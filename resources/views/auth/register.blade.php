@@ -1,0 +1,33 @@
+@extends('layouts.auth')
+
+@section('content')
+    <form id="register_form" method="POST" action="#">
+        @csrf
+        <div class="row gy-3">
+            <div class="col-xl-12">
+                <label for="email" class="form-label text-default">Email</label>
+                <input type="text" class="form-control" id="email" name="email" autocomplete="off">
+            </div>
+            <div class="col-xl-12 mb-2">
+                <label for="password" class="form-label text-default d-block">Password</label>
+                <div class="position-relative">
+                    <input type="password" class="form-control" type="password" id="password" name="password" autocomplete="off">
+                    <span class="show-password-button text-muted">
+                        <i class="ri-eye-off-line align-middle"></i>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </form>
+    <div class="d-grid mt-3">
+        <button type="submit" form="register_form" class="btn btn-primary">Register</button>
+    </div>
+    <div class="text-center mt-3 fw-medium">
+        Already have an account? <a href="{{ route(name: 'login') }}" class="text-primary">Sign In</a>
+    </div>
+@endsection
+
+@push('scripts')
+    <script src="{{ asset('assets/js/authentication-main.js') }}"></script>
+    <script src="{{ asset('assets/js/show-password.js') }}"></script>
+@endpush

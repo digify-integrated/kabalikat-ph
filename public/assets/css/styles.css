@@ -9073,6 +9073,7 @@ caption {
   padding: 0.55rem;
   inset-block-start: 0;
   inset-inline-end: 4px;
+  cursor: pointer;
 }
 .authentication.authentication-cover-main .show-password-button {
   padding: 0.65rem;
@@ -24668,4 +24669,20 @@ a.link-underline-dark {
 }
 .focus-ring.focus-ring-dark:focus {
   --bs-focus-ring-color: rgba(var(--dark-rgb), var(--bs-focus-ring-opacity));
+}
+
+[data-theme-mode=light] .auth-logo .logo-light {
+  display: none;
+}
+
+[data-theme-mode=light] .auth-logo .logo-dark {
+  display: block;
+}
+
+[data-theme-mode=dark] .auth-logo .logo-dark {
+  display: none;
+}
+
+[data-theme-mode=dark] .auth-logo .logo-light {
+  display: block;
 }
