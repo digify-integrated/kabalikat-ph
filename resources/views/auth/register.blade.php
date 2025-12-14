@@ -28,6 +28,5 @@
 @endsection
 
 @push('scripts')
-    <script src="{{ asset('assets/js/authentication-main.js') }}"></script>
     <script src="{{ asset('assets/js/show-password.js') }}"></script>
 @endpush

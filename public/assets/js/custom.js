@@ -425,11 +425,6 @@
   });
   /* Choices JS */
 
-  /* footer year */
-  const yearElement = document.getElementById("year");
-  yearElement.innerHTML = new Date().getFullYear();
-  /* footer year */
-
   /* node waves */
   Waves.attach(".btn-wave", ["waves-light"]);
   Waves.init();
@@ -517,36 +512,6 @@
     new SimpleBar(myHeaderCart, { autoHide: true });
   }
   /* header dropdowns scroll */
-
-  const autoCompleteJS = new autoComplete({
-    selector: "#header-search",
-    data: {
-      src: [
-        "How do plants adapt to different environments?",
-        "What makes the ocean's tides rise and fall?",
-        "How do our brains process emotions?",
-        "What factors contribute to the creation of a rainbow?",
-        "Who invented the telephone?",
-        "What role does the moon play in Earth's ecosystem?",
-        "How do animals communicate with each other?",
-        "What causes earthquakes to happen?",
-        "What is the significance of the Great Barrier Reef?",
-        "How do human bones regenerate after an injury?"
-      ],
-      cache: true,
-    },
-    resultItem: {
-      highlight: true
-    },
-    events: {
-      input: {
-        selection: (event) => {
-          const selection = event.detail.selection.value;
-          autoCompleteJS.input.value = selection;
-        }
-      }
-    }
-  });
 })();
 
 /* full screen */

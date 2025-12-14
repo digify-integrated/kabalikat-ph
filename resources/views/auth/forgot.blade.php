@@ -19,5 +19,5 @@
 @endsection
 
 @push('scripts')
-    <script src="{{ asset('assets/js/authentication-main.js') }}"></script>
+
 @endpush

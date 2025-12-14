@@ -8,4 +8,3 @@
 <link href="{{ asset('assets/libs/@simonwep/pickr/themes/nano.min.css') }}" rel="stylesheet" >
 <link href="{{ asset('assets/libs/choices.js/public/assets/styles/choices.min.css') }}" rel="stylesheet" >
 <link href="{{ asset('assets/libs/flatpickr/flatpickr.min.css') }}" rel="stylesheet" >
-<link href="{{ asset('assets/libs/@tarekraafat/autocomplete.js/css/autoComplete.css') }}" rel="stylesheet" >
