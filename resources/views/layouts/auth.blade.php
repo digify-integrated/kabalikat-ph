@@ -10,6 +10,7 @@
     <link id="style" href="{{ asset('assets/libs/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet" >
     <link href="{{ asset('assets/css/styles.css') }}" rel="stylesheet" >
     <link href="{{ asset('assets/css/icons.css') }}" rel="stylesheet" >
+    @stack('css')
 </head>
 
 <body class="authentication-background">

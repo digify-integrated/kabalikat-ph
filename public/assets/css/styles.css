@@ -5263,12 +5263,7 @@ fieldset:disabled .btn {
 }
 .form-control.is-valid:focus,
 .was-validated .form-control:valid:focus {
-  border-color: rgb(var(--success-rgb));
   box-shadow: none;
-}
-.form-control.is-valid,
-.was-validated .form-control:valid {
-  border-color: rgb(var(--success-rgb));
 }
 .form-control-color {
   width: 1.75rem;
@@ -9068,14 +9063,14 @@ caption {
   height: 100%;
   bottom: 6px;
 }
-.show-password-button {
+.password-addon {
   position: absolute;
   padding: 0.55rem;
   inset-block-start: 0;
   inset-inline-end: 4px;
   cursor: pointer;
 }
-.authentication.authentication-cover-main .show-password-button {
+.authentication.authentication-cover-main .password-addon {
   padding: 0.65rem;
 }
 .authentication-background {
@@ -24685,3 +24680,4 @@ a.link-underline-dark {
 [data-theme-mode=dark] .auth-logo .logo-light {
   display: block;
 }
+

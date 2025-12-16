@@ -1,18 +1,22 @@
 @extends('layouts.auth')
 
+@push('css')
+    <link rel="stylesheet" href="{{ asset('assets/libs/toastify-js/src/toastify.css') }}">
+@endpush
+
 @section('content')
-    <form id="login_form" method="POST" action="#">
+    <form id="login_form" class="needs-validation" novalidate method="POST" action="#">
         @csrf
         <div class="row gy-3">
             <div class="col-xl-12">
                 <label for="email" class="form-label text-default">Email</label>
-                <input type="text" class="form-control" id="email" name="email" autocomplete="off">
+                <input type="text" class="form-control" id="email" name="email" autocomplete="off" required>
             </div>
             <div class="col-xl-12 mb-2">
                 <label for="password" class="form-label text-default d-block">Password</label>
                 <div class="position-relative">
-                    <input type="password" class="form-control" type="password" id="password" name="password" autocomplete="off">
-                    <span class="show-password-button text-muted">
+                    <input type="password" class="form-control" type="password" id="password" name="password" autocomplete="off" required>
+                    <span class="password-addon text-muted">
                         <i class="ri-eye-off-line align-middle"></i>
                     </span>
                 </div>
@@ -31,5 +35,6 @@
 @endsection
 
 @push('scripts')
-    <script src="{{ asset('assets/js/show-password.js') }}"></script>
+    <script src="{{ asset('assets/libs/toastify-js/src/toastify.js') }}"></script>
+    <script type="module" src="{{ asset('assets/js/auth/login.js') }}"></script>
 @endpush
