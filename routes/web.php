@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuthenticationController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -9,6 +10,9 @@ Route::get('/', function () {
         'description' => 'Please enter your credentials.'
     ]);
 })->name('login');
+
+Route::post('/authenticate', [AuthenticationController::class, 'authenticate'])
+    ->name('authenticate');
 
 Route::get('/forgot', function () {
     return view('auth.forgot', [
