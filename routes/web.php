@@ -3,53 +3,48 @@
 use App\Http\Controllers\AuthenticationController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('auth.login', [
-        'pageTitle' => env('APP_NAME', 'Login'),
+// Routes that should NOT be accessible when logged in
+Route::middleware('guest')->group(function () {
+    Route::view('/', 'auth.login', [
+        'pageTitle' => env('APP_NAME', 'Laravel'), // set below if you want
         'title' => 'Hi, Welcome back!',
         'description' => 'Please enter your credentials.'
-    ]);
-})->name('login');
+    ])->name('login');
 
-Route::post('/authenticate', [AuthenticationController::class, 'authenticate'])
-    ->name('authenticate');
-
-Route::get('/forgot', function () {
-    return view('auth.forgot', [
+    Route::view('/forgot', 'auth.forgot', [
         'pageTitle' => 'Forgot Password',
         'title' => 'Forgot Password?',
         'description' => 'Enter your email to reset your password.'
-    ]);
-})->name('forgot');
+    ])->name('forgot');
 
-Route::get('/register', function () {
-    return view('auth.register', [
+    Route::view('/register', 'auth.register', [
         'pageTitle' => 'Register',
         'title' => 'Sign Up',
         'description' => 'Join us by creating a free account!'
-    ]); 
-})->name('register');
+    ])->name('register');
 
-Route::get('/otp', action: function () {
-    return view('auth.otp-verification', [
+    Route::view('/otp', 'auth.otp-verification', [
         'pageTitle' => 'Two-Factor',
         'title' => 'Verify Your Account',
         'description' => 'Enter the 6 digit code sent to the registered email.'
-    ]);
-})->name('otp');
+    ])->name('otp');
 
-Route::get('/reset-password', action: function () {
-    return view('auth.reset-password', [
+    Route::view('/reset-password', 'auth.reset-password', [
         'pageTitle' => 'Reset Password',
         'title' => 'Reset Password',
         'description' => 'Set your new password here.'
-    ]);
-})->name('reset.password');
+    ])->name('reset.password');
 
-Route::get('/app', function () {
-    return view('app.app', [
+    Route::post('/authenticate', [AuthenticationController::class, 'authenticate'])
+        ->name('authenticate');
+});
+
+// Routes that require login
+Route::middleware('auth')->group(function () {
+    Route::view('/app', 'app.app', [
         'pageTitle' => 'App',
-        'title' => 'Sign Up',
-        'description' => 'Join us by creating a free account !'
-    ]);
-})->name('app');
+        'title' => 'App',
+        'description' => 'Welcome!'
+    ])->name('app');
+
+});

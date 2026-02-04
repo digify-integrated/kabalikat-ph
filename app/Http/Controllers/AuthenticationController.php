@@ -10,9 +10,10 @@ class AuthenticationController extends Controller
 {
     public function authenticate(Request $request)
     {
-       $validator = Validator::make($request->all(), [
-            'email'         => ['required', 'email'],
-            'password'      => ['required', 'string']
+        $validator = Validator::make($request->all(), [
+            'email'    => ['required', 'email'],
+            'password' => ['required', 'string'],
+            'remember' => ['sometimes', 'boolean'],
         ]);
 
         if ($validator->fails()) {
@@ -24,14 +25,15 @@ class AuthenticationController extends Controller
         }
 
         $credentials = $request->only('email', 'password');
+        $remember = $request->boolean('remember');
 
         // Attempt login
-        if (!Auth::attempt($credentials, $request->boolean('remember'))) {
+        if (!Auth::attempt($credentials, $remember)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid email or password.',
                 'message_type' => 'error'
-            ], 401);
+            ]);
         }
 
         // Prevent session fixation
@@ -39,7 +41,7 @@ class AuthenticationController extends Controller
 
         return response()->json([
             'success' => true,
-            'redirect_link' => url('/dashboard'),
+            'redirect_link' => url('/app'),
         ]);
     }
 }
