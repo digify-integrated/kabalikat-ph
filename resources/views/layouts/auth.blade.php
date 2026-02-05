@@ -1,40 +1,27 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr" data-nav-layout="vertical" data-vertical-style="overlay" data-theme-mode="light" data-header-styles="light" data-menu-styles="light" data-toggled="close">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title> {{ $pageTitle ?? 'Error' }} </title>
-    <link rel="icon" href="{{ asset('assets/images/brand-logos/favicon.svg') }}" type="image/x-icon">
-    <script src="{{ asset('assets/js/authentication-main.js') }}"></script>
-    <link id="style" href="{{ asset('assets/libs/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet" >
-    <link href="{{ asset('assets/css/styles.css') }}" rel="stylesheet" >
-    <link href="{{ asset('assets/css/icons.css') }}" rel="stylesheet" >
-    @stack('css')
+    <title> {{ $pageTitle ?? env('APP_NAME', 'Laravel') }} </title>
+    @include('partials.required-css')
 </head>
+<body id="kt_body" class="app-blank bgi-size-cover bgi-attachment-fixed bgi-position-center bgi-no-repeat">
+    @include('partials.theme-switcher')
 
-<body class="authentication-background">
-    <div class="authentication-basic-background">
-        <img src="{{ asset('assets/images/media/backgrounds/9.png') }}" alt="background">
-    </div>
+    <div class="d-flex flex-column flex-root" id="kt_app_root">
+        <style>
+            body {
+                background-image: url('./assets/media/auth/bg4.jpg');
+            }
 
-    @include('partials.auth-switcher')
-
-    <div class="container">
-        <div class="row justify-content-center align-items-center authentication authentication-basic h-100">
-            <div class="col-lg-6 col-md-6 col-sm-8 col-12">
-                <div class="card custom-card border-0 my-4">
-                    <div class="card-body p-5">
-                        <div class="mb-4"> 
-                            <a href="{{ route(name: 'login') }}" class="auth-logo">
-                                <img src="{{ asset('assets/images/brand-logos/logo-light.svg') }}" alt="logo" class="logo-light"> 
-                                <img src="{{ asset('assets/images/brand-logos/logo-dark.svg') }}" alt="logo" class="logo-dark"> 
-                            </a> 
-                        </div>
-                        <div>
-                            <h4 class="mb-1 fw-semibold">{{ $title }}</h4>
-                            <p class="mb-4 text-muted fw-normal">{{ $description }}</p>
-                        </div>
+            [data-bs-theme="dark"] body {
+                background-image: url('./assets/media/auth/bg4-dark.jpg');
+            }
+        </style>
+        
+        <div class="d-flex flex-center flex-column-fluid flex-lg-row">
+            <div class="d-flex flex-column-fluid flex-lg-row-auto justify-content-center justify-content-lg-end p-12 p-lg-20">
+                <div class="bg-body d-flex flex-column align-items-stretch flex-center rounded-4 w-md-500px w-100 p-10">
+                    <div class="d-flex flex-center flex-column flex-column-fluid px-0 pb-lg-10 pt-lg-10">
                         @yield('content')
                     </div>
                 </div>
@@ -42,8 +29,8 @@
         </div>
     </div>
 
-    <script src="{{ asset('assets/libs/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ asset('assets/plugins/global/plugins.bundle.js') }}"></script>
+    <script src="{{ asset('assets/js/scripts.bundle.js') }}"></script>
     @stack('scripts')
 </body>
-
 </html>

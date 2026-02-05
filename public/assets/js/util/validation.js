@@ -36,9 +36,7 @@ export function initValidation(selector = '.needs-validation', options = {}) {
   const defaults = {
     // Toast options
     toastType: 'error',
-    toastDuration: 3500,
-    toastPosition: 'right',
-    toastGravity: 'top',
+    toastDuration: 500,
 
     // Behavior
     notifyOnFieldInvalid: false,
@@ -134,7 +132,6 @@ export function initValidation(selector = '.needs-validation', options = {}) {
 /* ----------------------------- toasts ----------------------------- */
 
 function toastErrors(errors, config) {
-  // Unique messages preserve order
   const unique = [];
   const seen = new Set();
 
@@ -149,18 +146,17 @@ function toastErrors(errors, config) {
   unique.forEach((msg, i) => {
     const delay = i * config.toastDelayStepMs;
 
-    if (delay === 0) {
-      // If your showNotification is title+description, you can split here:
-      // showNotification(e.title, e.description, ...)
-      showNotification(msg, config.toastType, config.toastDuration, config.toastPosition, config.toastGravity);
-      return;
-    }
+    const fire = () =>
+      showNotification({
+        message: msg,
+        type: config.toastType
+      });
 
-    window.setTimeout(() => {
-      showNotification(msg, config.toastType, config.toastDuration, config.toastPosition, config.toastGravity);
-    }, delay);
+    if (delay === 0) fire();
+    else window.setTimeout(fire, delay);
   });
 }
+
 
 /* ----------------------------- validation ----------------------------- */
 

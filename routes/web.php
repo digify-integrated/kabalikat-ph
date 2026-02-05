@@ -8,7 +8,7 @@ Route::middleware('guest')->group(function () {
     Route::view('/', 'auth.login', [
         'pageTitle' => env('APP_NAME', 'Laravel'), // set below if you want
         'title' => 'Hi, Welcome back!',
-        'description' => 'Please enter your credentials.'
+        'description' => 'Please enter your credentials'
     ])->name('login');
 
     Route::view('/forgot', 'auth.forgot', [
@@ -42,9 +42,9 @@ Route::middleware('guest')->group(function () {
 // Routes that require login
 Route::middleware('auth')->group(function () {
     Route::view('/app', 'app.app', [
-        'pageTitle' => 'App',
-        'title' => 'App',
-        'description' => 'Welcome!'
+        'pageTitle' => 'Apps'
     ])->name('app');
 
+    Route::get('/logout', [AuthenticationController::class, 'logout'])
+        ->name('logout');
 });

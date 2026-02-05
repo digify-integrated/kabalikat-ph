@@ -1,36 +1,46 @@
-import { handleSystemError } from '../modules/system-errors.js';
+const SPINNER_HTML =
+  '<span class="spinner-border spinner-border-sm align-middle ms-0" aria-hidden="true"></span>' +
+  '<span class="visually-hidden">Loading...</span>';
 
-export const disableButton = (buttonIds) => {
-  const ids = Array.isArray(buttonIds) ? buttonIds : [buttonIds];
+const toIdArray = (buttonIds) => (Array.isArray(buttonIds) ? buttonIds : [buttonIds]).filter(Boolean);
 
-  ids.forEach((id) => {
+const forEachButtonById = (buttonIds, fn, callerName) => {
+  toIdArray(buttonIds).forEach((id) => {
     const btn = document.getElementById(id);
     if (!btn) {
-      console.warn(`disableButton: button with ID "${id}" not found`);
+      console.warn(`${callerName}: button with ID "${id}" not found`);
       return;
     }
-
-    if (!btn.dataset.originalText) btn.dataset.originalText = btn.innerHTML;
-
-    btn.disabled = true;
-    btn.innerHTML = `<span><span class="spinner-border spinner-border-sm align-middle ms-0"></span></span>`;
+    fn(btn, id);
   });
 };
 
+export const disableButton = (buttonIds, { spinnerHtml = SPINNER_HTML } = {}) => {
+  forEachButtonById(
+    buttonIds,
+    (btn) => {
+      if (!btn.dataset.originalText) btn.dataset.originalText = btn.innerHTML;
+
+      btn.disabled = true;
+
+      if (btn.innerHTML !== spinnerHtml) btn.innerHTML = spinnerHtml;
+    },
+    "disableButton"
+  );
+};
+
 export const enableButton = (buttonIds) => {
-  const ids = Array.isArray(buttonIds) ? buttonIds : [buttonIds];
+  forEachButtonById(
+    buttonIds,
+    (btn) => {
+      btn.disabled = false;
 
-  ids.forEach((id) => {
-    const btn = document.getElementById(id);
-    if (!btn) {
-      console.warn(`enableButton: button with ID "${id}" not found`);
-      return;
-    }
-
-    btn.disabled = false;
-    if (btn.dataset.originalText) {
-      btn.innerHTML = btn.dataset.originalText;
-      delete btn.dataset.originalText;
-    }
-  });
+      const original = btn.dataset.originalText;
+      if (original != null) {
+        btn.innerHTML = original;
+        delete btn.dataset.originalText;
+      }
+    },
+    "enableButton"
+  );
 };

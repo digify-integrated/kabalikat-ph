@@ -19,8 +19,8 @@ export const passwordAddOn = (selector = '.password-addon') => {
       addon.querySelector('svg') ||
       addon;
 
-    const CLASS_EYE = 'ri-eye-line';
-    const CLASS_EYE_OFF = 'ri-eye-off-line';
+    const CLASS_EYE = 'ki-eye';
+    const CLASS_EYE_OFF = 'ki-eye-slash';
 
     const setA11y = () => {
       addon.setAttribute('role', 'button');

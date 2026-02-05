@@ -1,32 +1,39 @@
-export const showNotification = (
-  message,
-  type = 'info',
-  duration = 3000,
-  position = 'right',
-  gravity = 'top'
-) => {
-  const validTypes = ['success', 'info', 'warning', 'error'];
-  
-  if (!validTypes.includes(type)) {
-    console.warn(`Invalid toast type: "${type}". Defaulting to "info".`);
-    type = 'info';
-  }
+const DEFAULT_TOASTR_OPTIONS = Object.freeze({
+  closeButton: false,
+  debug: false,
+  newestOnTop: false,
+  progressBar: true,
+  preventDuplicates: false,
+  onclick: null,
+  hideDuration: 2000,
+  timeOut: 3000,
+  extendedTimeOut: 1000,
+  showMethod: "fadeIn",
+  hideMethod: "fadeOut",
+});
 
-  const backgroundColors = {
-    success: '#32d484',
-    info: '#00c9ff',
-    warning: '#fdaf22',
-    error: '#ff6757',
+const TOASTR_METHOD = Object.freeze({
+  success: "success",
+  info: "info",
+  warning: "warning",
+  error: "error",
+});
+
+export const showNotification = ({
+  title = "",
+  message = "",
+  type = "info",
+  duration = 500,
+  position = "toastr-top-right",
+} = {}) => {
+  //if (!message) return;
+
+  toastr.options = {
+    ...DEFAULT_TOASTR_OPTIONS,
+    positionClass: position,
+    showDuration: duration,
   };
 
-  Toastify({
-    text: message,
-    duration: duration,
-    gravity: gravity,
-    position: position,
-    newWindow: true,
-    close: true,
-    stopOnFocus: true,
-    backgroundColor: backgroundColors[type],
-  }).showToast();
+  const method = TOASTR_METHOD[type] ?? "info";
+  toastr[method](message, title);
 };

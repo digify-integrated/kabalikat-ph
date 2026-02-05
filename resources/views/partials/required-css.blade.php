@@ -1,10 +1,12 @@
-<link rel="icon" href="{{ asset('assets/images/brand-logos/favicon.svg') }}" type="image/x-icon">
-<link id="style" href="{{ asset('assets/libs/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet" >
-<link href="{{ asset('assets/css/styles.css') }}" rel="stylesheet" >
-<link href="{{ asset('assets/css/icons.css') }}" rel="stylesheet" >
-<link href="{{ asset('assets/libs/node-waves/waves.min.css') }}" rel="stylesheet" >
-<link href="{{ asset('assets/libs/simplebar/simplebar.min.css') }}" rel="stylesheet" >
-<link href="{{ asset('assets/libs/flatpickr/flatpickr.min.css') }}" rel="stylesheet" >
-<link href="{{ asset('assets/libs/@simonwep/pickr/themes/nano.min.css') }}" rel="stylesheet" >
-<link href="{{ asset('assets/libs/choices.js/public/assets/styles/choices.min.css') }}" rel="stylesheet" >
-<link href="{{ asset('assets/libs/flatpickr/flatpickr.min.css') }}" rel="stylesheet" >
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="shortcut icon" href="{{ asset('assets/media/logos/favicon.svg') }}" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
+<link href="{{ asset('assets/css/plugins.bundle.css') }}" rel="stylesheet" type="text/css" />
+<link href="{{ asset('assets/css/style.bundle.css') }}" rel="stylesheet" type="text/css" />
+@stack('css')
+<script>
+    if (window.top != window.self) {
+        window.top.location.replace(window.self.location.href);
+    }
+</script>
