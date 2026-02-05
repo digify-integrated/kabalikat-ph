@@ -11,12 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('app_module', function (Blueprint $table) {
+        Schema::create('app', function (Blueprint $table) {
             $table->id();
-            $table->string('app_module_name');
-            $table->string('app_module_description')->nullable();
+            $table->string('app_name');
+            $table->string('app_description')->nullable();
             $table->string('app_logo')->nullable();
-            $table->integer('menu_item_id')->nullable();
+            $table->integer('navigation_menu_id')->nullable();
+            $table->integer('navigation_menu_name');
             $table->integer('order_sequence')->default(0);
             $table->timestamps();
         });
@@ -25,10 +26,21 @@ return new class extends Migration
             $table->id();
             $table->string('navigation_menu_name');
             $table->string('navigation_menu_icon')->nullable();
-            $table->string('route');
+            $table->integer('app_id');
+            $table->string('app_name');
             $table->integer('app_module_id');
-            $table->integer('parent_id')->nullable();
+            $table->integer('parent_navigation_menu_id')->nullable();
+            $table->string('parent_navigation_menu_name')->nullable();
             $table->integer('order_sequence')->default(0);
+            $table->timestamps();
+        });
+
+        Schema::create('navigation_menu_route', function (Blueprint $table) {
+            $table->id();
+            $table->string('navigation_menu_id');
+            $table->string('route_key')->default('index');
+            $table->integer('view');
+            $table->string('js_file');
             $table->timestamps();
         });
     }
@@ -40,5 +52,6 @@ return new class extends Migration
     {
         Schema::dropIfExists('app_module');
         Schema::dropIfExists('navigation_menu');
+        Schema::dropIfExists('navigation_menu_route');
     }
 };
