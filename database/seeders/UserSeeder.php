@@ -13,17 +13,16 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        // One predictable test account
         User::updateOrCreate(
-            ['email' => 'test@example.com'],
+            ['email' => 'ldagulto@gmail.com'],
             [
-                'name' => 'Test User',
-                'password' => 'password123',
+                'name' => 'Lawrence Agulto',
+                'password' => Hash::make('password123'),
                 'status' => 'Active',
             ]
         );
 
         // Additional random users
-        User::factory(10)->create();
+        //User::factory(10)->create();
     }
 }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AppController;
 use App\Http\Controllers\AuthenticationController;
 use Illuminate\Support\Facades\Route;
 
@@ -41,9 +42,14 @@ Route::middleware('guest')->group(function () {
 
 // Routes that require login
 Route::middleware('auth')->group(function () {
-    Route::view('/app', 'app.app', [
+    /*Route::view('/app', 'app.app', [
         'pageTitle' => 'Apps'
-    ])->name('app');
+    ])-*/
+     
+    Route::get('/app', [AppController::class, 'index'])->name('app');
+
+    Route::get('/apps/{appModuleId}/module/{menuItemId}', [AppController::class, 'index'])
+    ->name('apps.index');
 
     Route::get('/logout', [AuthenticationController::class, 'logout'])
         ->name('logout');

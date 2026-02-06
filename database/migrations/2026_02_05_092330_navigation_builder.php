@@ -16,8 +16,7 @@ return new class extends Migration
             $table->string('app_name');
             $table->string('app_description')->nullable();
             $table->string('app_logo')->nullable();
-            $table->integer('navigation_menu_id')->nullable();
-            $table->integer('navigation_menu_name');
+            $table->bigInteger('navigation_menu_id');
             $table->integer('order_sequence')->default(0);
             $table->timestamps();
         });
@@ -26,21 +25,9 @@ return new class extends Migration
             $table->id();
             $table->string('navigation_menu_name');
             $table->string('navigation_menu_icon')->nullable();
-            $table->integer('app_id');
-            $table->string('app_name');
-            $table->integer('app_module_id');
-            $table->integer('parent_navigation_menu_id')->nullable();
-            $table->string('parent_navigation_menu_name')->nullable();
+            $table->bigInteger('app_id');
+            $table->bigInteger('parent_navigation_menu_id')->nullable();
             $table->integer('order_sequence')->default(0);
-            $table->timestamps();
-        });
-
-        Schema::create('navigation_menu_route', function (Blueprint $table) {
-            $table->id();
-            $table->string('navigation_menu_id');
-            $table->string('route_key')->default('index');
-            $table->integer('view');
-            $table->string('js_file');
             $table->timestamps();
         });
     }
@@ -50,8 +37,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('app_module');
         Schema::dropIfExists('navigation_menu');
-        Schema::dropIfExists('navigation_menu_route');
+        Schema::dropIfExists('app');
     }
 };
