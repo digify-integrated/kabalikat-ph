@@ -20,7 +20,7 @@ return new class extends Migration
 
         Schema::create('system_action', function (Blueprint $table) {
             $table->id();
-            $table->string('system_action');
+            $table->string('system_action_name');
             $table->string('system_action_description');
             $table->timestamps();
         });
@@ -30,16 +30,24 @@ return new class extends Migration
 
             $table->foreignId('role_id')
                 ->constrained('role')
-                ->cascadeOnDelete();
+                ->cascadeOnDelete()
+                ->cascade;
+
+            $table->string('role_name');
 
             $table->foreignId('navigation_menu_id')
                 ->constrained('navigation_menu')
                 ->cascadeOnDelete();
 
+            $table->string('navigation_menu_name');
+
             $table->boolean('read_access')->default(false);
             $table->boolean('write_access')->default(false);
             $table->boolean('create_access')->default(false);
             $table->boolean('delete_access')->default(false);
+            $table->boolean('import_access')->default(false);
+            $table->boolean('export_access')->default(false);
+            $table->boolean('logs_access')->default(false);
 
             $table->timestamps();
 
@@ -53,9 +61,13 @@ return new class extends Migration
                 ->constrained('role')
                 ->cascadeOnDelete();
 
+            $table->string('role_name');
+
             $table->foreignId('system_action_id')
                 ->constrained('system_action')
                 ->cascadeOnDelete();
+
+            $table->string('system_action_name');
 
             $table->boolean('system_action_access')->default(false);
             $table->timestamps();
@@ -69,10 +81,14 @@ return new class extends Migration
             $table->foreignId('role_id')
                 ->constrained('role')
                 ->cascadeOnDelete();
+                
+            $table->string('role_name');
 
             $table->foreignId('user_account_id')
                 ->constrained('users')
                 ->cascadeOnDelete();
+
+            $table->string('user_name');
 
             $table->timestamps();
 

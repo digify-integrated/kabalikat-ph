@@ -24,7 +24,11 @@ class AuthenticationController extends Controller
             ], 422);
         }
 
-        $credentials = $request->only('email', 'password');
+        $credentials = [
+            'email' => $request->input('email'),
+            'password' => $request->input('password'),
+            'status' => 'Active',
+        ];
         $remember = $request->boolean('remember');
 
         // Attempt login
@@ -33,7 +37,7 @@ class AuthenticationController extends Controller
                 'success' => false,
                 'message' => 'Invalid email or password.',
                 'message_type' => 'error'
-            ]);
+            ], 401);
         }
 
         // Prevent session fixation
@@ -47,11 +51,13 @@ class AuthenticationController extends Controller
 
     public function logout(Request $request)
     {
-        Auth::logout();
+        Auth::guard('web')->logout();
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        if ($request->hasSession()) {
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
 
-        return redirect('/');
+        return redirect()->route('login');
     }
 }

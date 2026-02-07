@@ -15,11 +15,22 @@ class RoleUserAccountSeeder extends Seeder
     {
         $now = now();
 
-        DB::table('role_user_account')->insert([
-            'role_id' => 1,
-            'user_account_id' => 1,
+        $defaults = [
             'created_at' => $now,
             'updated_at' => $now,
-        ]);
+        ];
+
+        $roleUserAccounts = [
+            [
+                'role_id' => 1,
+                'role_name' => 'Super Admin',
+                'user_account_id' => 1,
+                'user_name' => 'Lawrence Agulto'
+            ],
+        ];
+
+        DB::table('role_user_account')->insert(
+            array_map(fn ($row) => $row + $defaults, $roleUserAccounts)
+        );
     }
 }

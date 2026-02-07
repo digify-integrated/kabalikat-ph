@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureMenuReadAccess;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -14,7 +15,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectGuestsTo(fn () => route('login'));
 
         // Where to send logged-in users when they hit "guest" routes (like "/")
-        $middleware->redirectUsersTo(fn () => route('app'));
+        $middleware->redirectUsersTo(fn () => route('apps.index'));
+
+        $middleware->alias([
+            'menu.read' => EnsureMenuReadAccess::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

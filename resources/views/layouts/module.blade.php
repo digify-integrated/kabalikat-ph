@@ -12,7 +12,7 @@
                 @include('partials.module-header')
 
                 <div class="app-wrapper flex-column flex-row-fluid" id="kt_app_wrapper">                                        
-                    @include('partials.toolbar')
+                    @include('partials.module-toolbar')
                     <div class="app-container  container-xxl">
                         <div class="app-main flex-column flex-row-fluid " id="kt_app_main">
                             <div class="d-flex flex-column flex-column-fluid">

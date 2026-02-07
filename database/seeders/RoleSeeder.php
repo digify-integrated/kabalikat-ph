@@ -16,18 +16,24 @@ class RoleSeeder extends Seeder
     {
         $now = now();
 
-        DB::table('role')->insert([
-            'role_name'             => 'Super Admin',
-            'role_description'      => 'Has full access to all features and settings of the application.',
-            'created_at'            => $now,
-            'updated_at'            => $now,
-        ]);
+        $defaults = [
+            'created_at' => $now,
+            'updated_at' => $now,
+        ];
 
-        DB::table('role')->insert([
-            'role_name'             => 'System Admin',
-            'role_description'      => 'Responsible for managing system settings, user accounts, and overall maintenance of the application.',
-            'created_at'            => $now,
-            'updated_at'            => $now,
-        ]);
+        $roles = [
+            [
+                'role_name' => 'Super Admin',
+                'role_description' => 'Has full access to all features and settings of the application.',
+            ],
+            [
+                'role_name' => 'System Admin',
+                'role_description' => 'Responsible for managing system settings, user accounts, and overall maintenance of the application.',
+            ],
+        ];
+
+        DB::table('role')->insert(
+            array_map(fn ($row) => $row + $defaults, $roles)
+        );
     }
 }

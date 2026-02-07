@@ -10,11 +10,16 @@ class RolePermission extends Model
 
     protected $fillable = [
         'role_id',
+        'role_name',
         'navigation_menu_id',
+        'navigation_menu_name',
         'read_access',
         'write_access',
         'create_access',
         'delete_access',
+        'import_access',
+        'export_access',
+        'logs_access',
     ];
 
     public function role()

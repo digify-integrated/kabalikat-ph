@@ -6,13 +6,16 @@ use Illuminate\Database\Eloquent\Model;
 
 class NavigationMenu extends Model
 {
-     protected $table = 'navigation_menu';
+    protected $table = 'navigation_menu';
 
     protected $fillable = [
         'navigation_menu_name',
         'navigation_menu_icon',
         'app_id',
+        'app_name',
         'parent_navigation_menu_id',
+        'parent_navigation_menu_name',
+        'database_table',
         'order_sequence',
     ];
 

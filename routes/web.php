@@ -41,15 +41,22 @@ Route::middleware('guest')->group(function () {
 });
 
 // Routes that require login
-Route::middleware('auth')->group(function () {
-    /*Route::view('/app', 'app.app', [
-        'pageTitle' => 'Apps'
-    ])-*/
-     
-    Route::get('/app', [AppController::class, 'index'])->name('app');
+Route::middleware('auth')->group(function () {     
+    Route::get('/app', [AppController::class, 'index'])->name('apps.index');
 
-    Route::get('/apps/{appModuleId}/module/{menuItemId}', [AppController::class, 'index'])
-    ->name('apps.index');
+    Route::middleware('menu.read')->group(function () {
+        Route::get('/apps/{appModuleId}/module/{navigationMenuId}', [AppController::class, 'base'])
+            ->name('apps.base');
+
+        Route::get('/apps/{appModuleId}/module/{navigationMenuId}/new', [AppController::class, 'new'])
+            ->name('apps.new');
+
+        Route::get('/apps/{appModuleId}/module/{navigationMenuId}/details/{details_id}', [AppController::class, 'details'])
+            ->name('apps.details');
+
+        Route::get('/apps/{appModuleId}/module/{navigationMenuId}/import', [AppController::class, 'import'])
+            ->name('apps.import');
+    });
 
     Route::get('/logout', [AuthenticationController::class, 'logout'])
         ->name('logout');

@@ -9,7 +9,7 @@ class SystemAction extends Model
     protected $table = 'system_action';
 
     protected $fillable = [
-        'system_action',
+        'system_action_name',
         'system_action_description',
     ];
 }

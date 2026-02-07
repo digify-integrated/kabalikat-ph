@@ -10,7 +10,9 @@ class RoleUserAccount extends Model
 
     protected $fillable = [
         'role_id',
+        'role_name',
         'user_account_id',
+        'user_name',
     ];
 
     public function role()

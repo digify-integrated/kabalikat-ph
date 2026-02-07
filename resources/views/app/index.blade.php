@@ -5,9 +5,9 @@
         @forelse ($apps as $app)
             @php
                 // Link (adjust params if your route expects different names)
-                $defaultLink = route('apps.index', [
+                $defaultLink = route('apps.base', [
                     'appModuleId' => $app->app_id,
-                    'menuItemId'  => $app->navigation_menu_id,
+                    'navigationMenuId'  => $app->navigation_menu_id,
                 ]);
 
                 // Logo URL:
@@ -17,7 +17,7 @@
                         : asset('assets/media/default/app-module-logo.png');
 
                 // Optional version (if you don't have a version column yet)
-                $version = $app->version ?? 'v. 1.0.0';
+                $version = $app->app_version ?? '1.0.0';
             @endphp
 
             <div class="col-md-6 col-xl-3">
@@ -31,16 +31,16 @@
 
                         <div class="card-toolbar">
                             <span class="badge badge-sm badge-light-primary me-auto px-2 py-2">
-                                {{ $version }}
+                                v. {{ $version }}
                             </span>
                         </div>
                     </div>
 
                     <div class="card-body p-9">
-                        <div class="fs-3 fw-bold text-gray-900">
+                        <div class="fs-1 fw-bold text-gray-900">
                             {{ $app->app_name }}
                         </div>
-                        <p class="text-gray-500 fw-semibold fs-8 mt-1">
+                        <p class="text-gray-500 fw-semibold fs-7 mt-1">
                             {{ $app->app_description }}
                         </p>
                     </div>
