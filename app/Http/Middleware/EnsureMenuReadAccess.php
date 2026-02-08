@@ -14,30 +14,63 @@ class EnsureMenuReadAccess
         $user = $request->user();
         $navigationMenuId = $request->route('navigationMenuId');
 
-        // If the route param is missing or not numeric, treat as not found.
         if (!is_numeric($navigationMenuId)) {
             abort(404);
         }
 
-        // Get the user's role IDs from role_user_account
+        $navigationMenuId = (int) $navigationMenuId;
+
         $roleIds = DB::table('role_user_account')
             ->where('user_account_id', $user->id)
-            ->pluck('role_id');
+            ->pluck('role_id')
+            ->map(fn ($v) => (int) $v)
+            ->all();
 
-        // If user has no roles, deny as 404
-        if ($roleIds->isEmpty()) {
+        if (empty($roleIds)) {
             abort(404);
         }
 
-        // Check role_permission for ANY role with read_access = 1 for this menu
-        $hasReadAccess = DB::table('role_permission')
+        // Build allowed set for this user (ANY role true)
+        $allowedIds = DB::table('role_permission')
             ->whereIn('role_id', $roleIds)
-            ->where('navigation_menu_id', (int) $navigationMenuId)
             ->where('read_access', true)
-            ->exists();
+            ->pluck('navigation_menu_id')
+            ->map(fn ($v) => (int) $v)
+            ->unique()
+            ->values()
+            ->all();
 
-        if (! $hasReadAccess) {
+        $allowedSet = array_fill_keys($allowedIds, true);
+
+        // Must be allowed on the requested menu
+        if (!isset($allowedSet[$navigationMenuId])) {
             abort(404);
+        }
+
+        // Enforce ancestor permissions (if any parent is not allowed => deny)
+        $currentId = $navigationMenuId;
+
+        while (true) {
+            $row = DB::table('navigation_menu')
+                ->where('id', $currentId)
+                ->select('parent_navigation_menu_id')
+                ->first();
+
+            if (!$row) {
+                abort(404);
+            }
+
+            if ($row->parent_navigation_menu_id === null) {
+                break;
+            }
+
+            $parentId = (int) $row->parent_navigation_menu_id;
+
+            if (!isset($allowedSet[$parentId])) {
+                abort(404);
+            }
+
+            $currentId = $parentId;
         }
 
         return $next($request);

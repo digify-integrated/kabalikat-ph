@@ -40,30 +40,16 @@ class AppController extends Controller
             ->orderBy('am.app_name')
             ->get();
 
-
         return view('app.index', compact('apps', 'pageTitle'));
     }
 
-    public function base(Request $request, int $appModuleId, int $navigationMenuId)
+    private function resolveViewAndJs(int $navigationMenuId, string $routeType): object
     {
-        $userId = Auth::id();
-
-        $access = $request->user()->menuPermissions($navigationMenuId);
-
-        $writePermission  = $access['write'];
-        $createPermission = $access['create'];
-        $deletePermission = $access['delete'];
-        $importPermission = $access['import'];
-        $exportPermission = $access['export'];
-        $logsPermission   = $access['logs'];
-
-        $navigationMenuInfo = DB::table('navigation_menu')
-            ->where('id', $navigationMenuId)
-            ->select('navigation_menu_name')
-            ->first();
-
         $routeInfo = DB::table('navigation_menu_route')
-            ->where('navigation_menu_id', $navigationMenuId)
+            ->where([
+                'route_type' => $routeType,
+                'navigation_menu_id' => $navigationMenuId,
+            ])
             ->select('view_file', 'js_file')
             ->first();
 
@@ -71,22 +57,103 @@ class AppController extends Controller
             abort(404);
         }
 
-        $pageTitle = $navigationMenuInfo->navigation_menu_name;
-        $viewFile = $routeInfo->view_file;
-        $jsFile   = $routeInfo->js_file;
-
-        return view($viewFile, compact(
-            'pageTitle',
-            'writePermission',
-            'createPermission',
-            'deletePermission',
-            'importPermission',
-            'exportPermission',
-            'logsPermission',
-            'jsFile',
-            'appModuleId',
-            'navigationMenuId'
-        ));
+        return $routeInfo;
     }
 
+    /**
+     * Returns menu metadata used by the UI (title + icon).
+     * Make sure your navigation_menu table has columns:
+     * - navigation_menu_name
+     * - navigation_menu_icon
+     */
+    private function resolveMenuMeta(int $navigationMenuId): object
+    {
+        $menu = DB::table('navigation_menu')
+            ->where('id', $navigationMenuId)
+            ->select('navigation_menu_name', 'navigation_menu_icon')
+            ->first();
+
+        if (! $menu) {
+            abort(404);
+        }
+
+        return $menu;
+    }
+
+    private function permissions(Request $request, int $navigationMenuId): array
+    {
+        $access = $request->user()->menuPermissions($navigationMenuId);
+
+        return [
+            'writePermission'  => (int)($access['write']  ?? 0),
+            'createPermission' => (int)($access['create'] ?? 0),
+            'deletePermission' => (int)($access['delete'] ?? 0),
+            'importPermission' => (int)($access['import'] ?? 0),
+            'exportPermission' => (int)($access['export'] ?? 0),
+            'logsPermission'   => (int)($access['logs']   ?? 0),
+        ];
+    }
+
+    /**
+     * Central render helper so base/new/details/import stay consistent.
+     */
+    private function renderMenuRoute(
+        Request $request,
+        int $appModuleId,
+        int $navigationMenuId,
+        string $routeType,
+        array $extra = []
+    ) {
+        $menu = $this->resolveMenuMeta($navigationMenuId);
+        $routeInfo = $this->resolveViewAndJs($navigationMenuId, $routeType);
+        $perms = $this->permissions($request, $navigationMenuId);
+
+        // This is what your Blade partial will use as $iconClass
+        $iconClass = $menu->navigation_menu_icon ?: 'ki-outline ki-abstract-26';
+
+        return view($routeInfo->view_file, array_merge($perms, [
+            'pageTitle'        => (string) $menu->navigation_menu_name,
+            'iconClass'        => $iconClass,
+            'jsFile'           => $routeInfo->js_file,
+            'appModuleId'      => $appModuleId,
+            'navigationMenuId' => $navigationMenuId,
+        ], $extra));
+    }
+
+    public function base(Request $request, int $appModuleId, int $navigationMenuId)
+    {
+        return $this->renderMenuRoute($request, $appModuleId, $navigationMenuId, 'index');
+    }
+
+    public function new(Request $request, int $appModuleId, int $navigationMenuId)
+    {
+        return $this->renderMenuRoute($request, $appModuleId, $navigationMenuId, 'new', [
+            'pageTitleSuffix' => ' - New', // optional if you want to show in view
+            'isNew' => true,
+        ]);
+    }
+
+    public function details(Request $request, int $appModuleId, int $navigationMenuId, int $details_id)
+    {
+        return $this->renderMenuRoute($request, $appModuleId, $navigationMenuId, 'details', [
+            'pageTitleSuffix' => ' - Details', // optional
+            'detailsId' => $details_id,
+            'isDetails' => true,
+        ]);
+    }
+
+    public function import(Request $request, int $appModuleId, int $navigationMenuId)
+    {
+        $perms = $this->permissions($request, $navigationMenuId);
+
+        // Keep your existing behavior, but this should probably be 404 to match your "hide routes" pattern.
+        if (($perms['importPermission'] ?? 0) <= 0) {
+            abort(404);
+        }
+
+        return $this->renderMenuRoute($request, $appModuleId, $navigationMenuId, 'import', [
+            'pageTitleSuffix' => ' - Import', // optional
+            'isImport' => true,
+        ]);
+    }
 }

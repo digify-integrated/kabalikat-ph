@@ -7,7 +7,7 @@
         </div>
         
         <div class="d-flex align-items-center flex-grow-1 flex-lg-grow-0 me-lg-18">
-            <a href="/metronic8/demo34/?page=index">
+            <a href="{{ route('apps.index') }}">
                 <img alt="Logo" src="{{ asset('assets/media/logos/logo-light.svg') }}" class="h-30px d-sm-none" />
                 <img alt="Logo" src="{{ asset('assets/media/logos/logo-light.svg') }}" class="h-30px d-none d-sm-block" />
             </a>
@@ -95,7 +95,7 @@
                         </div>
                                         
                         <div class="menu-item px-5">
-                            <a href="/logout" class="menu-link px-5">
+                            <a href="{{ route('logout') }}" class="menu-link px-5">
                                 Sign Out
                             </a>
                         </div>

@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Middleware\EnsureMenuReadAccess;
+use App\Http\Middleware\ShareBreadcrumbs;
+use App\Http\Middleware\ShareNavigationMenu;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -17,8 +19,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // Where to send logged-in users when they hit "guest" routes (like "/")
         $middleware->redirectUsersTo(fn () => route('apps.index'));
 
-        $middleware->alias([
-            'menu.read' => EnsureMenuReadAccess::class,
+       $middleware->alias([
+            'menu.read'    => EnsureMenuReadAccess::class,
+            'breadcrumbs'  => ShareBreadcrumbs::class,
+            'nav.menu'     => ShareNavigationMenu::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

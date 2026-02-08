@@ -70,3 +70,10 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    @if ($jsFile)
+        <script type="module" src="{{ asset($jsFile) }}"></script>
+    @endif
+@endpush
+

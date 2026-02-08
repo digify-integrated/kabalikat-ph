@@ -31,6 +31,46 @@ class NavigationMenuSeeder extends Seeder
                 'database_table' => 'app',
                 'order_sequence' => 1,
             ],
+            [
+                'navigation_menu_name' => 'Settings',
+                'navigation_menu_icon' => null,
+                'app_id' => 1,
+                'app_name' => 'Settings',
+                'parent_navigation_menu_id' => null,
+                'parent_navigation_menu_name' => null,
+                'database_table' => null,
+                'order_sequence' => 80,
+            ],
+            [
+                'navigation_menu_name' => 'Users & Companies',
+                'navigation_menu_icon' => null,
+                'app_id' => 1,
+                'app_name' => 'Settings',
+                'parent_navigation_menu_id' => null,
+                'parent_navigation_menu_name' => null,
+                'database_table' => null,
+                'order_sequence' => 21,
+            ],
+            [
+                'navigation_menu_name' => 'User Account',
+                'navigation_menu_icon' => 'ki-outline ki-user',
+                'app_id' => 1,
+                'app_name' => 'Settings',
+                'parent_navigation_menu_id' => 3,
+                'parent_navigation_menu_name' => 'Users & Companies',
+                'database_table' => 'users',
+                'order_sequence' => 1,
+            ],
+            [
+                'navigation_menu_name' => 'Company',
+                'navigation_menu_icon' => 'ki-outline ki-shop',
+                'app_id' => 1,
+                'app_name' => 'Settings',
+                'parent_navigation_menu_id' => 3,
+                'parent_navigation_menu_name' => 'Users & Companies',
+                'database_table' => 'company',
+                'order_sequence' => 2
+            ],
         ];
 
         DB::table('navigation_menu')->insert(
