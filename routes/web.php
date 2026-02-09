@@ -56,6 +56,19 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/app/{appModuleId}/module/{navigationMenuId}/import', [AppController::class, 'import'])
             ->name('apps.import');
+
+        Route::prefix('datatables')
+            ->as('datatables.')
+            ->group(function () {
+
+                Route::post('/app', [AppModuleDatatableController::class, 'index'])
+                    ->name('app');
+
+                Route::post('/roles', [RoleDatatableController::class, 'index'])
+                    ->name('roles');
+
+                // Add more tables here...
+        });
     });
 
     Route::get('/logout', [AuthenticationController::class, 'logout'])->name('logout');

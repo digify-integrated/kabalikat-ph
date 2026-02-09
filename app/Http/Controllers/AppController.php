@@ -60,12 +60,6 @@ class AppController extends Controller
         return $routeInfo;
     }
 
-    /**
-     * Returns menu metadata used by the UI (title + icon).
-     * Make sure your navigation_menu table has columns:
-     * - navigation_menu_name
-     * - navigation_menu_icon
-     */
     private function resolveMenuMeta(int $navigationMenuId): object
     {
         $menu = DB::table('navigation_menu')
@@ -94,9 +88,6 @@ class AppController extends Controller
         ];
     }
 
-    /**
-     * Central render helper so base/new/details/import stay consistent.
-     */
     private function renderMenuRoute(
         Request $request,
         int $appModuleId,
@@ -108,7 +99,6 @@ class AppController extends Controller
         $routeInfo = $this->resolveViewAndJs($navigationMenuId, $routeType);
         $perms = $this->permissions($request, $navigationMenuId);
 
-        // This is what your Blade partial will use as $iconClass
         $iconClass = $menu->navigation_menu_icon ?: 'ki-outline ki-abstract-26';
 
         return view($routeInfo->view_file, array_merge($perms, [
@@ -128,7 +118,7 @@ class AppController extends Controller
     public function new(Request $request, int $appModuleId, int $navigationMenuId)
     {
         return $this->renderMenuRoute($request, $appModuleId, $navigationMenuId, 'new', [
-            'pageTitleSuffix' => ' - New', // optional if you want to show in view
+            'pageTitleSuffix' => ' - New',
             'isNew' => true,
         ]);
     }
@@ -136,7 +126,7 @@ class AppController extends Controller
     public function details(Request $request, int $appModuleId, int $navigationMenuId, int $details_id)
     {
         return $this->renderMenuRoute($request, $appModuleId, $navigationMenuId, 'details', [
-            'pageTitleSuffix' => ' - Details', // optional
+            'pageTitleSuffix' => ' - Details',
             'detailsId' => $details_id,
             'isDetails' => true,
         ]);
@@ -146,7 +136,6 @@ class AppController extends Controller
     {
         $perms = $this->permissions($request, $navigationMenuId);
 
-        // Keep your existing behavior, but this should probably be 404 to match your "hide routes" pattern.
         if (($perms['importPermission'] ?? 0) <= 0) {
             abort(404);
         }

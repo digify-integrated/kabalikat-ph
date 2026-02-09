@@ -48,7 +48,7 @@ return new class extends Migration
                 ->constrained('navigation_menu')
                 ->cascadeOnDelete();
 
-            $table->string('route_type')->default('index');
+            $table->enum('route_type', ['index', 'details', 'new', 'import'])->default('index');
             $table->string('view_file');
             $table->string('js_file');
             $table->timestamps();

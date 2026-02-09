@@ -53,7 +53,7 @@
 
         <div class="card-body pt-9">
             <div class="table-responsive">
-                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5" id="app-module-table">
+                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5" id="app-module-table" data-url="{{ route('datatable.app-modules') }}">>
                     <thead>
                         <tr class="text-start text-gray-800 fw-bold fs-7 text-uppercase gs-0">
                             <th>
@@ -72,8 +72,8 @@
 @endsection
 
 @push('scripts')
-    @if ($jsFile)
-        <script type="module" src="{{ asset($jsFile) }}"></script>
+    @if (!empty($jsFile))
+        <script type="module" src="{{ asset('assets/js/pages/' . $jsFile . '.js') }}"></script>
     @endif
 @endpush
 
