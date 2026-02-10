@@ -16,7 +16,6 @@ const debounce = (fn, delay = 150) => {
   };
 };
 
-
 export const manageActionDropdown = (options = { hideOnly: false }) => {
   const actionDropdown = document.querySelector('.action-dropdown');
   if (!actionDropdown) return;
@@ -82,6 +81,8 @@ export const initializeDatatable = ({
   const tableElement = document.querySelector(selector);
   if (!tableElement) return;
 
+  const el = document.querySelector(selector);
+
   destroyDatatable(selector);
 
   manageActionDropdown({ hideOnly: true });
@@ -90,8 +91,8 @@ export const initializeDatatable = ({
     processing: true,
     deferRender: true,
     ajax: {
-      url: ajaxUrl,
-      type: 'POST',
+      url: el.dataset.url,
+      type: 'GET',
       dataType: 'json',
       data: {
         ...ajaxData,

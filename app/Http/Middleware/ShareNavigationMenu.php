@@ -11,17 +11,17 @@ class ShareNavigationMenu
     public function handle(Request $request, Closure $next)
     {
         $userId = (int) ($request->user()?->id ?? 0);
-        $appModuleId = (int) ($request->route('appModuleId') ?? 0);
+        $appId = (int) ($request->route('appId') ?? 0);
 
         $navTree = [];
-        if ($userId > 0 && $appModuleId > 0) {
+        if ($userId > 0 && $appId > 0) {
             /** @var NavigationMenuBuilder $builder */
             $builder = app(NavigationMenuBuilder::class);
-            $navTree = $builder->buildForUserAndApp($userId, $appModuleId);
+            $navTree = $builder->buildForUserAndApp($userId, $appId);
         }
 
         view()->share([
-            'nav_appModuleId' => $appModuleId,
+            'nav_app_id' => $appId,
             'nav_tree' => $navTree,
         ]);
 

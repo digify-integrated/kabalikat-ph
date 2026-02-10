@@ -1,9 +1,9 @@
 import { initializeDatatable, initializeDatatableControls, reloadDatatable } from '../../util/datatable.js';
+import { initializeExportFeature } from '../../util/export.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     initializeDatatable({
-        selector: '#app-module-table',
-        transaction: 'generate app module table',
+        selector: '#app-table',
         columns: [
             { data: 'CHECK_BOX' },
             { data: 'APP_NAME' }
@@ -16,4 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (rowData?.LINK) window.open(rowData.LINK, '_blank');
         }
     });
+
+    initializeDatatableControls('#app-table');
+    initializeExportFeature('app');
 });

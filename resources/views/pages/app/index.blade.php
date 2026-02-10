@@ -1,7 +1,12 @@
 @extends('layouts.module')
 
+@push('css')
+    <link href="{{ asset('assets/plugins/datatables/datatables.bundle.css') }}" rel="stylesheet" type="text/css"/>
+    <link href="{{ asset('assets/plugins/bootstrap-duallistbox/dist/bootstrap-duallistbox.min.css') }}" rel="stylesheet" type="text/css"/>
+@endpush
+
 @section('content')
-    <div class="card mb-6">
+    <div class="card">
         <div class="card-header border-0 pt-6">
             <div class="card-title">
                 @include('partials.datatable-search')
@@ -38,7 +43,7 @@
                                 <div class="menu-item px-3">
                                     <a href="javascript:void(0);"
                                     class="menu-link px-3"
-                                    id="delete-app-module">
+                                    id="delete-app">
                                         Delete
                                     </a>
                                 </div>
@@ -53,7 +58,7 @@
 
         <div class="card-body pt-9">
             <div class="table-responsive">
-                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5" id="app-module-table" data-url="{{ route('datatable.app-modules') }}">>
+                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5" id="app-table" data-url="{{ route('datatable.app', ['appId' => $appId, 'navigationMenuId' => $navigationMenuId]) }}">
                     <thead>
                         <tr class="text-start text-gray-800 fw-bold fs-7 text-uppercase gs-0">
                             <th>
@@ -61,7 +66,7 @@
                                     <input class="form-check-input" id="datatable-checkbox" type="checkbox">
                                 </div>
                             </th>
-                            <th>App Module</th>
+                            <th>App</th>
                         </tr>
                     </thead>
                     <tbody class="fw-semibold text-gray-800"></tbody>
@@ -69,9 +74,16 @@
             </div>
         </div>
     </div>
+
+    @if(($exportPermission ?? 0) > 0)
+        @include('partials.export-modal')
+    @endif
 @endsection
 
 @push('scripts')
+    <script src="{{ asset('assets/plugins/datatables/datatables.bundle.js') }}"></script>
+    <script src="{{ asset('assets/plugins/bootstrap-duallistbox/dist/jquery.bootstrap-duallistbox.min.js') }}"></script>
+
     @if (!empty($jsFile))
         <script type="module" src="{{ asset('assets/js/pages/' . $jsFile . '.js') }}"></script>
     @endif

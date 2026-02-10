@@ -3,6 +3,7 @@
     <head>
         <title> {{ $pageTitle }} </title>
         @include('partials.required-css')
+        @stack('css')
     </head>
     <body id="kt_app_body" data-kt-app-header-fixed-mobile="true" data-kt-app-toolbar-enabled="true" class="app-default">
         @include('partials.theme-switcher')
@@ -22,11 +23,11 @@
                             </div>
                         </div>
                     </div>
-
-                    @include('partials.footer')
                 </div>
             </div>
         </div>
+        
+        @include('partials.footer')
 
         @include('partials.scroll')
 

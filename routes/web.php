@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AppController;
+use App\Http\Controllers\AppRenderController;
 use App\Http\Controllers\AuthenticationController;
 use Illuminate\Support\Facades\Route;
 
@@ -42,33 +43,28 @@ Route::middleware('guest')->group(function () {
 
 // Routes that require login
 Route::middleware('auth')->group(function () {
-    Route::get('/app', [AppController::class, 'index'])->name('apps.index');
+    Route::get('/app', [AppRenderController::class, 'index'])->name('apps.index');
 
     Route::middleware(['menu.read', 'breadcrumbs', 'nav.menu'])->group(function () {
-        Route::get('/app/{appModuleId}/module/{navigationMenuId}', [AppController::class, 'base'])
+        Route::get('/app/{appId}/module/{navigationMenuId}', [AppRenderController::class, 'base'])
             ->name('apps.base');
 
-        Route::get('/app/{appModuleId}/module/{navigationMenuId}/new', [AppController::class, 'new'])
+        Route::get('/app/{appId}/module/{navigationMenuId}/new', [AppRenderController::class, 'new'])
             ->name('apps.new');
 
-        Route::get('/app/{appModuleId}/module/{navigationMenuId}/details/{details_id}', [AppController::class, 'details'])
+        Route::get('/app/{appId}/module/{navigationMenuId}/details/{details_id}', [AppRenderController::class, 'details'])
             ->name('apps.details');
 
-        Route::get('/app/{appModuleId}/module/{navigationMenuId}/import', [AppController::class, 'import'])
+        Route::get('/app/{appId}/module/{navigationMenuId}/import', [AppRenderController::class, 'import'])
             ->name('apps.import');
+    });
 
-        Route::prefix('datatables')
-            ->as('datatables.')
-            ->group(function () {
+    Route::prefix('datatable')
+        ->as('datatable.')
+        ->group(function () {
 
-                Route::post('/app', [AppModuleDatatableController::class, 'index'])
-                    ->name('app');
-
-                Route::post('/roles', [RoleDatatableController::class, 'index'])
-                    ->name('roles');
-
-                // Add more tables here...
-        });
+        Route::get('/apps/{appId}/module/{navigationMenuId}', [AppController::class, 'generateAppTable'])
+            ->name('app');
     });
 
     Route::get('/logout', [AuthenticationController::class, 'logout'])->name('logout');

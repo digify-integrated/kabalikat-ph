@@ -13,14 +13,14 @@
                 {{-- Buttons (optional) --}}
                 <div class="d-flex align-self-center flex-center flex-shrink-1">
                     @if(($createPermission ?? 0) > 0 && !request()->routeIs('apps.new'))
-                        <a href="{{ route('apps.new', ['appModuleId' => $appModuleId, 'navigationMenuId' => $navigationMenuId]) }}"
+                        <a href="{{ route('apps.new', ['appId' => $appId, 'navigationMenuId' => $navigationMenuId]) }}"
                            class="btn btn-flex btn-sm btn-outline btn-active-color-primary btn-custom px-4">
                             <i class="ki-outline ki-plus fs-4 me-2"></i> New
                         </a>
                     @endif
 
                     @if(($importPermission ?? 0) > 0 && !request()->routeIs('apps.import'))
-                        <a href="{{ route('apps.import', ['appModuleId' => $appModuleId, 'navigationMenuId' => $navigationMenuId]) }}"
+                        <a href="{{ route('apps.import', ['appId' => $appId, 'navigationMenuId' => $navigationMenuId]) }}"
                            class="btn btn-flex btn-sm btn-outline btn-active-color-primary btn-custom ms-3 px-4">
                             <i class="ki-outline ki-exit-down fs-4 me-2"></i> Import
                         </a>

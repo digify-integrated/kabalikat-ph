@@ -39,11 +39,11 @@ class ShareBreadcrumbs
 
         // Share to all views for the current request
         view()->share([
-            'bc_appModuleId'      => $appModuleId,
-            'bc_navigationMenuId' => $navigationMenuId,
-            'bc_items'            => $bcItems,
-            'bc_route_name'       => $routeName,
-            'bc_details_id'       => $detailsId,
+            'bc_app_id'             => $appModuleId,
+            'bc_navigation_menu_id' => $navigationMenuId,
+            'bc_items'              => $bcItems,
+            'bc_route_name'         => $routeName,
+            'bc_details_id'         => $detailsId,
         ]);
 
         return $next($request);

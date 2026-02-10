@@ -18,7 +18,7 @@
             <li class="breadcrumb-item text-white fw-bold lh-1">
                 @if($isNavCrumb)
                     <a class="text-decoration-none text-white fw-bold fs-7"
-                        href="{{ route('apps.base', ['appModuleId' => $bc_appModuleId, 'navigationMenuId' => $item['id']]) }}">
+                        href="{{ route('apps.base', ['appId' => $bc_app_id, 'navigationMenuId' => $item['id']]) }}">
                         {{ $item['label'] }}
                     </a>
                 @else

@@ -4,19 +4,13 @@
     <div class="row g-6 g-xl-9">
         @forelse ($apps as $app)
             @php
-                // Link (adjust params if your route expects different names)
                 $defaultLink = route('apps.base', [
-                    'appModuleId' => $app->app_id,
+                    'appId' => $app->app_id,
                     'navigationMenuId'  => $app->navigation_menu_id,
                 ]);
 
-                // Logo URL:
-                // If app_logo is stored like "app/1/settings.png" on the public disk
-                $logoUrl = !empty($app->app_logo)
-                        ? asset('storage/' . ltrim($app->app_logo, '/'))
-                        : asset('assets/media/default/app-module-logo.png');
+                $logoUrl = Storage::url($app->app_logo);
 
-                // Optional version (if you don't have a version column yet)
                 $version = $app->app_version ?? '1.0.0';
             @endphp
 

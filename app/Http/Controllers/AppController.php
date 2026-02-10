@@ -4,145 +4,49 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class AppController extends Controller
 {
-    public function index(Request $request)
+    public function generateAppTable(int $appId, int $navigationMenuId)
     {
-        $userId = Auth::id();
-        $pageTitle = 'Apps';
+        $apps = DB::table('app')
+        ->orderBy('app_name')
+        ->get();
 
-        $apps = DB::table('app as am')
-            ->select([
-                'am.id as app_id',
-                'am.app_name',
-                DB::raw('MIN(nm.id) as navigation_menu_id'),
-                'am.app_logo',
-                'am.app_description',
-                'am.app_version',
-                'am.order_sequence',
-            ])
-            ->join('navigation_menu as nm', 'nm.app_id', '=', 'am.id')
-            ->whereExists(function ($q) use ($userId) {
-                $q->select(DB::raw(1))
-                    ->from('role_permission as rp')
-                    ->whereColumn('rp.navigation_menu_id', 'nm.id')
-                    ->where('rp.read_access', 1)
-                    ->whereIn('rp.role_id', function ($q2) use ($userId) {
-                        $q2->select('role_id')
-                            ->from('role_user_account')
-                            ->where('user_account_id', $userId);
-                    });
-            })
-            ->groupBy('am.id', 'am.app_name', 'am.app_logo', 'am.app_description', 'am.app_version', 'am.order_sequence')
-            ->orderBy('am.order_sequence')
-            ->orderBy('am.app_name')
-            ->get();
+        $response = $apps->map(function ($row) use ($appId, $navigationMenuId)  {
+            $appId = $row->id;
+            $appName = $row->app_name;
+            $appDescription = $row->app_description;
+            $logoUrl = Storage::url($row->app_logo);
 
-        return view('app.index', compact('apps', 'pageTitle'));
-    }
+            $link = route('apps.details', [
+                'appId' => $appId,
+                'navigationMenuId' => $navigationMenuId,
+                'details_id' => $appId,
+            ]);
 
-    private function resolveViewAndJs(int $navigationMenuId, string $routeType): object
-    {
-        $routeInfo = DB::table('navigation_menu_route')
-            ->where([
-                'route_type' => $routeType,
-                'navigation_menu_id' => $navigationMenuId,
-            ])
-            ->select('view_file', 'js_file')
-            ->first();
+            return [
+                'CHECK_BOX' => '
+                    <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
+                        <input class="form-check-input datatable-checkbox-children" type="checkbox" value="'.$appId.'">
+                    </div>
+                ',
+                'APP_NAME' => '
+                    <div class="d-flex align-items-center">
+                        <img src="'.$logoUrl.'" alt="app-logo" width="45" />
+                        <div class="ms-3">
+                            <div class="user-meta-info">
+                                <h6 class="mb-0">'.$appName.'</h6>
+                                <small class="text-wrap fs-7 text-gray-500">'.$appDescription.'</small>
+                            </div>
+                        </div>
+                    </div>
+                ',
+                'LINK' => $link,
+            ];
+        })->values();
 
-        if (! $routeInfo) {
-            abort(404);
-        }
-
-        return $routeInfo;
-    }
-
-    private function resolveMenuMeta(int $navigationMenuId): object
-    {
-        $menu = DB::table('navigation_menu')
-            ->where('id', $navigationMenuId)
-            ->select('navigation_menu_name', 'navigation_menu_icon')
-            ->first();
-
-        if (! $menu) {
-            abort(404);
-        }
-
-        return $menu;
-    }
-
-    private function permissions(Request $request, int $navigationMenuId): array
-    {
-        $access = $request->user()->menuPermissions($navigationMenuId);
-
-        return [
-            'writePermission'  => (int)($access['write']  ?? 0),
-            'createPermission' => (int)($access['create'] ?? 0),
-            'deletePermission' => (int)($access['delete'] ?? 0),
-            'importPermission' => (int)($access['import'] ?? 0),
-            'exportPermission' => (int)($access['export'] ?? 0),
-            'logsPermission'   => (int)($access['logs']   ?? 0),
-        ];
-    }
-
-    private function renderMenuRoute(
-        Request $request,
-        int $appModuleId,
-        int $navigationMenuId,
-        string $routeType,
-        array $extra = []
-    ) {
-        $menu = $this->resolveMenuMeta($navigationMenuId);
-        $routeInfo = $this->resolveViewAndJs($navigationMenuId, $routeType);
-        $perms = $this->permissions($request, $navigationMenuId);
-
-        $iconClass = $menu->navigation_menu_icon ?: 'ki-outline ki-abstract-26';
-
-        return view($routeInfo->view_file, array_merge($perms, [
-            'pageTitle'        => (string) $menu->navigation_menu_name,
-            'iconClass'        => $iconClass,
-            'jsFile'           => $routeInfo->js_file,
-            'appModuleId'      => $appModuleId,
-            'navigationMenuId' => $navigationMenuId,
-        ], $extra));
-    }
-
-    public function base(Request $request, int $appModuleId, int $navigationMenuId)
-    {
-        return $this->renderMenuRoute($request, $appModuleId, $navigationMenuId, 'index');
-    }
-
-    public function new(Request $request, int $appModuleId, int $navigationMenuId)
-    {
-        return $this->renderMenuRoute($request, $appModuleId, $navigationMenuId, 'new', [
-            'pageTitleSuffix' => ' - New',
-            'isNew' => true,
-        ]);
-    }
-
-    public function details(Request $request, int $appModuleId, int $navigationMenuId, int $details_id)
-    {
-        return $this->renderMenuRoute($request, $appModuleId, $navigationMenuId, 'details', [
-            'pageTitleSuffix' => ' - Details',
-            'detailsId' => $details_id,
-            'isDetails' => true,
-        ]);
-    }
-
-    public function import(Request $request, int $appModuleId, int $navigationMenuId)
-    {
-        $perms = $this->permissions($request, $navigationMenuId);
-
-        if (($perms['importPermission'] ?? 0) <= 0) {
-            abort(404);
-        }
-
-        return $this->renderMenuRoute($request, $appModuleId, $navigationMenuId, 'import', [
-            'pageTitleSuffix' => ' - Import', // optional
-            'isImport' => true,
-        ]);
+        return response()->json($response);
     }
 }

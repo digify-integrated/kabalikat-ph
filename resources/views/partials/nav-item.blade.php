@@ -10,7 +10,7 @@
 
     // Route for leaf items
     $href = route('apps.base', [
-        'appModuleId' => $nav_appModuleId,
+        'appId' => $nav_app_id,
         'navigationMenuId' => $item['id'],
     ]);
 @endphp
@@ -35,7 +35,7 @@
 
             <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown px-lg-2 py-lg-4 w-lg-250px">
                 @foreach($item['children'] as $child)
-                    @include('partials.nav-item', ['item' => $child, 'level' => $level + 1, 'nav_appModuleId' => $nav_appModuleId])
+                    @include('partials.nav-item', ['item' => $child, 'level' => $level + 1, 'nav_app_id' => $nav_app_id])
                 @endforeach
             </div>
         </div>
@@ -73,7 +73,7 @@
 
             <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown menu-active-bg px-lg-2 py-lg-4 w-lg-225px">
                 @foreach($item['children'] as $child)
-                    @include('partials.nav-item', ['item' => $child, 'level' => $level + 1, 'nav_appModuleId' => $nav_appModuleId])
+                    @include('partials.nav-item', ['item' => $child, 'level' => $level + 1, 'nav_app_id' => $nav_app_id])
                 @endforeach
             </div>
         </div>
