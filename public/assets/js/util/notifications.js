@@ -26,7 +26,6 @@ export const showNotification = ({
   duration = 500,
   position = "toastr-top-right",
 } = {}) => {
-  //if (!message) return;
 
   toastr.options = {
     ...DEFAULT_TOASTR_OPTIONS,

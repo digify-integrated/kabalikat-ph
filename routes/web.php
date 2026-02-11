@@ -3,6 +3,7 @@
 use App\Http\Controllers\AppController;
 use App\Http\Controllers\AppRenderController;
 use App\Http\Controllers\AuthenticationController;
+use App\Http\Controllers\ExportController;
 use Illuminate\Support\Facades\Route;
 
 // Routes that should NOT be accessible when logged in
@@ -66,6 +67,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/apps/{appId}/module/{navigationMenuId}', [AppController::class, 'generateAppTable'])
             ->name('app');
     });
+
+    Route::post('/export-list', [ExportController::class, 'exportList'])->name('export.list');
+    Route::post('/export', [ExportController::class, 'exportData'])->name('export.data');
 
     Route::get('/logout', [AuthenticationController::class, 'logout'])->name('logout');
 });

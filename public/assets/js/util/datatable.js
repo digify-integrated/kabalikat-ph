@@ -1,3 +1,6 @@
+import { handleSystemError } from '../modules/system-errors.js';
+import { showNotification } from './notifications.js';
+
 const getDT = (selector) => {
   if (!selector) return null;
   return $.fn.DataTable.isDataTable(selector) ? $(selector).DataTable() : null;
@@ -99,14 +102,7 @@ export const initializeDatatable = ({
       },
       dataSrc: '',
       error: (xhr, status, error) => {
-        console.log('DataTable AJAX error:', {
-          status,
-          error,
-          httpStatus: xhr?.status,
-          responseText: xhr?.responseText,
-          responseJSON: xhr?.responseJSON,
-          url: xhr?.responseURL,
-        });
+        handleSystemError(xhr, status, error);
       },
     },
 
@@ -142,7 +138,10 @@ export const initializeDatatable = ({
 export const initializeDatatableControls = (selector) => {
   const dt = getDT(selector);
   if (!dt) {
-    console.warn(`DataTable not initialized for selector: ${selector}`);
+    showNotification({
+      message: `DataTable not initialized for selector: ${selector}`,
+      type: 'error'
+    });
     return;
   }
 
@@ -150,6 +149,8 @@ export const initializeDatatableControls = (selector) => {
   const $searchInput = $('#datatable-search');
 
   if ($lengthDropdown.length) {
+    dt.page.len(safeInt($lengthDropdown.val(), 10)).draw(false);
+
     $lengthDropdown.off('change.dtControls').on('change.dtControls', function () {
       dt.page.len(safeInt(this.value, 10)).draw(false);
     });
@@ -178,7 +179,10 @@ export const initializeDatatableControls = (selector) => {
 export const initializeSubDatatableControls = (searchSelector, lengthSelector, tableSelector) => {
   const dt = getDT(tableSelector);
   if (!dt) {
-    console.warn(`DataTable not initialized for selector: ${tableSelector}`);
+    showNotification({
+      message: `DataTable not initialized for selector: ${tableSelector}`,
+      type: 'error'
+    });
     return;
   }
 
