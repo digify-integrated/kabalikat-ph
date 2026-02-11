@@ -8,8 +8,11 @@ use Illuminate\Support\Facades\Storage;
 
 class AppController extends Controller
 {
-    public function generateAppTable(int $appId, int $navigationMenuId)
+    public function generateAppTable(Request $request)
     {
+        $appId = (int) $request->input('appId'); // from AJAX
+        $navigationMenuId = (int) $request->input('navigationMenuId'); // from AJAX
+
         $apps = DB::table('app')
         ->orderBy('app_name')
         ->get();
@@ -18,7 +21,14 @@ class AppController extends Controller
             $appId = $row->id;
             $appName = $row->app_name;
             $appDescription = $row->app_description;
-            $logoUrl = Storage::url($row->app_logo);
+            
+            $defaultLogo = asset('assets/media/default/app-logo.png');
+
+            $path = trim((string) ($row->app_logo ?? ''));
+
+            $logoUrl = $path !== '' && Storage::disk('public')->exists($path)
+                ? Storage::url($path)
+                : $defaultLogo;
 
             $link = route('apps.details', [
                 'appId' => $appId,

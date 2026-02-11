@@ -100,7 +100,7 @@ class ExportController extends Controller
 
         // 5) Filename
         $cleanTable = Str::slug($tableName, '_');
-        $timestamp  = now()->format('Y-m-d_Hi');
+        $timestamp  = now()->format('Y_m_d_Hi');
         $baseName   = "{$cleanTable}_report_{$timestamp}";
 
         // 6) Export

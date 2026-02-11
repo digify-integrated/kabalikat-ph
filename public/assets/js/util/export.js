@@ -1,152 +1,208 @@
-import { disableButton, enableButton } from '../modules/form-utilities.js';
-import { handleSystemError } from '../modules/system-errors.js';
-import { showNotification } from './notifications.js';
+import { disableButton, enableButton } from '../form/button.js';
+import { initializeDualListBoxIcon } from '../form/field.js';
+import { getCsrfToken } from '../form/form.js';
+import { handleSystemError } from '../util/system-errors.js';
+import { showNotification } from '../util/notifications.js';
 
-const initializeDualListBoxIcon = () => {
-  $('.moveall i').removeClass().addClass('ki-duotone ki-right');
-  $('.removeall i').removeClass().addClass('ki-duotone ki-left');
-  $('.move i').removeClass().addClass('ki-duotone ki-right');
-  $('.remove i').removeClass().addClass('ki-duotone ki-left');
+const parseFilename = (contentDisposition) => {
+  if (!contentDisposition) return '';
 
-  $('.moveall, .removeall, .move, .remove')
-    .removeClass('btn-default')
-    .addClass('btn-primary');
-};
-
-async function fetchOrThrow(url, options = {}) {
-  const res = await fetch(url, {
-    headers: { 'X-Requested-With': 'XMLHttpRequest', ...(options.headers || {}) },
-    ...options
-  });
-  if (!res.ok) throw res;
-  return res;
-}
-
-const  getFilenameFromDisposition = (disposition) => {
-  if (!disposition) return '';
-
-  // RFC 5987: filename*=UTF-8''encoded-name
-  const star = disposition.match(/filename\*\s*=\s*UTF-8''([^;]+)/i);
-  if (star?.[1]) {
-    return decodeURIComponent(star[1].replace(/["']/g, ''));
+  // Prefer RFC 5987: filename*=UTF-8''...
+  const starMatch = contentDisposition.match(/filename\*\s*=\s*([^;]+)/i);
+  if (starMatch?.[1]) {
+    const v = starMatch[1].trim();
+    const parts = v.split("''"); // UTF-8''encodedName
+    const encoded = parts.length === 2 ? parts[1] : v;
+    const cleaned = encoded.replace(/^["']|["']$/g, '');
+    try {
+      return decodeURIComponent(cleaned);
+    } catch {
+      return cleaned;
+    }
   }
 
-  // filename="name.ext" OR filename=name.ext
-  const plain = disposition.match(/filename\s*=\s*("?)([^";]+)\1/i);
-  return plain?.[2] || '';
-}
+  // Fallback: filename=... (quoted or unquoted)
+  const nameMatch = contentDisposition.match(/filename\s*=\s*([^;]+)/i);
+  if (nameMatch?.[1]) {
+    return nameMatch[1].trim().replace(/^["']|["']$/g, '');
+  }
+
+  return '';
+};
+
+const downloadBlob = (blob, filename) => {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+};
+
+const jsonFetch = async (url, { signal, method = 'POST', bodyObj } = {}) => {
+  const csrf = getCsrfToken();
+  const res = await fetch(url, {
+    method,
+    signal,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(csrf && { 'X-CSRF-TOKEN': csrf }),
+    },
+    body: bodyObj ? JSON.stringify(bodyObj) : undefined,
+    credentials: 'same-origin',
+  });
+
+  if (!res.ok) throw res; // handleSystemError supports Response
+  return res.json();
+};
+
+const blobFetch = async (url, { method = 'POST', bodyObj } = {}) => {
+  const csrf = getCsrfToken();
+  const res = await fetch(url, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(csrf && { 'X-CSRF-TOKEN': csrf }),
+    },
+    body: bodyObj ? JSON.stringify(bodyObj) : undefined,
+    credentials: 'same-origin',
+  });
+
+  if (!res.ok) throw res;
+
+  const cd = res.headers.get('Content-Disposition');
+  const headerFilename = parseFilename(cd);
+
+  const blob = await res.blob();
+  return { blob, headerFilename };
+};
 
 export const initializeExportFeature = (tableName) => {
-    let selectedColumnsOrder = [];
+  let selectedColumnsOrder = [];
+  let dualListInitialized = false;
+  let listAbort = null;
 
-    $(document).off('click', '#export-data').on('click', '#export-data', async () => {
-        try {
-            const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-            const res = await fetchOrThrow('/export-list', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
-                body: JSON.stringify({ table_name: tableName })
-            });
+  const getSelectEl = () => document.getElementById('table_column');
 
-            const response = await res.json();
-            const select = document.getElementById('table_column');
-            if (!select) return;
+  const initDualListOnce = () => {
+    if (dualListInitialized) return;
+    const $el = $('#table_column');
+    if (!$el.length) return;
 
-            select.options.length = 0;
-            response.forEach(opt => select.appendChild(new Option(opt.text, opt.id)));
-
-        } catch (err) {
-            await handleSystemError(err, 'error', 'Failed to load export columns');
-            return;
-        }
-
-        if (!$('#table_column').length) return;
-
-        $('#table_column').bootstrapDualListbox({
-            nonSelectedListLabel: 'Non-selected',
-            selectedListLabel: 'Selected',
-            preserveSelectionOnMove: 'moved',
-            moveOnSelect: false,
-            helperSelectNamePostfix: false,
-            sortByInputOrder: true
-        });
-
-        $('#table_column').off('change').on('change', function () {
-            selectedColumnsOrder = $('#table_column option:selected')
-                .map((_, opt) => $(opt).val())
-                .get();
-        });
-
-        $('#table_column').bootstrapDualListbox('refresh', true);
-        initializeDualListBoxIcon();
+    $el.bootstrapDualListbox({
+      nonSelectedListLabel: 'Non-selected',
+      selectedListLabel: 'Selected',
+      preserveSelectionOnMove: 'moved',
+      moveOnSelect: false,
+      helperSelectNamePostfix: false,
+      sortByInputOrder: true,
     });
 
-    $(document).off('click', '#submit-export').on('click', '#submit-export', async () => {
-        const exportTo = $('input[name="export_to"]:checked').val();
-        const tableColumn = selectedColumnsOrder;
-        const exportId = [];
+    // Keep selected order updated
+    $el.off('change.export').on('change.export', function () {
+      selectedColumnsOrder = $('#table_column option:selected')
+        .map((_, opt) => opt.value)
+        .get();
+    });
 
-        $('.datatable-checkbox-children:checked').each((_, el) => exportId.push(el.value));
+    initializeDualListBoxIcon();
+    dualListInitialized = true;
+  };
 
-        if (exportId.length === 0) {
-            showNotification({
-                message: 'Choose the data you want to export',
-                type: 'error'
-            });
-            return;
+  const refreshDualList = () => {
+    const $el = $('#table_column');
+    if ($el.length) $el.bootstrapDualListbox('refresh', true);
+    initializeDualListBoxIcon();
+  };
+
+  // Load export column list
+  $(document)
+    .off('click.exportFeature', '#export-data')
+    .on('click.exportFeature', '#export-data', async () => {
+      const select = getSelectEl();
+      if (!select) return;
+
+      // Cancel in-flight request on repeated clicks
+      if (listAbort) listAbort.abort();
+      listAbort = new AbortController();
+
+      try {
+        const response = await jsonFetch('/export-list', {
+          signal: listAbort.signal,
+          bodyObj: { table_name: tableName },
+        });
+
+        // Populate options efficiently
+        select.options.length = 0;
+        const frag = document.createDocumentFragment();
+        for (let i = 0; i < response.length; i++) {
+          const opt = response[i];
+          frag.appendChild(new Option(opt.text, opt.id));
         }
+        select.appendChild(frag);
 
-        if (tableColumn.length === 0) {
-            showNotification({
-                message: 'Choose the columns you want to export',
-                type: 'error'
-            });
-            return;
-        }
+        initDualListOnce();
+        selectedColumnsOrder = []; // reset because options changed
+        refreshDualList();
+      } catch (err) {
+        if (err?.name === 'AbortError') return;
+        handleSystemError(err, 'error', 'Failed to load export columns');
+      } finally {
+        listAbort = null;
+      }
+    });
 
-        disableButton('submit-export');
+  // Submit export (download file)
+  $(document)
+    .off('click.exportFeature', '#submit-export')
+    .on('click.exportFeature', '#submit-export', async () => {
+      const transaction = 'export data';
+      const exportTo = document.querySelector('input[name="export_to"]:checked')?.value;
 
-        try {
-            const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+      const exportId = Array.from(
+        document.querySelectorAll('.datatable-checkbox-children:checked'),
+        (el) => el.value
+      );
 
-            const res = await fetchOrThrow('/export', {
-                method: 'POST',
-                credentials: 'same-origin',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrf,
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-                body: JSON.stringify({
-                    export_id: exportId,
-                    export_to: exportTo,
-                    table_column: tableColumn,
-                    table_name: tableName
-                })
-            });
+      if (!exportId.length) {
+        showNotification('Choose the data you want to export');
+        return;
+      }
 
-            const disposition = res.headers.get('Content-Disposition') || '';
-            const filename = getFilenameFromDisposition(disposition);
-            const match = /filename="(.+?)"/.exec(disposition);
-            if (match?.[1]) filename = match[1];
+      if (!selectedColumnsOrder.length) {
+        showNotification('Choose the columns you want to export');
+        return;
+      }
 
-            const blob = await res.blob();
-            const url = URL.createObjectURL(blob);
+      if (!exportTo) {
+        showNotification('Choose an export format');   
+        return;
+      }
 
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename || `export.${exportTo}`;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
+      disableButton('submit-export');
 
-            URL.revokeObjectURL(url);
+      try {
+        const { blob, headerFilename } = await blobFetch('/export', {
+          bodyObj: {
+            transaction,
+            export_id: exportId,
+            export_to: exportTo,
+            table_column: selectedColumnsOrder,
+            table_name: tableName,
+          },
+        });
 
-        } catch (err) {
-            await handleSystemError(err, 'error', 'Export failed');
-        } finally {
-            enableButton('submit-export');
-        }
+        // Use server filename if provided, otherwise fallback
+        const fallback = `${tableName}-export.${exportTo}`;
+        const finalName = headerFilename || fallback;
+
+        downloadBlob(blob, finalName);
+      } catch (err) {
+        handleSystemError(err, 'error', 'Export failed');
+      } finally {
+        enableButton('submit-export');
+      }
     });
 };

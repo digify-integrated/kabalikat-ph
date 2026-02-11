@@ -1,38 +1,49 @@
-const DEFAULT_TOASTR_OPTIONS = Object.freeze({
-  closeButton: false,
-  debug: false,
-  newestOnTop: false,
-  progressBar: true,
-  preventDuplicates: false,
-  onclick: null,
-  hideDuration: 2000,
-  timeOut: 3000,
-  extendedTimeOut: 1000,
-  showMethod: "fadeIn",
-  hideMethod: "fadeOut",
-});
+const VALID_TYPES = new Set(['success', 'info', 'warning', 'error']);
 
-const TOASTR_METHOD = Object.freeze({
-  success: "success",
-  info: "info",
-  warning: "warning",
-  error: "error",
-});
+const STORAGE_KEY = 'notificationPayload';
 
-export const showNotification = ({
-  title = "",
-  message = "",
-  type = "info",
-  duration = 500,
-  position = "toastr-top-right",
-} = {}) => {
+let toastrConfigured = false;
+const ensureToastrConfigured = () => {
+  if (toastrConfigured) return;
+  toastrConfigured = true;
 
   toastr.options = {
-    ...DEFAULT_TOASTR_OPTIONS,
-    positionClass: position,
-    showDuration: duration,
+    closeButton: true,
+    progressBar: true,
+    preventDuplicates: true,
+    positionClass: 'toastr-top-right',
+    timeOut: 2000,
   };
+};
 
-  const method = TOASTR_METHOD[type] ?? "info";
-  toastr[method](message, title);
+export const showNotification = (message, type = 'error', timeOut) => {
+  ensureToastrConfigured();
+
+  if (!VALID_TYPES.has(type)) {
+    console.error(`Invalid toastr type: ${type}`);
+    type = 'info';
+  }
+
+  if (typeof timeOut === 'number') toastr.options.timeOut = timeOut;
+
+  toastr[type](String(message ?? ''), '');
+};
+
+export const setNotification = (message, type = 'info', timeOut) => {
+  const payload = { message, type, timeOut };
+  sessionStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+};
+
+export const checkNotification = () => {
+  const raw = sessionStorage.getItem(STORAGE_KEY);
+  if (!raw) return;
+
+  sessionStorage.removeItem(STORAGE_KEY);
+
+  try {
+    const { message, type, timeOut } = JSON.parse(raw) || {};
+    if (message != null && type) showNotification(message, type, timeOut);
+  } catch (e) {
+    console.error('Failed to parse notification payload.', e);
+  }
 };

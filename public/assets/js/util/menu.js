@@ -2,42 +2,57 @@ export const setHereClassForMenu = (menuContainerSelector, menuSelector) => {
   const menuContainer = document.querySelector(menuContainerSelector);
   if (!menuContainer) return;
 
-  const normalizeUrl = (url) => {
+  // Precompute current path once
+  const currentPath = (() => {
     try {
-      const u = new URL(url, window.location.origin);
-      return u.pathname.replace(/\/+$/, '') || '/';
+      // Use location.pathname directly (fast + already normalized by browser)
+      const p = window.location.pathname || '/';
+      return p.replace(/\/+$/, '') || '/';
+    } catch {
+      return '/';
+    }
+  })();
+
+  // Normalize href -> pathname (handles relative + absolute). Cheap in hot path.
+  const normalizePath = (href) => {
+    if (!href || href === '#') return null;
+    try {
+      const p = new URL(href, window.location.origin).pathname || '/';
+      return p.replace(/\/+$/, '') || '/';
     } catch {
       return null;
     }
   };
 
-  const currentPath = normalizeUrl(window.location.href);
-
   const menuItems = menuContainer.querySelectorAll(menuSelector);
 
-  menuItems.forEach((menuItem) => {
-    const childLinks = menuItem.querySelectorAll(':scope .menu-sub .menu-link[href]');
+  for (let i = 0; i < menuItems.length; i++) {
+    const menuItem = menuItems[i];
 
+    // Fast path: if there are submenu links, check them and stop.
+    const childLinks = menuItem.querySelectorAll('.menu-sub .menu-link[href]');
     if (childLinks.length) {
-      const activeChild = Array.from(childLinks).find((link) => {
-        const linkPath = normalizeUrl(link.getAttribute('href'));
-        return linkPath && linkPath === currentPath;
-      });
-
-      if (activeChild) {
-        activeChild.classList.add('active');
-        menuItem.classList.add('here', 'show');
+      for (let j = 0; j < childLinks.length; j++) {
+        const link = childLinks[j];
+        const linkPath = normalizePath(link.getAttribute('href'));
+        if (linkPath && linkPath === currentPath) {
+          link.classList.add('active');
+          menuItem.classList.add('here', 'show');
+          break;
+        }
       }
-
-      return;
+      continue;
     }
 
-    const anchor = menuItem.querySelector(':scope > a[href], :scope .menu-link[href]');
-    if (!anchor) return;
+    // Otherwise, check the primary link for this item
+    const anchor =
+      menuItem.querySelector(':scope > a[href]') ||
+      menuItem.querySelector(':scope .menu-link[href]');
+    if (!anchor) continue;
 
-    const anchorPath = normalizeUrl(anchor.getAttribute('href'));
+    const anchorPath = normalizePath(anchor.getAttribute('href'));
     if (anchorPath && anchorPath === currentPath) {
       menuItem.classList.add('here');
     }
-  });
+  }
 };

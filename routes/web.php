@@ -60,14 +60,17 @@ Route::middleware('auth')->group(function () {
             ->name('apps.import');
     });
 
-    Route::prefix('datatable')
-        ->as('datatable.')
-        ->group(function () {
+    // App
+    Route::post('/generate-app-table', [AppController::class, 'generateAppTable'])->name('generate.app.table');
+    Route::post('/delete-multiple-app', [AppController::class, 'deleteMultipleApp'])->name(name: 'delete.multiple.app');
+    Route::post('/save-app', [AppController::class, 'saveApp'])->name('create.app');
+    Route::post('/delete-app', [AppController::class, 'deleteApp'])->name('delete.app');
+    Route::post('/get-app-details', [AppController::class, 'getAppDetails'])->name('get.app.details');
 
-        Route::get('/apps/{appId}/module/{navigationMenuId}', [AppController::class, 'generateAppTable'])
-            ->name('app');
-    });
+    // Audit logs
+    Route::post('/get-audit-logs', [AppController::class, 'getAppDetails'])->name('get.app.details');
 
+    // Export route
     Route::post('/export-list', [ExportController::class, 'exportList'])->name('export.list');
     Route::post('/export', [ExportController::class, 'exportData'])->name('export.data');
 
