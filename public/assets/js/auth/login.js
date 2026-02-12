@@ -51,8 +51,8 @@ document.addEventListener('DOMContentLoaded', () => {
       password: { required: true },
     },
     messages: {
-      email: { required: 'Please enter your email.' },
-      password: { required: 'Please enter your password.' },
+      email: { required: 'Please enter your email' },
+      password: { required: 'Please enter your password' },
     },
 
     submitHandler: async (form) => {

@@ -4,6 +4,7 @@ use App\Http\Controllers\AppController;
 use App\Http\Controllers\AppRenderController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\ExportController;
+use App\Http\Controllers\NavigationMenuController;
 use Illuminate\Support\Facades\Route;
 
 // Routes that should NOT be accessible when logged in
@@ -62,10 +63,14 @@ Route::middleware('auth')->group(function () {
 
     // App
     Route::post('/generate-app-table', [AppController::class, 'generateAppTable'])->name('generate.app.table');
-    Route::post('/delete-multiple-app', [AppController::class, 'deleteMultipleApp'])->name(name: 'delete.multiple.app');
+    Route::post('/generate-app-options', [AppController::class, 'generateAppOptions'])->name('generate.app.option');
     Route::post('/save-app', [AppController::class, 'saveApp'])->name('create.app');
+    Route::post('/delete-multiple-app', [AppController::class, 'deleteMultipleApp'])->name(name: 'delete.multiple.app');
     Route::post('/delete-app', [AppController::class, 'deleteApp'])->name('delete.app');
     Route::post('/get-app-details', [AppController::class, 'getAppDetails'])->name('get.app.details');
+
+    // Navigation Menu    
+    Route::post('/generate-navigation-menu-options', [NavigationMenuController::class, 'generateNavigationMenuOptions'])->name('generate.navigation.menu.option');
 
     // Audit logs
     Route::post('/get-audit-logs', [AppController::class, 'getAppDetails'])->name('get.app.details');

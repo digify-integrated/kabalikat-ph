@@ -5,32 +5,9 @@ import { showNotification } from './notifications.js';
 /**
  * validate-lite.js (Pure JS ES6+) conveniences (mirrors common jQuery Validate behavior)
  *
- * What’s new vs your current version:
- * 1) Auto-rules inferred from HTML attributes / input types:
- *    - required attribute (and requiredIf rule)
- *    - type="email|url|tel|number"
- *    - minlength / maxlength
- *    - min / max / step (for number/date/time when applicable)
- *    - pattern
- * 2) You can still override/extend with `rules` and `messages`.
- * 3) Conditional rules like requiredIf / minIf / maxIf (similar to depends).
- * 4) One toast PER error message (staggered).
- * 5) Still Bootstrap-friendly + Select2 focus/open.
- *
- * Usage:
- * initValidation('.needs-validation', {
- *   rules: {
- *     relation_name: { required: true },
- *     middle_name: { requiredIf: { field: 'has_middle_name', value: '1' } },
- *     age: { min: 18 }, // overrides/extends HTML attributes
- *   },
- *   messages: {
- *     relation_name: { required: 'Please enter the relation name' },
- *     middle_name: { requiredIf: 'Middle name is required when enabled.' },
- *     age: { min: 'You must be at least 18.' },
- *   },
- *   submitHandler: (form) => { ... },
- * });
+ * Select2 support included:
+ * - Adds/removes .is-invalid on the rendered Select2 selection UI
+ * - Clears red border when user selects/unselects/clears (select2 events)
  */
 export function initValidation(selector = '.needs-validation', options = {}) {
   const defaults = {
@@ -70,6 +47,9 @@ export function initValidation(selector = '.needs-validation', options = {}) {
     if (form.dataset.validationBound === 'true') continue;
     form.dataset.validationBound = 'true';
 
+    // Bind Select2 change/clear events so red border clears properly
+    bindSelect2ClearInvalid(form);
+
     if (config.notifyOnFieldInvalid) {
       form.addEventListener(
         'invalid',
@@ -80,19 +60,24 @@ export function initValidation(selector = '.needs-validation', options = {}) {
           const errors = validateField(field, form, config);
           if (!errors.length) return;
 
+          setFieldInvalid(field, true);
           toastErrors(errors, config);
         },
         true
       );
     }
 
+    // Clear invalid on normal fields as user types/changes
     form.addEventListener('input', (e) => {
       const field = e.target;
-      if (isValidatableField(field)) field.classList.remove('is-invalid');
+      if (isValidatableField(field)) setFieldInvalid(field, false);
     });
+
+    // Note: for Select2, the real change happens via select2:* events above.
+    // This is still useful for normal <select> (non-select2) fields.
     form.addEventListener('change', (e) => {
       const field = e.target;
-      if (isValidatableField(field)) field.classList.remove('is-invalid');
+      if (isValidatableField(field)) setFieldInvalid(field, false);
     });
 
     form.addEventListener('submit', (event) => {
@@ -102,7 +87,7 @@ export function initValidation(selector = '.needs-validation', options = {}) {
         event.preventDefault();
         event.stopPropagation();
 
-        for (const err of errors) err.field.classList.add('is-invalid');
+        for (const err of errors) setFieldInvalid(err.field, true);
 
         if (config.toastEachError) toastErrors(errors, config);
         else if (errors[0]) toastErrors([errors[0]], config);
@@ -145,18 +130,11 @@ function toastErrors(errors, config) {
 
   unique.forEach((msg, i) => {
     const delay = i * config.toastDelayStepMs;
-
-    const fire = () =>
-      showNotification({
-        message: msg,
-        type: config.toastType
-      });
-
+    const fire = () => showNotification(msg);
     if (delay === 0) fire();
     else window.setTimeout(fire, delay);
   });
 }
-
 
 /* ----------------------------- validation ----------------------------- */
 
@@ -179,13 +157,7 @@ function validateField(field, form, config) {
   const inferredRules = inferRulesFromField(field);
   const customRules = fieldKey ? (config.rules?.[fieldKey] || null) : null;
 
-  // Rule merge strategy:
-  // - inferred rules apply by default
-  // - custom rules override inferred rules of the same name
-  // - if runInferredRulesEvenWhenCustomProvided=false and customRules exist => inferred rules ignored
   const effectiveRules = buildEffectiveRules(inferredRules, customRules, config);
-
-  // Evaluate rules in a stable order (so messages feel consistent)
   const orderedRuleEntries = orderRules(effectiveRules);
 
   for (const [ruleName, ruleValue] of orderedRuleEntries) {
@@ -199,7 +171,7 @@ function validateField(field, form, config) {
     }
   }
 
-  // Last resort fallback (native) if no rules were inferred nor provided
+  // Fallback native validity if no rules exist
   if (errors.length === 0 && orderedRuleEntries.length === 0) {
     if (!field.checkValidity()) {
       const native = (field.validationMessage || 'Invalid value').trim();
@@ -218,7 +190,6 @@ function buildEffectiveRules(inferredRules, customRules, config) {
     return { ...custom };
   }
 
-  // Custom overrides inferred if same rule exists
   return { ...inferred, ...custom };
 }
 
@@ -253,31 +224,24 @@ function orderRules(rulesObj) {
 function inferRulesFromField(field) {
   const rules = {};
 
-  // required attribute
   if (field.required) rules.required = true;
 
-  const tag = field.tagName.toLowerCase();
   const type = (field.getAttribute('type') || '').toLowerCase();
 
-  // type-based
   if (type === 'email') rules.typeEmail = true;
   if (type === 'url') rules.typeUrl = true;
   if (type === 'tel') rules.typeTel = true;
   if (type === 'number') rules.typeNumber = true;
 
-  // minlength/maxlength attributes (work for text-like inputs)
   const minLenAttr = field.getAttribute('minlength');
   if (minLenAttr != null && String(minLenAttr).trim() !== '') rules.minlength = Number(minLenAttr);
 
   const maxLenAttr = field.getAttribute('maxlength');
   if (maxLenAttr != null && String(maxLenAttr).trim() !== '') rules.maxlength = Number(maxLenAttr);
 
-  // pattern attribute
   const pattern = field.getAttribute('pattern');
   if (pattern) rules.pattern = pattern;
 
-  // min/max/step attributes
-  // Applicable: number, range, date, datetime-local, month, time, week
   const supportsMinMax =
     type === 'number' ||
     type === 'range' ||
@@ -295,17 +259,9 @@ function inferRulesFromField(field) {
     if (maxAttr != null && String(maxAttr).trim() !== '') rules.max = maxAttr;
 
     const stepAttr = field.getAttribute('step');
-    // Ignore "any" — means no step constraint
     if (stepAttr && stepAttr !== 'any') rules.step = stepAttr;
   }
 
-  // select required convenience:
-  // If <select required> is set, required already covers it.
-
-  // textarea rules already handled via minlength/maxlength if present.
-
-  // If developer uses data-rule-* attributes (optional convenience)
-  // e.g. data-rule-equal-to="#password"
   const eq = field.getAttribute('data-rule-equal-to');
   if (eq) rules.equalTo = eq;
 
@@ -322,7 +278,6 @@ function runRule(ruleName, ruleValue, field, form) {
     case 'required':
       return requiredCheck(field, form);
 
-    // Conditional required: requiredIf: { field: 'other', value: '1' } OR function(form, field) => boolean
     case 'requiredIf': {
       const must = evaluateCondition(ruleValue, form, field);
       if (!must) return true;
@@ -339,7 +294,6 @@ function runRule(ruleName, ruleValue, field, form) {
 
     case 'typeTel':
       if (isEmpty(value)) return true;
-      // Lightweight phone check (lets many international formats through)
       return /^[+()\d\s\-\.]{6,}$/.test(String(value));
 
     case 'typeNumber':
@@ -362,17 +316,17 @@ function runRule(ruleName, ruleValue, field, form) {
 
     case 'min': {
       if (isEmpty(value)) return true;
-      return compareMinMax({ field, type, value, bound: ruleValue, isMin: true });
+      return compareMinMax({ type, value, bound: ruleValue, isMin: true });
     }
 
     case 'max': {
       if (isEmpty(value)) return true;
-      return compareMinMax({ field, type, value, bound: ruleValue, isMin: false });
+      return compareMinMax({ type, value, bound: ruleValue, isMin: false });
     }
 
     case 'step': {
       if (isEmpty(value)) return true;
-      return validateStep({ field, type, value, step: ruleValue });
+      return validateStep({ type, value, step: ruleValue });
     }
 
     case 'equalTo': {
@@ -400,21 +354,12 @@ function requiredCheck(field, form) {
 }
 
 function evaluateCondition(condition, form, field) {
-  // condition can be:
-  // - function(form, field) => boolean
-  // - { field: 'otherNameOrId', value: 'x' } (value can be array)
-  // - { selector: '#id', value: 'x' }
-  // - { field: 'x', notEmpty: true }
-  if (typeof condition === 'function') {
-    return !!condition(form, field);
-  }
-
+  if (typeof condition === 'function') return !!condition(form, field);
   if (!condition || typeof condition !== 'object') return false;
 
-  const other =
-    condition.selector
-      ? form.querySelector(condition.selector)
-      : resolveOtherField(condition.field, form);
+  const other = condition.selector
+    ? form.querySelector(condition.selector)
+    : resolveOtherField(condition.field, form);
 
   if (!other) return false;
 
@@ -428,7 +373,6 @@ function evaluateCondition(condition, form, field) {
     return String(otherVal) === String(expected);
   }
 
-  // If no explicit comparison, treat "truthy" as enabled
   return !isEmpty(otherVal);
 }
 
@@ -449,35 +393,25 @@ function resolveOtherField(ruleValue, form) {
 /* ----------------------------- min/max/step helpers ----------------------------- */
 
 function compareMinMax({ type, value, bound, isMin }) {
-  // For number/range -> numeric compare
   if (type === 'number' || type === 'range') {
     const n = Number(value);
     const b = Number(bound);
-    if (!Number.isFinite(n) || !Number.isFinite(b)) return true; // ignore if unparsable
+    if (!Number.isFinite(n) || !Number.isFinite(b)) return true;
     return isMin ? n >= b : n <= b;
   }
 
-  // For date/time-like types -> lexicographic compare works with ISO-ish values
-  // date: YYYY-MM-DD
-  // datetime-local: YYYY-MM-DDTHH:mm
-  // month: YYYY-MM
-  // time: HH:mm (lex works)
-  // week: YYYY-W##
   const v = String(value);
   const b = String(bound);
   return isMin ? v >= b : v <= b;
 }
 
 function validateStep({ type, value, step }) {
-  // step applies cleanly to number/range; for date/time it’s more nuanced.
-  // We’ll enforce step only for number/range in this lightweight implementation.
   if (!(type === 'number' || type === 'range')) return true;
 
   const n = Number(value);
   const s = Number(step);
   if (!Number.isFinite(n) || !Number.isFinite(s) || s <= 0) return true;
 
-  // Consider decimal steps; use a tolerance.
   const ratio = n / s;
   const nearest = Math.round(ratio);
   return Math.abs(ratio - nearest) < 1e-10;
@@ -490,7 +424,6 @@ function isFiniteNumber(v) {
 
 function isValidUrl(str) {
   try {
-    // Accepts http(s) URLs; adjust if you want to accept any scheme
     const u = new URL(str);
     return u.protocol === 'http:' || u.protocol === 'https:';
   } catch {
@@ -631,10 +564,36 @@ function cssEscape(value) {
   return String(value).replace(/["\\#.;?+*~':!^$[\]()=>|/@]/g, '\\$&');
 }
 
-/* ----------------------------- Select2 support (best-effort) ----------------------------- */
+/* ----------------------------- Select2 support ----------------------------- */
 
 function isSelect2Field(field) {
   return field?.tagName === 'SELECT' && field.classList.contains('select2-hidden-accessible');
+}
+
+function getSelect2Container(field) {
+  const next = field.nextElementSibling;
+  return next?.classList?.contains('select2') ? next : null;
+}
+
+function getInvalidTarget(field) {
+  if (isSelect2Field(field)) {
+    const container = getSelect2Container(field);
+    const selection = container?.querySelector('.select2-selection');
+    return selection || field;
+  }
+  return field;
+}
+
+// Toggle invalid on BOTH the hidden select + visible select2 selection (prevents “stuck” states)
+function setFieldInvalid(field, on = true) {
+  if (!field) return;
+
+  field.classList.toggle('is-invalid', !!on);
+
+  const target = getInvalidTarget(field);
+  if (target && target !== field) {
+    target.classList.toggle('is-invalid', !!on);
+  }
 }
 
 function openSelect2(field) {
@@ -651,9 +610,34 @@ function openSelect2(field) {
   }
 }
 
-function getSelect2Container(field) {
-  const next = field.nextElementSibling;
-  return next?.classList?.contains('select2') ? next : null;
+// IMPORTANT: Clear invalid based on Select2 events (not DOM change events)
+function bindSelect2ClearInvalid(form) {
+  if (!window.jQuery) return;
+
+  const $ = window.jQuery;
+  const $selects = $(form).find('select.select2-hidden-accessible');
+
+  if (!$selects.length) return;
+
+  $selects.each(function () {
+    const el = this;
+    const $el = $(el);
+
+    if (typeof $el.select2 !== 'function' || !$el.data('select2')) return;
+
+    // Avoid double-binding
+    if (el.dataset.select2InvalidBound === 'true') return;
+    el.dataset.select2InvalidBound = 'true';
+
+    $el.on('select2:select select2:unselect select2:clear', function () {
+      setFieldInvalid(el, false);
+    });
+
+    // Optional: clear on close as well
+    $el.on('select2:close', function () {
+      setFieldInvalid(el, false);
+    });
+  });
 }
 
 function focusFieldSmart(field, { scroll = true, focus = true } = {}) {

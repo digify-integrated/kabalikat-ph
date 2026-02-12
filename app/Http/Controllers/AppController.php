@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\App;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class AppController extends Controller
 {
@@ -59,4 +61,41 @@ class AppController extends Controller
 
         return response()->json($response);
     }
+
+    public function deleteMultipleApp(Request $request)
+    {
+        $validated = $request->validate([
+            'selected_id'   => ['required', 'array', 'min:1'],
+            'selected_id.*' => ['integer', 'distinct', 'exists:app,id'], // <-- likely fix here
+        ]);
+
+        $ids = $validated['selected_id'];
+
+        DB::transaction(function () use ($ids) {
+            $apps = App::query()
+                ->whereIn('id', $ids)
+                ->get(['id', 'app_logo']);
+
+            foreach ($apps as $app) {
+                $path = ltrim((string) $app->app_logo, '/');
+
+                $path = Str::replaceFirst('storage/', '', $path);
+                $path = Str::replaceFirst('app/public/', '', $path);
+                $path = Str::replaceFirst('public/', '', $path);
+
+                if ($path !== '') {
+                    Storage::disk('public')->delete($path); // <-- use correct disk
+                }
+            }
+
+            App::query()->whereIn('id', $ids)->delete();
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'The selected apps have been deleted successfully.',
+        ]);
+    }
+
+
 }

@@ -1,30 +1,33 @@
 import { handleSystemError } from './system-errors.js';
 import { getCsrfToken, getPageContext } from '../form/form.js';
+import { initializeExportFeature } from '../util/export.js';
 
 /**
- * Cache DT instances by table DOM node (robust, avoids selector-staleness).
- * WeakMap allows GC when table is removed.
+ * ===== Performance-oriented DataTables helper =====
+ * - Server-side capable (recommended for thousands of rows)
+ * - Caches DT instances by DOM node (WeakMap)
+ * - Avoids repeated DOM scans for checkbox selection UI
+ * - Avoids re-binding handlers on every draw
  */
+
 const dtByNode = new WeakMap();
 
 const getTableNode = (selectorOrNode) => {
   if (!selectorOrNode) return null;
-  if (selectorOrNode.nodeType === 1) return selectorOrNode; // element
+  if (selectorOrNode.nodeType === 1) return selectorOrNode;
   return document.querySelector(selectorOrNode);
 };
+
+const isDT = (node) => !!node && !!$.fn.DataTable && $.fn.DataTable.isDataTable(node);
 
 const getDT = (selectorOrNode) => {
   const node = getTableNode(selectorOrNode);
   if (!node) return null;
 
   const cached = dtByNode.get(node);
-  if (cached) {
-    // Ensure it’s still a DT table
-    if ($.fn.dataTable.isDataTable(node)) return cached;
-    dtByNode.delete(node);
-  }
+  if (cached && isDT(node)) return cached;
 
-  if (!$.fn.dataTable.isDataTable(node)) return null;
+  if (!isDT(node)) return null;
 
   const dt = $(node).DataTable();
   dtByNode.set(node, dt);
@@ -36,56 +39,61 @@ const safeInt = (value, fallback = 10) => {
   return Number.isFinite(n) ? n : fallback;
 };
 
-const debounce = (fn, delay = 150) => {
+const debounce = (fn, delay = 250) => {
   let t;
-  return function debounced(...args) {
+  return function (...args) {
     clearTimeout(t);
     t = window.setTimeout(() => fn.apply(this, args), delay);
   };
 };
 
-/** Cache global-ish UI nodes once */
+/** Cache UI nodes */
 const actionDropdownEl = document.querySelector('.action-dropdown');
 const masterCheckboxEl = document.getElementById('datatable-checkbox');
 
-/**
- * Avoid querying all children twice; use :checked count when only counting.
- * Use a loop when you must write to all checkboxes.
- */
+/** Track selection count without DOM scanning */
+let checkedCountCache = 0;
+
 export const manageActionDropdown = ({ hideOnly = false } = {}) => {
   if (!actionDropdownEl) return;
 
-  const children = document.querySelectorAll('.datatable-checkbox-children');
-
   if (hideOnly) {
+    checkedCountCache = 0;
     actionDropdownEl.classList.add('d-none');
     if (masterCheckboxEl) masterCheckboxEl.checked = false;
+
+    const children = document.querySelectorAll('.datatable-checkbox-children');
     for (let i = 0; i < children.length; i++) children[i].checked = false;
     return;
   }
 
-  // Count checked cheaply
-  const checkedCount = document.querySelectorAll('.datatable-checkbox-children:checked').length;
-  actionDropdownEl.classList.toggle('d-none', checkedCount === 0);
+  actionDropdownEl.classList.toggle('d-none', checkedCountCache === 0);
 };
 
 export const toggleHideActionDropdown = () => {
+  checkedCountCache = 0;
   if (actionDropdownEl) actionDropdownEl.classList.add('d-none');
   if (masterCheckboxEl) masterCheckboxEl.checked = false;
 };
 
-export const reloadDatatable = (tableSelector) => {
+export const reloadDatatable = (tableSelectorOrNode) => {
   toggleHideActionDropdown();
-  const dt = getDT(tableSelector);
-  if (dt) dt.ajax.reload(null, false);
+  const node = getTableNode(tableSelectorOrNode);
+  if (!node) return;
+
+  if (isDT(node)) {
+    $(node).DataTable().ajax.reload(null, false);
+  }
 };
 
-export const destroyDatatable = (tableSelector) => {
-  const node = getTableNode(tableSelector);
+export const destroyDatatable = (tableSelectorOrNode) => {
+  const node = getTableNode(tableSelectorOrNode);
+  if (!node) return;
+
   const dt = getDT(node);
   if (!dt) return;
 
-  // Remove any delegated handlers we attached for this table (row click)
+  // Remove row-click handler we attach
   const tbody = node.tBodies?.[0];
   if (tbody) {
     const ns = `.dtRowClick_${node.id || 'table'}`;
@@ -97,23 +105,40 @@ export const destroyDatatable = (tableSelector) => {
   dtByNode.delete(node);
 };
 
-export const clearDatatable = (tableSelector) => {
-  const dt = getDT(tableSelector);
+export const clearDatatable = (tableSelectorOrNode) => {
+  const dt = getDT(tableSelectorOrNode);
   if (dt) dt.clear().draw(false);
 };
 
+/**
+ * Initialize DataTable (FAST defaults)
+ *
+ * IMPORTANT:
+ * - For thousands of records, use serverSide: true and return DT format:
+ *   { draw, recordsTotal, recordsFiltered, data: [...] }
+ */
 export const initializeDatatable = ({
-  url,
   selector,
+  url,
   ajaxData = {},
   columns = [],
   columnDefs = [],
+  order = [[1, 'asc']],
   lengthMenu = [
     [10, 25, 50, 100, -1],
     [10, 25, 50, 100, 'All'],
   ],
-  order = [[1, 'asc']],
   onRowClick = null,
+  addons = {
+    controls: false,            // true | { table?: selectorOrNode }
+    export: false,              // selectorOrNode (e.g. EXPORT_TABLE) | { table: ... }
+    subControls: false,         // { searchSelector, lengthSelector, table?: selectorOrNode }
+  },
+  serverSide = true,
+  pageLength = 25,
+  searchDelay = 400,
+  scrollX = true,
+  responsive = false,
 }) => {
   const table = getTableNode(selector);
   if (!table) return;
@@ -122,15 +147,31 @@ export const initializeDatatable = ({
   manageActionDropdown({ hideOnly: true });
 
   if (!url) {
-    showNotification(`Missing data-url on: ${selector}`);
+    showNotification(`Missing url for DataTable: ${selector}`);
     return;
   }
 
   const csrf = getCsrfToken();
 
   const dt = $(table).DataTable({
+    serverSide,
     processing: true,
     deferRender: true,
+    autoWidth: false,
+    orderClasses: false,
+    searchDelay,
+    responsive,
+    scrollX,
+    scrollCollapse: true,
+
+    paging: true,
+    pageLength,
+    lengthChange: false,
+    order,
+    columns,
+    columnDefs,
+    lengthMenu,
+
     ajax: {
       url,
       type: 'POST',
@@ -138,40 +179,63 @@ export const initializeDatatable = ({
       headers: csrf ? { 'X-CSRF-Token': csrf } : {},
       data: (d) => {
         const ctx = getPageContext();
-
-        // If ajaxData is an object, merge it. If it's a function, call it.
-        const extra =
-          typeof ajaxData === 'function'
-            ? ajaxData(d)
-            : (ajaxData || {});
-
-        return {
-          ...d,           // DataTables paging/search/order payload
-          ...extra,       // any custom caller-provided fields
-          ...ctx,         // appId + navigationMenuId
-        };
+        const extra = typeof ajaxData === 'function' ? ajaxData(d) : (ajaxData || {});
+        return { ...d, ...extra, ...ctx };
       },
-      dataSrc: '',
+      dataSrc: serverSide ? 'data' : '',
       error: (xhr, status, err) => handleSystemError(xhr, status, err),
     },
-    lengthChange: false,
-    searchDelay: 200,
-    order,
-    columns,
-    columnDefs,
-    lengthMenu,
-    autoWidth: false,
+
     language: {
       emptyTable: 'No data found',
       info: '_START_ - _END_ of _TOTAL_ items',
-      loadingRecords: 'Just a moment while we fetch your data...',
+      loadingRecords: 'Loading...',
+      processing: 'Loading...',
       zeroRecords: 'No matching records found',
+    },
+
+    drawCallback: () => {
+      toggleHideActionDropdown();
+    },
+
+    // ✅ Run optional initializers ONCE after DT is ready
+    initComplete: () => {
+      // 1) Standard controls
+      if (addons?.controls) {
+        const tableRef =
+          typeof addons.controls === 'object' && addons.controls?.table
+            ? addons.controls.table
+            : selector;
+        initializeDatatableControls(tableRef);
+      }
+
+      // 2) Export feature
+      if (addons?.export) {
+        const exportRef =
+          typeof addons.export === 'object' && addons.export?.table
+            ? addons.export.table
+            : addons.export; // allow passing EXPORT_TABLE directly
+        // Assumes initializeExportFeature exists/imported in this module
+        initializeExportFeature(exportRef);
+      }
+
+      // 3) Sub-datatable controls
+      if (addons?.subControls && typeof addons.subControls === 'object') {
+        const {
+          searchSelector,
+          lengthSelector,
+          table: subTableRef = selector,
+        } = addons.subControls;
+
+        if (searchSelector && lengthSelector) {
+          initializeSubDatatableControls(searchSelector, lengthSelector, subTableRef);
+        }
+      }
     },
   });
 
   dtByNode.set(table, dt);
 
-  // One delegated row-click handler per table (major win on redraw)
   if (typeof onRowClick === 'function') {
     const tbody = table.tBodies?.[0];
     if (tbody) {
@@ -184,15 +248,18 @@ export const initializeDatatable = ({
         });
     }
   }
+
+  return dt;
 };
 
-/** Bind checkbox handlers once globally */
+
+/** Bind checkbox handlers once globally (fast, delegated) */
 let checkboxHandlersBound = false;
 
-export const initializeDatatableControls = (tableSelector) => {
-  const dt = getDT(tableSelector);
+export const initializeDatatableControls = (tableSelectorOrNode) => {
+  const dt = getDT(tableSelectorOrNode);
   if (!dt) {
-    showNotification(`DataTable not initialized for selector: ${tableSelector}`);
+    showNotification(`DataTable not initialized for: ${tableSelectorOrNode}`);
     return;
   }
 
@@ -201,24 +268,30 @@ export const initializeDatatableControls = (tableSelector) => {
 
   if (lengthEl) {
     dt.page.len(safeInt(lengthEl.value, 10)).draw(false);
-    // Bind directly (faster than delegating through jQuery for fixed controls)
     lengthEl.onchange = () => dt.page.len(safeInt(lengthEl.value, 10)).draw(false);
   }
 
   if (searchEl) {
-    const handleSearch = debounce((value) => dt.search(value).draw(false), 150);
+    const handleSearch = debounce((value) => dt.search(value).draw(false), 400);
     searchEl.oninput = () => handleSearch(searchEl.value);
   }
 
   if (!checkboxHandlersBound) {
     checkboxHandlersBound = true;
 
-    // Use delegation because checkboxes are often re-rendered by DT
     $(document)
-      .on('click.dtCheckbox', '.datatable-checkbox-children', () => manageActionDropdown())
+      .on('click.dtCheckbox', '.datatable-checkbox-children', function () {
+        checkedCountCache += this.checked ? 1 : -1;
+        if (checkedCountCache < 0) checkedCountCache = 0;
+        manageActionDropdown();
+      })
       .on('click.dtCheckbox', '#datatable-checkbox', function () {
         const checked = this.checked === true;
-        $('.datatable-checkbox-children').prop('checked', checked);
+        const children = document.querySelectorAll('.datatable-checkbox-children');
+
+        checkedCountCache = checked ? children.length : 0;
+        for (let i = 0; i < children.length; i++) children[i].checked = checked;
+
         manageActionDropdown();
       });
   } else {
@@ -226,16 +299,15 @@ export const initializeDatatableControls = (tableSelector) => {
   }
 };
 
-export const initializeSubDatatableControls = (searchSelector, lengthSelector, tableSelector) => {
-  const dt = getDT(tableSelector);
-  if (!dt) {    
-    showNotification(`DataTable not initialized for selector: ${tableSelector}`);
+const initializeSubDatatableControls = (searchSelector, lengthSelector, tableSelectorOrNode) => {
+  const dt = getDT(tableSelectorOrNode);
+  if (!dt) {
+    showNotification(`DataTable not initialized for: ${tableSelectorOrNode}`);
     return;
   }
 
-  const handleSearch = debounce((value) => dt.search(value).draw(false), 150);
+  const handleSearch = debounce((value) => dt.search(value).draw(false), 400);
 
-  // Keep delegation; namespace once and replace existing handlers.
   $(document)
     .off('change.dtSubControls', lengthSelector)
     .on('change.dtSubControls', lengthSelector, function () {

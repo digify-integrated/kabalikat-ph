@@ -9,8 +9,14 @@
                     'navigationMenuId'  => $app->navigation_menu_id,
                 ]);
 
-                $logoUrl = Storage::url($app->app_logo);
+                $defaultLogo = asset('assets/media/default/app-logo.png');
 
+                $path = trim((string) ($app->app_logo ?? ''));
+
+                $logoUrl = $path !== '' && Storage::disk('public')->exists($path)
+                    ? Storage::url($path)
+                    : $defaultLogo;
+                    
                 $version = $app->app_version ?? '1.0.0';
             @endphp
 

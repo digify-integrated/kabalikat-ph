@@ -1,4 +1,7 @@
 import { showNotification } from '../util/notifications.js';
+import { reloadDatatable } from '../util/datatable.js';
+import { handleSystemError } from '../util/system-errors.js';
+import { getCsrfToken } from '../form/form.js';
 
 const DEFAULT_SPINNER_HTML =
   '<span class="spinner-border spinner-border-sm align-middle ms-0" aria-hidden="true"></span>' +
@@ -307,3 +310,107 @@ export async function copyToClipboard({
     return { ok: false, value, method, error: err };
   }
 }
+
+export const multipleDeleteActionButton = (
+  trigger,
+  url,
+  swalTitle,
+  swalText,
+  table,
+  opts = {}
+) => {
+  const { checkboxSelector = '.datatable-checkbox-children:checked' } = opts;
+
+  const el = typeof trigger === 'string' ? document.querySelector(trigger) : trigger;
+  if (!el) {
+    console.warn('[multipleDeleteActionButton] Trigger element not found:', trigger);
+    return () => {};
+  }
+
+  let busy = false;
+
+  const onClick = async (e) => {
+    e?.preventDefault?.();
+    if (busy) return;
+
+    const selectedIds = Array.from(document.querySelectorAll(checkboxSelector)).map(
+      ({ value }) => value
+    );
+
+    if (selectedIds.length === 0) {
+      showNotification('Please select the data you want to delete.');
+      return;
+    }
+
+    const { isConfirmed } = await Swal.fire({
+      title: swalTitle,
+      text: swalText,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Delete',
+      cancelButtonText: 'Cancel',
+      customClass: {
+        confirmButton: 'btn btn-danger',
+        cancelButton: 'btn btn-secondary',
+      },
+      buttonsStyling: false,
+    });
+
+    if (!isConfirmed) return;
+
+    busy = true;
+    const csrf = getCsrfToken();
+
+    if ('disabled' in el) el.disabled = true;
+    el.setAttribute('aria-busy', 'true');
+
+    try {
+      const body = new URLSearchParams();
+      selectedIds.forEach((id) => body.append('selected_id[]', id));
+
+      const response = await fetch(url, {
+        method: 'POST',
+        body,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+          Accept: 'application/json',
+          ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+        },
+      });
+
+      let payload;
+      try {
+        payload = await response.json();
+      } catch {
+        const text = await response.text().catch(() => '');
+        payload = { success: false, message: text };
+      }
+
+      if (!response.ok) {
+        throw new Error(payload?.message || `Deletion failed (${response.status}).`);
+      }
+
+      if (payload?.success) {
+        showNotification(payload?.message ?? 'Deleted successfully.', 'success');
+        reloadDatatable(table)
+        return;
+      }
+
+      showNotification(payload?.message ?? 'Deletion failed.');
+    } catch (error) {
+      handleSystemError(
+        error,
+        'fetch_failed',
+        `Fetch request failed: ${error?.message ?? error}`
+      );
+    } finally {
+      busy = false;
+      if ('disabled' in el) el.disabled = false;
+      el.removeAttribute('aria-busy');
+    }
+  };
+
+  el.addEventListener('click', onClick);
+
+  return () => el.removeEventListener('click', onClick);
+};

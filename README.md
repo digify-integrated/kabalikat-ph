@@ -68,3 +68,16 @@ php artisan migrate   # if applicable
 php arisan db:seed
 php artisan storage:link  # if you use public storage
 npm install && npm run build   # if the project uses Vite/frontend assets
+
+
+Datatable:
+
+addons: {
+    controls: true,                // calls initializeDatatableControls(APP_TABLE)
+    export: EXPORT_TABLE,          // calls initializeExportFeature(EXPORT_TABLE)
+    subControls: {
+      searchSelector: '#product-attribute-datatable-search',
+      lengthSelector: '#product-attribute-datatable-length',
+      table: '#product-attribute-table',
+    },
+  },
