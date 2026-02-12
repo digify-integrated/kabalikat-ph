@@ -414,3 +414,36 @@ export const multipleDeleteActionButton = (
 
   return () => el.removeEventListener('click', onClick);
 };
+
+export const discardCreate = () => {
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('#discard-create');
+    if (!btn) return;
+
+    e.preventDefault();
+
+    Swal.fire({
+      title: 'Are you sure?',
+      text: 'You will lose all unsaved changes!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, discard it!',
+      cancelButtonText: 'Cancel',
+      customClass: {
+        confirmButton: 'btn btn-danger mt-2',
+        cancelButton: 'btn btn-secondary ms-2 mt-2'
+      },
+      buttonsStyling: false,
+    }).then(({ isConfirmed }) => {
+      if (!isConfirmed) return;
+
+      const { origin, pathname, search, hash } = window.location;
+
+      const cleanedPath = pathname
+        .replace(/\/new\/?$/i, '')
+        .replace(/\/details\/[^/]+\/?$/i, '');
+
+      window.location.href = `${origin}${cleanedPath}${search}${hash}`;
+    });
+  });
+};

@@ -13,7 +13,7 @@ export const resetForm = (formId) => {
   const invalids = form.querySelectorAll('.is-invalid');
   for (const el of invalids) el.classList.remove('is-invalid');
 
-  const hiddens = form.querySelectorAll('input[type="hidden"]:not([name="csrf_token"])');
+  const hiddens = form.querySelectorAll('input[type="hidden"]:not([name="_token"])');
   for (const h of hiddens) h.value = '';
 };
 
@@ -27,5 +27,6 @@ export const getPageContext = () => {
   return {
     appId: el?.dataset?.appId ?? null,
     navigationMenuId: el?.dataset?.navigationMenuId ?? null,
+    detailId: el?.dataset?.detailId ?? null,
   };
 };

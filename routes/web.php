@@ -64,7 +64,8 @@ Route::middleware('auth')->group(function () {
     // App
     Route::post('/generate-app-table', [AppController::class, 'generateAppTable'])->name('generate.app.table');
     Route::post('/generate-app-options', [AppController::class, 'generateAppOptions'])->name('generate.app.option');
-    Route::post('/save-app', [AppController::class, 'saveApp'])->name('create.app');
+    Route::post('/save-app', [AppController::class, 'saveApp'])->name('save.app');
+    Route::post('/fetch-app-details', [AppController::class, 'fetchAppDetails'])->name('fetch.app.details');
     Route::post('/delete-multiple-app', [AppController::class, 'deleteMultipleApp'])->name(name: 'delete.multiple.app');
     Route::post('/delete-app', [AppController::class, 'deleteApp'])->name('delete.app');
     Route::post('/get-app-details', [AppController::class, 'getAppDetails'])->name('get.app.details');

@@ -14,6 +14,7 @@ class App extends Model
         'app_version',
         'app_logo',
         'navigation_menu_id',
+        'navigation_menu_name',
         'order_sequence',
     ];
 

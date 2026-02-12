@@ -6,7 +6,17 @@
         @include('partials.required-css')
         @stack('css')
     </head>
-    <body id="kt_app_body" data-kt-app-header-fixed-mobile="true" data-kt-app-toolbar-enabled="true" data-kt-app-page-loading-enabled="true" data-kt-app-page-loading="on" data-app-id="{{ $appId }}" data-navigation-menu-id="{{ $navigationMenuId }}" class="app-default">
+    <body id="kt_app_body"
+      data-kt-app-header-fixed-mobile="true"
+      data-kt-app-toolbar-enabled="true"
+      data-kt-app-page-loading-enabled="true"
+      data-kt-app-page-loading="on"
+      data-app-id="{{ $appId }}"
+      data-navigation-menu-id="{{ $navigationMenuId }}"
+      @if(request()->routeIs('apps.details'))
+          data-detail-id="{{ $detailsId }}"
+      @endif
+      class="app-default">
         @include('partials.theme-switcher')
         @include('partials.page-loader')
 
