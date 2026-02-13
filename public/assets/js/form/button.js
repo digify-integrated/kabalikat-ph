@@ -1,7 +1,7 @@
 import { showNotification } from '../util/notifications.js';
 import { reloadDatatable } from '../util/datatable.js';
 import { handleSystemError } from '../util/system-errors.js';
-import { getCsrfToken } from '../form/form.js';
+import { getCsrfToken, getPageContext } from '../form/form.js';
 
 const DEFAULT_SPINNER_HTML =
   '<span class="spinner-border spinner-border-sm align-middle ms-0" aria-hidden="true"></span>' +
@@ -311,14 +311,18 @@ export async function copyToClipboard({
   }
 }
 
-export const multipleDeleteActionButton = (
+export const multipleActionButton = ({
   trigger,
   url,
   swalTitle,
   swalText,
+  swalIcon = 'warning',
+  confirmButtonText,
+  confirmButtonClass = 'danger',
+  validationMessage,
   table,
   opts = {}
-) => {
+}) => {
   const { checkboxSelector = '.datatable-checkbox-children:checked' } = opts;
 
   const el = typeof trigger === 'string' ? document.querySelector(trigger) : trigger;
@@ -338,19 +342,19 @@ export const multipleDeleteActionButton = (
     );
 
     if (selectedIds.length === 0) {
-      showNotification('Please select the data you want to delete.');
+      showNotification(validationMessage);
       return;
     }
 
     const { isConfirmed } = await Swal.fire({
       title: swalTitle,
       text: swalText,
-      icon: 'warning',
+      icon: swalIcon,
       showCancelButton: true,
-      confirmButtonText: 'Delete',
+      confirmButtonText: confirmButtonText,
       cancelButtonText: 'Cancel',
       customClass: {
-        confirmButton: 'btn btn-danger',
+        confirmButton: `btn btn-${confirmButtonClass}`,
         cancelButton: 'btn btn-secondary',
       },
       buttonsStyling: false,
@@ -391,12 +395,12 @@ export const multipleDeleteActionButton = (
       }
 
       if (payload?.success) {
-        showNotification(payload?.message ?? 'Deleted successfully.', 'success');
+        showNotification(payload?.message, 'success');
         reloadDatatable(table)
         return;
       }
 
-      showNotification(payload?.message ?? 'Deletion failed.');
+      showNotification(payload?.message);
     } catch (error) {
       handleSystemError(
         error,
@@ -413,6 +417,144 @@ export const multipleDeleteActionButton = (
   el.addEventListener('click', onClick);
 
   return () => el.removeEventListener('click', onClick);
+};
+
+const redirectToCleanPath = ({
+  patterns = [/\/new\/?$/i, /\/details\/[^/]+\/?$/i],
+  preserveQuery = true,
+  preserveHash = true,
+  replace = true,
+  url = window.location.href,
+} = {}) => {
+  const u = new URL(url);
+
+  let path = u.pathname;
+  for (const rx of patterns) path = path.replace(rx, '');
+
+  const target =
+    `${u.origin}${path}` +
+    (preserveQuery ? u.search : '') +
+    (preserveHash ? u.hash : '');
+
+  if (target !== u.href) {
+    replace ? window.location.replace(target) : window.location.assign(target);
+  }
+
+  return target;
+};
+
+export const detailsDeleteButton = ({
+  trigger,
+  url,
+  swalTitle,
+  swalText,
+  swalIcon = 'warning',
+  confirmButtonText,
+  confirmButtonClass = 'danger',
+}) => {
+  document.addEventListener('click', async (e) => {
+    const btn = e.target.closest(trigger);
+    if (!btn) return;
+
+    e.preventDefault();
+
+    const result = await Swal.fire({
+      title: swalTitle,
+      text: swalText,
+      icon: swalIcon,
+      showCancelButton: true,
+      confirmButtonText: confirmButtonText,
+      cancelButtonText: 'Cancel',
+      customClass: {
+        confirmButton: `btn btn-${confirmButtonClass}`,
+        cancelButton: 'btn btn-secondary',
+      },
+      buttonsStyling: false,
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const csrf = getCsrfToken();
+        const ctx = getPageContext();
+
+        const formData = new URLSearchParams();
+        formData.append('detailId', ctx.detailId ?? '');
+        formData.append('appId', ctx.appId ?? '');
+        formData.append('navigationMenuId', ctx.navigationMenuId ?? '')
+
+        const response = await fetch(url, {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            Accept: 'application/json',
+            ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+          },
+        });
+
+        if (!response.ok) throw new Error(`Request failed with status: ${response.status}`);
+
+        const data = await response.json();
+
+        if (data.success) {
+          setNotification(data.message, 'success');
+          redirectToCleanPath();
+        }
+        else {
+          showNotification(data.message);
+        }
+      } catch (error) {
+        handleSystemError(error, 'fetch_failed', `Fetch request failed: ${error.message}`);
+      }
+    }
+  });
+};
+
+export const imageRealtimeUploadButton = ({
+  trigger,
+  url
+}) => {
+  document.addEventListener('click', async (e) => {
+    const btn = e.target.closest(trigger);
+    if (!btn) return;
+
+    const input = e.target;
+    if (input.files && input.files.length > 0) {      
+      const csrf = getCsrfToken();
+      const ctx = getPageContext();
+
+      const formData = new FormData();
+      formData.append('detailId', ctx.detailId ?? '');
+      formData.append('appId', ctx.appId ?? '');
+      formData.append('navigationMenuId', ctx.navigationMenuId ?? '')
+      formData.append('app_logo', input.files[0]);
+
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            Accept: 'application/json',
+            ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+          },
+        });
+
+        if (!response.ok) throw new Error(`Request failed with status: ${response.status}`);
+
+        const data = await response.json();
+
+        if (data.success) {
+          showNotification(data.message, 'success');
+        }
+        else {
+          showNotification(data.message);
+        }
+      } catch (error) {
+        handleSystemError(error, 'fetch_failed', `Fetch request failed: ${error.message}`);
+      }
+    }
+  });
 };
 
 export const discardCreate = () => {
@@ -437,13 +579,7 @@ export const discardCreate = () => {
     }).then(({ isConfirmed }) => {
       if (!isConfirmed) return;
 
-      const { origin, pathname, search, hash } = window.location;
-
-      const cleanedPath = pathname
-        .replace(/\/new\/?$/i, '')
-        .replace(/\/details\/[^/]+\/?$/i, '');
-
-      window.location.href = `${origin}${cleanedPath}${search}${hash}`;
+      redirectToCleanPath();
     });
   });
 };

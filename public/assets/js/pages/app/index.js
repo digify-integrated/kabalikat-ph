@@ -1,5 +1,5 @@
 import { initializeDatatable } from '../../util/datatable.js';
-import { multipleDeleteActionButton } from '../../form/button.js';
+import { multipleActionButton } from '../../form/button.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const TABLE = '#app-table';
@@ -26,11 +26,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    multipleDeleteActionButton(
-        '#delete-app',
-        '/delete-multiple-app',
-        'Confirm Multiple Apps Deletion?',
-        'Are you sure you want to delete these apps?',
-        TABLE
-    );
+    multipleActionButton({
+        'trigger' : '#delete-app',
+        'url' : '/delete-multiple-app',
+        'swalTitle' : 'Confirm Multiple Apps Deletion',
+        'swalText' : 'Are you sure you want to delete these apps?',
+        'confirmButtonText' : 'Delete',
+        'validationMessage' : 'Please select the data you want to delete',
+        'table' : TABLE
+    });
 });

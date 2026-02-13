@@ -1,14 +1,12 @@
 import { initValidation } from '../../util/validation.js';
 import { showNotification, setNotification } from '../../util/notifications.js';
-import { disableButton, enableButton, discardCreate } from '../../form/button.js';
+import { disableButton, enableButton, discardCreate, detailsDeleteButton, imageRealtimeUploadButton } from '../../form/button.js';
 import { generateDropdownOptions } from '../../form/field.js';
 import { handleSystemError } from '../../util/system-errors.js';
-import { getPageContext } from '../../form/form.js';
-import { getCsrfToken } from '../../form/form.js';
+import { getPageContext, getCsrfToken } from '../../form/form.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const ROUTE = '/save-app';
-    let isLoadingDetails = true;
 
     discardCreate();    
 
@@ -90,11 +88,6 @@ document.addEventListener('DOMContentLoaded', () => {
             order_sequence: { required: 'Enter the order sequence' },
         },
         submitHandler: async (form) => {
-            if (isLoadingDetails) {
-                showNotification('Please wait while details are loading...');
-                return;
-            }
-
             const ctx = getPageContext();
             const formData = new URLSearchParams(new FormData(form));
             formData.append('app_id', ctx.detailId ?? '');
@@ -126,5 +119,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 enableButton('submit-data');
             }
         },
+    });
+
+    detailsDeleteButton({
+        'trigger' : '#delete-app-module',
+        'url' : '/delete-app',
+        'swalTitle' : 'Confirm App Deletion',
+        'swalText' : 'Are you sure you want to delete this app?',
+        'confirmButtonText' : 'Delete'
+    });
+
+    imageRealtimeUploadButton({
+        'trigger' : '#app_logo',
+        'url' : '/upload-app-logo',
     });
 });
