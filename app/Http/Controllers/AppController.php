@@ -66,23 +66,32 @@ class AppController extends Controller
     public function fetchAppDetails(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'app_id' => ['required', 'integer', 'min:1', 'exists:app,id'],
+            'detailId' => ['required', 'integer', 'min:1'],
         ]);
 
         if ($validator->fails()) {
-            if ($validator->errors()->has('app_id')) {
-                return response()->json([
-                    'success'  => false,
-                    'notExist' => true,
-                ]);
-            }
+            return response()->json([
+                'success' => false,
+                'notExist' => false,
+                'message' => $validator->errors()->first('detailId') ?? 'Validation failed.',
+                'errors'  => $validator->errors(),
+            ], 422);
         }
 
         $validated = $validator->validated();
 
         $app = DB::table('app')
-            ->where('id', $validated['app_id'])
+            ->where('id', $validated['detailId'])
             ->first();
+
+        // Explicit "not exist" response
+        if (!$app) {
+            return response()->json([
+                'success'  => false,
+                'notExist' => true,
+                'message'  => 'App not found.',
+            ], 404);
+        }
 
         $defaultLogo = asset('assets/media/default/app-logo.png');
         $path = trim((string) ($app->app_logo ?? ''));
@@ -93,6 +102,7 @@ class AppController extends Controller
 
         return response()->json([
             'success'          => true,
+            'notExist'         => false,
             'appName'          => $app->app_name ?? null,
             'appDescription'   => $app->app_description ?? null,
             'navigationMenuId' => $app->navigation_menu_id ?? null,
@@ -101,6 +111,7 @@ class AppController extends Controller
             'appLogo'          => $logoUrl,
         ]);
     }
+
 
     public function generateAppTable(Request $request)
     {

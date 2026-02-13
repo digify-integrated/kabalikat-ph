@@ -1,78 +1,54 @@
 import { initValidation } from '../../util/validation.js';
-import { showNotification, setNotification } from '../../util/notifications.js';
+import { showNotification } from '../../util/notifications.js';
 import { disableButton, enableButton, discardCreate, detailsDeleteButton, imageRealtimeUploadButton } from '../../form/button.js';
 import { generateDropdownOptions } from '../../form/field.js';
+import { displayDetails } from '../../form/form.js';
 import { handleSystemError } from '../../util/system-errors.js';
-import { getPageContext, getCsrfToken } from '../../form/form.js';
+import { getPageContext } from '../../form/form.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    const ROUTE = '/save-app';
+    const FORM_URL = '/save-app';
+    const DETAILS_URL = '/fetch-app-details';
+    const DELETE_URL = '/delete-app';
+    const IMAGE_UPLOAD_URL = '/upload-app-logo';
+    const FORM = '#app_form';
+    const IMAGE_TRIGGER = '#app_logo';
+    const DELETE_TRIGGER = '#delete-app-module';
 
     discardCreate();    
 
-    disableButton('submit-data');
-
-    const displayDetails = async () => {
-        try {
-            const csrf = getCsrfToken();
-            const ctx = getPageContext();
-
-            const formData = new URLSearchParams();
-            formData.append('app_id', ctx.detailId ?? '');
-
-            const response = await fetch('/fetch-app-details', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                    Accept: 'application/json',
-                    ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error(`Request failed with status: ${response.status}`);
-            }
-
-            const data = await response.json();
-
-            if (data.success) {
-                document.getElementById('app_name').value = data.appName || '';
-                document.getElementById('app_description').value = data.appDescription || '';
-                document.getElementById('app_version').value = data.appVersion || '';
-                document.getElementById('order_sequence').value = data.orderSequence || '';
-
-                $('#navigation_menu_id').val(data.navigationMenuId).trigger('change');
-
-                const thumbnail = document.getElementById('app_thumbnail');
-                if (thumbnail) thumbnail.style.backgroundImage = `url(${data.appLogo || ''})`;
-            } else if (data.notExist) {
-                setNotification(data.message, 'error');
-                window.location.href = page_link;
-            } else {
-                showNotification(data.message);
-            }
-        } catch (error) {
-            handleSystemError(error, 'fetch_failed', `Fetch request failed: ${error.message}`);
-        }
-    };
-
     (async () => {
         try {
-            await generateDropdownOptions({
+            const optionsPromise = generateDropdownOptions({
                 url: '/generate-navigation-menu-options',
                 dropdownSelector: '#navigation_menu_id',
             });
 
-            await displayDetails();
+            await displayDetails({
+                url: DETAILS_URL,
+                formSelector: FORM,
+                onSuccess: async (data) => {
+                    document.getElementById('app_name').value = data.appName || '';
+                    document.getElementById('app_description').value = data.appDescription || '';
+                    document.getElementById('app_version').value = data.appVersion || '';
+                    document.getElementById('order_sequence').value = data.orderSequence || '';
+
+                    const thumbnail = document.getElementById('app_thumbnail');
+                    if (thumbnail) thumbnail.style.backgroundImage = `url(${data.appLogo || ''})`;
+
+                    await optionsPromise;
+
+                    $('#navigation_menu_id').val(data.navigationMenuId).trigger('change');
+                },
+            });
+
+            await optionsPromise;
         } catch (err) {
             handleSystemError(err, 'init_failed', `Initialization failed: ${err.message}`);
-        } finally {
-            enableButton('submit-data');
         }
     })();
 
-    initValidation('#app_form', {
+    initValidation(FORM, {
         rules: {
             app_name: { required: true },
             app_description: { required: true },
@@ -97,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
             disableButton('submit-data');
 
             try {
-                const response = await fetch(ROUTE, {
+                const response = await fetch(FORM_URL, {
                     method: 'POST',
                     body: formData,
                 });
@@ -122,15 +98,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     detailsDeleteButton({
-        'trigger' : '#delete-app-module',
-        'url' : '/delete-app',
+        'trigger' : DELETE_TRIGGER,
+        'url' : DELETE_URL,
         'swalTitle' : 'Confirm App Deletion',
         'swalText' : 'Are you sure you want to delete this app?',
         'confirmButtonText' : 'Delete'
     });
 
     imageRealtimeUploadButton({
-        'trigger' : '#app_logo',
-        'url' : '/upload-app-logo',
+        'trigger' : IMAGE_TRIGGER,
+        'url' : IMAGE_UPLOAD_URL
     });
 });

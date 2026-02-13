@@ -419,7 +419,7 @@ export const multipleActionButton = ({
   return () => el.removeEventListener('click', onClick);
 };
 
-const redirectToCleanPath = ({
+export const redirectToCleanPath = ({
   patterns = [/\/new\/?$/i, /\/details\/[^/]+\/?$/i],
   preserveQuery = true,
   preserveHash = true,
