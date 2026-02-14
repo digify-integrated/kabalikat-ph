@@ -6,7 +6,7 @@
             <h5 class="card-title mb-0">App Details</h5>
         </div>
         <div class="card-body">
-            <form id="app_form" method="post" action="#">
+            <form id="app_form" method="post" action="#" novalidate>
                 @csrf
                 <div class="row row-cols-1 row-cols-sm-4 rol-cols-md-3 row-cols-lg-4">
                     <div class="col">
@@ -44,7 +44,7 @@
                                 Order Sequence
                             </label>
 
-                            <input type="number" class="form-control" id="order_sequence" name="order_sequence" min="0">
+                            <input type="number" class="form-control" id="order_sequence" name="order_sequence" min="0" max="1000">
                         </div>
                     </div>
                 </div>

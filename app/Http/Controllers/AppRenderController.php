@@ -64,7 +64,7 @@ class AppRenderController extends Controller
     {
         $menu = DB::table('navigation_menu')
             ->where('id', $navigationMenuId)
-            ->select('navigation_menu_name', 'navigation_menu_icon')
+            ->select('navigation_menu_name', 'navigation_menu_icon', 'database_table')
             ->first();
 
         if (! $menu) {
@@ -102,11 +102,12 @@ class AppRenderController extends Controller
         $iconClass = $menu->navigation_menu_icon ?: 'ki-outline ki-abstract-26';
 
         return view($routeInfo->view_file, array_merge($perms, [
-            'pageTitle'        => (string) $menu->navigation_menu_name,
-            'iconClass'        => $iconClass,
-            'jsFile'           => $routeInfo->js_file,
-            'appId'      => $appId,
+            'pageTitle' => (string) $menu->navigation_menu_name,
+            'iconClass' => $iconClass,
+            'jsFile' => $routeInfo->js_file,
+            'appId' => $appId,
             'navigationMenuId' => $navigationMenuId,
+            'databaseTable' => $menu->database_table ?: '',
         ], $extra));
     }
 
@@ -141,7 +142,7 @@ class AppRenderController extends Controller
         }
 
         return $this->renderMenuRoute($request, $appId, $navigationMenuId, 'import', [
-            'pageTitleSuffix' => ' - Import', // optional
+            'pageTitleSuffix' => ' - Import',
             'isImport' => true,
         ]);
     }

@@ -1,6 +1,5 @@
 import { showNotification, setNotification } from '../util/notifications.js';
 import { handleSystemError } from '../util/system-errors.js';
-import { redirectToCleanPath } from '../form/button.js';
 
 export const resetForm = (formId) => {
   const form = document.getElementById(formId);
@@ -30,6 +29,7 @@ export const getPageContext = () => {
   const el = document.getElementById('kt_app_body');
   return {
     appId: el?.dataset?.appId ?? null,
+    databaseTable: el?.dataset?.table ?? null,
     navigationMenuId: el?.dataset?.navigationMenuId ?? null,
     detailId: el?.dataset?.detailId ?? null,
   };
@@ -97,6 +97,8 @@ export const displayDetails = async ({
 
     const resolvedDetailId = detailIdValue ?? (ctx?.detailId ?? '');
     params.append(detailIdKey, resolvedDetailId);
+    params.append('appId', ctx.appId ?? '');
+    params.append('navigationMenuId', ctx.navigationMenuId ?? '')
 
     // correctly append extra payload keys (fixes your previous "detailId" overwrite)
     appendObject(params, otherData);
@@ -127,7 +129,7 @@ export const displayDetails = async ({
         onNotExist(data);
       } else {
         setNotification(data.message);
-        redirectToCleanPath();
+        window.location.replace(data.redirect_link);
       }
       return data;
     }

@@ -13,6 +13,7 @@
       data-kt-app-page-loading="on"
       data-app-id="{{ $appId }}"
       data-navigation-menu-id="{{ $navigationMenuId }}"
+      data-table="{{ $databaseTable ?? '' }}"
       @if(request()->routeIs('apps.details'))
           data-detail-id="{{ $detailsId }}"
       @endif

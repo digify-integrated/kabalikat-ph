@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\App;
 use App\Models\NavigationMenu;
+use App\Models\UploadSetting;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -29,8 +31,9 @@ class AppController extends Controller
 
         $navigationMenuId = (int) $validated['navigation_menu_id'];
 
-        $navigationMenu = NavigationMenu::query()->findOrFail($navigationMenuId);
-        $navigationMenuName = (string) ($navigationMenu->navigation_menu_name ?? '');
+        $navigationMenuName = (string) NavigationMenu::query()
+            ->whereKey($navigationMenuId)
+            ->value('navigation_menu_name');
 
         $payload = [
             'app_name' => $validated['app_name'],
@@ -39,6 +42,7 @@ class AppController extends Controller
             'navigation_menu_id' => $navigationMenuId,
             'navigation_menu_name' => $navigationMenuName,
             'order_sequence' => $validated['order_sequence'] ?? 0,
+            'last_log_by' => Auth::id(),
         ];
 
         $appId = $validated['app_id'] ?? null;
@@ -49,6 +53,13 @@ class AppController extends Controller
         } else {
             $app = App::query()->create($payload);
         }
+
+        NavigationMenu::query()
+            ->where('app_id', $app->id)
+            ->update([
+                'app_name' => $app->app_name,
+                'last_log_by' => Auth::id(),
+            ]);
 
         $link = route('apps.details', [
             'appId' => $pageAppId,
@@ -63,19 +74,134 @@ class AppController extends Controller
         ]);
     }
 
-    public function fetchAppDetails(Request $request)
+    public function uploadAppLogo(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'detailId' => ['required', 'integer', 'min:1'],
+            'detailId' => ['required', 'integer', 'min:1', 'exists:app,id'],
+            'image'    => ['required', 'file'],
+        ]);
+
+        $pageAppId = (int) $request->input('appId');
+        $pageNavigationMenuId = (int) $request->input('navigationMenuId');
+
+        $link = route('apps.base', [
+            'appId' => $pageAppId,
+            'navigationMenuId' => $pageNavigationMenuId,
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
                 'notExist' => false,
+                'redirect_link' => $link,
+                'message' => $validator->errors()->first() ?? 'Validation failed.',
+            ]);
+        }
+
+        $detailId = (int) $request->input('detailId');
+
+        // 2) Load app
+        $app = App::query()->findOrFail($detailId);
+
+        // 3) Load upload setting (1 = App Logo) and allowed extensions
+        $uploadSettingId = 1;
+
+        $uploadSetting = UploadSetting::query()->findOrFail($uploadSettingId);
+
+        // max_file_size is assumed MB (based on your old logic: MB * 1024 => KB for Laravel "max")
+        $maxMb = (float) $uploadSetting->max_file_size;
+        $maxKb = (int) round($maxMb * 1024);
+
+        // Requires relationships from earlier:
+        // UploadSetting::fileExtensions() belongsToMany(FileExtension::class, 'upload_setting_file_extension', ...)
+        $allowedExt = $uploadSetting->uploadSettingFileExtensions()
+            ->pluck('file_extension')
+            ->map(fn ($e) => strtolower((string) $e))
+            ->unique()
+            ->values()
+            ->all();
+
+        // 4) Validate extension + size using DB-driven rules
+        $file = $request->file('image');
+
+        if (!$file || !$file->isValid()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while uploading the file.',
+            ]);
+        }
+
+        $ext = strtolower($file->getClientOriginalExtension());
+
+        if (!in_array($ext, $allowedExt, true)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The file uploaded is not supported.',
+            ]);
+        }
+
+        // Laravel validator "max" for file is in kilobytes
+        $sizeValidator = Validator::make($request->all(), [
+            'image' => ['max:' . $maxKb],
+        ]);
+
+        if ($sizeValidator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The app logo exceeds the maximum allowed size of ' . $maxMb . ' MB.',
+            ]);
+        }
+
+        // 5) Store file + update DB (transaction recommended)
+        DB::transaction(function () use ($app, $file, $ext) {
+            // Delete existing logo (your provided logic, adapted)
+            $existing = (string) ($app->app_logo ?? '');
+            if ($existing !== '') {
+                $path = ltrim($existing, '/');
+                $path = Str::replaceFirst('storage/', '', $path);
+                $path = Str::replaceFirst('app/public/', '', $path);
+                $path = Str::replaceFirst('public/', '', $path);
+
+                if ($path !== '') {
+                    Storage::disk('public')->delete($path);
+                }
+            }
+
+            // Build destination: storage/app/public/app/<id>/<random>.<ext>
+            $fileName = Str::random(20);
+            $fileNew  = $fileName . '.' . $ext;
+
+            $relativePath = "app/{$app->id}/{$fileNew}"; // saved in DB like your sample
+            // Store in "public" disk => storage/app/public/<relativePath>
+            $file->storeAs("app/{$app->id}", $fileNew, 'public');
+
+            // Save DB path (example: app/1/settings.png)
+            $app->update([
+                'app_logo' => $relativePath,
+            ]);
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'The app logo has been updated successfully.',
+        ]);
+    }
+
+    public function fetchAppDetails(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'detailId' => ['required', 'integer', 'min:1'],
+        ]);
+
+        $pageAppId = (int) $request->input('appId');
+        $pageNavigationMenuId = (int) $request->input('navigationMenuId');
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'notExist' => false,
                 'message' => $validator->errors()->first('detailId') ?? 'Validation failed.',
-                'errors'  => $validator->errors(),
-            ], 422);
+            ]);
         }
 
         $validated = $validator->validated();
@@ -86,11 +212,17 @@ class AppController extends Controller
 
         // Explicit "not exist" response
         if (!$app) {
+            $link = route('apps.base', [
+                'appId' => $pageAppId,
+                'navigationMenuId' => $pageNavigationMenuId,
+            ]);
+
             return response()->json([
                 'success'  => false,
                 'notExist' => true,
+                'redirect_link' => $link,
                 'message'  => 'App not found.',
-            ], 404);
+            ]);
         }
 
         $defaultLogo = asset('assets/media/default/app-logo.png');
@@ -111,7 +243,6 @@ class AppController extends Controller
             'appLogo'          => $logoUrl,
         ]);
     }
-
 
     public function generateAppTable(Request $request)
     {
@@ -165,11 +296,56 @@ class AppController extends Controller
         return response()->json($response);
     }
 
+    public function deleteApp(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'detailId' => ['required', 'integer', 'min:1', 'exists:app,id'],
+        ]);
+
+        $pageAppId = (int) $request->input('appId');
+        $pageNavigationMenuId = (int) $request->input('navigationMenuId');
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first('detailId') ?? 'Validation failed.',
+            ]);
+        }
+
+        $detailId = (int) $validator->validated()['detailId'];
+
+        DB::transaction(function () use ($detailId) {
+            $app = App::query()->select(['id', 'app_logo'])->findOrFail($detailId);
+
+            $path = ltrim((string) $app->app_logo, '/');
+            $path = Str::replaceFirst('storage/', '', $path);
+            $path = Str::replaceFirst('app/public/', '', $path);
+            $path = Str::replaceFirst('public/', '', $path);
+
+            if ($path !== '') {
+                Storage::disk('public')->delete($path);
+            }
+
+            $app->delete();
+        });        
+
+        $link = route('apps.base', [
+                'appId' => $pageAppId,
+                'navigationMenuId' => $pageNavigationMenuId,
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'redirect_link' => $link,
+            'message' => 'The app has been deleted successfully.',
+        ]);
+    }
+
     public function deleteMultipleApp(Request $request)
     {
         $validated = $request->validate([
             'selected_id'   => ['required', 'array', 'min:1'],
-            'selected_id.*' => ['integer', 'distinct', 'exists:app,id'], // <-- likely fix here
+            'selected_id.*' => ['integer', 'distinct', 'exists:app,id'],
         ]);
 
         $ids = $validated['selected_id'];
@@ -187,7 +363,7 @@ class AppController extends Controller
                 $path = Str::replaceFirst('public/', '', $path);
 
                 if ($path !== '') {
-                    Storage::disk('public')->delete($path); // <-- use correct disk
+                    Storage::disk('public')->delete($path);
                 }
             }
 
@@ -199,6 +375,4 @@ class AppController extends Controller
             'message' => 'The selected apps have been deleted successfully.',
         ]);
     }
-
-
 }

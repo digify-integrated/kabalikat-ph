@@ -12,7 +12,7 @@ class ShareBreadcrumbs
     {
         $route = $request->route();
 
-        $appModuleId      = (int) ($route?->parameter('appModuleId') ?? 0);
+        $appId      = (int) ($route?->parameter('appId') ?? 0);
         $navigationMenuId = (int) ($route?->parameter('navigationMenuId') ?? 0);
         $detailsId        = $route?->parameter('details_id');
 
@@ -39,7 +39,7 @@ class ShareBreadcrumbs
 
         // Share to all views for the current request
         view()->share([
-            'bc_app_id'             => $appModuleId,
+            'bc_app_id'             => $appId,
             'bc_navigation_menu_id' => $navigationMenuId,
             'bc_items'              => $bcItems,
             'bc_route_name'         => $routeName,

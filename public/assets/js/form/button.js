@@ -1,4 +1,4 @@
-import { showNotification } from '../util/notifications.js';
+import { showNotification, setNotification  } from '../util/notifications.js';
 import { reloadDatatable } from '../util/datatable.js';
 import { handleSystemError } from '../util/system-errors.js';
 import { getCsrfToken, getPageContext } from '../form/form.js';
@@ -498,7 +498,7 @@ export const detailsDeleteButton = ({
 
         if (data.success) {
           setNotification(data.message, 'success');
-          redirectToCleanPath();
+          window.location.replace(data.redirect_link);
         }
         else {
           showNotification(data.message);
@@ -510,49 +510,58 @@ export const detailsDeleteButton = ({
   });
 };
 
-export const imageRealtimeUploadButton = ({
-  trigger,
-  url
-}) => {
-  document.addEventListener('click', async (e) => {
-    const btn = e.target.closest(trigger);
-    if (!btn) return;
-
+export const imageRealtimeUploadButton = ({ trigger, url }) => {
+  document.addEventListener('change', async (e) => {
     const input = e.target;
-    if (input.files && input.files.length > 0) {      
-      const csrf = getCsrfToken();
-      const ctx = getPageContext();
 
-      const formData = new FormData();
-      formData.append('detailId', ctx.detailId ?? '');
-      formData.append('appId', ctx.appId ?? '');
-      formData.append('navigationMenuId', ctx.navigationMenuId ?? '')
-      formData.append('app_logo', input.files[0]);
+    // Ensure the change came from a file input we care about
+    if (!(input instanceof HTMLInputElement)) return;
+    if (input.type !== 'file') return;
 
-      try {
-        const response = await fetch(url, {
-          method: 'POST',
-          body: formData,
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-            Accept: 'application/json',
-            ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
-          },
-        });
+    // Match selector (either the input itself or an ancestor wrapper)
+    const matched = input.matches(trigger) || input.closest(trigger);
+    if (!matched) return;
 
-        if (!response.ok) throw new Error(`Request failed with status: ${response.status}`);
+    if (!input.files || input.files.length === 0) return;
 
-        const data = await response.json();
+    const csrf = getCsrfToken();
+    const ctx = getPageContext();
 
-        if (data.success) {
-          showNotification(data.message, 'success');
-        }
-        else {
-          showNotification(data.message);
-        }
-      } catch (error) {
-        handleSystemError(error, 'fetch_failed', `Fetch request failed: ${error.message}`);
+    const formData = new FormData();
+    formData.append('detailId', ctx.detailId ?? '');
+    formData.append('appId', ctx.appId ?? '');
+    formData.append('navigationMenuId', ctx.navigationMenuId ?? '');
+    formData.append('image', input.files[0]);
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          Accept: 'application/json',
+          ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+          // IMPORTANT: do NOT set Content-Type here
+        },
+        credentials: 'same-origin', // good practice for Laravel sessions/CSRF
+      });
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        const msg = data?.message || `Request failed with status: ${response.status}`;
+        throw new Error(msg);
       }
+
+      if (data?.success) {
+        showNotification(data.message, 'success');
+      } else {
+        showNotification(data?.message || 'Upload failed.');
+      }
+    } catch (error) {
+      handleSystemError(error, 'fetch_failed', `Fetch request failed: ${error.message}`);
+    } finally {
+      // Optional: allow re-uploading the same file (change event won't fire otherwise)
+      input.value = '';
     }
   });
 };

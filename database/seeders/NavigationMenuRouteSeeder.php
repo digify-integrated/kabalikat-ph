@@ -41,7 +41,7 @@ class NavigationMenuRouteSeeder extends Seeder
             [
                 'navigation_menu_id'    => 1,
                 'route_type'            => 'import',
-                'view_file'             => 'index',
+                'view_file'             => 'pages.import.index',
                 'js_file'               => 'import/import',
             ],
             
@@ -66,7 +66,7 @@ class NavigationMenuRouteSeeder extends Seeder
             [
                 'navigation_menu_id'    => 4,
                 'route_type'            => 'import',
-                'view_file'             => 'index',
+                'view_file'             => 'pages.import.index',
                 'js_file'               => 'import/import',
             ],
 
@@ -91,7 +91,7 @@ class NavigationMenuRouteSeeder extends Seeder
             [
                 'navigation_menu_id'    => 5,
                 'route_type'            => 'import',
-                'view_file'             => 'index',
+                'view_file'             => 'pages.import.index',
                 'js_file'               => 'import/import',
             ],
 
@@ -116,7 +116,7 @@ class NavigationMenuRouteSeeder extends Seeder
             [
                 'navigation_menu_id'    => 6,
                 'route_type'            => 'import',
-                'view_file'             => 'index',
+                'view_file'             => 'pages.import.index',
                 'js_file'               => 'import/import',
             ],
 
@@ -141,7 +141,7 @@ class NavigationMenuRouteSeeder extends Seeder
             [
                 'navigation_menu_id'    => 8,
                 'route_type'            => 'import',
-                'view_file'             => 'index',
+                'view_file'             => 'pages.import.index',
                 'js_file'               => 'import/import',
             ],
 
@@ -166,7 +166,7 @@ class NavigationMenuRouteSeeder extends Seeder
             [
                 'navigation_menu_id'    => 9,
                 'route_type'            => 'import',
-                'view_file'             => 'index',
+                'view_file'             => 'pages.import.index',
                 'js_file'               => 'import/import',
             ],
 
@@ -191,7 +191,7 @@ class NavigationMenuRouteSeeder extends Seeder
             [
                 'navigation_menu_id'    => 12,
                 'route_type'            => 'import',
-                'view_file'             => 'index',
+                'view_file'             => 'pages.import.index',
                 'js_file'               => 'import/import',
             ],
 
@@ -216,7 +216,7 @@ class NavigationMenuRouteSeeder extends Seeder
             [
                 'navigation_menu_id'    => 13,
                 'route_type'            => 'import',
-                'view_file'             => 'index',
+                'view_file'             => 'pages.import.index',
                 'js_file'               => 'import/import',
             ],
 
@@ -241,7 +241,7 @@ class NavigationMenuRouteSeeder extends Seeder
             [
                 'navigation_menu_id'    => 14,
                 'route_type'            => 'import',
-                'view_file'             => 'index',
+                'view_file'             => 'pages.import.index',
                 'js_file'               => 'import/import',
             ],
 
@@ -266,7 +266,7 @@ class NavigationMenuRouteSeeder extends Seeder
             [
                 'navigation_menu_id'    => 15,
                 'route_type'            => 'import',
-                'view_file'             => 'index',
+                'view_file'             => 'pages.import.index',
                 'js_file'               => 'import/import',
             ],
 
@@ -291,7 +291,7 @@ class NavigationMenuRouteSeeder extends Seeder
             [
                 'navigation_menu_id'    => 16,
                 'route_type'            => 'import',
-                'view_file'             => 'index',
+                'view_file'             => 'pages.import.index',
                 'js_file'               => 'import/import',
             ],
 
@@ -316,7 +316,7 @@ class NavigationMenuRouteSeeder extends Seeder
             [
                 'navigation_menu_id'    => 18,
                 'route_type'            => 'import',
-                'view_file'             => 'index',
+                'view_file'             => 'pages.import.index',
                 'js_file'               => 'import/import',
             ],
 
@@ -341,7 +341,7 @@ class NavigationMenuRouteSeeder extends Seeder
             [
                 'navigation_menu_id'    => 19,
                 'route_type'            => 'import',
-                'view_file'             => 'index',
+                'view_file'             => 'pages.import.index',
                 'js_file'               => 'import/import',
             ],
 
@@ -366,7 +366,7 @@ class NavigationMenuRouteSeeder extends Seeder
             [
                 'navigation_menu_id'    => 20,
                 'route_type'            => 'import',
-                'view_file'             => 'index',
+                'view_file'             => 'pages.import.index',
                 'js_file'               => 'import/import',
             ],
 
@@ -391,7 +391,7 @@ class NavigationMenuRouteSeeder extends Seeder
             [
                 'navigation_menu_id'    => 21,
                 'route_type'            => 'import',
-                'view_file'             => 'index',
+                'view_file'             => 'pages.import.index',
                 'js_file'               => 'import/import',
             ],
         ];

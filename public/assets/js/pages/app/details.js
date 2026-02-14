@@ -1,5 +1,6 @@
 import { initValidation } from '../../util/validation.js';
 import { showNotification } from '../../util/notifications.js';
+import { attachLogNotesHandler } from '../../util/log-notes.js';
 import { disableButton, enableButton, discardCreate, detailsDeleteButton, imageRealtimeUploadButton } from '../../form/button.js';
 import { generateDropdownOptions } from '../../form/field.js';
 import { displayDetails } from '../../form/form.js';
@@ -15,7 +16,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const IMAGE_TRIGGER = '#app_logo';
     const DELETE_TRIGGER = '#delete-app-module';
 
-    discardCreate();    
+    discardCreate();
+    attachLogNotesHandler();
 
     (async () => {
         try {
@@ -96,6 +98,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         },
     });
+
+    attachLogNotesHandler('#log-notes-main', '#details-id', 'app_module');
 
     detailsDeleteButton({
         'trigger' : DELETE_TRIGGER,

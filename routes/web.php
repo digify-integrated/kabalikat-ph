@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AppController;
 use App\Http\Controllers\AppRenderController;
+use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\NavigationMenuController;
@@ -65,6 +66,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/generate-app-table', [AppController::class, 'generateAppTable'])->name('generate.app.table');
     Route::post('/generate-app-options', [AppController::class, 'generateAppOptions'])->name('generate.app.option');
     Route::post('/save-app', [AppController::class, 'saveApp'])->name('save.app');
+    Route::post('/upload-app-logo', [AppController::class, 'uploadAppLogo'])->name('upload.app.logo');
     Route::post('/fetch-app-details', [AppController::class, 'fetchAppDetails'])->name('fetch.app.details');
     Route::post('/delete-multiple-app', [AppController::class, 'deleteMultipleApp'])->name(name: 'delete.multiple.app');
     Route::post('/delete-app', [AppController::class, 'deleteApp'])->name('delete.app');
@@ -74,7 +76,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/generate-navigation-menu-options', [NavigationMenuController::class, 'generateNavigationMenuOptions'])->name('generate.navigation.menu.option');
 
     // Audit logs
-    Route::post('/get-audit-logs', [AppController::class, 'getAppDetails'])->name('get.app.details');
+    Route::post('/get-audit-logs', [AuditLogController::class, 'fetchAuditLogs'])->name('get.audit.logs');
 
     // Export route
     Route::post('/export-list', [ExportController::class, 'exportList'])->name('export.list');

@@ -1,7 +1,9 @@
 import { initializeDatatable } from '../../util/datatable.js';
 import { multipleActionButton } from '../../form/button.js';
+import { checkNotification } from '../../util/notifications.js';
 
 document.addEventListener('DOMContentLoaded', () => {
+    checkNotification();
     const TABLE = '#app-table';
     const EXPORT = 'app';
 

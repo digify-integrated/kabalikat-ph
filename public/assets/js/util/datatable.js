@@ -139,6 +139,7 @@ export const initializeDatatable = ({
   searchDelay = 400,
   scrollX = true,
   responsive = false,
+  processing = false,
 }) => {
   const table = getTableNode(selector);
   if (!table) return;
@@ -155,7 +156,7 @@ export const initializeDatatable = ({
 
   const dt = $(table).DataTable({
     serverSide,
-    processing: true,
+    processing: processing,
     deferRender: true,
     autoWidth: false,
     orderClasses: false,
@@ -189,7 +190,7 @@ export const initializeDatatable = ({
     language: {
       emptyTable: 'No data found',
       info: '_START_ - _END_ of _TOTAL_ items',
-      loadingRecords: 'Loading...',
+      loadingRecords: 'Loading Data...',
       processing: 'Loading...',
       zeroRecords: 'No matching records found',
     },
