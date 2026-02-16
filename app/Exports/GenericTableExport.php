@@ -10,18 +10,23 @@ class GenericTableExport implements FromCollection, WithHeadings
 {
     public function __construct(
         protected array $columns,
-        protected Collection $rows
+        protected Collection $rows,
+        protected bool $keepRawHeadings = false
     ) {}
 
     public function headings(): array
     {
-        // nicer headings: column_name -> Column Name
+        // If this is for CSV import, keep DB column names exactly.
+        if ($this->keepRawHeadings) {
+            return $this->columns;
+        }
+
+        // Otherwise, use nicer headings: column_name -> Column Name
         return array_map(fn ($c) => ucwords(str_replace('_', ' ', $c)), $this->columns);
     }
 
     public function collection(): Collection
     {
-        // Ensure the export matches the selected columns order
         return $this->rows->map(function ($row) {
             $arr = (array) $row;
             return collect($this->columns)->map(fn ($c) => $arr[$c] ?? null)->all();

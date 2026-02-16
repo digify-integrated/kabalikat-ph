@@ -3,12 +3,16 @@ import { multipleActionButton } from '../../form/button.js';
 import { checkNotification } from '../../util/notifications.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    checkNotification();
+    const TABLE_URL = '/generate-app-table';
     const TABLE = '#app-table';
     const EXPORT = 'app';
+    const DELETE_TRIGGER = '#delete-app';
+    const DELETE_URL = '/delete-multiple-app';
+    
+    checkNotification();
 
     initializeDatatable({
-        url: '/generate-app-table',
+        url: TABLE_URL,
         selector: TABLE,
         serverSide: false,
         columns: [
@@ -29,12 +33,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     multipleActionButton({
-        'trigger' : '#delete-app',
-        'url' : '/delete-multiple-app',
+        'trigger' : DELETE_TRIGGER,
+        'url' : DELETE_URL,
         'swalTitle' : 'Confirm Multiple Apps Deletion',
         'swalText' : 'Are you sure you want to delete these apps?',
         'confirmButtonText' : 'Delete',
-        'validationMessage' : 'Please select the data you want to delete',
+        'validationMessage' : 'Please select the apps you want to delete',
         'table' : TABLE
     });
 });

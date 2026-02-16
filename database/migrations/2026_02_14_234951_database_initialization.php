@@ -278,9 +278,6 @@ return new class extends Migration
     public function down(): void
     {        
         Schema::dropIfExists('audit_log');
-        Schema::dropIfExists('navigation_menu_route');
-        Schema::dropIfExists('navigation_menu');
-        Schema::dropIfExists('app');
         Schema::dropIfExists('role_user_account');
         Schema::dropIfExists('role_system_action_permission');
         Schema::dropIfExists('role_permission');
@@ -290,7 +287,9 @@ return new class extends Migration
         Schema::dropIfExists('upload_setting');
         Schema::dropIfExists('file_extension');
         Schema::dropIfExists('file_type');
-
+        Schema::dropIfExists('navigation_menu_route');
+        Schema::dropIfExists('navigation_menu');
+        Schema::dropIfExists('app');
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
         Schema::dropIfExists('users');

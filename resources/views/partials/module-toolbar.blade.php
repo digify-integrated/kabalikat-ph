@@ -11,7 +11,7 @@
                 </div>
 
                 <div class="d-flex align-self-center flex-center flex-shrink-1">
-                    @if(($createPermission ?? 0) > 0 && !request()->routeIs('apps.new'))
+                    @if(($createPermission ?? 0) > 0 && (request()->routeIs('apps.base') || request()->routeIs('apps.details')))
                         <a href="{{ route('apps.new', ['appId' => $appId, 'navigationMenuId' => $navigationMenuId]) }}"
                            class="btn btn-flex btn-sm btn-outline btn-active-color-primary btn-custom px-4">
                             <i class="ki-outline ki-plus fs-4 me-2"></i> New

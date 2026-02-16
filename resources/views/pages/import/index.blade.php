@@ -88,7 +88,7 @@
                         @csrf
                         <div class="row">
                             <div class="col-lg-12">
-                                <input type="hidden" id="import_table_name" name="import_table_name">
+                                <input type="hidden" id="import_table_name" name="import_table_name" value="{{ $databaseTable }}">
                                 <input type="file" class="form-control" id="import_file" name="import_file" accept=".csv">
                             </div>
                         </div>

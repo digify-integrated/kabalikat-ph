@@ -27,7 +27,6 @@ class ExportController extends Controller
         }
 
         $tableName = $request->input('table_name');
-
         $dbName = DB::getDatabaseName();
 
         $fields = DB::table('information_schema.columns')
@@ -47,23 +46,21 @@ class ExportController extends Controller
 
     public function exportData(Request $request)
     {
-        // 1) Validate inputs
         $validated = $request->validate([
-            'export_to'     => ['required', 'in:csv,xlsx,pdf'],
-            'export_id'     => ['required', 'array', 'min:1'],
-            'export_id.*'   => ['integer'],
-            'table_column'  => ['required', 'array', 'min:1'],
-            'table_column.*'=> ['string', 'max:64', 'regex:/^[A-Za-z0-9_]+$/'],
-            'table_name'    => ['required', 'string', 'max:64', 'regex:/^[A-Za-z0-9_]+$/'],
+            'export_to'      => ['required', 'in:csv,csv import,xlsx,pdf'],
+            'export_id'      => ['required', 'array', 'min:1'],
+            'export_id.*'    => ['integer'],
+            'table_column'   => ['required', 'array', 'min:1'],
+            'table_column.*' => ['string', 'max:64', 'regex:/^[A-Za-z0-9_]+$/'],
+            'table_name'     => ['required', 'string', 'max:64', 'regex:/^[A-Za-z0-9_]+$/'],
         ]);
 
-        $exportTo     = $validated['export_to'];
-        $ids          = $validated['export_id'];
-        $columns      = $validated['table_column'];
-        $tableName    = $validated['table_name'];
+        $exportTo  = $validated['export_to'];
+        $ids       = $validated['export_id'];
+        $columns   = $validated['table_column'];
+        $tableName = $validated['table_name'];
 
-        // 2) Strongly recommended: whitelist allowed tables
-        // Prevent users from exporting arbitrary tables.
+        // Optional whitelist
         $allowedTables = [
             // 'users', 'orders', ...
         ];
@@ -74,7 +71,7 @@ class ExportController extends Controller
             ], 403);
         }
 
-        // 3) Ensure requested columns really exist in that table
+        // Validate columns exist
         $dbName = DB::getDatabaseName();
         $existingColumns = DB::table('information_schema.columns')
             ->where('table_schema', $dbName)
@@ -90,22 +87,20 @@ class ExportController extends Controller
             ], 422);
         }
 
-        // 4) Fetch data safely (no raw column SQL strings)
-        // Assumes your table has an "id" primary key.
+        // Fetch rows
         $rows = DB::table($tableName)
             ->select($columns)
             ->whereIn('id', $ids)
             ->orderBy('id')
             ->get();
 
-        // 5) Filename
+        // Filename
         $cleanTable = Str::slug($tableName, '_');
         $timestamp  = now()->format('Y_m_d_Hi');
         $baseName   = "{$cleanTable}_report_{$timestamp}";
 
-        // 6) Export
+        // PDF
         if ($exportTo === 'pdf') {
-            // Create a simple PDF from a Blade view
             $pdf = Pdf::loadView('exports.table', [
                 'tableName' => $tableName,
                 'columns'   => $columns,
@@ -115,16 +110,20 @@ class ExportController extends Controller
             return $pdf->download($baseName . '.pdf');
         }
 
-        // CSV / XLSX via Laravel Excel
-        $export = new GenericTableExport($columns, $rows);
+        // CSV Import should keep raw column headings
+        $keepRawHeadings = ($exportTo === 'csv import');
 
-        if ($exportTo === 'csv') {
+        // Export object
+        $export = new GenericTableExport($columns, $rows, $keepRawHeadings);
+
+        // CSV / XLSX
+        if ($exportTo === 'csv' || $exportTo === 'csv import') {
             return Excel::download($export, $baseName . '.csv', \Maatwebsite\Excel\Excel::CSV, [
                 'Content-Type' => 'text/csv',
             ]);
         }
 
-        // xlsx
+        // XLSX
         return Excel::download($export, $baseName . '.xlsx');
     }
 }

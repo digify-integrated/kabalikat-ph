@@ -16,7 +16,10 @@ export const resetForm = (formId) => {
   const invalids = form.querySelectorAll('.is-invalid');
   for (const el of invalids) el.classList.remove('is-invalid');
 
-  const hiddens = form.querySelectorAll('input[type="hidden"]:not([name="_token"])');
+  // Do not clear _token and import_table_name
+  const hiddens = form.querySelectorAll(
+    'input[type="hidden"]:not([name="_token"]):not([name="import_table_name"])'
+  );
   for (const h of hiddens) h.value = '';
 };
 

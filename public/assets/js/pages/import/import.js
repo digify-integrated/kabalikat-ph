@@ -29,10 +29,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const response = await fetch(ROUTE, {
                     method: 'POST',
                     body: formData,
-                    // IMPORTANT: do not set Content-Type; browser sets multipart boundary
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest',
-                        // If you need CSRF here, include it too (see below)
                     }
                 });
 
@@ -55,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         $('#upload-modal').modal('hide');
                         enableButton(['submit-upload', 'import', 'reset-import']);
                     } else {
-                        setNotification(data.message);
+                        setNotification(data.message, 'success');
                         window.location.href = data.redirect_link;
                     }
                 } else {

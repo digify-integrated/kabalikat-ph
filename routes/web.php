@@ -81,7 +81,7 @@ Route::middleware('auth')->group(function () {
 
     // Import route
     Route::post('/import-preview', [ImportController::class, 'importPreview'])->name('import.preview');
-    Route::post('/save-import-data', [ExportController::class, 'saveImportData'])->name('save.import.data');
+    Route::post('/save-import-data', [ImportController::class, 'saveImportData'])->name('save.import.data');
 
     // Export route
     Route::post('/export-list', [ExportController::class, 'exportList'])->name('export.list');
