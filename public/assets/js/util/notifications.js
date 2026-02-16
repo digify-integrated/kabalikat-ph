@@ -10,7 +10,7 @@ const ensureToastrConfigured = () => {
   toastr.options = {
     closeButton: true,
     progressBar: true,
-    preventDuplicates: true,
+    preventDuplicates: false,
     positionClass: 'toastr-top-right',
     timeOut: 2000,
   };

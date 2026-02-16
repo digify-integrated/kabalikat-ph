@@ -23,7 +23,7 @@ class AppSeeder extends Seeder
                 'app_version'           => '1.0.0',
                 'app_logo'              => 'app/1/settings.png',
                 'navigation_menu_id'    => 1,
-                'navigation_menu_name'  => 'App Module',
+                'navigation_menu_name'  => 'App',
                 'order_sequence'        => 100,
             ],
             [
@@ -32,7 +32,7 @@ class AppSeeder extends Seeder
                 'app_version'           => '1.0.0',
                 'app_logo'              => 'app/2/employees.png',
                 'navigation_menu_id'    => 1,
-                'navigation_menu_name'  => 'App Module',
+                'navigation_menu_name'  => 'App',
                 'order_sequence'        => 5,
             ],
             [
@@ -41,7 +41,7 @@ class AppSeeder extends Seeder
                 'app_version'           => '1.0.0',
                 'app_logo'              => 'app/3/pos.png',
                 'navigation_menu_id'    => 1,
-                'navigation_menu_name'  => 'App Module',
+                'navigation_menu_name'  => 'App',
                 'order_sequence'        => 5,
             ],
             [
@@ -50,7 +50,7 @@ class AppSeeder extends Seeder
                 'app_version'           => '1.0.0',
                 'app_logo'              => 'app/4/inventory.png',
                 'navigation_menu_id'    => 1,
-                'navigation_menu_name'  => 'App Module',
+                'navigation_menu_name'  => 'App',
                 'order_sequence'        => 5,
             ],
         ];

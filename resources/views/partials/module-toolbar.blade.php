@@ -10,7 +10,6 @@
                     </h1>
                 </div>
 
-                {{-- Buttons (optional) --}}
                 <div class="d-flex align-self-center flex-center flex-shrink-1">
                     @if(($createPermission ?? 0) > 0 && !request()->routeIs('apps.new'))
                         <a href="{{ route('apps.new', ['appId' => $appId, 'navigationMenuId' => $navigationMenuId]) }}"
@@ -19,14 +18,13 @@
                         </a>
                     @endif
 
-                    @if(($importPermission ?? 0) > 0 && !request()->routeIs('apps.import'))
+                    @if(($importPermission ?? 0) > 0 && request()->routeIs('apps.base') )
                         <a href="{{ route('apps.import', ['appId' => $appId, 'navigationMenuId' => $navigationMenuId]) }}"
                            class="btn btn-flex btn-sm btn-outline btn-active-color-primary btn-custom ms-3 px-4">
                             <i class="ki-outline ki-exit-down fs-4 me-2"></i> Import
                         </a>
                     @endif
 
-                    {{-- Example: show logs only on details route, adjust to your needs --}}
                     @if(($logsPermission ?? 0) > 0 && request()->routeIs('apps.details'))
                         <button id="log-notes-main"
                                 class="btn btn-flex btn-sm btn-outline btn-active-color-primary btn-custom ms-3 px-4"

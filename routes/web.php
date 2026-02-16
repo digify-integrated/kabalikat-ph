@@ -5,6 +5,7 @@ use App\Http\Controllers\AppRenderController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\ExportController;
+use App\Http\Controllers\ImportController;
 use App\Http\Controllers\NavigationMenuController;
 use Illuminate\Support\Facades\Route;
 
@@ -77,6 +78,10 @@ Route::middleware('auth')->group(function () {
 
     // Audit logs
     Route::post('/get-audit-logs', [AuditLogController::class, 'fetchAuditLogs'])->name('get.audit.logs');
+
+    // Import route
+    Route::post('/import-preview', [ImportController::class, 'importPreview'])->name('import.preview');
+    Route::post('/save-import-data', [ExportController::class, 'saveImportData'])->name('save.import.data');
 
     // Export route
     Route::post('/export-list', [ExportController::class, 'exportList'])->name('export.list');
