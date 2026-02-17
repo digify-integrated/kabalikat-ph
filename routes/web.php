@@ -7,6 +7,7 @@ use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\NavigationMenuController;
+use App\Http\Controllers\RolePermissionController;
 use Illuminate\Support\Facades\Route;
 
 // Routes that should NOT be accessible when logged in
@@ -70,11 +71,20 @@ Route::middleware('auth')->group(function () {
     Route::post('/upload-app-logo', [AppController::class, 'uploadAppLogo'])->name('upload.app.logo');
     Route::post('/fetch-app-details', [AppController::class, 'fetchAppDetails'])->name('fetch.app.details');
     Route::post('/delete-multiple-app', [AppController::class, 'deleteMultipleApp'])->name(name: 'delete.multiple.app');
-    Route::post('/delete-app', [AppController::class, 'deleteApp'])->name('delete.app');
-    Route::post('/get-app-details', [AppController::class, 'getAppDetails'])->name('get.app.details');
+    Route::post('/delete-app', [AppController::class, 'deleteApp'])->name('delete.app');;
 
-    // Navigation Menu    
+    // Navigation Menu 
+    Route::post('/generate-navigation-menu-table', [NavigationMenuController::class, 'generateNavigationMenuTable'])->name('generate.navigation.menu.table');  
     Route::post('/generate-navigation-menu-options', [NavigationMenuController::class, 'generateNavigationMenuOptions'])->name('generate.navigation.menu.option');
+    Route::post('/save-navigation-menu', [NavigationMenuController::class, 'saveNavigationMenu'])->name('save.navigation.menu');
+    Route::post('/save-navigation-menu-route', [NavigationMenuController::class, 'saveNavigationMenuRoute'])->name('save.navigation.menu');
+    Route::post('/fetch-navigation-menu-details', [NavigationMenuController::class, 'fetchNavigationMenuDetails'])->name('fetch.navigation.menu.details');
+    Route::post('/fetch-navigation-menu-route-details', [NavigationMenuController::class, 'fetchNavigationMenuRouteDetails'])->name('fetch.navigation.menu.route.details');
+    Route::post('/delete-multiple-navigation-menu', [NavigationMenuController::class, 'deleteMultipleNavigationMenu'])->name(name: 'delete.multiple.navigation.menu');
+    Route::post('/delete-navigation-menu', [NavigationMenuController::class, 'deleteNavigationMenu'])->name('delete.navigation.menu');
+
+    // Role Permission
+    Route::post('/generate-navigation-menu-role-permission-table', [RolePermissionController::class, 'generateNavigationMenuRolePermissionTable'])->name('generate.navigation.menu.role.permission.table');
 
     // Audit logs
     Route::post('/get-audit-logs', [AuditLogController::class, 'fetchAuditLogs'])->name('get.audit.logs');
@@ -84,6 +94,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/save-import-data', [ImportController::class, 'saveImportData'])->name('save.import.data');
 
     // Export route
+    Route::post('/table-list', [ExportController::class, 'generateTableOptions'])->name('table.list');
     Route::post('/export-list', [ExportController::class, 'exportList'])->name('export.list');
     Route::post('/export', [ExportController::class, 'exportData'])->name('export.data');
 

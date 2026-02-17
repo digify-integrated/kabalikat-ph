@@ -11,5 +11,6 @@ class SystemAction extends Model
     protected $fillable = [
         'system_action_name',
         'system_action_description',
+        'last_log_by'
     ];
 }

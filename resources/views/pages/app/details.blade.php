@@ -52,7 +52,7 @@
                         </a>
                         <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-125px py-4" data-kt-menu="true" style="z-index: 107; position: fixed; inset: 0px 0px auto auto; margin: 0px; transform: translate(-60px, 539px);" data-popper-placement="bottom-end">
                             <div class="menu-item px-3">
-                                <a href="javascript:void(0);" class="menu-link px-3" id="delete-app-module">
+                                <a href="javascript:void(0);" class="menu-link px-3" id="delete-app">
                                     Delete
                                 </a>
                             </div>
@@ -156,10 +156,6 @@
 
                     @if($canWrite)
                         <div class="card-footer d-flex justify-content-end py-6 px-9">
-                            <button type="button" id="discard-create" class="btn btn-light btn-active-light-primary me-2">
-                                Discard
-                            </button>
-
                             <button type="submit" class="btn btn-primary" id="submit-data">
                                 Save Changes
                             </button>

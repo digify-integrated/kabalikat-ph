@@ -16,6 +16,7 @@ class App extends Model
         'navigation_menu_id',
         'navigation_menu_name',
         'order_sequence',
+        'last_log_by'
     ];
 
     public function navigationMenus()

@@ -11,12 +11,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const FORM = '#app_form';
     const FORM_URL = '/save-app';
     const DETAILS_URL = '/fetch-app-details';
-    const DELETE_TRIGGER = '#delete-app-module';
+    const DELETE_TRIGGER = '#delete-app';
     const DELETE_URL = '/delete-app';
     const IMAGE_TRIGGER = '#app_logo';
     const IMAGE_UPLOAD_URL = '/upload-app-logo';
 
-    discardCreate();
     attachLogNotesHandler();
 
     (async () => {
@@ -29,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
             await displayDetails({
                 url: DETAILS_URL,
                 formSelector: FORM,
+                busyHideTargets: ['#submit-data'],
                 onSuccess: async (data) => {
                     document.getElementById('app_name').value = data.appName || '';
                     document.getElementById('app_description').value = data.appDescription || '';
@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
                 if (!response.ok) {
-                    throw new Error(`Save app module failed with status: ${response.status}`);
+                    throw new Error(`Save app failed with status: ${response.status}`);
                 }
 
                 const data = await response.json();
@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
     });
 
-    attachLogNotesHandler('#log-notes-main', '#details-id', 'app_module');
+    attachLogNotesHandler('#log-notes-main', '#details-id');
 
     detailsDeleteButton({
         'trigger' : DELETE_TRIGGER,

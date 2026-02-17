@@ -44,6 +44,35 @@ class ExportController extends Controller
         return response()->json($response);
     }
 
+    public function generateTableOptions(Request $request)
+    {
+        $multiple = filter_var($request->input('multiple', false), FILTER_VALIDATE_BOOLEAN);
+
+        $response = collect();
+
+        if (!$multiple) {
+            $response->push([
+                'id'   => '',
+                'text' => '--',
+            ]);
+        }
+
+        $apps = DB::table('information_schema.tables')
+            ->select(['table_name'])
+            ->orderBy('table_name')
+            ->where('table_schema', env('DB_DATABASE'))
+            ->get();
+
+        $response = $response->concat(
+            $apps->map(fn ($row) => [
+                'id'   => $row->table_name,
+                'text' => $row->table_name,
+            ])
+        )->values();
+
+        return response()->json($response);
+    }
+
     public function exportData(Request $request)
     {
         $validated = $request->validate([

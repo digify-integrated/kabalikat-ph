@@ -98,7 +98,7 @@ class NavigationMenuSeeder extends Seeder
                 'app_name'                      => 'Settings',
                 'parent_navigation_menu_id'     => 7,
                 'parent_navigation_menu_name'   => 'User Interface',
-                'database_table'                => 'menu_item',
+                'database_table'                => 'navigation_menu',
                 'order_sequence'                => 2
             ],
             [

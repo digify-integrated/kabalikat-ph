@@ -20,6 +20,7 @@ class RolePermission extends Model
         'import_access',
         'export_access',
         'logs_access',
+        'last_log_by'
     ];
 
     public function role()

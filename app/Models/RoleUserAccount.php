@@ -13,6 +13,7 @@ class RoleUserAccount extends Model
         'role_name',
         'user_account_id',
         'user_name',
+        'last_log_by'
     ];
 
     public function role()

@@ -43,30 +43,42 @@ export const displayDetails = async ({
   otherData = {},
 
   // Busy handling
-  form,                 // HTMLElement
-  formSelector,         // string selector (optional)
+  form,                 
+  formSelector,         
   disableWhileFetching = true,
+
+  // ✅ NEW: hide these while fetching (selectors or elements)
+  busyHideTargets = [],
 
   // detailId config
   detailIdKey = 'detailId',
-  detailIdValue,        // optional override; otherwise uses page context
+  detailIdValue,
 
   // Callbacks
   onSuccess = () => {},
-  onNotExist,           // optional override
-  onFailureMessage,     // optional override
+  onNotExist,
+  onFailureMessage,
 } = {}) => {
-  // --- local helpers kept INSIDE for a single cohesive function ---
   const resolveForm = () => form ?? (formSelector ? document.querySelector(formSelector) : null);
+
+  const resolveNodes = (targets) => {
+    const nodes = [];
+    const list = Array.isArray(targets) ? targets : [targets];
+
+    for (const t of list) {
+      if (!t) continue;
+      if (t.nodeType === 1) nodes.push(t);
+      else if (typeof t === 'string') document.querySelectorAll(t).forEach((el) => nodes.push(el));
+    }
+    return nodes;
+  };
 
   const setFormBusy = (targetForm, isBusy) => {
     if (!targetForm) return;
 
     const controls = targetForm.querySelectorAll('input, select, textarea, button');
-
     controls.forEach((el) => {
       if (isBusy) {
-        // store original disabled state so we restore correctly
         el.dataset.prevDisabled = String(el.disabled);
         el.disabled = true;
       } else {
@@ -80,6 +92,20 @@ export const displayDetails = async ({
     else targetForm.removeAttribute('aria-busy');
   };
 
+  const setHiddenBusy = (nodes, isBusy) => {
+    nodes.forEach((el) => {
+      if (isBusy) {
+        // store original "hidden" state so we restore correctly
+        el.dataset.prevHidden = String(el.classList.contains('d-none'));
+        el.classList.add('d-none');
+      } else {
+        const wasHidden = el.dataset.prevHidden === 'true';
+        if (!wasHidden) el.classList.remove('d-none');
+        delete el.dataset.prevHidden;
+      }
+    });
+  };
+
   const appendObject = (params, obj) => {
     if (!obj || typeof obj !== 'object') return;
     Object.entries(obj).forEach(([key, value]) => {
@@ -89,21 +115,20 @@ export const displayDetails = async ({
   };
 
   const targetForm = resolveForm();
+  const hideNodes = resolveNodes(busyHideTargets);
 
   try {
     if (disableWhileFetching) setFormBusy(targetForm, true);
+    setHiddenBusy(hideNodes, true);
 
     const csrf = getCsrfToken();
     const ctx = getPageContext();
 
     const params = new URLSearchParams();
-
     const resolvedDetailId = detailIdValue ?? (ctx?.detailId ?? '');
     params.append(detailIdKey, resolvedDetailId);
     params.append('appId', ctx.appId ?? '');
-    params.append('navigationMenuId', ctx.navigationMenuId ?? '')
-
-    // correctly append extra payload keys (fixes your previous "detailId" overwrite)
+    params.append('navigationMenuId', ctx.navigationMenuId ?? '');
     appendObject(params, otherData);
 
     const response = await fetch(url, {
@@ -116,9 +141,7 @@ export const displayDetails = async ({
       },
     });
 
-    if (!response.ok) {
-      throw new Error(`Request failed with status: ${response.status}`);
-    }
+    if (!response.ok) throw new Error(`Request failed with status: ${response.status}`);
 
     const data = await response.json();
 
@@ -128,9 +151,8 @@ export const displayDetails = async ({
     }
 
     if (data?.notExist) {
-      if (typeof onNotExist === 'function') {
-        onNotExist(data);
-      } else {
+      if (typeof onNotExist === 'function') onNotExist(data);
+      else {
         setNotification(data.message);
         window.location.replace(data.redirect_link);
       }
@@ -145,6 +167,7 @@ export const displayDetails = async ({
     handleSystemError(error, 'fetch_failed', `Fetch request failed: ${error.message}`);
     throw error;
   } finally {
+    setHiddenBusy(hideNodes, false);
     if (disableWhileFetching) setFormBusy(targetForm, false);
   }
 };

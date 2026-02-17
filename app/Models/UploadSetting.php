@@ -14,6 +14,7 @@ class UploadSetting extends Model
         'upload_setting_name',
         'upload_setting_description',
         'max_file_size',
+        'last_log_by'
     ];
 
     /**

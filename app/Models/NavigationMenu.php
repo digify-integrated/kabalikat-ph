@@ -17,6 +17,7 @@ class NavigationMenu extends Model
         'parent_navigation_menu_name',
         'database_table',
         'order_sequence',
+        'last_log_by'
     ];
 
     public function app()

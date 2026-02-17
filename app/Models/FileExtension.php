@@ -16,6 +16,7 @@ class FileExtension extends Model
         'file_extension',
         'file_type_id',
         'file_type_name',
+        'last_log_by'
     ];
 
     /**

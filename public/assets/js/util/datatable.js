@@ -93,7 +93,6 @@ export const destroyDatatable = (tableSelectorOrNode) => {
   const dt = getDT(node);
   if (!dt) return;
 
-  // Remove row-click handler we attach
   const tbody = node.tBodies?.[0];
   if (tbody) {
     const ns = `.dtRowClick_${node.id || 'table'}`;
@@ -101,7 +100,7 @@ export const destroyDatatable = (tableSelectorOrNode) => {
   }
 
   dt.clear();
-  dt.destroy(true);
+  dt.destroy();
   dtByNode.delete(node);
 };
 

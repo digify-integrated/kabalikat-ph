@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('password');
             $table->string('status')->default('Inactive');
             $table->rememberToken();
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
             $table->timestamps();
         });
 

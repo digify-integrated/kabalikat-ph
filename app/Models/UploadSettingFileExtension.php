@@ -15,6 +15,7 @@ class UploadSettingFileExtension extends Model
         'file_extension_id',
         'file_extension_name',
         'file_extension',
+        'last_log_by'
     ];
 
     /**

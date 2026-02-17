@@ -11,6 +11,7 @@ class FileType extends Model
 
     protected $fillable = [
         'file_type_name',
+        'last_log_by'
     ];
 
     /**

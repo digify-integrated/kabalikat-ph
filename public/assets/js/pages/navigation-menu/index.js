@@ -1,6 +1,7 @@
 import { initializeDatatable } from '../../util/datatable.js';
 import { multipleActionButton } from '../../form/button.js';
 import { checkNotification } from '../../util/notifications.js';
+import { generateDropdownOptions } from '../../form/field.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const TABLE_URL = '/generate-navigation-menu-table';
@@ -8,18 +9,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const EXPORT = 'navigation_menu';
     const DELETE_TRIGGER = '#delete-navigation-menu';
     const DELETE_URL = '/delete-multiple-navigation-menu';
-    
-    const dropdownConfigs = [
-        { url: '/generate-app-options', dropdownSelector: '#filter_by_app' },
-        { url: '/generate-navigation-menu-parent-options', dropdownSelector: '#filter_by_parent_menu' },
-    ];
-    
-    checkNotification();
 
-    initializeDatatable({
+    const datatableConfig = () => ({
         url: TABLE_URL,
         selector: TABLE,
-        serverSide: false,        
+        serverSide: false,
         ajaxData: {
             filter_by_app: $('#filter_by_app').val(),
             filter_by_parent_menu: $('#filter_by_parent_menu').val()
@@ -46,11 +40,20 @@ document.addEventListener('DOMContentLoaded', () => {
             export: EXPORT,
         }
     });
+    
+    const dropdownConfigs = [
+        { url: '/generate-app-options', dropdownSelector: '#filter_by_app' },
+        { url: '/generate-navigation-menu-options', dropdownSelector: '#filter_by_parent_menu' },
+    ];
+    
+    checkNotification();
+
+    initializeDatatable(datatableConfig());
 
     dropdownConfigs.forEach(cfg => {
         generateDropdownOptions({
             url: cfg.url,
-            dropdownSelector: cfg.selector,
+            dropdownSelector: cfg.dropdownSelector,
             data: { multiple : true }
         });
     });
@@ -63,5 +66,18 @@ document.addEventListener('DOMContentLoaded', () => {
         'confirmButtonText' : 'Delete',
         'validationMessage' : 'Please select the navigation menus you want to delete',
         'table' : TABLE
+    });
+
+     document.addEventListener('click', async (event) => {
+        if (event.target.closest('#apply-filter')) {
+            initializeDatatable(datatableConfig());
+        }
+
+        if (event.target.closest('#reset-filter')) {
+            $('#filter_by_parent_menu').val(null).trigger('change');
+            $('#filter_by_app').val(null).trigger('change');
+
+            initializeDatatable(datatableConfig());
+        }
     });
 });

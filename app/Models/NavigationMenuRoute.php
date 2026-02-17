@@ -13,5 +13,6 @@ class NavigationMenuRoute extends Model
         'route_type',
         'view_file',
         'js_file',
+        'last_log_by'
     ];
 }

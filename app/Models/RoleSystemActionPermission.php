@@ -14,6 +14,7 @@ class RoleSystemActionPermission extends Model
         'system_action_id',
         'system_action_name',
         'system_action_access',
+        'last_log_by'
     ];
 
     public function role()
