@@ -4,11 +4,11 @@ import { checkNotification } from '../../util/notifications.js';
 import { generateDropdownOptions } from '../../form/field.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    const TABLE_URL = '/generate-navigation-menu-table';
+    const TABLE_URL = '/navigation-menu/generate-table';
     const TABLE = '#navigation-menu-table';
     const EXPORT = 'navigation_menu';
-    const DELETE_TRIGGER = '#delete-navigation-menu';
-    const DELETE_URL = '/delete-multiple-navigation-menu';
+    const DELETE_TRIGGER = '#delete-data';
+    const DELETE_URL = '/navigation-menu/delete-multiple';
 
     const datatableConfig = () => ({
         url: TABLE_URL,
@@ -42,8 +42,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     const dropdownConfigs = [
-        { url: '/generate-app-options', dropdownSelector: '#filter_by_app' },
-        { url: '/generate-navigation-menu-options', dropdownSelector: '#filter_by_parent_menu' },
+        { url: '/app/generate-options', dropdownSelector: '#filter_by_app' },
+        { url: '/navigation-menu/generate-options', dropdownSelector: '#filter_by_parent_menu' },
     ];
     
     checkNotification();

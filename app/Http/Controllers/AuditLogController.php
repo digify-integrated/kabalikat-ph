@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Storage;
 
 class AuditLogController extends Controller
 {
-    public function fetchAuditLogs(Request $request)
+    public function fetch(Request $request)
     {
         $validated = $request->validate([
             'appId'            => ['nullable', 'integer', 'min:0'],

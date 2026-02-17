@@ -6,30 +6,34 @@ import { handleSystemError } from '../../util/system-errors.js';
 import { getPageContext } from '../../form/form.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    const FORM = '#app_form';
-    const ROUTE = '/app/save';
+    const FORM = '#navigation_menu_form';
+    const ROUTE = '/save-navigation-menu';
 
     discardCreate();
 
-    generateDropdownOptions({
-        url: '/navigation-menu/generate-options',
-        dropdownSelector: '#navigation_menu_id',
+    const dropdownConfigs = [
+        { url: '/generate-app-options', dropdownSelector: '#app_id' },
+        { url: '/generate-navigation-menu-options', dropdownSelector: '#parent_id' },
+        { url: '/table-list', dropdownSelector: '#table_name' },
+    ];
+
+    dropdownConfigs.forEach(cfg => {
+        generateDropdownOptions({
+            url: cfg.url,
+            dropdownSelector: cfg.dropdownSelector
+        });
     });
 
     initValidation(FORM, {
         rules: {
-            app_name: { required: true},
-            app_description: { required: true },
-            navigation_menu_id: { required: true },
-            app_version: { required: true },
-            order_sequence: { required: true },
+            navigation_menu_name: { required: true },
+            app_id: { required: true },
+            order_sequence: { required: true }
         },
         messages: {
-            app_name: { required: 'Enter the display name' },
-            app_description: { required: 'Enter the description' },
-            navigation_menu_id: { required: 'Select the default page' },
-            app_version: { required: 'Enter the app version' },
-            order_sequence: { required: 'Enter the order sequence' },
+            navigation_menu_name: { required: 'Enter the display name' },
+            app_id: { required: 'Choose the app' },
+            order_sequence: { required: 'Enter the order sequence' }
         },
         submitHandler: async (form) => {
             const ctx = getPageContext();
@@ -46,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
                 if (!response.ok) {
-                    throw new Error(`Save app module failed with status: ${response.status}`);
+                    throw new Error(`Save navigation menu failed with status: ${response.status}`);
                 }
 
                 const data = await response.json();

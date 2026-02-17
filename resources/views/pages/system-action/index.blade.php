@@ -51,14 +51,13 @@
 
                         </div>
                     @endif
-
                 </div>
             </div>
         </div>
 
         <div class="card-body pt-9">
             <div class="table-responsive">
-                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5" id="app-table">
+                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5" id="system-action-table">
                     <thead>
                         <tr class="text-start text-gray-800 fw-bold fs-7 text-uppercase gs-0">
                             <th>
@@ -66,7 +65,7 @@
                                     <input class="form-check-input" id="datatable-checkbox" type="checkbox">
                                 </div>
                             </th>
-                            <th>App</th>
+                            <th>System Action</th>
                         </tr>
                     </thead>
                     <tbody class="fw-semibold text-gray-800"></tbody>
@@ -85,6 +84,12 @@
     <script src="{{ asset('assets/plugins/bootstrap-duallistbox/dist/jquery.bootstrap-duallistbox.min.js') }}"></script>
 
     @if (!empty($jsFile))
+        <script>
+            window.routes = {
+                generateAppTable: @json(route('generate.app.table')),
+                generateAppOptions: @json(route('generate.app.option')),
+            };
+        </script>
         <script type="module" src="{{ asset('assets/js/pages/' . $jsFile . '.js') }}"></script>
     @endif
 @endpush

@@ -9,10 +9,10 @@ import { initializeDatatable, reloadDatatable } from '../../util/datatable.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const FORM = '#navigation_menu_form';
-    const FORM_URL = '/navigation-menu/save';
-    const DETAILS_URL = '/navigation-menu/fetch-details';
+    const FORM_URL = '/save-navigation-menu';
+    const DETAILS_URL = '/fetch-navigation-menu-details';
     const DELETE_TRIGGER = '#delete-navigation-menu';
-    const DELETE_URL = '/navigation-menu/delete';
+    const DELETE_URL = '/delete-navigation-menu';
     const ctx = getPageContext();
 
     attachLogNotesHandler();
@@ -20,9 +20,9 @@ document.addEventListener('DOMContentLoaded', () => {
     (async () => {
         try {
             const dropdownConfigs = [
-                { url: '/app/generate-options', dropdownSelector: '#app_id' },
-                { url: '/navigation-menu/generate-options', dropdownSelector: '#parent_id' },
-                { url: '/export/table-list', dropdownSelector: '#table_name' },
+                { url: '/generate-app-options', dropdownSelector: '#app_id' },
+                { url: '/generate-navigation-menu-options', dropdownSelector: '#parent_id' },
+                { url: '/table-list', dropdownSelector: '#table_name' },
             ];
 
             // 1) Start dropdown loads immediately
@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // 2) Start role-permission datatable immediately (concurrently)
             const rolePermissionTablePromise = Promise.resolve().then(() =>
                 initializeDatatable({
-                    url: '/role-permission/generate-navigation-menu-role-permission-table',
+                    url: '/generate-navigation-menu-role-permission-table',
                     selector: '#role-permission-table',
                     serverSide: false,
                     order: [[0, 'asc']],
@@ -47,14 +47,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         page_navigation_menu_id: ctx.navigationMenuId,
                     },
                     columns: [
-                        { data: 'ROLE' },
+                        { data: 'ROLE_NAME' },
                         { data: 'READ_ACCESS' },
                         { data: 'CREATE_ACCESS' },
                         { data: 'WRITE_ACCESS' },
                         { data: 'DELETE_ACCESS' },
                         { data: 'IMPORT_ACCESS' },
                         { data: 'EXPORT_ACCESS' },
-                        { data: 'LOGS_ACCESS' },
+                        { data: 'LOG_NOTES_ACCESS' },
                         { data: 'ACTION' },
                     ],
                     columnDefs: [
@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // 4) Start route details immediately
             const routeDetailsPromise = displayDetails({
-                url: '/navigation-menu/fetch-route-details',
+                url: '/fetch-navigation-menu-route-details',
                 formSelector: '#navigation_menu_route_form',
                 busyHideTargets: ['#submit-route-data'],
                 onSuccess: async (data) => {
@@ -183,7 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
             disableButton('submit-route-data');
 
             try {
-                const response = await fetch('/navigation-menu/save-route', {
+                const response = await fetch('/save-navigation-menu-route', {
                     method: 'POST',
                     body: formData,
                 });
@@ -217,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
             disableButton('submit-assignment');
 
             try {
-                const response = await fetch('/role-permission/save-navigation-menu-role-assignment', {
+                const response = await fetch('/save-navigation-menu-role-assignment', {
                     method: 'POST',
                     body: formData,
                 });
@@ -248,7 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     generateDualListBox({
         trigger: '#assign-role-permission',
-        url: '/role-permission/generate-navigation-menu-role-dual-listbox-options',
+        url: '/generate-navigation-menu-role-dual-listbox-options',
         selectSelector: 'role_id',
         data: {
             navigationMenuId: ctx.detailId ?? ''
@@ -265,7 +265,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     detailsTableActionButton({
         'trigger' : '.delete-role-permission',
-        'url' : '/role-permission/delete',
+        'url' : '/delete-role-permission',
         'table' : '#role-permission-table',
         'swalTitle' : 'Confirm Role Permission Deletion',
         'swalText' : 'Are you sure you want to delete this role permission?',
@@ -274,6 +274,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     permissionToggle({
         'trigger' : '.update-role-permission',
-        'url' : '/role-permission/update',
+        'url' : '/update-role-permission',
     });
 });

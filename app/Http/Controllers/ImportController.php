@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Validator;
 
 class ImportController extends Controller
 {
-    public function importPreview(Request $request)
+    public function preview(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'import_file' => ['required', 'file'],
@@ -113,7 +113,7 @@ class ImportController extends Controller
         }
     }
 
-    public function saveImportData(Request $request)
+    public function save(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'import_file'       => ['required', 'file'],

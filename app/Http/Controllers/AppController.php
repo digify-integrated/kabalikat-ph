@@ -15,7 +15,7 @@ use Illuminate\Support\Str;
 
 class AppController extends Controller
 {
-    public function saveApp(Request $request)
+    public function save(Request $request)
     {
         $validated = $request->validate([
             'app_id' => ['nullable', 'integer'],
@@ -175,7 +175,87 @@ class AppController extends Controller
         ]);
     }
 
-    public function fetchAppDetails(Request $request)
+    public function delete(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'detailId' => ['required', 'integer', 'min:1', 'exists:app,id'],
+        ]);
+
+        $pageAppId = (int) $request->input('appId');
+        $pageNavigationMenuId = (int) $request->input('navigationMenuId');
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first('detailId') ?? 'Validation failed',
+            ]);
+        }
+
+        $detailId = (int) $validator->validated()['detailId'];
+
+        DB::transaction(function () use ($detailId) {
+            $app = App::query()->select(['id', 'app_logo'])->findOrFail($detailId);
+
+            $path = ltrim((string) $app->app_logo, '/');
+            $path = Str::replaceFirst('storage/', '', $path);
+            $path = Str::replaceFirst('app/public/', '', $path);
+            $path = Str::replaceFirst('public/', '', $path);
+
+            if ($path !== '') {
+                Storage::disk('public')->delete($path);
+            }
+
+            $app->delete();
+        });        
+
+        $link = route('apps.base', [
+            'appId' => $pageAppId,
+            'navigationMenuId' => $pageNavigationMenuId,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'The app has been deleted successfully',
+            'redirect_link' => $link,
+        ]);
+    }
+
+    public function deleteMultiple(Request $request)
+    {
+        $validated = $request->validate([
+            'selected_id'   => ['required', 'array', 'min:1'],
+            'selected_id.*' => ['integer', 'distinct', 'exists:app,id'],
+        ]);
+
+        $ids = $validated['selected_id'];
+
+        DB::transaction(function () use ($ids) {
+            $apps = App::query()
+                ->whereIn('id', $ids)
+                ->get(['id', 'app_logo']);
+
+            foreach ($apps as $app) {
+                $path = ltrim((string) $app->app_logo, '/');
+
+                $path = Str::replaceFirst('storage/', '', $path);
+                $path = Str::replaceFirst('app/public/', '', $path);
+                $path = Str::replaceFirst('public/', '', $path);
+
+                if ($path !== '') {
+                    Storage::disk('public')->delete($path);
+                }
+            }
+
+            App::query()->whereIn('id', $ids)->delete();
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'The selected apps have been deleted successfully',
+        ]);
+    }
+
+    public function fetchDetails(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'detailId' => ['required', 'integer', 'min:1'],
@@ -231,7 +311,7 @@ class AppController extends Controller
         ]);
     }
 
-    public function generateAppTable(Request $request)
+    public function generateTable(Request $request)
     {
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
@@ -265,7 +345,7 @@ class AppController extends Controller
                         <input class="form-check-input datatable-checkbox-children" type="checkbox" value="'.$appId.'">
                     </div>
                 ',
-                'APP_NAME' => '
+                'APP' => '
                     <div class="d-flex align-items-center">
                         <img src="'.$logoUrl.'" alt="app-logo" width="45" />
                         <div class="ms-3">
@@ -283,87 +363,7 @@ class AppController extends Controller
         return response()->json($response);
     }
 
-    public function deleteApp(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'detailId' => ['required', 'integer', 'min:1', 'exists:app,id'],
-        ]);
-
-        $pageAppId = (int) $request->input('appId');
-        $pageNavigationMenuId = (int) $request->input('navigationMenuId');
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => $validator->errors()->first('detailId') ?? 'Validation failed',
-            ]);
-        }
-
-        $detailId = (int) $validator->validated()['detailId'];
-
-        DB::transaction(function () use ($detailId) {
-            $app = App::query()->select(['id', 'app_logo'])->findOrFail($detailId);
-
-            $path = ltrim((string) $app->app_logo, '/');
-            $path = Str::replaceFirst('storage/', '', $path);
-            $path = Str::replaceFirst('app/public/', '', $path);
-            $path = Str::replaceFirst('public/', '', $path);
-
-            if ($path !== '') {
-                Storage::disk('public')->delete($path);
-            }
-
-            $app->delete();
-        });        
-
-        $link = route('apps.base', [
-                'appId' => $pageAppId,
-                'navigationMenuId' => $pageNavigationMenuId,
-            ]);
-
-        return response()->json([
-            'success' => true,
-            'redirect_link' => $link,
-            'message' => 'The app has been deleted successfully',
-        ]);
-    }
-
-    public function deleteMultipleApp(Request $request)
-    {
-        $validated = $request->validate([
-            'selected_id'   => ['required', 'array', 'min:1'],
-            'selected_id.*' => ['integer', 'distinct', 'exists:app,id'],
-        ]);
-
-        $ids = $validated['selected_id'];
-
-        DB::transaction(function () use ($ids) {
-            $apps = App::query()
-                ->whereIn('id', $ids)
-                ->get(['id', 'app_logo']);
-
-            foreach ($apps as $app) {
-                $path = ltrim((string) $app->app_logo, '/');
-
-                $path = Str::replaceFirst('storage/', '', $path);
-                $path = Str::replaceFirst('app/public/', '', $path);
-                $path = Str::replaceFirst('public/', '', $path);
-
-                if ($path !== '') {
-                    Storage::disk('public')->delete($path);
-                }
-            }
-
-            App::query()->whereIn('id', $ids)->delete();
-        });
-
-        return response()->json([
-            'success' => true,
-            'message' => 'The selected apps have been deleted successfully',
-        ]);
-    }
-
-    public function generateAppOptions(Request $request)
+    public function generateOptions(Request $request)
     {
         $multiple = filter_var($request->input('multiple', false), FILTER_VALIDATE_BOOLEAN);
 

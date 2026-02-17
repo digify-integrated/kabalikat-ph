@@ -129,7 +129,7 @@ export const initializeExportFeature = (tableName) => {
       listAbort = new AbortController();
 
       try {
-        const response = await jsonFetch('/export-list', {
+        const response = await jsonFetch('/export/export-list', {
           signal: listAbort.signal,
           bodyObj: { table_name: tableName },
         });
@@ -158,7 +158,6 @@ export const initializeExportFeature = (tableName) => {
   $(document)
     .off('click.exportFeature', '#submit-export')
     .on('click.exportFeature', '#submit-export', async () => {
-      const transaction = 'export data';
       const exportTo = document.querySelector('input[name="export_to"]:checked')?.value;
 
       const exportId = Array.from(
@@ -184,9 +183,8 @@ export const initializeExportFeature = (tableName) => {
       disableButton('submit-export');
 
       try {
-        const { blob, headerFilename } = await blobFetch('/export', {
+        const { blob, headerFilename } = await blobFetch('/export/export', {
           bodyObj: {
-            transaction,
             export_id: exportId,
             export_to: exportTo,
             table_column: selectedColumnsOrder,

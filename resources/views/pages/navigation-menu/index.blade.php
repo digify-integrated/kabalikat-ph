@@ -43,7 +43,7 @@
                                 <div class="menu-item px-3">
                                     <a href="javascript:void(0);"
                                     class="menu-link px-3"
-                                    id="delete-navigation-menu">
+                                    id="delete-delete-data">
                                         Delete
                                     </a>
                                 </div>

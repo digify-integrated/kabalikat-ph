@@ -510,6 +510,124 @@ export const detailsDeleteButton = ({
   });
 };
 
+export const detailsTableActionButton = ({
+  trigger,
+  url,
+  table,
+  swalTitle,
+  swalText,
+  swalIcon = 'warning',
+  confirmButtonText,
+  confirmButtonClass = 'danger',
+}) => {
+  document.addEventListener('click', async (e) => {
+    const btn = e.target.closest(trigger);
+    if (!btn) return;
+    const referenceId = btn.dataset.referenceId;
+
+    e.preventDefault();
+
+    const result = await Swal.fire({
+      title: swalTitle,
+      text: swalText,
+      icon: swalIcon,
+      showCancelButton: true,
+      confirmButtonText: confirmButtonText,
+      cancelButtonText: 'Cancel',
+      customClass: {
+        confirmButton: `btn btn-${confirmButtonClass}`,
+        cancelButton: 'btn btn-secondary',
+      },
+      buttonsStyling: false,
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const csrf = getCsrfToken();
+        const ctx = getPageContext();
+
+        const formData = new URLSearchParams();
+        formData.append('referenceId', referenceId);
+        formData.append('detailId', ctx.detailId ?? '');
+        formData.append('appId', ctx.appId ?? '');
+        formData.append('navigationMenuId', ctx.navigationMenuId ?? '')
+
+        const response = await fetch(url, {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            Accept: 'application/json',
+            ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+          },
+        });
+
+        if (!response.ok) throw new Error(`Request failed with status: ${response.status}`);
+
+        const data = await response.json();
+
+        if (data.success) {
+          reloadDatatable(table);
+          showNotification(data.message, 'success');
+        }
+        else {
+          showNotification(data.message);
+        }
+      } catch (error) {
+        handleSystemError(error, 'fetch_failed', `Fetch request failed: ${error.message}`);
+      }
+    }
+  });
+};
+
+export const permissionToggle = ({
+  trigger,
+  url,
+}) => {
+  document.addEventListener('change', async (e) => {
+    const btn = e.target.closest(trigger);
+    if (!btn) return;
+    const referenceId = btn.dataset.referenceId;
+    const accessType = btn.dataset.accessType;
+    const access = btn.checked ? 1 : 0;
+
+    e.preventDefault();
+
+    try {
+      const csrf = getCsrfToken();
+      const ctx = getPageContext();
+
+      const formData = new URLSearchParams();
+      formData.append('referenceId', referenceId);
+      formData.append('accessType', accessType);
+      formData.append('access', access);
+      formData.append('detailId', ctx.detailId ?? '');
+      formData.append('appId', ctx.appId ?? '');
+      formData.append('navigationMenuId', ctx.navigationMenuId ?? '')
+
+      const response = await fetch(url, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+          Accept: 'application/json',
+          ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+        },
+      });
+
+      if (!response.ok) throw new Error(`Request failed with status: ${response.status}`);
+
+      const data = await response.json();
+
+      if (!data.success) {
+        showNotification(data.message);
+      }
+    } catch (error) {
+        handleSystemError(error, 'fetch_failed', `Failed to update role permission: ${error.message}`);
+    }
+  });
+};
+
 export const imageRealtimeUploadButton = ({ trigger, url }) => {
   document.addEventListener('change', async (e) => {
     const input = e.target;

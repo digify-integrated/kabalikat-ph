@@ -7,7 +7,7 @@ let loginRequestController = null;
 let isSubmitting = false;
 
 const DEFAULT_REDIRECT = '/';
-const AUTH_ENDPOINT = '/authenticate';
+const AUTH_ENDPOINT = '/auth/authenticate';
 
 const isAbortError = (err) =>
   err?.name === 'AbortError' || err?.code === DOMException.ABORT_ERR;

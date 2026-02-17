@@ -3,21 +3,32 @@ import { multipleActionButton } from '../../form/button.js';
 import { checkNotification } from '../../util/notifications.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    const TABLE_URL = '/generate-app-table';
-    const TABLE = '#app-table';
-    const EXPORT = 'app';
-    const DELETE_TRIGGER = '#delete-app';
-    const DELETE_URL = '/delete-multiple-app';
+    const config = {
+        'table' : {
+            'url' : '/app/generate-table',
+            'selector' : '#app-table',
+            'export' : 'app'
+        },
+        'table' : {
+            'url' : '/app/generate-table',
+            'selector' : '#app-table',
+            'export' : 'app'
+        },
+        'delete' : {
+            'url' : '/app/delete-multiple',
+            'trigger' : '#delete-data'
+        },
+    }
     
     checkNotification();
 
     initializeDatatable({
-        url: TABLE_URL,
-        selector: TABLE,
+        url: config.table.url,
+        selector: config.table.selector,
         serverSide: false,
         columns: [
             { data: 'CHECK_BOX' },
-            { data: 'APP_NAME' }
+            { data: 'APP' }
         ],
         columnDefs: [
             { width: '5%', bSortable: false, targets: 0, responsivePriority: 1 },
@@ -28,17 +39,17 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         addons: {
             controls: true,
-            export: EXPORT,
+            export: config.table.export,
         }
     });
 
     multipleActionButton({
-        'trigger' : DELETE_TRIGGER,
-        'url' : DELETE_URL,
+        'trigger' : config.delete.trigger,
+        'url' : config.delete.url,
         'swalTitle' : 'Confirm Multiple Apps Deletion',
         'swalText' : 'Are you sure you want to delete these apps?',
         'confirmButtonText' : 'Delete',
         'validationMessage' : 'Please select the apps you want to delete',
-        'table' : TABLE
+        'table' : config.table.selector
     });
 });

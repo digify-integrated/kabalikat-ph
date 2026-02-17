@@ -1,7 +1,7 @@
 import { initValidation } from '../../util/validation.js';
 import { showNotification } from '../../util/notifications.js';
 import { attachLogNotesHandler } from '../../util/log-notes.js';
-import { disableButton, enableButton, discardCreate, detailsDeleteButton, imageRealtimeUploadButton } from '../../form/button.js';
+import { disableButton, enableButton, detailsDeleteButton, imageRealtimeUploadButton } from '../../form/button.js';
 import { generateDropdownOptions } from '../../form/field.js';
 import { displayDetails } from '../../form/form.js';
 import { handleSystemError } from '../../util/system-errors.js';
@@ -9,19 +9,19 @@ import { getPageContext } from '../../form/form.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const FORM = '#app_form';
-    const FORM_URL = '/save-app';
-    const DETAILS_URL = '/fetch-app-details';
+    const FORM_URL = '/app/save';
+    const DETAILS_URL = '/app/fetch-details';
     const DELETE_TRIGGER = '#delete-app';
-    const DELETE_URL = '/delete-app';
+    const DELETE_URL = '/app/delete';
     const IMAGE_TRIGGER = '#app_logo';
-    const IMAGE_UPLOAD_URL = '/upload-app-logo';
+    const IMAGE_UPLOAD_URL = '/app/upload-app-logo';
 
     attachLogNotesHandler();
 
     (async () => {
         try {
             const optionsPromise = generateDropdownOptions({
-                url: '/generate-navigation-menu-options',
+                url: '/navigation-menu/generate-options',
                 dropdownSelector: '#navigation_menu_id',
             });
 

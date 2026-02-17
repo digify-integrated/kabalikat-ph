@@ -108,17 +108,21 @@ function focusSelect2Search() {
   }, 100);
 }
 
-export const generateDualListBox = async ({ url, selectSelector, data = {} }) => {
-  try {
-    const formData = new URLSearchParams();
-    for (const key in data) {
-      if (Object.prototype.hasOwnProperty.call(data, key)) {
-        formData.append(key, data[key]);
+export const generateDualListBox = async ({ trigger, url, selectSelector, data = {} }) => {
+  document.addEventListener('click', async (e) => {
+    const btn = e.target.closest(trigger);
+    if (!btn) return;     
+  
+    try {
+      const formData = new URLSearchParams();
+      for (const key in data) {
+        if (Object.prototype.hasOwnProperty.call(data, key)) {
+          formData.append(key, data[key]);
+        }
       }
-    }
-    
-    const csrf = getCsrfToken();
-    const response = await fetch(url, {
+        
+      const csrf = getCsrfToken();
+      const response = await fetch(url, {
         method: 'POST',
         body: formData,      
         headers: {
@@ -126,40 +130,41 @@ export const generateDualListBox = async ({ url, selectSelector, data = {} }) =>
           Accept: 'application/json',
           ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
         },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch dual list box data. HTTP status: ${response.status}`);
-    }
-
-    const result = await response.json();
-
-    const select = document.getElementById(selectSelector);
-    if (!select) {
-      return;
-    }
-
-    select.options.length = 0;
-    result.forEach(opt => {
-      const option = new Option(opt.text, opt.id);
-      select.appendChild(option);
-    });
-
-    if ($(`#${selectSelector}`).length) {
-      $(`#${selectSelector}`).bootstrapDualListbox({
-        nonSelectedListLabel: 'Non-selected',
-        selectedListLabel: 'Selected',
-        preserveSelectionOnMove: 'moved',
-        moveOnSelect: false,
-        helperSelectNamePostfix: false
       });
 
-      $(`#${selectSelector}`).bootstrapDualListbox('refresh', true);
-      initializeDualListBoxIcon();
+      if (!response.ok) {
+        throw new Error(`Failed to fetch dual list box data. HTTP status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      const select = document.getElementById(selectSelector);
+      if (!select) {
+        return;
+      }
+
+      select.options.length = 0;
+      result.forEach(opt => {
+        const option = new Option(opt.text, opt.id);
+        select.appendChild(option);
+      });
+
+      if ($(`#${selectSelector}`).length) {
+        $(`#${selectSelector}`).bootstrapDualListbox({
+          nonSelectedListLabel: 'Non-selected',
+          selectedListLabel: 'Selected',
+          preserveSelectionOnMove: 'moved',
+          moveOnSelect: false,
+          helperSelectNamePostfix: false
+        });
+
+        $(`#${selectSelector}`).bootstrapDualListbox('refresh', true);
+        initializeDualListBoxIcon();
+      }
+    } catch (error) {
+      handleSystemError(error, 'fetch_failed', `Dual list box generation failed: ${error.message}`);
     }
-  } catch (error) {
-    handleSystemError(error, 'fetch_failed', `Dual list box generation failed: ${error.message}`);
-  }
+  });
 };
 
 export const initializeTinyMCE = (tiny_mce_id, disabled = 0) => {

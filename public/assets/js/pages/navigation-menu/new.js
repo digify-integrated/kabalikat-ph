@@ -7,14 +7,14 @@ import { getPageContext } from '../../form/form.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const FORM = '#navigation_menu_form';
-    const ROUTE = '/save-navigation-menu';
+    const ROUTE = '/navigation-menu/save';
 
     discardCreate();
 
     const dropdownConfigs = [
-        { url: '/generate-app-options', dropdownSelector: '#app_id' },
-        { url: '/generate-navigation-menu-options', dropdownSelector: '#parent_id' },
-        { url: '/table-list', dropdownSelector: '#table_name' },
+        { url: '/app/generate-options', dropdownSelector: '#app_id' },
+        { url: '/navigation-menu/generate-options', dropdownSelector: '#parent_id' },
+        { url: '/export/table-list', dropdownSelector: '#table_name' },
     ];
 
     dropdownConfigs.forEach(cfg => {

@@ -14,8 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         submitHandler: async (form) => {
             const ROUTE = document.querySelector('.upload-file-preview').classList.contains('d-none')
-                            ? '/import-preview'
-                            : '/save-import-data';
+                            ? '/import/preview'
+                            : '/import/save';
 
             const ctx = getPageContext();
 

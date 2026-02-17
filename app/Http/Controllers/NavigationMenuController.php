@@ -15,14 +15,14 @@ use Illuminate\Support\Str;
 
 class NavigationMenuController extends Controller
 {
-    public function saveNavigationMenu(Request $request)
+    public function save(Request $request)
     {
         $validated = $request->validate([
             'navigation_menu_id' => ['nullable', 'integer'],
             'navigation_menu_name' => ['required', 'string', 'max:255'],
             'app_id' => ['required', 'integer', Rule::exists('app', 'id')],
             'parent_id' => ['nullable', 'integer'],
-            'navigation_menu_icon' => ['string', 'max:255'],
+            'navigation_menu_icon' => ['nullable', 'string', 'max:255'],
             'order_sequence' => ['nullable', 'integer', 'min:0'],
             'table_name' => ['nullable', 'string', 'max:100'],
         ]);
@@ -97,7 +97,7 @@ class NavigationMenuController extends Controller
         ]);
     }
 
-    public function saveNavigationMenuRoute(Request $request)
+    public function saveRoute(Request $request)
     {
         $validated = $request->validate([
             'navigation_menu_id'   => ['required', 'integer'],
@@ -159,7 +159,62 @@ class NavigationMenuController extends Controller
         ]);
     }
 
-    public function fetchNavigationMenuDetails(Request $request)
+    public function delete(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'detailId' => ['required', 'integer', 'min:1', 'exists:navigation_menu,id'],
+        ]);
+
+        $pageAppId = (int) $request->input('appId');
+        $pageNavigationMenuId = (int) $request->input('navigationMenuId');
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first('detailId') ?? 'Validation failed',
+            ]);
+        }
+
+        $detailId = (int) $validator->validated()['detailId'];
+
+        DB::transaction(function () use ($detailId) {
+            $navigationMenu = NavigationMenu::query()->select(['id'])->findOrFail($detailId);
+
+            $navigationMenu->delete();
+        });        
+
+        $link = route('apps.base', [
+            'appId' => $pageAppId,
+            'navigationMenuId' => $pageNavigationMenuId,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'The navigation menu has been deleted successfully',
+            'redirect_link' => $link,
+        ]);
+    }
+
+    public function deleteMultiple(Request $request)
+    {
+        $validated = $request->validate([
+            'selected_id'   => ['required', 'array', 'min:1'],
+            'selected_id.*' => ['integer', 'distinct', 'exists:navigation_menu,id'],
+        ]);
+
+        $ids = $validated['selected_id'];
+
+        DB::transaction(function () use ($ids) {
+            NavigationMenu::query()->whereIn('id', $ids)->delete();
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'The selected navigation menus have been deleted successfully',
+        ]);
+    }
+
+    public function fetchDetails(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'detailId' => ['required', 'integer', 'min:1'],
@@ -195,6 +250,7 @@ class NavigationMenuController extends Controller
                 'message'  => 'Navigation menu not found',
             ]);
         }
+        
 
         return response()->json([
             'success' => true,
@@ -202,13 +258,13 @@ class NavigationMenuController extends Controller
             'navigationMenuName' => $navigationMenu->navigation_menu_name ?? null,
             'navigationMenuIcon' => $navigationMenu->navigation_menu_icon ?? null,
             'appId' => $navigationMenu->app_id ?? null,
-            'parentNavigationMenuId' => $navigationMenu->parent_navigation_menu_id ?? null,
+            'parentNavigationMenuId' => $navigationMenu->parent_navigation_menu_id == 0 ? '' : $navigationMenu->parent_navigation_menu_id,
             'databaseTable' => $navigationMenu->database_table ?? null,
             'orderSequence' => $navigationMenu->order_sequence ?? null,
         ]);
     }
 
-    public function fetchNavigationMenuRouteDetails(Request $request)
+    public function fetchRouteDetails(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'detailId' => ['required', 'integer', 'min:1'],
@@ -249,8 +305,7 @@ class NavigationMenuController extends Controller
 
     }
 
-
-    public function generateNavigationMenuTable(Request $request)
+    public function generateTable(Request $request)
     {
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
@@ -296,63 +351,7 @@ class NavigationMenuController extends Controller
 
         return response()->json($response);
     }
-
-    public function deleteNavigationMenu(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'detailId' => ['required', 'integer', 'min:1', 'exists:navigation_menu,id'],
-        ]);
-
-        $pageAppId = (int) $request->input('appId');
-        $pageNavigationMenuId = (int) $request->input('navigationMenuId');
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => $validator->errors()->first('detailId') ?? 'Validation failed',
-            ]);
-        }
-
-        $detailId = (int) $validator->validated()['detailId'];
-
-        DB::transaction(function () use ($detailId) {
-            $app = NavigationMenu::query()->select(['id'])->findOrFail($detailId);
-
-            $app->delete();
-        });        
-
-        $link = route('apps.base', [
-                'appId' => $pageAppId,
-                'navigationMenuId' => $pageNavigationMenuId,
-            ]);
-
-        return response()->json([
-            'success' => true,
-            'redirect_link' => $link,
-            'message' => 'The navigation menu has been deleted successfully',
-        ]);
-    }
-
-    public function deleteMultipleNavigationMenu(Request $request)
-    {
-        $validated = $request->validate([
-            'selected_id'   => ['required', 'array', 'min:1'],
-            'selected_id.*' => ['integer', 'distinct', 'exists:navigation_menu,id'],
-        ]);
-
-        $ids = $validated['selected_id'];
-
-        DB::transaction(function () use ($ids) {
-            NavigationMenu::query()->whereIn('id', $ids)->delete();
-        });
-
-        return response()->json([
-            'success' => true,
-            'message' => 'The selected navigation menus have been deleted successfully',
-        ]);
-    }
-
-    public function generateNavigationMenuOptions(Request $request)
+    public function generateOptions(Request $request)
     {
         $multiple = filter_var($request->input('multiple', false), FILTER_VALIDATE_BOOLEAN);
 
