@@ -4,52 +4,40 @@ import { checkNotification } from '../../util/notifications.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const config = {
-        'table' : {
-            'url' : '/app/generate-table',
-            'selector' : '#app-table',
-            'export' : 'app'
+        table: {
+            url: '/app/generate-table',
+            selector: '#app-table',
+            serverSide: false,
+            columns: [
+                { data: 'CHECK_BOX' },
+                { data: 'APP' }
+            ],
+            columnDefs: [
+                { width: '5%', bSortable: false, targets: 0, responsivePriority: 1 },
+                { width: 'auto', targets: 1, responsivePriority: 2 }
+            ],
+            onRowClick: (rowData) => {
+                if (rowData?.LINK) window.open(rowData.LINK, '_blank');
+            },
+            addons: {
+                controls: true,
+                export: 'app',
+            }
         },
-        'table' : {
-            'url' : '/app/generate-table',
-            'selector' : '#app-table',
-            'export' : 'app'
-        },
-        'delete' : {
-            'url' : '/app/delete-multiple',
-            'trigger' : '#delete-data'
+        delete: {
+            trigger : '#delete-data',
+            url : '/app/delete-multiple',
+            swalTitle : 'Confirm Multiple Apps Deletion',
+            swalText : 'Are you sure you want to delete these apps?',
+            confirmButtonText : 'Delete',
+            validationMessage : 'Please select the apps you want to delete',
+            table : '#app-table'
         },
     }
     
     checkNotification();
 
-    initializeDatatable({
-        url: config.table.url,
-        selector: config.table.selector,
-        serverSide: false,
-        columns: [
-            { data: 'CHECK_BOX' },
-            { data: 'APP' }
-        ],
-        columnDefs: [
-            { width: '5%', bSortable: false, targets: 0, responsivePriority: 1 },
-            { width: 'auto', targets: 1, responsivePriority: 2 }
-        ],
-        onRowClick: (rowData) => {
-            if (rowData?.LINK) window.open(rowData.LINK, '_blank');
-        },
-        addons: {
-            controls: true,
-            export: config.table.export,
-        }
-    });
+    initializeDatatable(config.table);
 
-    multipleActionButton({
-        'trigger' : config.delete.trigger,
-        'url' : config.delete.url,
-        'swalTitle' : 'Confirm Multiple Apps Deletion',
-        'swalText' : 'Are you sure you want to delete these apps?',
-        'confirmButtonText' : 'Delete',
-        'validationMessage' : 'Please select the apps you want to delete',
-        'table' : config.table.selector
-    });
+    multipleActionButton(config.delete);
 });

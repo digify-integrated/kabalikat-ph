@@ -84,12 +84,6 @@
     <script src="{{ asset('assets/plugins/bootstrap-duallistbox/dist/jquery.bootstrap-duallistbox.min.js') }}"></script>
 
     @if (!empty($jsFile))
-        <script>
-            window.routes = {
-                generateAppTable: @json(route('generate.app.table')),
-                generateAppOptions: @json(route('generate.app.option')),
-            };
-        </script>
         <script type="module" src="{{ asset('assets/js/pages/' . $jsFile . '.js') }}"></script>
     @endif
 @endpush

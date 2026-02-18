@@ -8,6 +8,7 @@ use App\Http\Controllers\ExportController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\NavigationMenuController;
 use App\Http\Controllers\RolePermissionController;
+use App\Http\Controllers\SystemActionController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
@@ -86,6 +87,19 @@ Route::middleware('auth')->group(function () {
             Route::post('/generate-options', 'generateOptions')->name('generate.options');
         });
 
+    // System Action
+    Route::prefix('system-action')
+        ->name('system.action.')
+        ->controller(SystemActionController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
+            Route::post('/delete', 'delete')->name('delete');
+            Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
+            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
+            Route::post('/generate-table', 'generateTable')->name('generate.table');
+            Route::post('/generate-options', 'generateOptions')->name('generate.options');
+        });
+
 
     // Role Permission
     Route::prefix('role-permission')
@@ -126,9 +140,14 @@ Route::middleware('auth')->group(function () {
             Route::post('/export', 'exportData')->name('data');
         });
 
+    // Audit Logs
+    Route::prefix('audit-log')
+        ->name('audit-log.')
+        ->controller(AuditLogController::class)
+        ->group(function () {
+            Route::post('/fetch', 'fetch')->name('fetch');
+        });
 
-    // Audit logs
-    Route::post('/audit-log/fetch', [AuditLogController::class, 'fetchAuditLogs'])->name('get.audit.logs');
 
     Route::get('/logout', [AuthenticationController::class, 'logout'])->name('logout');
 });
