@@ -510,6 +510,73 @@ export const detailsDeleteButton = ({
   });
 };
 
+export const detailsActionButton = ({
+  trigger,
+  url,
+  swalTitle,
+  swalText,
+  swalIcon = 'warning',
+  confirmButtonText,
+  confirmButtonClass = 'danger',
+}) => {
+  document.addEventListener('click', async (e) => {
+    const btn = e.target.closest(trigger);
+    if (!btn) return;
+
+    e.preventDefault();
+
+    const result = await Swal.fire({
+      title: swalTitle,
+      text: swalText,
+      icon: swalIcon,
+      showCancelButton: true,
+      confirmButtonText: confirmButtonText,
+      cancelButtonText: 'Cancel',
+      customClass: {
+        confirmButton: `btn btn-${confirmButtonClass}`,
+        cancelButton: 'btn btn-secondary',
+      },
+      buttonsStyling: false,
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const csrf = getCsrfToken();
+        const ctx = getPageContext();
+
+        const formData = new URLSearchParams();
+        formData.append('detailId', ctx.detailId ?? '');
+        formData.append('appId', ctx.appId ?? '');
+        formData.append('navigationMenuId', ctx.navigationMenuId ?? '')
+
+        const response = await fetch(url, {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            Accept: 'application/json',
+            ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+          },
+        });
+
+        if (!response.ok) throw new Error(`Request failed with status: ${response.status}`);
+
+        const data = await response.json();
+
+        if (data.success) {
+          setNotification(data.message, 'success');
+          window.location.reload();
+        }
+        else {
+          showNotification(data.message);
+        }
+      } catch (error) {
+        handleSystemError(error, 'fetch_failed', `Fetch request failed: ${error.message}`);
+      }
+    }
+  });
+};
+
 export const detailsTableActionButton = ({
   trigger,
   url,

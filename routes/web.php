@@ -12,6 +12,7 @@ use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\RoleSystemActionPermissionController;
 use App\Http\Controllers\RoleUserAccountController;
 use App\Http\Controllers\SystemActionController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
@@ -192,6 +193,24 @@ Route::middleware('auth')->group(function () {
 
             Route::post('/generate-role-user-account-dual-listbox-options', 'generateRoleUserAccountDualListboxOptions')
                 ->name('generate.role.user.account.dual.listbox.options');
+        });
+
+    // Users
+    Route::prefix('user')
+        ->name('user.')
+        ->controller(UserController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
+            Route::post('/upload-user-profile-picture', 'uploadProfilePicture')->name('upload.profile-picture');
+            Route::post('/delete', 'delete')->name('delete');
+            Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
+            Route::post('/activate', 'activate')->name('activate');
+            Route::post('/activate-multiple', 'activateMultiple')->name('activate.multiple');
+            Route::post('/deactivate', 'deactivate')->name('deactivate');
+            Route::post('/deactivate-multiple', 'deactivateMultiple')->name('deactivate.multiple');
+            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
+            Route::post('/generate-table', 'generateTable')->name('generate.table');
+            Route::post('/generate-options', 'generateOptions')->name('generate.options');
         });
 
 

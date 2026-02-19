@@ -5,8 +5,8 @@ import { checkNotification } from '../../util/notifications.js';
 document.addEventListener('DOMContentLoaded', () => {
     const config = {
         table: {
-            url: '/users/generate-table',
-            selector: '#users-table',
+            url: '/user/generate-table',
+            selector: '#user-table',
             serverSide: false,
             ajaxData: () => ({
                 filter_by_user_status: $('#filter_by_user_status').val()
@@ -29,22 +29,43 @@ document.addEventListener('DOMContentLoaded', () => {
                 export: 'users',
             }
         },
-        delete: {
-            trigger : '#delete-data',
-            url : '/users/delete-multiple',
-            swalTitle : 'Confirm Multiple User Deletion',
-            swalText : 'Are you sure you want to delete these users?',
-            confirmButtonText : 'Delete',
-            validationMessage : 'Please select the users you want to delete',
-            table : '#users-table'
-        },
+        action: [
+            {
+                trigger : '#delete-data',
+                url : '/user/delete-multiple',
+                swalTitle : 'Confirm Multiple User Deletion',
+                swalText : 'Are you sure you want to delete these user?',
+                confirmButtonText : 'Delete',
+                validationMessage : 'Please select the users you want to delete',
+                table : '#user-table'
+            },
+            {
+                trigger : '#activate-data',
+                url : '/user/activate-multiple',
+                swalTitle : 'Confirm Multiple User Activation',
+                swalText : 'Are you sure you want to activate these user?',
+                confirmButtonText : 'Activate',
+                validationMessage : 'Please select the users you want to activate',
+                confirmButtonClass : 'success',
+                table : '#user-table'
+            },
+            {
+                trigger : '#deactivate-data',
+                url : '/user/deactivate-multiple',
+                swalTitle : 'Confirm Multiple User Deactivation',
+                swalText : 'Are you sure you want to deactivate these user?',
+                confirmButtonText : 'Activate',
+                validationMessage : 'Please select the users you want to deactivate',
+                table : '#user-table'
+            }
+        ],
     }
     
     checkNotification();
 
     initializeDatatable(config.table);
 
-    multipleActionButton(config.delete);
+    config.action.forEach((cfg) => multipleActionButton(cfg));
 
     document.addEventListener('click', async (event) => {
         if (event.target.closest('#apply-filter')) {

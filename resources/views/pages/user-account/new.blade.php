@@ -6,7 +6,7 @@
             <h5 class="card-title mb-0">User Details</h5>
         </div>
         <div class="card-body">
-            <form id="users_form" method="post" action="#" novalidate>
+            <form id="user_form" method="post" action="#" novalidate>
                 @csrf
                 
                 <div class="row">
@@ -50,7 +50,7 @@
         </div>
         <div class="card-footer d-flex justify-content-end py-6 px-9">
             <button type="button" id="discard-create" class="btn btn-light btn-active-light-primary me-2">Discard</button>
-            <button type="submit" form="users_form" class="btn btn-primary" id="submit-data">Save</button>
+            <button type="submit" form="user_form" class="btn btn-primary" id="submit-data">Save</button>
         </div>
     </div>
 @endsection

@@ -16,6 +16,7 @@ class User extends Authenticatable
         'email',
         'password',
         'status',
+        'profile_picture',
         'last_log_by'
     ];
 
