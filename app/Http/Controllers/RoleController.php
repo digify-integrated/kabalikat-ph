@@ -2,52 +2,68 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Role;
+use App\Models\RolePermission;
 use App\Models\RoleSystemActionPermission;
-use App\Models\SystemAction;
+use App\Models\RoleUserAccount;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 
-class SystemActionController extends Controller
+class RoleController extends Controller
 {
     public function save(Request $request)
     {
         $validated = $request->validate([
-            'system_action_id' => ['nullable', 'integer'],
-            'system_action_name' => ['required', 'string', 'max:255'],
-            'system_action_description' => ['required', 'string', 'max:255']
+            'role_id' => ['nullable', 'integer'],
+            'role_name' => ['required', 'string', 'max:255'],
+            'role_description' => ['required', 'string', 'max:255']
         ]);
 
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
 
         $payload = [
-            'system_action_name' => $validated['system_action_name'],
-            'system_action_description' => $validated['system_action_description'],
+            'role_name' => $validated['role_name'],
+            'role_description' => $validated['role_description'],
             'last_log_by' => Auth::id(),
         ];
 
-        $systemActionId = $validated['system_action_id'] ?? null;
+        $roleId = $validated['role_id'] ?? null;
 
-        if ($systemActionId && SystemAction::query()->whereKey($systemActionId)->exists()) {
-            $systemAction = SystemAction::query()->findOrFail($systemActionId);
-            $systemAction->update($payload);
+        if ($roleId && Role::query()->whereKey($roleId)->exists()) {
+            $role = Role::query()->findOrFail($roleId);
+            $role->update($payload);
         } else {
-            $systemAction = SystemAction::query()->create($payload);
+            $role = Role::query()->create($payload);
         }
 
-        RoleSystemActionPermission::query()
-            ->where('system_action_id', $systemAction->id)
+        RolePermission::query()
+            ->where('role_id', $role->id)
             ->update([
-                'system_action_name' => $systemAction->system_action_name,
+                'role_name' => $role->role_name,
+                'last_log_by' => Auth::id(),
+            ]);
+
+        RoleSystemActionPermission::query()
+            ->where('role_id', $role->id)
+            ->update([
+                'role_name' => $role->role_name,
+                'last_log_by' => Auth::id(),
+            ]);
+
+        RoleUserAccount::query()
+            ->where('role_id', $role->id)
+            ->update([
+                'role_name' => $role->role_name,
                 'last_log_by' => Auth::id(),
             ]);
 
         $link = route('apps.details', [
             'appId' => $pageAppId,
             'navigationMenuId' => $pageNavigationMenuId,
-            'details_id' => $systemAction->id,
+            'details_id' => $role->id,
         ]);
 
         return response()->json([
@@ -60,7 +76,7 @@ class SystemActionController extends Controller
     public function delete(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'detailId' => ['required', 'integer', 'min:1', 'exists:system_action,id'],
+            'detailId' => ['required', 'integer', 'min:1', 'exists:role,id'],
         ]);
 
         $pageAppId = (int) $request->input('appId');
@@ -76,9 +92,9 @@ class SystemActionController extends Controller
         $detailId = (int) $validator->validated()['detailId'];
 
         DB::transaction(function () use ($detailId) {
-            $systemAction = SystemAction::query()->select(['id'])->findOrFail($detailId);
+            $role = Role::query()->select(['id'])->findOrFail($detailId);
 
-            $systemAction->delete();
+            $role->delete();
         });        
 
         $link = route('apps.base', [
@@ -88,7 +104,7 @@ class SystemActionController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'The system action has been deleted successfully',
+            'message' => 'The role has been deleted successfully',
             'redirect_link' => $link,
         ]);
     }
@@ -97,18 +113,18 @@ class SystemActionController extends Controller
     {
         $validated = $request->validate([
             'selected_id'   => ['required', 'array', 'min:1'],
-            'selected_id.*' => ['integer', 'distinct', 'exists:system_action,id'],
+            'selected_id.*' => ['integer', 'distinct', 'exists:role,id'],
         ]);
 
         $ids = $validated['selected_id'];
 
         DB::transaction(function () use ($ids) {
-            SystemAction::query()->whereIn('id', $ids)->delete();
+            Role::query()->whereIn('id', $ids)->delete();
         });
 
         return response()->json([
             'success' => true,
-            'message' => 'The selected system actions have been deleted successfully',
+            'message' => 'The selected roles have been deleted successfully',
         ]);
     }
 
@@ -131,11 +147,11 @@ class SystemActionController extends Controller
 
         $validated = $validator->validated();
 
-        $systemAction = DB::table('system_action')
+        $role = DB::table('role')
             ->where('id', $validated['detailId'])
             ->first();
 
-        if (!$systemAction) {
+        if (!$role) {
             $link = route('apps.base', [
                 'appId' => $pageAppId,
                 'navigationMenuId' => $pageNavigationMenuId,
@@ -153,8 +169,8 @@ class SystemActionController extends Controller
         return response()->json([
             'success' => true,
             'notExist' => false,
-            'systemActionName' => $systemAction->system_action_name ?? null,
-            'systemActionDescription' => $systemAction->system_action_description ?? null
+            'roleName' => $role->role_name ?? null,
+            'roleDescription' => $role->role_description ?? null
         ]);
     }
 
@@ -163,33 +179,33 @@ class SystemActionController extends Controller
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
 
-        $systemActions = DB::table('system_action')
-        ->orderBy('system_action_name')
+        $roles = DB::table('role')
+        ->orderBy('role_name')
         ->get();
 
-        $response = $systemActions->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
-            $systemActionId = $row->id;
-            $systemActionName = $row->system_action_name;
-            $systemActionDescription = $row->system_action_description;
+        $response = $roles->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
+            $roleId = $row->id;
+            $roleName = $row->role_name;
+            $roleDescription = $row->role_description;
 
             $link = route('apps.details', [
                 'appId' => $pageAppId,
                 'navigationMenuId' => $pageNavigationMenuId,
-                'details_id' => $systemActionId,
+                'details_id' => $roleId,
             ]);
 
             return [
                 'CHECK_BOX' => '
                     <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                        <input class="form-check-input datatable-checkbox-children" type="checkbox" value="'.$systemActionId.'">
+                        <input class="form-check-input datatable-checkbox-children" type="checkbox" value="'.$roleId.'">
                     </div>
                 ',
-                'SYSTEM_ACTION' => '
+                'ROLE' => '
                     <div class="d-flex align-items-center">
                         <div class="ms-3">
                             <div class="user-meta-info">
-                                <h6 class="mb-0">'.$systemActionName.'</h6>
-                                <small class="text-wrap fs-7 text-gray-500">'.$systemActionDescription.'</small>
+                                <h6 class="mb-0">'.$roleName.'</h6>
+                                <small class="text-wrap fs-7 text-gray-500">'.$roleDescription.'</small>
                             </div>
                         </div>
                     </div>
@@ -199,20 +215,5 @@ class SystemActionController extends Controller
         })->values();
 
         return response()->json($response);
-    }
-
-    public function countUserRoleAccessForAction(int $systemActionId, int $userAccountId): int
-    {
-        return (int) DB::table('role_system_action_permission as rsap')
-            ->join('role_user_account as rua', 'rua.role_id', '=', 'rsap.role_id')
-            ->where('rsap.system_action_id', $systemActionId)
-            ->where('rsap.system_action_access', 1)
-            ->where('rua.user_account_id', $userAccountId)
-            ->count('rsap.role_id');
-    }
-
-    public function userHasRoleAccessForAction(int $systemActionId, int $userAccountId): bool
-    {
-        return $this->countUserRoleAccessForAction($systemActionId, $userAccountId) > 0;
     }
 }

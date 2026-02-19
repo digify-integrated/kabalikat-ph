@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Validator;
 
 class RolePermissionController extends Controller
 {
-    public function saveNavigationMenuRoleAssignment(Request $request)
+    public function saveRoleAssignment(Request $request)
     {
         $validator = Validator::make(
         $request->all(),
@@ -48,13 +48,6 @@ class RolePermissionController extends Controller
             ->whereKey($navigationMenuId)
             ->value('navigation_menu_name');
 
-        if ($navigationMenuName === '') {
-            return response()->json([
-                'success' => false,
-                'message' => 'The selected navigation menu does not exist',
-            ]);
-        }
-
         $lastLogBy = (int) auth()->id();
 
         $roles = Role::query()
@@ -85,7 +78,82 @@ class RolePermissionController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'The navigation menu role has been assigned successfully',
+            'message' => 'The role has been assigned successfully',
+        ]);
+    }
+
+    public function saveNavigationMenuAssignment(Request $request)
+    {
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'role_id'                  => ['required', 'integer', Rule::exists('role', 'id')],
+                'navigation_menu_id'       => ['required', 'array', 'min:1'],
+                'navigation_menu_id.*'     => ['required', 'integer', Rule::exists('navigation_menu', 'id')],
+            ],
+            [
+                'role_id.required'              => 'Please select a role',
+                'role_id.exists'                => 'The selected role does not exist',
+
+                'navigation_menu_id.required'   => 'Please select the navigation menu(s) you wish to assign to the role',
+                'navigation_menu_id.array'      => 'The selected navigation menus must be provided as a list',
+                'navigation_menu_id.min'        => 'Please select at least one navigation menu',
+                'navigation_menu_id.*.exists'   => 'One or more of the selected navigation menus is invalid',
+            ]
+        );
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ]);
+        }
+
+        $validated = $validator->validated();
+
+        $roleId = (int) $validated['role_id'];
+
+        $navigationMenuIds = collect($validated['navigation_menu_id'])
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
+
+        $roleName = (string) Role::query()
+            ->whereKey($roleId)
+            ->value('role_name');
+
+        $lastLogBy = (int) auth()->id();
+
+        $navigationMenus = NavigationMenu::query()
+            ->whereIn('id', $navigationMenuIds)
+            ->get(['id', 'navigation_menu_name'])
+            ->keyBy('id');
+
+        $now = now();
+
+        $rows = $navigationMenuIds->map(function (int $navigationMenuId) use ($navigationMenus, $roleId, $roleName, $lastLogBy, $now) {
+            return [
+                'role_id'               => $roleId,
+                'role_name'             => $roleName,
+                'navigation_menu_id'    => $navigationMenuId,
+                'navigation_menu_name'  => (string) ($navigationMenus[$navigationMenuId]->navigation_menu_name ?? ''),
+                'last_log_by'           => $lastLogBy,
+                'created_at'            => $now,
+                'updated_at'            => $now,
+            ];
+        })->all();
+
+        DB::transaction(function () use ($rows) {
+            DB::table('role_permission')->upsert(
+                $rows,
+                ['role_id', 'navigation_menu_id'],
+                ['role_name', 'navigation_menu_name', 'last_log_by', 'updated_at']
+            );
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'The navigation menu have been assigned successfully',
         ]);
     }
 
@@ -171,7 +239,7 @@ class RolePermissionController extends Controller
         $navigationMenuId = (int) $request->input('navigation_menu_id');
         $pageNavigationNenuId = (int) $request->input('page_navigation_menu_id');
 
-        $apps = DB::table('role_permission')
+        $rolePermissions = DB::table('role_permission')
         ->where('navigation_menu_id', $navigationMenuId)
         ->orderBy('role_name')
         ->get();
@@ -181,7 +249,7 @@ class RolePermissionController extends Controller
 
         $logsAccess = $request->user()->menuPermissions($pageNavigationNenuId)['logs'] ?? 0;
 
-        $response = $apps->map(function ($row) use ($canUpdateRoleAccess, $logsAccess)  {
+        $response = $rolePermissions->map(function ($row) use ($canUpdateRoleAccess, $logsAccess)  {
             $rolePermissionId = $row->id;
             $roleName = $row->role_name;
             $readAccess = $row->read_access;
@@ -268,7 +336,7 @@ class RolePermissionController extends Controller
         $roleId = (int) $request->input('role_id');
         $pageNavigationNenuId = (int) $request->input('page_navigation_menu_id');
 
-        $apps = DB::table('role_permission')
+        $rolePermissions = DB::table('role_permission')
         ->where('role_id', $roleId)
         ->orderBy('navigation_menu_name')
         ->get();
@@ -278,7 +346,7 @@ class RolePermissionController extends Controller
 
         $logsAccess = $request->user()->menuPermissions($pageNavigationNenuId)['logs'] ?? 0;
 
-        $response = $apps->map(function ($row) use ($canUpdateRoleAccess, $logsAccess)  {
+        $response = $rolePermissions->map(function ($row) use ($canUpdateRoleAccess, $logsAccess)  {
             $rolePermissionId = $row->id;
             $navigationMenuName = $row->navigation_menu_name;
             $readAccess = $row->read_access;
@@ -301,44 +369,44 @@ class RolePermissionController extends Controller
             $deleteButton = '';
             if($canUpdateRoleAccess ?? false === true){
                 $disabled = '';
-                $deleteButton = '<button class="btn btn-icon btn-light btn-active-light-danger delete-role-permission" data-reference-id="' . $rolePermissionId . '" title="Delete Role Permission">
+                $deleteButton = '<button class="btn btn-icon btn-light btn-active-light-danger delete-role-navigation-menu-permission" data-reference-id="' . $rolePermissionId . '" title="Delete Role Permission">
                                     <i class="ki-outline ki-trash fs-3 m-0 fs-5"></i>
                                 </button>';
             }
 
             $logNotes = '';
             if($logsAccess > 0){
-                $logNotes = '<button class="btn btn-icon btn-light btn-active-light-primary view-role-permission-log-notes" data-reference-id="' . $rolePermissionId . '" data-bs-toggle="modal" data-bs-target="#log-notes-modal" title="View Log Notes">
+                $logNotes = '<button class="btn btn-icon btn-light btn-active-light-primary view-role-navigation-menu-permission-log-notes" data-reference-id="' . $rolePermissionId . '" data-bs-toggle="modal" data-bs-target="#log-notes-modal" title="View Log Notes">
                                 <i class="ki-outline ki-shield-search fs-3 m-0 fs-5"></i>
                             </button>';
             }
 
             $readAccessButton = '<div class="form-check form-switch form-switch-sm form-check-custom form-check-solid">
-                                    <input class="form-check-input update-role-permission" type="checkbox" data-reference-id="' . $rolePermissionId . '" data-access-type="read_access" ' . $readAccessChecked . ' '. $disabled .' />
+                                    <input class="form-check-input update-role-navigation-menu-permission" type="checkbox" data-reference-id="' . $rolePermissionId . '" data-access-type="read_access" ' . $readAccessChecked . ' '. $disabled .' />
                                 </div>';
 
             $writeAccessButton = '<div class="form-check form-switch form-switch-sm form-check-custom form-check-solid">
-                                    <input class="form-check-input update-role-permission" type="checkbox" data-reference-id="' . $rolePermissionId . '" data-access-type="write_access" ' . $writeAccessChecked . ' '. $disabled .' />
+                                    <input class="form-check-input update-role-navigation-menu-permission" type="checkbox" data-reference-id="' . $rolePermissionId . '" data-access-type="write_access" ' . $writeAccessChecked . ' '. $disabled .' />
                                 </div>';
 
             $createAccessButton = '<div class="form-check form-switch form-switch-sm form-check-custom form-check-solid">
-                                    <input class="form-check-input update-role-permission" type="checkbox" data-reference-id="' . $rolePermissionId . '" data-access-type="create_access" ' . $createAccessChecked . ' '. $disabled .' />
+                                    <input class="form-check-input update-role-navigation-menu-permission" type="checkbox" data-reference-id="' . $rolePermissionId . '" data-access-type="create_access" ' . $createAccessChecked . ' '. $disabled .' />
                                 </div>';
 
             $deleteAccessButton = '<div class="form-check form-switch form-switch-sm form-check-custom form-check-solid">
-                                    <input class="form-check-input update-role-permission" type="checkbox" data-reference-id="' . $rolePermissionId . '" data-access-type="delete_access" ' . $deleteAccessChecked . ' '. $disabled .' />
+                                    <input class="form-check-input update-role-navigation-menu-permission" type="checkbox" data-reference-id="' . $rolePermissionId . '" data-access-type="delete_access" ' . $deleteAccessChecked . ' '. $disabled .' />
                                 </div>';
 
             $importAccessButton = '<div class="form-check form-switch form-switch-sm form-check-custom form-check-solid">
-                                    <input class="form-check-input update-role-permission" type="checkbox" data-reference-id="' . $rolePermissionId . '" data-access-type="import_access" ' . $importAccessChecked . ' '. $disabled .' />
+                                    <input class="form-check-input update-role-navigation-menu-permission" type="checkbox" data-reference-id="' . $rolePermissionId . '" data-access-type="import_access" ' . $importAccessChecked . ' '. $disabled .' />
                                 </div>';
 
             $exportAccessButton = '<div class="form-check form-switch form-switch-sm form-check-custom form-check-solid">
-                                    <input class="form-check-input update-role-permission" type="checkbox" data-reference-id="' . $rolePermissionId . '" data-access-type="export_access" ' . $exportAccessChecked . ' '. $disabled .' />
+                                    <input class="form-check-input update-role-navigation-menu-permission" type="checkbox" data-reference-id="' . $rolePermissionId . '" data-access-type="export_access" ' . $exportAccessChecked . ' '. $disabled .' />
                                 </div>';
 
             $logNotesAccessButton = '<div class="form-check form-switch form-switch-sm form-check-custom form-check-solid">
-                                    <input class="form-check-input update-role-permission" type="checkbox" data-reference-id="' . $rolePermissionId . '" data-access-type="logs_access" ' . $logNotesAccessChecked . ' '. $disabled .' />
+                                    <input class="form-check-input update-role-navigation-menu-permission" type="checkbox" data-reference-id="' . $rolePermissionId . '" data-access-type="logs_access" ' . $logNotesAccessChecked . ' '. $disabled .' />
                                 </div>';
 
             return [
@@ -349,7 +417,7 @@ class RolePermissionController extends Controller
                 'DELETE_ACCESS' => $deleteAccessButton,
                 'IMPORT_ACCESS' => $importAccessButton,
                 'EXPORT_ACCESS' => $exportAccessButton,
-                'LOG_NOTES_ACCESS' => $logNotesAccessButton,
+                'LOGS_ACCESS' => $logNotesAccessButton,
                 'ACTION' => '<div class="d-flex justify-content-end gap-3">
                                 '. $logNotes .'
                                 '. $deleteButton .'

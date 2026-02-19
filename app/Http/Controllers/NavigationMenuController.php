@@ -309,10 +309,10 @@ class NavigationMenuController extends Controller
     {
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
-        $filterByApp = $request->input('filter_by_app'); // This is an array
-        $filterByParentMenu = $request->input('filter_by_parent_menu'); // This is an array
+        $filterByApp = $request->input('filter_by_app');
+        $filterByParentMenu = $request->input('filter_by_parent_menu');
 
-        $apps = DB::table('navigation_menu')
+        $navigationMenus = DB::table('navigation_menu')
         ->when(!empty($filterByApp), function ($q) use ($filterByApp) {
             $q->whereIn('app_id', $filterByApp);
         })
@@ -322,7 +322,7 @@ class NavigationMenuController extends Controller
         ->orderBy('navigation_menu_name')
         ->get();
 
-        $response = $apps->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
+        $response = $navigationMenus->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
             $navigationMenuId = $row->id;
             $navigationMenuName = $row->navigation_menu_name;
             $appName = $row->app_name;
@@ -351,6 +351,7 @@ class NavigationMenuController extends Controller
 
         return response()->json($response);
     }
+
     public function generateOptions(Request $request)
     {
         $multiple = filter_var($request->input('multiple', false), FILTER_VALIDATE_BOOLEAN);

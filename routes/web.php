@@ -7,7 +7,10 @@ use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\NavigationMenuController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RolePermissionController;
+use App\Http\Controllers\RoleSystemActionPermissionController;
+use App\Http\Controllers\RoleUserAccountController;
 use App\Http\Controllers\SystemActionController;
 use Illuminate\Support\Facades\Route;
 
@@ -100,23 +103,95 @@ Route::middleware('auth')->group(function () {
             Route::post('/generate-options', 'generateOptions')->name('generate.options');
         });
 
+    // Role
+    Route::prefix('role')
+        ->name('role.')
+        ->controller(RoleController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
+            Route::post('/delete', 'delete')->name('delete');
+            Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
+            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
+            Route::post('/generate-table', 'generateTable')->name('generate.table');
+            Route::post('/generate-options', 'generateOptions')->name('generate.options');
+        });
+
 
     // Role Permission
     Route::prefix('role-permission')
         ->name('role.permission.')
         ->controller(RolePermissionController::class)
         ->group(function () {
-            Route::post('/save-navigation-menu-role-assignment', 'saveNavigationMenuRoleAssignment')
-                ->name('save.navigation.menu.role.assignment');
+            Route::post('/save-navigation-menu-role-assignment', 'saveRoleAssignment')
+                ->name('save.role.assignment');
+            Route::post('/save-role-navigation-menu-assignment', 'saveNavigationMenuAssignment')
+                ->name('save.navigation.menu.assignment');
 
             Route::post('/update', 'update')->name('update');
             Route::post('/delete', 'delete')->name('delete');
 
             Route::post('/generate-navigation-menu-role-permission-table', 'generateNavigationMenuRolePermissionTable')
-                ->name('generate.navigation.menu.table');
+                ->name('generate.navigation.menu.role.table');
+
+            Route::post('/generate-role-navigation-menu-permission-table', 'generateRoleNavigationMenuPermissionTable')
+                ->name('generate.role.navigation.menu.table');
 
             Route::post('/generate-navigation-menu-role-dual-listbox-options', 'generateNavigationMenuRoleDualListboxOptions')
-                ->name('generate.navigation.menu.dual.listbox.options');
+                ->name('generate.navigation.menu.role.dual.listbox.options');
+
+            Route::post('/generate-role-navigation-menu-dual-listbox-options', 'generateRoleNavigationMenuDualListboxOptions')
+                ->name('generate.role.navigation.menu.dual.listbox.options');
+        });
+
+    // Role System Action Permission
+    Route::prefix('role-system-action-permission')
+        ->name('role.system.action.permission.')
+        ->controller(RoleSystemActionPermissionController::class)
+        ->group(function () {
+            Route::post('/save-system-action-role-assignment', 'saveRoleAssignment')
+                ->name('save.role.assignment');
+            Route::post('/save-role-system-action-assignment', 'saveSystemActionAssignment')
+                ->name('save.system.action.assignment');
+
+            Route::post('/update', 'update')->name('update');
+            Route::post('/delete', 'delete')->name('delete');
+
+            Route::post('/generate-system-action-role-permission-table', 'generateSystemActionRolePermissionTable')
+                ->name('generate.system.action.role.table');
+
+            Route::post('/generate-role-system-action-permission-table', 'generateRoleSystemActionPermissionTable')
+                ->name('generate.role.system.action.table');
+
+            Route::post('/generate-system-action-role-dual-listbox-options', 'generateSystemActionRoleDualListboxOptions')
+                ->name('generate.system.action.role.dual.listbox.options');
+
+            Route::post('/generate-role-system-action-dual-listbox-options', 'generateRoleSystemActionDualListboxOptions')
+                ->name('generate.role.system.action.dual.listbox.options');
+        });
+
+    // Role User Account
+    Route::prefix('role-user-account')
+        ->name('role.user.account.')
+        ->controller(RoleUserAccountController::class)
+        ->group(function () {
+            Route::post('/save-user-account-role-assignment', 'saveRoleAssignment')
+                ->name('save.role.assignment');
+            Route::post('/save-role-user-account-assignment', 'saveUserAccountAssignment')
+                ->name('save.user.account.assignment');
+
+            Route::post('/delete', 'delete')->name('delete');
+
+            Route::post('/generate-user-account-role-table', 'generateUserAccountRoleTable')
+                ->name('generate.user.account.role.table');
+
+            Route::post('/generate-role-user-account-table', 'generateRoleUserAccountTable')
+                ->name('generate.role.user.account.table');
+
+            Route::post('/generate-user-account-role-dual-listbox-options', 'generateUserAccountRoleDualListboxOptions')
+                ->name('generate.user.account.role.dual.listbox.options');
+
+            Route::post('/generate-role-user-account-dual-listbox-options', 'generateRoleUserAccountDualListboxOptions')
+                ->name('generate.role.user.account.dual.listbox.options');
         });
 
 

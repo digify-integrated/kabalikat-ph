@@ -106,40 +106,40 @@ document.addEventListener('DOMContentLoaded', () => {
             {
                 selector: '#role_permission_assignment_form',
                 rules: {
-                submitHandler: async (form) => {
-                    const formData = new URLSearchParams(new FormData(form));
-                    formData.append('navigation_menu_id', ctx.detailId ?? '');
-                    formData.append('appId', ctx.appId ?? '');
-                    formData.append('navigationMenuId', ctx.navigationMenuId ?? '');
+                    submitHandler: async (form) => {
+                        const formData = new URLSearchParams(new FormData(form));
+                        formData.append('navigation_menu_id', ctx.detailId ?? '');
+                        formData.append('appId', ctx.appId ?? '');
+                        formData.append('navigationMenuId', ctx.navigationMenuId ?? '');
 
-                    disableButton('submit-assignment');
+                        disableButton('submit-assignment');
 
-                    try {
-                        const response = await fetch('/role-permission/save-navigation-menu-role-assignment', {
-                            method: 'POST',
-                            body: formData,
-                        });
+                        try {
+                            const response = await fetch('/role-permission/save-navigation-menu-role-assignment', {
+                                method: 'POST',
+                                body: formData,
+                            });
 
-                        if (!response.ok) {
-                            throw new Error(`Save navigation menu role assignment failed with status: ${response.status}`);
+                            if (!response.ok) {
+                                throw new Error(`Save navigation menu role assignment failed with status: ${response.status}`);
+                            }
+
+                            const data = await response.json();
+
+                            if (data.success) {
+                                reloadDatatable('#role-permission-table');
+                                $('#role-permission-assignment-modal').modal('hide');
+                                showNotification(data.message, 'success');
+                            } else {
+                                showNotification(data.message);
+                            }
+                        } catch (error) {
+                            handleSystemError(error, 'fetch_failed', `Fetch request failed: ${error.message}`);
+                        } finally {
+                            enableButton('submit-assignment');
                         }
-
-                        const data = await response.json();
-
-                        if (data.success) {
-                            reloadDatatable('#role-permission-table');
-                            $('#role-permission-assignment-modal').modal('hide');
-                            showNotification(data.message, 'success');
-                        } else {
-                            showNotification(data.message);
-                        }
-                    } catch (error) {
-                        handleSystemError(error, 'fetch_failed', `Fetch request failed: ${error.message}`);
-                    } finally {
-                        enableButton('submit-assignment');
-                    }
-                },
-            }
+                    },
+                }
             },
         ],
         table: {
