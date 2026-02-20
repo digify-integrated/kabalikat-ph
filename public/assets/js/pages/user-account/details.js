@@ -32,20 +32,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     },
                     submitHandler: async (form) => {
                         const formData = new URLSearchParams(new FormData(form));
-                        formData.append('app_id', ctx.detailId ?? '');
+                        formData.append('user_id', ctx.detailId ?? '');
                         formData.append('appId', ctx.appId ?? '');
                         formData.append('navigationMenuId', ctx.navigationMenuId ?? '');
 
                         disableButton('submit-data');
 
                         try {
-                            const response = await fetch('/app/save', {
+                            const response = await fetch('/user/save', {
                                 method: 'POST',
                                 body: formData,
                             });
 
                             if (!response.ok) {
-                                throw new Error(`Save app failed with status: ${response.status}`);
+                                throw new Error(`Save user failed with status: ${response.status}`);
                             }
 
                             const data = await response.json();

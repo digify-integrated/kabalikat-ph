@@ -5,6 +5,8 @@ use App\Http\Controllers\AppRenderController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\ExportController;
+use App\Http\Controllers\FileExtensionController;
+use App\Http\Controllers\FileTypeController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\NavigationMenuController;
 use App\Http\Controllers\RoleController;
@@ -213,6 +215,31 @@ Route::middleware('auth')->group(function () {
             Route::post('/generate-options', 'generateOptions')->name('generate.options');
         });
 
+    // File Type
+    Route::prefix('file-type')
+        ->name('file.type.')
+        ->controller(FileTypeController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
+            Route::post('/delete', 'delete')->name('delete');
+            Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
+            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
+            Route::post('/generate-table', 'generateTable')->name('generate.table');
+            Route::post('/generate-options', 'generateOptions')->name('generate.options');
+        });
+
+    // File Extension
+    Route::prefix('file-extension')
+        ->name('file.extension.')
+        ->controller(FileExtensionController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
+            Route::post('/delete', 'delete')->name('delete');
+            Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
+            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
+            Route::post('/generate-table', 'generateTable')->name('generate.table');
+            Route::post('/generate-options', 'generateOptions')->name('generate.options');
+        });
 
     // Import
     Route::prefix('import')

@@ -15,6 +15,51 @@ return new class extends Migration
             TABLE: APP
         ============================================================================================= */
 
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_users_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_users_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_app_update
+            AFTER UPDATE ON users
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'User changed.<br/><br/>';
+
+                IF NEW.name <> OLD.name THEN
+                    SET audit_log = CONCAT(audit_log, "Name: ", OLD.name, " -> ", NEW.name, "<br/>");
+                END IF;
+
+                IF NEW.email <> OLD.email THEN
+                    SET audit_log = CONCAT(audit_log, "Email: ", OLD.email, " -> ", NEW.email, "<br/>");
+                END IF;
+
+                IF NEW.status <> OLD.status THEN
+                    SET audit_log = CONCAT(audit_log, "Status: ", OLD.status, " -> ", NEW.status, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'User changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('users', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_app_insert
+            AFTER INSERT ON users
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'User created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('users', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
+
+        /* =============================================================================================
+            TABLE: APP
+        ============================================================================================= */
+
         DB::unprepared('DROP TRIGGER IF EXISTS trg_app_update');
         DB::unprepared('DROP TRIGGER IF EXISTS trg_app_insert');
 

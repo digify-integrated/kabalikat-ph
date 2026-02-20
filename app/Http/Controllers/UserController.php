@@ -18,10 +18,10 @@ class UserController extends Controller
     public function save(Request $request)
     {
         $validated = $request->validate([
-            'user_id' => ['nullable', 'integer'],
-            'user_name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'string', 'max:255'],
-            'password' => ['nullable', 'string'],
+            'user_id'    => ['nullable', 'integer'],
+            'user_name'  => ['required', 'string', 'max:255'],
+            'email'      => ['required', 'email', 'max:255'],
+            'password'   => [$request->filled('user_id') ? 'nullable' : 'required', 'string', 'min:8'],
         ]);
 
         $pageAppId = (int) $request->input('appId');

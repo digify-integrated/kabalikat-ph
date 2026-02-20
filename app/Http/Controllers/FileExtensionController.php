@@ -4,53 +4,66 @@ namespace App\Http\Controllers;
 
 use App\Models\FileExtension;
 use App\Models\FileType;
+use App\Models\UploadSettingFileExtension;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 
-class FileTypeController extends Controller
+class FileExtensionController extends Controller
 {
     public function save(Request $request)
     {
         $validated = $request->validate([
-            'file_type_id' => ['nullable', 'integer'],
-            'file_type_name' => ['required', 'string', 'max:255'],
+            'file_extension_id' => ['nullable', 'integer'],
+            'file_extension_name' => ['required', 'string', 'max:255'],
+            'file_extension' => ['required', 'string', 'max:255'],
+            'file_type_id' => ['integer'],
         ]);
 
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
 
+        $fileTypeId = (int) $validated['file_type_id'];
+
+        $fileTypeName = (string) FileType::query()
+            ->whereKey($fileTypeId)
+            ->value('file_type_name');
+
         $payload = [
-            'file_type_name' => $validated['file_type_name'],
+            'file_extension_name' => $validated['file_extension_name'],
+            'file_extension' => $validated['file_extension'],
+            'file_type_id' => $fileTypeId,
+            'file_type_name' => $fileTypeName,
             'last_log_by' => Auth::id(),
         ];
 
-        $fileTypeId = $validated['file_type_id'] ?? null;
+        $fileExtensionId = $validated['file_extension_id'] ?? null;
 
-        if ($fileTypeId && FileType::query()->whereKey($fileTypeId)->exists()) {
-            $fileType = FileType::query()->findOrFail($fileTypeId);
-            $fileType->update($payload);
+        if ($fileExtensionId && FileExtension::query()->whereKey($fileExtensionId)->exists()) {
+            $fileExtension = FileExtension::query()->findOrFail($fileExtensionId);
+            $fileExtension->update($payload);
         } else {
-            $fileType = FileType::query()->create($payload);
+            $fileExtension = FileExtension::query()->create($payload);
         }
 
-        FileExtension::query()
-            ->where('file_type_id', $fileType->id)
+        UploadSettingFileExtension::query()
+            ->where('file_extension_id', $fileExtension->id)
             ->update([
-                'file_type_name' => $fileType->file_type_name,
+                'file_extension_name' => $fileExtension->file_extension_name,
+                'file_extension' => $fileExtension->file_extension,
                 'last_log_by' => Auth::id(),
             ]);
 
         $link = route('apps.details', [
             'appId' => $pageAppId,
             'navigationMenuId' => $pageNavigationMenuId,
-            'details_id' => $fileType->id,
+            'details_id' => $fileExtension->id,
         ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'The file type has been saved successfully',
+            'message' => 'The file extension has been saved successfully',
             'redirect_link' => $link,
         ]);
     }
@@ -58,7 +71,7 @@ class FileTypeController extends Controller
     public function delete(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'detailId' => ['required', 'integer', 'min:1', 'exists:file_type,id'],
+            'detailId' => ['required', 'integer', 'min:1', 'exists:file_extension,id'],
         ]);
 
         $pageAppId = (int) $request->input('appId');
@@ -74,9 +87,9 @@ class FileTypeController extends Controller
         $detailId = (int) $validator->validated()['detailId'];
 
         DB::transaction(function () use ($detailId) {
-            $fileType = FileType::query()->select(['id'])->findOrFail($detailId);
+            $fileExtension = FileExtension::query()->select(['id'])->findOrFail($detailId);
 
-            $fileType->delete();
+            $fileExtension->delete();
         });        
 
         $link = route('apps.base', [
@@ -86,7 +99,7 @@ class FileTypeController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'The file type has been deleted successfully',
+            'message' => 'The file extension has been deleted successfully',
             'redirect_link' => $link,
         ]);
     }
@@ -95,18 +108,18 @@ class FileTypeController extends Controller
     {
         $validated = $request->validate([
             'selected_id'   => ['required', 'array', 'min:1'],
-            'selected_id.*' => ['integer', 'distinct', 'exists:file_type,id'],
+            'selected_id.*' => ['integer', 'distinct', 'exists:file_extension,id'],
         ]);
 
         $ids = $validated['selected_id'];
 
         DB::transaction(function () use ($ids) {
-            FileType::query()->whereIn('id', $ids)->delete();
+            FileExtension::query()->whereIn('id', $ids)->delete();
         });
 
         return response()->json([
             'success' => true,
-            'message' => 'The selected file types have been deleted successfully',
+            'message' => 'The selected file extensions have been deleted successfully',
         ]);
     }
 
@@ -129,11 +142,11 @@ class FileTypeController extends Controller
 
         $validated = $validator->validated();
 
-        $fileType = DB::table('file_type')
+        $fileExtension = DB::table('file_extension')
             ->where('id', $validated['detailId'])
             ->first();
 
-        if (!$fileType) {
+        if (!$fileExtension) {
             $link = route('apps.base', [
                 'appId' => $pageAppId,
                 'navigationMenuId' => $pageNavigationMenuId,
@@ -143,7 +156,7 @@ class FileTypeController extends Controller
                 'success'  => false,
                 'notExist' => true,
                 'redirect_link' => $link,
-                'message'  => 'File type not found',
+                'message'  => 'File extension not found',
             ]);
         }
         
@@ -151,7 +164,9 @@ class FileTypeController extends Controller
         return response()->json([
             'success' => true,
             'notExist' => false,
-            'fileTypeName' => $fileType->file_type_name ?? null,
+            'fileExtensionName' => $fileExtension->file_extension_name ?? null,
+            'fileExtension' => $fileExtension->file_extension ?? null,
+            'fileTypeId' => $fileExtension->file_type_id ?? null,
         ]);
     }
 
@@ -159,27 +174,33 @@ class FileTypeController extends Controller
     {
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
+        $filterByFileType = $request->input('filter_by_file_type');
 
-        $fileTypes = DB::table('file_type')
-        ->orderBy('file_type_name')
+        $fileExtensions = DB::table('file_extension')
+        ->when(!empty($filterByFileType), function ($q) use ($filterByFileType) {
+            $q->where('file_type_id', $filterByFileType);
+        })
+        ->orderBy('file_extension_name')
         ->get();
 
-        $response = $fileTypes->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
-            $fileTypeId = $row->id;
+        $response = $fileExtensions->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
+            $fileExtensionId = $row->id;
+            $fileExtensionName = $row->file_extension_name;
             $fileTypeName = $row->file_type_name;
 
             $link = route('apps.details', [
                 'appId' => $pageAppId,
                 'navigationMenuId' => $pageNavigationMenuId,
-                'details_id' => $fileTypeId,
+                'details_id' => $fileExtensionId,
             ]);
 
             return [
                 'CHECK_BOX' => '
                     <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                        <input class="form-check-input datatable-checkbox-children" type="checkbox" value="'.$fileTypeId.'">
+                        <input class="form-check-input datatable-checkbox-children" type="checkbox" value="'.$fileExtensionId.'">
                     </div>
                 ',
+                'FILE_EXTENSION' => $fileExtensionName,
                 'FILE_TYPE' => $fileTypeName,
                 'LINK' => $link,
             ];
@@ -201,15 +222,15 @@ class FileTypeController extends Controller
             ]);
         }
 
-        $fileTypes = DB::table('file_type')
-            ->select(['id', 'file_type_name'])
-            ->orderBy('file_type_name')
+        $fileTypes = DB::table('file_extension')
+            ->select(['id', 'file_extension_name'])
+            ->orderBy('file_extension_name')
             ->get();
 
         $response = $response->concat(
             $fileTypes->map(fn ($row) => [
                 'id'   => $row->id,
-                'text' => $row->file_type_name,
+                'text' => $row->file_extension_name,
             ])
         )->values();
 
