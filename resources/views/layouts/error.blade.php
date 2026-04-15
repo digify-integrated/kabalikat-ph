@@ -1,24 +1,42 @@
-<!DOCTYPE html>
-<html lang="en" dir="ltr" data-nav-layout="vertical" data-vertical-style="overlay" data-theme-mode="light" data-header-styles="light" data-menu-styles="light" data-toggled="close">
-<head>
-    <meta charset="UTF-8">
-    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Error</title>
-    <link rel="icon" href="{{ asset('assets/images/brand-logos/favicon.svg') }}" type="image/x-icon">
-    <script src="{{ asset('assets/js/authentication-main.js') }}"></script>
-    <link id="style" href="{{ asset('assets/libs/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet" >
-    <link href="{{ asset('assets/css/styles.css') }}" rel="stylesheet" >
-    <link href="{{ asset('assets/css/icons.css') }}" rel="stylesheet" >
-</head>
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>Error</title>
+        <meta name="csrf-token" content="{{ csrf_token() }}">
+        @include('partials.required-css')
+        @stack('css')
+    </head>
+    <body id="kt_app_body"
+      data-kt-app-header-fixed-mobile="true"
+      data-kt-app-toolbar-enabled="true"
+      data-kt-app-page-loading-enabled="true"
+      data-kt-app-page-loading="on"
+      class="app-default">
+        @include('partials.theme-switcher')
+        @include('partials.page-loader')
+        <div class="d-flex flex-column flex-root">
+            <div class="page d-flex flex-row flex-column-fluid">
+                <div class="wrapper d-flex flex-column flex-row-fluid" id="kt_wrapper">
+                    <div class="content d-flex flex-column flex-column-fluid " id="kt_content">
+                        <div class="post d-flex flex-column-fluid" id="kt_post">
+                            <div id="kt_content_container" class=" container-xxl ">
+                                @yield('content')
+                            </div>
+                        </div>
+                    </div>
+                    @include('partials.footer')
+                </div>
+            </div>
+        </div>
 
-<body>
-    @include('partials.auth-switcher')
+       
+        
+        @include('partials.error-modal')
+        @include('partials.scroll')
 
-    @yield('content')
-
-    <script src="{{ asset('assets/libs/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
-    @stack('scripts')
-</body>
-
+        <script src="{{ asset('assets/plugins/global/plugins.bundle.js') }}"></script>
+        <script src="{{ asset('assets/js/scripts.bundle.js') }}"></script>
+        <script type="module" src="{{ asset('assets/js/navigation.js') }}"></script>
+        @stack('scripts')
+    </body>
 </html>

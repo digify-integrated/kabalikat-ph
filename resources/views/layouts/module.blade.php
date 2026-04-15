@@ -20,29 +20,26 @@
       class="app-default">
         @include('partials.theme-switcher')
         @include('partials.page-loader')
-
-        <div class="d-flex flex-column flex-root app-root" id="kt_app_root">
-            <div class="app-page flex-column flex-column-fluid" id="kt_app_page">
-                @include('partials.module-header')
-
-                <div class="app-wrapper flex-column flex-row-fluid" id="kt_app_wrapper">                                        
-                    @include('partials.module-toolbar')
-                    <div class="app-container  container-xxl">
-                        <div class="app-main flex-column flex-row-fluid " id="kt_app_main">
-                            <div class="d-flex flex-column flex-column-fluid">
-                                <div id="kt_app_content" class="app-content flex-column-fluid">
-                                    @yield('content')
-                                </div>
+        <div class="d-flex flex-column flex-root">
+            <div class="page d-flex flex-row flex-column-fluid">
+                @include('partials.module-aside')
+                <div class="wrapper d-flex flex-column flex-row-fluid" id="kt_wrapper">
+                    @include('partials.module-header')
+                    <div class="content d-flex flex-column flex-column-fluid " id="kt_content">
+                        <div class="post d-flex flex-column-fluid" id="kt_post">
+                            <div id="kt_content_container" class=" container-xxl ">
+                                @yield('content')
                             </div>
                         </div>
                     </div>
+                    @include('partials.footer')
                 </div>
             </div>
         </div>
+
+       
         
         @include('partials.error-modal')
-        @include('partials.footer')
-
         @include('partials.scroll')
 
         <script src="{{ asset('assets/plugins/global/plugins.bundle.js') }}"></script>

@@ -3,5 +3,5 @@ import { checkNotification } from './util/notifications.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     checkNotification();
-    setHereClassForMenu('#kt_app_header_menu', '.menu-item');
+    setHereClassForMenu('#kt_aside_menu');
 });

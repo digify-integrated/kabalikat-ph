@@ -1,58 +1,55 @@
-export const setHereClassForMenu = (menuContainerSelector, menuSelector) => {
+export const setHereClassForMenu = (menuContainerSelector) => {
   const menuContainer = document.querySelector(menuContainerSelector);
   if (!menuContainer) return;
 
-  // Precompute current path once
-  const currentPath = (() => {
+  // Normalize current path
+  const normalize = (url) => {
     try {
-      // Use location.pathname directly (fast + already normalized by browser)
-      const p = window.location.pathname || '/';
-      return p.replace(/\/+$/, '') || '/';
-    } catch {
-      return '/';
-    }
-  })();
-
-  // Normalize href -> pathname (handles relative + absolute). Cheap in hot path.
-  const normalizePath = (href) => {
-    if (!href || href === '#') return null;
-    try {
-      const p = new URL(href, window.location.origin).pathname || '/';
-      return p.replace(/\/+$/, '') || '/';
+      const u = new URL(url, window.location.origin);
+      return (u.pathname || '/').replace(/\/+$/, '') || '/';
     } catch {
       return null;
     }
   };
 
-  const menuItems = menuContainer.querySelectorAll(menuSelector);
+  const currentPath = normalize(window.location.href);
 
-  for (let i = 0; i < menuItems.length; i++) {
-    const menuItem = menuItems[i];
+  // Reset previous state
+  menuContainer
+    .querySelectorAll('.active, .here, .show')
+    .forEach(el => el.classList.remove('active', 'here', 'show'));
 
-    // Fast path: if there are submenu links, check them and stop.
-    const childLinks = menuItem.querySelectorAll('.menu-sub .menu-link[href]');
-    if (childLinks.length) {
-      for (let j = 0; j < childLinks.length; j++) {
-        const link = childLinks[j];
-        const linkPath = normalizePath(link.getAttribute('href'));
-        if (linkPath && linkPath === currentPath) {
-          link.classList.add('active');
-          menuItem.classList.add('here', 'show');
-          break;
-        }
-      }
-      continue;
+  // Find active link
+  const links = menuContainer.querySelectorAll('a.menu-link[href]');
+  let activeLink = null;
+
+  for (let i = 0; i < links.length; i++) {
+    const linkPath = normalize(links[i].href);
+
+    if (linkPath === currentPath) {
+      activeLink = links[i];
+      break;
     }
+  }
 
-    // Otherwise, check the primary link for this item
-    const anchor =
-      menuItem.querySelector(':scope > a[href]') ||
-      menuItem.querySelector(':scope .menu-link[href]');
-    if (!anchor) continue;
+  if (!activeLink) {
+    console.warn('No active menu match for:', currentPath);
+    return;
+  }
 
-    const anchorPath = normalizePath(anchor.getAttribute('href'));
-    if (anchorPath && anchorPath === currentPath) {
-      menuItem.classList.add('here');
+  // Apply active ONLY to link
+  activeLink.classList.add('active');
+
+  // Apply here/show to parents
+  let parentItem = activeLink.closest('.menu-item');
+
+  // Skip leaf → go to parent
+  parentItem = parentItem?.parentElement?.closest('.menu-item');
+
+  while (parentItem && parentItem !== menuContainer) {
+    if (parentItem.classList.contains('menu-accordion')) {
+      parentItem.classList.add('here', 'show');
     }
+    parentItem = parentItem.parentElement?.closest('.menu-item');
   }
 };

@@ -48,9 +48,14 @@ class EnsureMenuReadAccess
         }
 
         // Enforce ancestor permissions (if any parent is not allowed => deny)
-        $currentId = $navigationMenuId;
+       $currentId = (int) $navigationMenuId;
 
         while (true) {
+
+            if (!in_array($currentId, $allowedIds, true)) {
+                abort(403, "No access to menu {$currentId}");
+            }
+
             $row = DB::table('navigation_menu')
                 ->where('id', $currentId)
                 ->select('parent_navigation_menu_id')
@@ -60,17 +65,13 @@ class EnsureMenuReadAccess
                 abort(404);
             }
 
-            if ($row->parent_navigation_menu_id === null) {
+            $parentId = $row->parent_navigation_menu_id;
+
+            if (empty($parentId) || (int) $parentId === 0) {
                 break;
             }
 
-            $parentId = (int) $row->parent_navigation_menu_id;
-
-            if (!isset($allowedSet[$parentId])) {
-                abort(404);
-            }
-
-            $currentId = $parentId;
+            $currentId = (int) $parentId;
         }
 
         return $next($request);

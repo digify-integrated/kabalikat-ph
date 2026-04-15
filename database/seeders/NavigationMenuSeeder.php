@@ -23,7 +23,7 @@ class NavigationMenuSeeder extends Seeder
         $navigationMenus = [
             [
                 'navigation_menu_name'          => 'Apps',
-                'navigation_menu_icon'          => null,
+                'navigation_menu_icon'          => 'ki-outline ki-abstract-26',
                 'app_id'                        => 1,
                 'app_name'                      => 'Settings',
                 'parent_navigation_menu_id'     => null,
@@ -33,7 +33,7 @@ class NavigationMenuSeeder extends Seeder
             ],
             [
                 'navigation_menu_name'          => 'Settings',
-                'navigation_menu_icon'          => null,
+                'navigation_menu_icon'          => 'ki-outline ki-setting-2',
                 'app_id'                        => 1,
                 'app_name'                      => 'Settings',
                 'parent_navigation_menu_id'     => null,
@@ -43,7 +43,7 @@ class NavigationMenuSeeder extends Seeder
             ],
             [
                 'navigation_menu_name'          => 'Users & Companies',
-                'navigation_menu_icon'          => null,
+                'navigation_menu_icon'          => 'ki-outline ki-user-square',
                 'app_id'                        => 1,
                 'app_name'                      => 'Settings',
                 'parent_navigation_menu_id'     => null,
@@ -53,7 +53,7 @@ class NavigationMenuSeeder extends Seeder
             ],
             [
                 'navigation_menu_name'          => 'User Account',
-                'navigation_menu_icon'          => 'ki-outline ki-user',
+                'navigation_menu_icon'          => null,
                 'app_id'                        => 1,
                 'app_name'                      => 'Settings',
                 'parent_navigation_menu_id'     => 3,
@@ -63,7 +63,7 @@ class NavigationMenuSeeder extends Seeder
             ],
             [
                 'navigation_menu_name'          => 'Company',
-                'navigation_menu_icon'          => 'ki-outline ki-shop',
+                'navigation_menu_icon'          => '',
                 'app_id'                        => 1,
                 'app_name'                      => 'Settings',
                 'parent_navigation_menu_id'     => 3,
@@ -73,7 +73,7 @@ class NavigationMenuSeeder extends Seeder
             ],
             [
                 'navigation_menu_name'          => 'Role',
-                'navigation_menu_icon'          => null,
+                'navigation_menu_icon'          => 'ki-outline ki-security-user',
                 'app_id'                        => 1,
                 'app_name'                      => 'Settings',
                 'parent_navigation_menu_id'     => null,
@@ -83,7 +83,7 @@ class NavigationMenuSeeder extends Seeder
             ],
             [
                 'navigation_menu_name'          => 'User Interface',
-                'navigation_menu_icon'          => null,
+                'navigation_menu_icon'          => 'ki-outline ki-element-8',
                 'app_id'                        => 1,
                 'app_name'                      => 'Settings',
                 'parent_navigation_menu_id'     => null,
@@ -93,7 +93,7 @@ class NavigationMenuSeeder extends Seeder
             ],
             [
                 'navigation_menu_name'          => 'Navigation Menu',
-                'navigation_menu_icon'          => 'ki-outline ki-data',
+                'navigation_menu_icon'          => null,
                 'app_id'                        => 1,
                 'app_name'                      => 'Settings',
                 'parent_navigation_menu_id'     => 7,
@@ -103,7 +103,7 @@ class NavigationMenuSeeder extends Seeder
             ],
             [
                 'navigation_menu_name'          => 'System Action',
-                'navigation_menu_icon'          => 'ki-outline ki-key-square',
+                'navigation_menu_icon'          => null,
                 'app_id'                        => 1,
                 'app_name'                      => 'Settings',
                 'parent_navigation_menu_id'     => 7,
@@ -113,7 +113,7 @@ class NavigationMenuSeeder extends Seeder
             ],
             [
                 'navigation_menu_name'          => 'Configurations',
-                'navigation_menu_icon'          => null,
+                'navigation_menu_icon'          => 'ki-outline ki-wrench',
                 'app_id'                        => 1,
                 'app_name'                      => 'Settings',
                 'parent_navigation_menu_id'     => null,
@@ -123,7 +123,7 @@ class NavigationMenuSeeder extends Seeder
             ],
             [
                 'navigation_menu_name'          => 'Localization',
-                'navigation_menu_icon'          => 'ki-outline ki-compass',
+                'navigation_menu_icon'          => null,
                 'app_id'                        => 1,
                 'app_name'                      => 'Settings',
                 'parent_navigation_menu_id'     => 10,
@@ -183,7 +183,7 @@ class NavigationMenuSeeder extends Seeder
             ],
             [
                 'navigation_menu_name'          => 'Data Classification',
-                'navigation_menu_icon'          => 'ki-outline ki-file-up',
+                'navigation_menu_icon'          => null,
                 'app_id'                        => 1,
                 'app_name'                      => 'Settings',
                 'parent_navigation_menu_id'     => 10,
@@ -213,7 +213,7 @@ class NavigationMenuSeeder extends Seeder
             ],
             [
                 'navigation_menu_name'          => 'Upload Setting',
-                'navigation_menu_icon'          => 'ki-outline ki-exit-up',
+                'navigation_menu_icon'          => null,
                 'app_id'                        => 1,
                 'app_name'                      => 'Settings',
                 'parent_navigation_menu_id'     => 2,
@@ -223,7 +223,7 @@ class NavigationMenuSeeder extends Seeder
             ],
             [
                 'navigation_menu_name'          => 'Notification Setting',
-                'navigation_menu_icon'          => 'ki-outline ki-notification',
+                'navigation_menu_icon'          => null,
                 'app_id'                        => 1,
                 'app_name'                      => 'Settings',
                 'parent_navigation_menu_id'     => 2,

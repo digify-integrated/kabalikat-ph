@@ -1,100 +1,71 @@
 @php
     $hasChildren = !empty($item['children']);
     $isTopLevel = ($level === 0);
-    $isSecondLevel = ($level === 1);
 
-    // Choose a default icon for second level if none provided.
-    // Replace with whatever KeenThemes icon you prefer.
-    $defaultSecondLevelIcon = 'ki-outline ki-abstract-26';
-    $iconClass = !empty($item['icon']) ? $item['icon'] : $defaultSecondLevelIcon;
+    $defaultIcon = 'ki-duotone ki-abstract-26';
+    $iconClass = !empty($item['icon']) ? $item['icon'] : $defaultIcon;
 
-    // Route for leaf items
     $href = route('apps.base', [
         'appId' => $nav_app_id,
         'navigationMenuId' => $item['id'],
     ]);
 @endphp
 
-@if($isTopLevel)
-    {{-- TOP LEVEL --}}
-    @if(!$hasChildren)
-        <div class="menu-item menu-here-bg menu-lg-down-accordion me-0 me-lg-2">
-            <a class="menu-link" href="{{ $href }}">
-                <span class="menu-title">{{ $item['title'] }}</span>
-            </a>
+{{-- ========================= --}}
+{{-- ITEM WITH CHILDREN --}}
+{{-- ========================= --}}
+@if($hasChildren)
+    <div data-kt-menu-trigger="click" class="menu-item menu-accordion">
+
+        <!-- Menu Link -->
+        <span class="menu-link">
+            
+            {{-- ICON: only for top level --}}
+            @if($isTopLevel)
+                <span class="menu-icon">
+                    <i class="{{ $iconClass }} fs-2"></i>
+                </span>
+            @else
+                <span class="menu-bullet">
+                    <span class="bullet bullet-dot"></span>
+                </span>
+            @endif
+
+            <span class="menu-title">{{ $item['title'] }}</span>
+            <span class="menu-arrow"></span>
+        </span>
+
+        <!-- Sub Menu -->
+        <div class="menu-sub menu-sub-accordion">
+            @foreach($item['children'] as $child)
+                @include('partials.nav-item', [
+                    'item' => $child,
+                    'level' => $level + 1,
+                    'nav_app_id' => $nav_app_id
+                ])
+            @endforeach
         </div>
-    @else
-        <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}"
-             data-kt-menu-placement="bottom-start"
-             class="menu-item menu-lg-down-accordion menu-sub-lg-down-indention me-0 me-lg-2">
+    </div>
 
-            <span class="menu-link">
-                <span class="menu-title">{{ $item['title'] }}</span>
-                <span class="menu-arrow d-lg-none"></span>
-            </span>
-
-            <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown px-lg-2 py-lg-4 w-lg-250px">
-                @foreach($item['children'] as $child)
-                    @include('partials.nav-item', ['item' => $child, 'level' => $level + 1, 'nav_app_id' => $nav_app_id])
-                @endforeach
-            </div>
-        </div>
-    @endif
-
+{{-- ========================= --}}
+{{-- LEAF ITEM --}}
+{{-- ========================= --}}
 @else
-    {{-- NESTED LEVELS --}}
-    @if($hasChildren)
-        <div data-kt-menu-trigger="{default:'click', lg: 'hover'}"
-             data-kt-menu-placement="right-start"
-             class="menu-item menu-lg-down-accordion">
+    <div class="menu-item">
+        <a class="menu-link" href="{{ $href }}">
 
-            <span class="menu-link">
-                {{-- Second level must always have an icon --}}
-                @if($isSecondLevel)
-                    <span class="menu-icon">
-                        <i class="{{ $iconClass }} fs-2"></i>
-                    </span>
-                @else
-                    {{-- Third+ level: keep your existing logic (icon if present, else bullet) --}}
-                    @if(!empty($item['icon']))
-                        <span class="menu-icon">
-                            <i class="{{ $item['icon'] }}"></i>
-                        </span>
-                    @else
-                        <span class="menu-bullet">
-                            <span class="bullet bullet-dot"></span>
-                        </span>
-                    @endif
-                @endif
+            {{-- ICON: only for top level --}}
+            @if($isTopLevel)
+                <span class="menu-icon">
+                    <i class="{{ $iconClass }} fs-2"></i>
+                </span>
+            @else
+                <span class="menu-bullet">
+                    <span class="bullet bullet-dot"></span>
+                </span>
+            @endif
 
-                <span class="menu-title">{{ $item['title'] }}</span>
-                <span class="menu-arrow"></span>
-            </span>
-
-            <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown menu-active-bg px-lg-2 py-lg-4 w-lg-225px">
-                @foreach($item['children'] as $child)
-                    @include('partials.nav-item', ['item' => $child, 'level' => $level + 1, 'nav_app_id' => $nav_app_id])
-                @endforeach
-            </div>
-        </div>
-
-    @else
-        <div class="menu-item">
-            <a class="menu-link" href="{{ $href }}">
-                {{-- Second level leaf: always icon --}}
-                @if($isSecondLevel)
-                    <span class="menu-icon">
-                        <i class="{{ $iconClass }} fs-2"></i>
-                    </span>
-                @else
-                    {{-- Third+ leaf: keep bullet (or icon if you want) --}}
-                    <span class="menu-bullet">
-                        <span class="bullet bullet-dot"></span>
-                    </span>
-                @endif
-
-                <span class="menu-title">{{ $item['title'] }}</span>
-            </a>
-        </div>
-    @endif
+            <span class="menu-title">{{ $item['title'] }}</span>
+        </a>
+    </div>
 @endif
