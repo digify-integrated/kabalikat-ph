@@ -28,6 +28,9 @@ class DatabaseSeeder extends Seeder
             FileExtensionSeeder::class,
             UploadSettingSeeder::class,
             UploadSettingFileExtensionSeeder::class,
+            CountrySeeder::class,
+            StateSeeder::class,
+            CitySeeder::class,
         ]);
     }
 }

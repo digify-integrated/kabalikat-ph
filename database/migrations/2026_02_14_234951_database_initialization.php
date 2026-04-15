@@ -268,6 +268,68 @@ return new class extends Migration
         });
 
         /* =============================================================================================
+            TABLE: Country
+        ============================================================================================= */
+
+        Schema::create('country', function (Blueprint $table) {
+            $table->id();
+
+            $table->string('country_name');
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+        });
+
+        /* =============================================================================================
+            TABLE: State
+        ============================================================================================= */
+
+        Schema::create('state', function (Blueprint $table) {
+            $table->id();
+
+            $table->string('state_name');
+
+            $table->bigInteger('country_id')
+            ->constrained('country')
+            ->cascadeOnDelete();
+
+            $table->string('country_name');
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+
+            $table->index(['country_id'], 'state_country_id_idx');
+        });
+
+        /* =============================================================================================
+            TABLE: City
+        ============================================================================================= */
+
+        Schema::create('city', function (Blueprint $table) {
+            $table->id();
+
+            $table->string('city_name');
+
+            $table->bigInteger('state_id')
+            ->constrained('state')
+            ->cascadeOnDelete();
+
+            $table->string('state_name');
+
+            $table->bigInteger('country_id')
+            ->constrained('country')
+            ->cascadeOnDelete();
+
+            $table->string('country_name');
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+
+            $table->index(['country_id'], 'city_country_id_idx');
+            $table->index(['state_id'], 'city_state_id_idx');
+        });
+
+        /* =============================================================================================
             TABLE: 
         ============================================================================================= */
     }
@@ -278,6 +340,9 @@ return new class extends Migration
     public function down(): void
     {        
         Schema::dropIfExists('audit_log');
+        Schema::dropIfExists('city');
+        Schema::dropIfExists('state');
+        Schema::dropIfExists('country');
         Schema::dropIfExists('role_user_account');
         Schema::dropIfExists('role_system_action_permission');
         Schema::dropIfExists('role_permission');

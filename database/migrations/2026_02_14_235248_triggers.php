@@ -611,6 +611,129 @@ return new class extends Migration
                 VALUES ('upload_setting_file_extension', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
             END
         SQL);
+
+        /* =============================================================================================
+            TABLE: COUNTRY
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_country_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_country_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_country_update
+            AFTER UPDATE ON country
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Country changed.<br/><br/>';
+
+                IF NEW.country_name <> OLD.country_name THEN
+                    SET audit_log = CONCAT(audit_log, "Country: ", OLD.country_name, " -> ", NEW.country_name, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Country changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('country', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_country_insert
+            AFTER INSERT ON country
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Country created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('country', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
+
+        /* =============================================================================================
+            TABLE: STATE
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_state_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_state_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_state_update
+            AFTER UPDATE ON state
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'State changed.<br/><br/>';
+
+                IF NEW.state_name <> OLD.state_name THEN
+                    SET audit_log = CONCAT(audit_log, "State: ", OLD.state_name, " -> ", NEW.state_name, "<br/>");
+                END IF;
+
+                IF NEW.country_name <> OLD.country_name THEN
+                    SET audit_log = CONCAT(audit_log, "Country: ", OLD.country_name, " -> ", NEW.country_name, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'State changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('state', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_state_insert
+            AFTER INSERT ON state
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'State created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('state', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
+
+        /* =============================================================================================
+            TABLE: CITY
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_city_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_city_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_city_update
+            AFTER UPDATE ON city
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'City changed.<br/><br/>';
+
+                IF NEW.city_name <> OLD.city_name THEN
+                    SET audit_log = CONCAT(audit_log, "City: ", OLD.city_name, " -> ", NEW.city_name, "<br/>");
+                END IF;
+
+                IF NEW.state_name <> OLD.state_name THEN
+                    SET audit_log = CONCAT(audit_log, "State: ", OLD.state_name, " -> ", NEW.state_name, "<br/>");
+                END IF;
+
+                IF NEW.country_name <> OLD.country_name THEN
+                    SET audit_log = CONCAT(audit_log, "Country: ", OLD.country_name, " -> ", NEW.country_name, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'City changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('city', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_city_insert
+            AFTER INSERT ON city
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'City created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('city', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
     }
 
     /**

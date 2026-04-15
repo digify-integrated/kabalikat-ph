@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="row g-6 g-xl-9">
+    <div class="row g-6 g-xl-9 my-2">
         @forelse ($apps as $app)
             @php
                 $defaultLink = route('apps.base', [
@@ -20,7 +20,7 @@
                 $version = $app->app_version ?? '1.0.0';
             @endphp
 
-            <div class="col-md-6 col-xl-3">
+            <div class="col-md-6 col-xl-4">
                 <a href="{{ $defaultLink }}" class="card border-hover-primary">
                     <div class="card-header border-0 pt-9">
                         <div class="card-title m-0">
