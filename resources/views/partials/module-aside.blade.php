@@ -2,12 +2,13 @@
     <div class="aside-toolbar flex-column-auto" id="kt_aside_toolbar">
         <div class="aside-user d-flex align-items-sm-center justify-content-center py-5">
             <div class="symbol symbol-50px">
-                <img src="{{ asset('assets/media/default/default-avatar.jpg') }}" alt="" />
+                <img src="{{ $navProfilePicture }}" alt="" />
             </div>
             <div class="aside-user-info flex-row-fluid flex-wrap ms-5">
                 <div class="d-flex">
                     <div class="flex-grow-1 me-2">
-                        <a href="#" class="text-white text-hover-primary fs-6 fw-bold">Lawrence De Vera Agulto</a>
+                        <h3 class="text-white fs-6 fw-bold">{{ $navName }}</h3>
+                        <span class="text-gray-600 fw-semibold d-block fs-8 mb-1">{{ $navEmail }}</span>
                     </div>
                     <div class="me-n2">
                         <a href="#" class="btn btn-icon btn-sm btn-active-color-primary mt-n2" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-start" data-kt-menu-overflow="true">
@@ -20,18 +21,15 @@
                             <div class="menu-item px-3">
                                 <div class="menu-content d-flex align-items-center px-3">
                                     <div class="symbol symbol-50px me-5">
-                                        <img alt="Logo" src="{{ asset('assets/media/default/default-avatar.jpg') }}" />
+                                        <img alt="Logo" src="{{ $navProfilePicture }}" />
                                     </div>
                                     <div class="d-flex flex-column">
                                         <div class="fw-bold d-flex align-items-center fs-5">
-                                            Max Smith
-                                            <span class="badge badge-light-success fw-bold fs-8 px-2 py-1 ms-2"
-                                                >Pro</span
-                                            >
+                                            {{ $navName }}
                                         </div>
-                                        <a href="#" class="fw-semibold text-muted text-hover-primary fs-7">
-                                            max@kt.com
-                                        </a>
+                                        <div class="fw-semibold text-muted text-hover-primary fs-7">
+                                            {{ $navEmail }}
+                                        </div>
                                     </div>
                                 </div>
                             </div>

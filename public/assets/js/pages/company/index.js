@@ -5,12 +5,12 @@ import { checkNotification } from '../../util/notifications.js';
 document.addEventListener('DOMContentLoaded', () => {
     const config = {
         table: {
-            url: '/app/generate-table',
-            selector: '#app-table',
+            url: '/company/generate-table',
+            selector: '#company-table',
             serverSide: false,
             columns: [
                 { data: 'CHECK_BOX' },
-                { data: 'APP' }
+                { data: 'COMPANY' }
             ],
             columnDefs: [
                 { width: '5%', bSortable: false, targets: 0, responsivePriority: 1 },
@@ -26,12 +26,12 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         delete: {
             trigger : '#delete-data',
-            url : '/app/delete-multiple',
-            swalTitle : 'Confirm Multiple Apps Deletion',
-            swalText : 'Are you sure you want to delete these apps?',
+            url : '/company/delete-multiple',
+            swalTitle : 'Confirm Multiple Companies Deletion',
+            swalText : 'Are you sure you want to delete these companies?',
             confirmButtonText : 'Delete',
-            validationMessage : 'Please select the apps you want to delete',
-            table : '#app-table'
+            validationMessage : 'Please select the companies you want to delete',
+            table : '#company-table'
         },
     }
     

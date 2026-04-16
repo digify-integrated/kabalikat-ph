@@ -8,21 +8,19 @@ import { getPageContext } from '../../form/form.js';
 document.addEventListener('DOMContentLoaded', () => {
     const config = {
         form: {
-            selector: '#app_form',
+            selector: '#company_form',
             rules: {
                 rules: {
-                    app_name: { required: true},
-                    app_description: { required: true },
-                    navigation_menu_id: { required: true },
-                    app_version: { required: true },
-                    order_sequence: { required: true },
+                    company_name: { required: true},
+                    address: { required: true },
+                    city_id: { required: true },
+                    currency_id: { required: true },
                 },
                 messages: {
-                    app_name: { required: 'Enter the display name' },
-                    app_description: { required: 'Enter the description' },
-                    navigation_menu_id: { required: 'Select the default page' },
-                    app_version: { required: 'Enter the app version' },
-                    order_sequence: { required: 'Enter the order sequence' },
+                    company_name: { required: 'Enter the display name' },
+                    address: { required: 'Enter the address' },
+                    city_id: { required: 'Select the city' },
+                    currency_id: { required: 'Select the currency' },
                 },
                 submitHandler: async (form) => {
                     const ctx = getPageContext();
@@ -33,13 +31,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     disableButton('submit-data');
 
                     try {
-                        const response = await fetch('/app/save', {
+                        const response = await fetch('/company/save', {
                             method: 'POST',
                             body: formData
                         });
 
                         if (!response.ok) {
-                            throw new Error(`Save app module failed with status: ${response.status}`);
+                            throw new Error(`Save company failed with status: ${response.status}`);
                         }
 
                         const data = await response.json();
@@ -60,15 +58,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
             }
         },
-        dropdown: {
-            url: '/navigation-menu/generate-options',
-            dropdownSelector: '#navigation_menu_id',
-        }
+        dropdown : [
+            { url: '/city/generate-options', dropdownSelector: '#city_id' },
+            { url: '/currency/generate-options', dropdownSelector: '#currency_id' },
+        ]
     }
 
     discardCreate();
 
-    generateDropdownOptions(config.dropdown);
+    config.dropdown.forEach(cfg => {
+        generateDropdownOptions({
+            url: cfg.url,
+            dropdownSelector: cfg.dropdownSelector
+        });
+    });
 
     initValidation(config.form.selector, config.form.rules);
 });

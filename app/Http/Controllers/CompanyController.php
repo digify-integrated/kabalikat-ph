@@ -186,7 +186,7 @@ class CompanyController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'The app logo has been updated successfully',
+            'message' => 'The company logo has been updated successfully',
         ]);
     }
 
@@ -344,8 +344,9 @@ class CompanyController extends Controller
         $response = $companies->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
             $companyId = $row->id;
             $companyName = $row->company_name;
+            $address = $row->address . ', ' . $row->city_name . ', ' . $row->state_name . ', ' . $row->country_name;
             
-            $defaultLogo = asset('assets/media/default/app-logo.png');
+            $defaultLogo = asset('assets/media/default/default-company-logo.png');
 
             $path = trim((string) ($row->company_logo ?? ''));
 
@@ -367,10 +368,11 @@ class CompanyController extends Controller
                 ',
                 'COMPANY' => '
                     <div class="d-flex align-items-center">
-                        <img src="'.$logoUrl.'" alt="app-logo" width="45" />
+                        <img src="'.$logoUrl.'" alt="company-logo" width="45" />
                         <div class="ms-3">
                             <div class="user-meta-info">
                                 <h6 class="mb-0">'.$companyName.'</h6>
+                                <small class="text-wrap fs-7 text-gray-500">'.$address.'</small>
                             </div>
                         </div>
                     </div>

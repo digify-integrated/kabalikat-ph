@@ -57,13 +57,15 @@
         </div>
 
         <div class="d-flex flex-column flex-row-fluid gap-7 gap-lg-10">
-            <div class="card card-flush">
-                <div class="card-header border-0">
-                    <div class="card-title m-0">
-                        <h3 class="fw-bold m-0">User Details</h3>
-                    </div>
-
-                    @if($canDelete || ($activateUser ?? false) === true && $user->status === 'Inactive' || ($deactivateUser ?? false) === true && $user->status === 'Active')
+            <ul class="nav nav-custom nav-tabs nav-line-tabs nav-line-tabs-2x border-0 fs-4 fw-semibold" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link text-active-primary pb-4 active" data-bs-toggle="tab" href="#overview_tab" aria-selected="true" role="tab">Overview</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link text-active-primary pb-4" data-bs-toggle="tab" href="#user_role_tab" aria-selected="false" role="tab">Role</a>
+                </li>
+                <li class="nav-item ms-auto">
+                     @if($canDelete || ($activateUser ?? false) === true && $user->status === 'Inactive' || ($deactivateUser ?? false) === true && $user->status === 'Active')
                        <a href="#" class="btn btn-light-primary btn-flex btn-center btn-active-light-primary show menu-dropdown align-self-center" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
                             Actions
                             <i class="ki-outline ki-down fs-5 ms-1"></i>
@@ -95,122 +97,130 @@
                             @endif
                         </div>
                     @endif
-                </div>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-content" id="user_account_tab_content">
+                    <div class="tab-pane fade active show" id="overview_tab" role="tabpanel">
+                        <div class="card mb-5">
+                            <form id="user_form" method="post" action="#" novalidate>
+                                @csrf
+                                <div class="card-body p-9">
+                                    <div class="row">
+                                        <div class="col">
+                                            <div class="fv-row mb-7">
+                                                <label class="fs-6 fw-semibold required form-label mt-3" for="user_name">
+                                                    User Name
+                                                </label>
 
-                <form id="user_form" method="post" action="#" novalidate>
-                    @csrf
-                    <div class="card-body border-top p-9">
-                        <div class="row">
-                            <div class="col">
-                                <div class="fv-row mb-7">
-                                    <label class="fs-6 fw-semibold required form-label mt-3" for="user_name">
-                                        User Name
-                                    </label>
+                                                <input
+                                                    type="text"
+                                                    class="form-control"
+                                                    id="user_name"
+                                                    name="user_name"
+                                                    maxlength="100"
+                                                    autocomplete="off"
+                                                    @disabled(!$canWrite)
+                                                >
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row row-cols-1 row-cols-sm-2 rol-cols-md-1 row-cols-lg-2">
+                                        <div class="col">
+                                            <div class="fv-row mb-7">
+                                                <label class="fs-6 fw-semibold required form-label mt-3" for="email">
+                                                    Email
+                                                </label>
 
-                                    <input
-                                        type="text"
-                                        class="form-control"
-                                        id="user_name"
-                                        name="user_name"
-                                        maxlength="100"
-                                        autocomplete="off"
-                                        @disabled(!$canWrite)
-                                    >
+                                                <input
+                                                    type="email"
+                                                    class="form-control"
+                                                    id="email"
+                                                    name="email"
+                                                    maxlength="100"
+                                                    autocomplete="off"
+                                                    @disabled(!$canWrite)
+                                                >
+                                            </div>
+                                        </div>
+
+                                        <div class="col">
+                                            <div class="fv-row mb-7">
+                                                <label class="fs-6 fw-semibold form-label mt-3" for="user_name">
+                                                    Password
+                                                </label>
+
+                                                <div class="input-group mb-5">
+                                                    <input
+                                                        type="password"
+                                                        id="password"
+                                                        name="password"
+                                                        class="form-control"
+                                                        @disabled(!$canWrite)
+                                                    >
+                                                    <span class="input-group-text password-addon">
+                                                        <i class="ki-outline ki-eye fs-3"></i>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
+
+                                @if($canWrite)
+                                    <div class="card-footer d-flex justify-content-end py-6 px-9">
+                                        <button type="submit" class="btn btn-primary" id="submit-data">
+                                            Save Changes
+                                        </button>
+                                    </div>
+                                @endif
+                            </form>
                         </div>
-                        <div class="row row-cols-1 row-cols-sm-2 rol-cols-md-1 row-cols-lg-2">
-                            <div class="col">
-                                <div class="fv-row mb-7">
-                                    <label class="fs-6 fw-semibold required form-label mt-3" for="email">
-                                        Email
-                                    </label>
-
-                                    <input
-                                        type="email"
-                                        class="form-control"
-                                        id="email"
-                                        name="email"
-                                        maxlength="100"
-                                        autocomplete="off"
-                                        @disabled(!$canWrite)
-                                    >
+                    </div>
+                    <div class="tab-pane fade" id="user_role_tab" role="tabpanel">
+                        <div class="card mb-5">
+                            <div class="card-header border-0 pt-6">
+                                <div class="card-title">
+                                    <div class="d-flex align-items-center position-relative my-1 me-3">
+                                        <i class="ki-outline ki-magnifier fs-3 position-absolute ms-5"></i> <input type="text" class="form-control w-250px ps-12" id="role-datatable-search" placeholder="Search..." autocomplete="off" />
+                                    </div>
+                                    <select id="role-datatable-length" class="form-select w-auto">
+                                        <option value="-1">All</option>
+                                        <option value="5">5</option>
+                                        <option value="10" selected>10</option>
+                                        <option value="20">20</option>
+                                        <option value="25">25</option>
+                                        <option value="50">50</option>
+                                        <option value="100">100</option>
+                                    </select>
                                 </div>
-                            </div>
-
-                            <div class="col">
-                                <div class="fv-row mb-7">
-                                    <label class="fs-6 fw-semibold form-label mt-3" for="user_name">
-                                        Password
-                                    </label>
-
-                                    <div class="input-group mb-5">
-                                        <input
-                                            type="password"
-                                            id="password"
-                                            name="password"
-                                            class="form-control"
-                                            @disabled(!$canWrite)
-                                        >
-                                        <span class="input-group-text password-addon">
-                                            <i class="ki-outline ki-eye fs-3"></i>
-                                        </span>
+                                <div class="card-toolbar">
+                                    <div class="d-flex justify-content-end" data-kt-customer-table-toolbar="base">
+                                        @if(($canAssignUserAccount ?? false) === true)
+                                            <button type="button"
+                                                    class="btn btn-light-primary me-3"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#role-assignment-modal"
+                                                    id="assign-role">
+                                                <i class="ki-outline ki-plus fs-2"></i> Assign
+                                            </button>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
+                            <div class="card-body pt-9">
+                                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5 gs-7" id="role-table">
+                                    <thead>
+                                        <tr class="fw-semibold fs-6 text-gray-800">
+                                            <th>Role</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="fw-semibold text-gray-600"></tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
-
-                    @if($canWrite)
-                        <div class="card-footer d-flex justify-content-end py-6 px-9">
-                            <button type="submit" class="btn btn-primary" id="submit-data">
-                                Save Changes
-                            </button>
-                        </div>
-                    @endif
-                </form>
-            </div>
-
-            <div class="card mb-10">
-                <div class="card-header border-0 pt-6">
-                    <div class="card-title">
-                        <div class="d-flex align-items-center position-relative my-1 me-3">
-                            <i class="ki-outline ki-magnifier fs-3 position-absolute ms-5"></i> <input type="text" class="form-control w-250px ps-12" id="role-datatable-search" placeholder="Search..." autocomplete="off" />
-                        </div>
-                        <select id="role-datatable-length" class="form-select w-auto">
-                            <option value="-1">All</option>
-                            <option value="5">5</option>
-                            <option value="10" selected>10</option>
-                            <option value="20">20</option>
-                            <option value="25">25</option>
-                            <option value="50">50</option>
-                            <option value="100">100</option>
-                        </select>
-                    </div>
-                    <div class="card-toolbar">
-                        <div class="d-flex justify-content-end" data-kt-customer-table-toolbar="base">
-                            @if(($canAssignUserAccount ?? false) === true)
-                                <button type="button"
-                                        class="btn btn-light-primary me-3"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#role-assignment-modal"
-                                        id="assign-role">
-                                    <i class="ki-outline ki-plus fs-2"></i> Assign
-                                </button>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-                <div class="card-body pt-9">
-                    <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5 gs-7" id="role-table">
-                        <thead>
-                            <tr class="fw-semibold fs-6 text-gray-800">
-                                <th>Role</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody class="fw-semibold text-gray-600"></tbody>
-                    </table>
                 </div>
             </div>
         </div>

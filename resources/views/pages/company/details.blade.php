@@ -13,8 +13,8 @@
                     <div class="image-input image-input-outline" data-kt-image-input="true">
                         <div
                             class="image-input-wrapper w-125px h-125px"
-                            id="app_thumbnail"
-                            style="background-image: url('{{ asset('assets/media/default/app-logo.png') }}')"
+                            id="company_thumbnail"
+                            style="background-image: url('{{ asset('assets/media/default/default-company-logo.png') }}')"
                         ></div>
 
                         @if($canWrite)
@@ -26,13 +26,13 @@
                                 data-bs-original-title="Change logo"
                             >
                                 <i class="ki-outline ki-pencil fs-7"></i>
-                                <input type="file" id="app_logo" name="app_logo" accept=".png, .jpg, .jpeg">
+                                <input type="file" id="company_logo" name="company_logo" accept=".png, .jpg, .jpeg">
                             </label>
                         @endif
                     </div>
 
                     <div class="form-text mt-5">
-                        Set the app module image. Only *.png, *.jpg and *.jpeg image files are accepted.
+                        Set the company image. Only *.png, *.jpg and *.jpeg image files are accepted.
                     </div>
                 </div>
             </div>
@@ -42,7 +42,7 @@
             <div class="card card-flush">
                 <div class="card-header border-0">
                     <div class="card-title m-0">
-                        <h3 class="fw-bold m-0">App Module Details</h3>
+                        <h3 class="fw-bold m-0">Company Details</h3>
                     </div>
 
                     @if($canDelete)
@@ -52,7 +52,7 @@
                         </a>
                         <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-125px py-4" data-kt-menu="true" style="z-index: 107; position: fixed; inset: 0px 0px auto auto; margin: 0px; transform: translate(-60px, 539px);" data-popper-placement="bottom-end">
                             <div class="menu-item px-3">
-                                <a href="javascript:void(0);" class="menu-link px-3" id="delete-app">
+                                <a href="javascript:void(0);" class="menu-link px-3" id="delete-company">
                                     Delete
                                 </a>
                             </div>
@@ -60,97 +60,99 @@
                     @endif
                 </div>
 
-                <form id="app_form" method="post" action="#" novalidate>
+                <form id="company_form" method="post" action="#" novalidate>
                     @csrf
                     <div class="card-body border-top p-9">
-                        <div class="row row-cols-1 row-cols-sm-4 rol-cols-md-3 row-cols-lg-4">
+                        <div class="row row-cols-1 row-cols-sm-3 rol-cols-md-3 row-cols-lg-3">
                             <div class="col">
                                 <div class="fv-row mb-4">
-                                    <label class="fs-6 fw-semibold required form-label mt-3" for="app_name">
+                                    <label class="fs-6 fw-semibold required form-label mt-3" for="company_name">
                                         Display Name
                                     </label>
 
-                                    <input
-                                        type="text"
-                                        class="form-control"
-                                        id="app_name"
-                                        name="app_name"
-                                        maxlength="100"
-                                        autocomplete="off"
-                                        @disabled(!$canWrite)
-                                    >
+                                    <input type="text" class="form-control" id="company_name" name="company_name" maxlength="100" autocomplete="off" @disabled(!$canWrite)>
                                 </div>
                             </div>
-
                             <div class="col">
-                                <div class="fv-row mb-7">
-                                    <label class="fs-6 fw-semibold required form-label mt-3" for="navigation_menu_id">
-                                        Default Page
+                                <div class="fv-row mb-4">
+                                    <label class="fs-6 fw-semibold required form-label mt-3" for="address">
+                                        Address
                                     </label>
 
-                                    <select
-                                        id="navigation_menu_id"
-                                        name="navigation_menu_id"
-                                        class="form-select"
-                                        data-control="select2"
-                                        data-allow-clear="false"
-                                        @disabled(!$canWrite)
-                                    >
+                                    <input type="text" class="form-control" id="address" name="address" maxlength="100" autocomplete="off" @disabled(!$canWrite)>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="fv-row mb-7">
+                                    <label class="fs-6 fw-semibold required form-label mt-3" for="city_id">
+                                        City
+                                    </label>
+
+                                    <select id="city_id" name="city_id" class="form-select" data-control="select2" data-allow-clear="false" @disabled(!$canWrite)>
                                         <option>--</option>
                                     </select>
                                 </div>
                             </div>
-
+                        </div>
+                        <div class="row row-cols-1 row-cols-sm-3 rol-cols-md-3 row-cols-lg-3">
                             <div class="col">
                                 <div class="fv-row mb-7">
-                                    <label class="fs-6 fw-semibold required form-label mt-3" for="app_version">
-                                        App Version
+                                    <label class="fs-6 fw-semibold form-label mt-3" for="tax_id">
+                                        Tax ID
                                     </label>
 
-                                    <input
-                                        type="text"
-                                        class="form-control"
-                                        id="app_version"
-                                        name="app_version"
-                                        maxlength="100"
-                                        autocomplete="off"
-                                        @disabled(!$canWrite)
-                                    >
+                                    <input type="text" class="form-control" id="tax_id" name="tax_id" maxlength="100" autocomplete="off" @disabled(!$canWrite)>
                                 </div>
                             </div>
-
                             <div class="col">
                                 <div class="fv-row mb-7">
-                                    <label class="fs-6 fw-semibold required form-label mt-3" for="order_sequence">
-                                        Order Sequence
+                                    <label class="fs-6 fw-semibold required form-label mt-3" for="currency_id">
+                                        Currency
                                     </label>
 
-                                    <input
-                                        type="number"
-                                        class="form-control"
-                                        id="order_sequence"
-                                        name="order_sequence"
-                                        min="0"
-                                        max="1000"
-                                        @disabled(!$canWrite)
-                                    >
+                                    <select id="currency_id" name="currency_id" class="form-select" data-control="select2" data-allow-clear="false" @disabled(!$canWrite)>
+                                        <option>--</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="fv-row mb-4">
+                                    <label class="fs-6 fw-semibold form-label mt-3" for="phone">
+                                        Phone
+                                    </label>
+
+                                    <input type="text" class="form-control" id="phone" name="phone" maxlength="100" autocomplete="off" @disabled(!$canWrite)>
                                 </div>
                             </div>
                         </div>
+                        <div class="row row-cols-1 row-cols-sm-3 rol-cols-md-3 row-cols-lg-3">
+                            <div class="col">
+                                <div class="fv-row mb-4">
+                                    <label class="fs-6 fw-semibold form-label mt-3" for="telephone">
+                                        Telephone
+                                    </label>
 
-                        <div class="fv-row mb-4">
-                            <label class="fs-6 fw-semibold required form-label mt-3" for="app_description">
-                                Description
-                            </label>
+                                    <input type="text" class="form-control" id="telephone" name="telephone" maxlength="100" autocomplete="off" @disabled(!$canWrite)>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="fv-row mb-4">
+                                    <label class="fs-6 fw-semibold form-label mt-3" for="email">
+                                        Email
+                                    </label>
 
-                            <textarea
-                                class="form-control"
-                                id="app_description"
-                                name="app_description"
-                                maxlength="500"
-                                rows="3"
-                                @disabled(!$canWrite)
-                            ></textarea>
+                                    <input type="email" class="form-control" id="email" name="email" maxlength="100" autocomplete="off" @disabled(!$canWrite)>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="fv-row mb-4">
+                                    <label class="fs-6 fw-semibold form-label mt-3" for="website">
+                                        Website
+                                    </label>
+
+                                    <input type="text" class="form-control" id="website" name="website" maxlength="100" autocomplete="off" @disabled(!$canWrite)>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

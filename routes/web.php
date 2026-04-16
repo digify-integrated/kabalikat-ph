@@ -5,6 +5,7 @@ use App\Http\Controllers\AppRenderController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\CityController;
+use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\CountryController;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\ExportController;
@@ -314,10 +315,10 @@ Route::middleware('auth')->group(function () {
     // Company
     Route::prefix('company')
         ->name('company.')
-        ->controller(CurrencyController::class)
+        ->controller(CompanyController::class)
         ->group(function () {
             Route::post('/save', 'save')->name('save');
-            Route::post('/upload-app-logo', 'uploadCompanyLogo')->name('upload.logo');
+            Route::post('/upload-company-logo', 'uploadCompanyLogo')->name('upload.logo');
             Route::post('/delete', 'delete')->name('delete');
             Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
             Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');

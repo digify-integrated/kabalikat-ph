@@ -256,28 +256,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     (async () => {
         try {
-        optionsPromise = Promise.all(
-            config.dropdown.map((cfg) =>
-            generateDropdownOptions({
-                url: cfg.url,
-                dropdownSelector: cfg.dropdownSelector,
-            })
-            )
-        );
+            optionsPromise = Promise.all(
+                config.dropdown.map((cfg) =>
+                generateDropdownOptions({
+                    url: cfg.url,
+                    dropdownSelector: cfg.dropdownSelector,
+                })
+                )
+            );
 
-        const rolePermissionTablePromise = Promise.resolve().then(() =>
-            initializeDatatable(config.table)
-        );
+            const rolePermissionTablePromise = Promise.resolve().then(() =>
+                initializeDatatable(config.table)
+            );
 
-        const fetchDetailsPromise = Promise.all(
-            config.detailsList.map((cfg) => displayDetails(cfg))
-        );
+            const fetchDetailsPromise = Promise.all(
+                config.detailsList.map((cfg) => displayDetails(cfg))
+            );
 
-        await Promise.all([
-            optionsPromise,
-            fetchDetailsPromise,
-            rolePermissionTablePromise,
-        ]);
+            await Promise.all([
+                optionsPromise,
+                fetchDetailsPromise,
+                rolePermissionTablePromise,
+            ]);
         } catch (err) {
             handleSystemError(err, 'init_failed', `Initialization failed: ${err.message}`);
         }

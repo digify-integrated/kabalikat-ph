@@ -11,40 +11,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const config = {
         form: {
-            selector: '#app_form',
+            selector: '#company_form',
             rules: {
                 rules: {
-                    app_name: { required: true },
-                    app_description: { required: true },
-                    navigation_menu_id: { required: true },
-                    app_version: { required: true },
-                    order_sequence: { required: true },
+                    company_name: { required: true},
+                    address: { required: true },
+                    city_id: { required: true },
+                    currency_id: { required: true },
                 },
                 messages: {
-                    app_name: { required: 'Enter the display name' },
-                    app_description: { required: 'Enter the description' },
-                    navigation_menu_id: { required: 'Select the default page' },
-                    app_version: { required: 'Enter the app version' },
-                    order_sequence: { required: 'Enter the order sequence' },
+                    company_name: { required: 'Enter the display name' },
+                    address: { required: 'Enter the address' },
+                    city_id: { required: 'Select the city' },
+                    currency_id: { required: 'Select the currency' },
                 },
                 submitHandler: async (form) => {
                     const ctx = getPageContext();
 
                     const formData = new URLSearchParams(new FormData(form));
-                    formData.append('app_id', ctx.detailId ?? '');
+                    formData.append('company_id', ctx.detailId ?? '');
                     formData.append('appId', ctx.appId ?? '');
                     formData.append('navigationMenuId', ctx.navigationMenuId ?? '');
 
                     disableButton('submit-data');
 
                     try {
-                        const response = await fetch('/app/save', {
+                        const response = await fetch('/company/save', {
                             method: 'POST',
                             body: formData,
                         });
 
                         if (!response.ok) {
-                            throw new Error(`Save app failed with status: ${response.status}`);
+                            throw new Error(`Save comapny failed with status: ${response.status}`);
                         }
 
                         const data = await response.json();
@@ -63,47 +61,60 @@ document.addEventListener('DOMContentLoaded', () => {
             },
         },
         details: {
-            url: '/app/fetch-details',
-            formSelector: '#app_form',
+            url: '/company/fetch-details',
+            formSelector: '#company_form',
             busyHideTargets: ['#submit-data'],
             onSuccess: async (data) => {
-                document.getElementById('app_name').value = data.appName || '';
-                document.getElementById('app_description').value = data.appDescription || '';
-                document.getElementById('app_version').value = data.appVersion || '';
-                document.getElementById('order_sequence').value = data.orderSequence || '';
+                document.getElementById('company_name').value = data.companyName || '';
+                document.getElementById('address').value = data.address || '';
+                document.getElementById('tax_id').value = data.taxId || '';
+                document.getElementById('phone').value = data.phone || '';
+                document.getElementById('telephone').value = data.telephone || '';
+                document.getElementById('email').value = data.email || '';
+                document.getElementById('website').value = data.website || '';
 
-                const thumbnail = document.getElementById('app_thumbnail');
-                if (thumbnail) thumbnail.style.backgroundImage = `url(${data.appLogo || ''})`;
+                const thumbnail = document.getElementById('company_thumbnail');
+                if (thumbnail) thumbnail.style.backgroundImage = `url(${data.companyLogo || ''})`;
 
                 await optionsPromise;
 
-                $('#navigation_menu_id').val(data.navigationMenuId).trigger('change');
+                $('#city_id').val(data.cityId).trigger('change');
+                $('#currency_id').val(data.currencyId).trigger('change');
             },
         },
-        dropdown: {
-            url: '/navigation-menu/generate-options',
-            dropdownSelector: '#navigation_menu_id',
-        },
+        dropdown: [
+            { url: '/city/generate-options', dropdownSelector: '#city_id' },
+            { url: '/currency/generate-options', dropdownSelector: '#currency_id' },
+        ],
         delete: {
-            trigger: '#delete-app',
-            url: '/app/delete',
-            swalTitle: 'Confirm App Deletion',
-            swalText: 'Are you sure you want to delete this app?',
+            trigger: '#delete-company',
+            url: '/company/delete',
+            swalTitle: 'Confirm Company Deletion',
+            swalText: 'Are you sure you want to delete this company?',
             confirmButtonText: 'Delete',
         },
         upload: {
-            trigger: '#app_logo',
-            url: '/app/upload-app-logo',
+            trigger: '#company_logo',
+            url: '/company/upload-company-logo',
         },
     };
 
     (async () => {
         try {
-            optionsPromise = generateDropdownOptions(config.dropdown);
+            optionsPromise = Promise.all(
+                config.dropdown.map((cfg) =>
+                generateDropdownOptions({
+                    url: cfg.url,
+                    dropdownSelector: cfg.dropdownSelector,
+                })
+                )
+            );
 
             await displayDetails(config.details);
 
-            await optionsPromise;
+            await Promise.all([
+                optionsPromise
+            ]);
         } catch (err) {
             handleSystemError(err, 'init_failed', `Initialization failed: ${err.message}`);
         }

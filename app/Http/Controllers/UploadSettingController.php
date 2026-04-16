@@ -2,60 +2,52 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\City;
-use App\Models\State;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Auth;
 
-class CityController extends Controller
+class UploadSettingController extends Controller
 {
     public function save(Request $request)
     {
         $validated = $request->validate([
-            'city_id' => ['nullable', 'integer'],
-            'city_name' => ['required', 'string', 'max:255'],
-            'state_id' => ['integer'],
+            'system_action_id' => ['nullable', 'integer'],
+            'system_action_name' => ['required', 'string', 'max:255'],
+            'system_action_description' => ['required', 'string', 'max:255']
         ]);
 
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
 
-        $stateId = (int) $validated['state_id'];
-
-        $stateDetails = State::query()->find($stateId);
-        $stateName = $stateDetails?->state_name;
-        $countryId = $stateDetails?->country_id;
-        $countryName = $stateDetails?->country_name;
-
         $payload = [
-            'city_name' => $validated['city_name'],
-            'state_id' => $stateId,
-            'state_name' => $stateName,
-            'country_id' => $countryId,
-            'country_name' => $countryName,
+            'system_action_name' => $validated['system_action_name'],
+            'system_action_description' => $validated['system_action_description'],
             'last_log_by' => Auth::id(),
         ];
 
-        $cityId = $validated['city_id'] ?? null;
+        $systemActionId = $validated['system_action_id'] ?? null;
 
-        if ($cityId && City::query()->whereKey($cityId)->exists()) {
-            $city = City::query()->findOrFail($cityId);
-            $city->update($payload);
+        if ($systemActionId && SystemAction::query()->whereKey($systemActionId)->exists()) {
+            $systemAction = SystemAction::query()->findOrFail($systemActionId);
+            $systemAction->update($payload);
         } else {
-            $city = City::query()->create($payload);
+            $systemAction = SystemAction::query()->create($payload);
         }
+
+        RoleSystemActionPermission::query()
+            ->where('system_action_id', $systemAction->id)
+            ->update([
+                'system_action_name' => $systemAction->system_action_name,
+                'last_log_by' => Auth::id(),
+            ]);
 
         $link = route('apps.details', [
             'appId' => $pageAppId,
             'navigationMenuId' => $pageNavigationMenuId,
-            'details_id' => $city->id,
+            'details_id' => $systemAction->id,
         ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'The city has been saved successfully',
+            'message' => 'The system action has been saved successfully',
             'redirect_link' => $link,
         ]);
     }
@@ -63,7 +55,7 @@ class CityController extends Controller
     public function delete(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'detailId' => ['required', 'integer', 'min:1', 'exists:city,id'],
+            'detailId' => ['required', 'integer', 'min:1', 'exists:system_action,id'],
         ]);
 
         $pageAppId = (int) $request->input('appId');
@@ -79,9 +71,9 @@ class CityController extends Controller
         $detailId = (int) $validator->validated()['detailId'];
 
         DB::transaction(function () use ($detailId) {
-            $city = City::query()->select(['id'])->findOrFail($detailId);
+            $systemAction = SystemAction::query()->select(['id'])->findOrFail($detailId);
 
-            $city->delete();
+            $systemAction->delete();
         });        
 
         $link = route('apps.base', [
@@ -91,7 +83,7 @@ class CityController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'The city has been deleted successfully',
+            'message' => 'The system action has been deleted successfully',
             'redirect_link' => $link,
         ]);
     }
@@ -100,18 +92,18 @@ class CityController extends Controller
     {
         $validated = $request->validate([
             'selected_id'   => ['required', 'array', 'min:1'],
-            'selected_id.*' => ['integer', 'distinct', 'exists:city,id'],
+            'selected_id.*' => ['integer', 'distinct', 'exists:system_action,id'],
         ]);
 
         $ids = $validated['selected_id'];
 
         DB::transaction(function () use ($ids) {
-            City::query()->whereIn('id', $ids)->delete();
+            SystemAction::query()->whereIn('id', $ids)->delete();
         });
 
         return response()->json([
             'success' => true,
-            'message' => 'The selected citys have been deleted successfully',
+            'message' => 'The selected system actions have been deleted successfully',
         ]);
     }
 
@@ -134,11 +126,11 @@ class CityController extends Controller
 
         $validated = $validator->validated();
 
-        $city = DB::table('city')
+        $systemAction = DB::table('system_action')
             ->where('id', $validated['detailId'])
             ->first();
 
-        if (!$city) {
+        if (!$systemAction) {
             $link = route('apps.base', [
                 'appId' => $pageAppId,
                 'navigationMenuId' => $pageNavigationMenuId,
@@ -148,7 +140,7 @@ class CityController extends Controller
                 'success'  => false,
                 'notExist' => true,
                 'redirect_link' => $link,
-                'message'  => 'File extension not found',
+                'message'  => 'System action not found',
             ]);
         }
         
@@ -156,9 +148,8 @@ class CityController extends Controller
         return response()->json([
             'success' => true,
             'notExist' => false,
-            'cityName' => $city->city_name ?? null,
-            'city' => $city->city ?? null,
-            'stateId' => $city->state_id ?? null,
+            'systemActionName' => $systemAction->system_action_name ?? null,
+            'systemActionDescription' => $systemAction->system_action_description ?? null
         ]);
     }
 
@@ -166,67 +157,41 @@ class CityController extends Controller
     {
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
-        $filterByState = $request->input('filter_by_state');
-        $filterByCountry = $request->input('filter_by_country');
 
-        $cities = DB::table('city')
-        ->when(!empty($filterByState), fn($q) => $q->whereIn('state_id', $filterByState))
-        ->when(!empty($filterByCountry), fn($q) => $q->whereIn('country_id', $filterByCountry))
-        ->orderBy('city_name')
+        $systemActions = DB::table('system_action')
+        ->orderBy('system_action_name')
         ->get();
 
-        $response = $cities->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
-            $cityId = $row->id;
-            $cityName = $row->city_name;
-            $stateName = $row->state_name;
-            $countryName = $row->country_name;
+        $response = $systemActions->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
+            $systemActionId = $row->id;
+            $systemActionName = $row->system_action_name;
+            $systemActionDescription = $row->system_action_description;
 
             $link = route('apps.details', [
                 'appId' => $pageAppId,
                 'navigationMenuId' => $pageNavigationMenuId,
-                'details_id' => $cityId,
+                'details_id' => $systemActionId,
             ]);
 
             return [
                 'CHECK_BOX' => '
                     <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                        <input class="form-check-input datatable-checkbox-children" type="checkbox" value="'.$cityId.'">
+                        <input class="form-check-input datatable-checkbox-children" type="checkbox" value="'.$systemActionId.'">
                     </div>
                 ',
-                'CITY' => $cityName,
-                'STATE' => $stateName,
-                'COUNTRY' => $countryName,
+                'SYSTEM_ACTION' => '
+                    <div class="d-flex align-items-center">
+                        <div class="ms-3">
+                            <div class="user-meta-info">
+                                <h6 class="mb-0">'.$systemActionName.'</h6>
+                                <small class="text-wrap fs-7 text-gray-500">'.$systemActionDescription.'</small>
+                            </div>
+                        </div>
+                    </div>
+                ',
                 'LINK' => $link,
             ];
         })->values();
-
-        return response()->json($response);
-    }
-
-    public function generateOptions(Request $request)
-    {
-        $multiple = filter_var($request->input('multiple', false), FILTER_VALIDATE_BOOLEAN);
-
-        $response = collect();
-
-        if (!$multiple) {
-            $response->push([
-                'id'   => '',
-                'text' => '--',
-            ]);
-        }
-
-        $states = DB::table('city')
-            ->select(['id', 'city_name', 'state_name', 'country_name'])
-            ->orderBy('city_name')
-            ->get();
-
-        $response = $response->concat(
-            $states->map(fn ($row) => [
-                'id'   => $row->id,
-                'text' => $row->city_name . ', ' . $row->state_name . ', ' . $row->country_name,
-            ])
-        )->values();
 
         return response()->json($response);
     }
