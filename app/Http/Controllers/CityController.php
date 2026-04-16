@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\City;
+use App\Models\State;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -12,43 +14,48 @@ class CityController extends Controller
     public function save(Request $request)
     {
         $validated = $request->validate([
-            'file_type_id' => ['nullable', 'integer'],
-            'file_type_name' => ['required', 'string', 'max:255'],
+            'city_id' => ['nullable', 'integer'],
+            'city_name' => ['required', 'string', 'max:255'],
+            'state_id' => ['integer'],
         ]);
 
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
 
+        $stateId = (int) $validated['state_id'];
+
+        $stateDetails = State::query()->find($stateId);
+        $stateName = $stateDetails?->state_name;
+        $countryId = $stateDetails?->country_id;
+        $countryName = $stateDetails?->country_name;
+
         $payload = [
-            'file_type_name' => $validated['file_type_name'],
+            'city_name' => $validated['city_name'],
+            'state_id' => $stateId,
+            'state_name' => $stateName,
+            'country_id' => $countryId,
+            'country_name' => $countryName,
             'last_log_by' => Auth::id(),
         ];
 
-        $fileTypeId = $validated['file_type_id'] ?? null;
+        $cityId = $validated['city_id'] ?? null;
 
-        if ($fileTypeId && FileType::query()->whereKey($fileTypeId)->exists()) {
-            $fileType = FileType::query()->findOrFail($fileTypeId);
-            $fileType->update($payload);
+        if ($cityId && City::query()->whereKey($cityId)->exists()) {
+            $city = City::query()->findOrFail($cityId);
+            $city->update($payload);
         } else {
-            $fileType = FileType::query()->create($payload);
+            $city = City::query()->create($payload);
         }
-
-        FileExtension::query()
-            ->where('file_type_id', $fileType->id)
-            ->update([
-                'file_type_name' => $fileType->file_type_name,
-                'last_log_by' => Auth::id(),
-            ]);
 
         $link = route('apps.details', [
             'appId' => $pageAppId,
             'navigationMenuId' => $pageNavigationMenuId,
-            'details_id' => $fileType->id,
+            'details_id' => $city->id,
         ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'The file type has been saved successfully',
+            'message' => 'The city has been saved successfully',
             'redirect_link' => $link,
         ]);
     }
@@ -56,7 +63,7 @@ class CityController extends Controller
     public function delete(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'detailId' => ['required', 'integer', 'min:1', 'exists:file_type,id'],
+            'detailId' => ['required', 'integer', 'min:1', 'exists:city,id'],
         ]);
 
         $pageAppId = (int) $request->input('appId');
@@ -72,9 +79,9 @@ class CityController extends Controller
         $detailId = (int) $validator->validated()['detailId'];
 
         DB::transaction(function () use ($detailId) {
-            $fileType = FileType::query()->select(['id'])->findOrFail($detailId);
+            $city = City::query()->select(['id'])->findOrFail($detailId);
 
-            $fileType->delete();
+            $city->delete();
         });        
 
         $link = route('apps.base', [
@@ -84,7 +91,7 @@ class CityController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'The file type has been deleted successfully',
+            'message' => 'The city has been deleted successfully',
             'redirect_link' => $link,
         ]);
     }
@@ -93,18 +100,18 @@ class CityController extends Controller
     {
         $validated = $request->validate([
             'selected_id'   => ['required', 'array', 'min:1'],
-            'selected_id.*' => ['integer', 'distinct', 'exists:file_type,id'],
+            'selected_id.*' => ['integer', 'distinct', 'exists:city,id'],
         ]);
 
         $ids = $validated['selected_id'];
 
         DB::transaction(function () use ($ids) {
-            FileType::query()->whereIn('id', $ids)->delete();
+            City::query()->whereIn('id', $ids)->delete();
         });
 
         return response()->json([
             'success' => true,
-            'message' => 'The selected file types have been deleted successfully',
+            'message' => 'The selected citys have been deleted successfully',
         ]);
     }
 
@@ -127,11 +134,11 @@ class CityController extends Controller
 
         $validated = $validator->validated();
 
-        $fileType = DB::table('file_type')
+        $city = DB::table('city')
             ->where('id', $validated['detailId'])
             ->first();
 
-        if (!$fileType) {
+        if (!$city) {
             $link = route('apps.base', [
                 'appId' => $pageAppId,
                 'navigationMenuId' => $pageNavigationMenuId,
@@ -141,7 +148,7 @@ class CityController extends Controller
                 'success'  => false,
                 'notExist' => true,
                 'redirect_link' => $link,
-                'message'  => 'File type not found',
+                'message'  => 'File extension not found',
             ]);
         }
         
@@ -149,7 +156,9 @@ class CityController extends Controller
         return response()->json([
             'success' => true,
             'notExist' => false,
-            'fileTypeName' => $fileType->file_type_name ?? null,
+            'cityName' => $city->city_name ?? null,
+            'city' => $city->city ?? null,
+            'stateId' => $city->state_id ?? null,
         ]);
     }
 
@@ -157,28 +166,36 @@ class CityController extends Controller
     {
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
+        $filterByState = $request->input('filter_by_state');
+        $filterByCountry = $request->input('filter_by_country');
 
-        $fileTypes = DB::table('file_type')
-        ->orderBy('file_type_name')
+        $cities = DB::table('city')
+        ->when(!empty($filterByState), fn($q) => $q->whereIn('state_id', $filterByState))
+        ->when(!empty($filterByCountry), fn($q) => $q->whereIn('country_id', $filterByCountry))
+        ->orderBy('city_name')
         ->get();
 
-        $response = $fileTypes->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
-            $fileTypeId = $row->id;
-            $fileTypeName = $row->file_type_name;
+        $response = $cities->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
+            $cityId = $row->id;
+            $cityName = $row->city_name;
+            $stateName = $row->state_name;
+            $countryName = $row->country_name;
 
             $link = route('apps.details', [
                 'appId' => $pageAppId,
                 'navigationMenuId' => $pageNavigationMenuId,
-                'details_id' => $fileTypeId,
+                'details_id' => $cityId,
             ]);
 
             return [
                 'CHECK_BOX' => '
                     <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                        <input class="form-check-input datatable-checkbox-children" type="checkbox" value="'.$fileTypeId.'">
+                        <input class="form-check-input datatable-checkbox-children" type="checkbox" value="'.$cityId.'">
                     </div>
                 ',
-                'FILE_TYPE' => $fileTypeName,
+                'CITY' => $cityName,
+                'STATE' => $stateName,
+                'COUNTRY' => $countryName,
                 'LINK' => $link,
             ];
         })->values();
@@ -199,15 +216,15 @@ class CityController extends Controller
             ]);
         }
 
-        $fileTypes = DB::table('file_type')
-            ->select(['id', 'file_type_name'])
-            ->orderBy('file_type_name')
+        $states = DB::table('city')
+            ->select(['id', 'city_name'])
+            ->orderBy('city_name')
             ->get();
 
         $response = $response->concat(
-            $fileTypes->map(fn ($row) => [
+            $states->map(fn ($row) => [
                 'id'   => $row->id,
-                'text' => $row->file_type_name,
+                'text' => $row->city_name,
             ])
         )->values();
 

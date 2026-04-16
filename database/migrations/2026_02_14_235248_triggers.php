@@ -734,6 +734,165 @@ return new class extends Migration
                 VALUES ('city', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
             END
         SQL);
+
+        /* =============================================================================================
+            TABLE: NATIONALITY
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_nationality_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_nationality_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_nationality_update
+            AFTER UPDATE ON nationality
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Nationality changed.<br/><br/>';
+
+                IF NEW.nationality_name <> OLD.nationality_name THEN
+                    SET audit_log = CONCAT(audit_log, "Nationality: ", OLD.nationality_name, " -> ", NEW.nationality_name, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Nationality changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('nationality', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_nationality_insert
+            AFTER INSERT ON city
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Nationality created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('nationality', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
+
+        /* =============================================================================================
+            TABLE: CURRENCY
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_currency_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_currency_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_currency_update
+            AFTER UPDATE ON currency
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Currency changed.<br/><br/>';
+
+                IF NEW.currency_name <> OLD.currency_name THEN
+                    SET audit_log = CONCAT(audit_log, "Currency: ", OLD.currency_name, " -> ", NEW.currency_name, "<br/>");
+                END IF;
+
+                IF NEW.symbol <> OLD.symbol THEN
+                    SET audit_log = CONCAT(audit_log, "Currency: ", OLD.symbol, " -> ", NEW.symbol, "<br/>");
+                END IF;
+
+                IF NEW.shorthand <> OLD.shorthand THEN
+                    SET audit_log = CONCAT(audit_log, "Shorthand: ", OLD.shorthand, " -> ", NEW.shorthand, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Currency changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('currency', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_currency_insert
+            AFTER INSERT ON city
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Currency created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('currency', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
+
+        /* =============================================================================================
+            TABLE: COMPANY
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_company_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_company_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_company_update
+            AFTER UPDATE ON company
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Company changed.<br/><br/>';
+
+                IF NEW.company_name <> OLD.company_name THEN
+                    SET audit_log = CONCAT(audit_log, "Company: ", OLD.company_name, " -> ", NEW.company_name, "<br/>");
+                END IF;
+
+                IF NEW.address <> OLD.address THEN
+                    SET audit_log = CONCAT(audit_log, "Address: ", OLD.address, " -> ", NEW.address, "<br/>");
+                END IF;
+
+                IF NEW.city_name <> OLD.city_name THEN
+                    SET audit_log = CONCAT(audit_log, "City: ", OLD.city_name, " -> ", NEW.city_name, "<br/>");
+                END IF;
+
+                IF NEW.state_name <> OLD.state_name THEN
+                    SET audit_log = CONCAT(audit_log, "State: ", OLD.state_name, " -> ", NEW.state_name, "<br/>");
+                END IF;
+
+                IF NEW.country_name <> OLD.country_name THEN
+                    SET audit_log = CONCAT(audit_log, "Country: ", OLD.country_name, " -> ", NEW.country_name, "<br/>");
+                END IF;
+
+                IF NEW.tax_id <> OLD.tax_id THEN
+                    SET audit_log = CONCAT(audit_log, "Tax Id: ", OLD.tax_id, " -> ", NEW.tax_id, "<br/>");
+                END IF;
+
+                IF NEW.currency_name <> OLD.currency_name THEN
+                    SET audit_log = CONCAT(audit_log, "Currency: ", OLD.currency_name, " -> ", NEW.currency_name, "<br/>");
+                END IF;
+
+                IF NEW.phone <> OLD.phone THEN
+                    SET audit_log = CONCAT(audit_log, "Phone: ", OLD.phone, " -> ", NEW.phone, "<br/>");
+                END IF;
+
+                IF NEW.telephone <> OLD.telephone THEN
+                    SET audit_log = CONCAT(audit_log, "Telephone: ", OLD.telephone, " -> ", NEW.telephone, "<br/>");
+                END IF;
+
+                IF NEW.email <> OLD.email THEN
+                    SET audit_log = CONCAT(audit_log, "Email: ", OLD.email, " -> ", NEW.email, "<br/>");
+                END IF;
+
+                IF NEW.website <> OLD.website THEN
+                    SET audit_log = CONCAT(audit_log, "Website: ", OLD.website, " -> ", NEW.website, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Company changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('company', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_company_insert
+            AFTER INSERT ON city
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Company created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('company', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
     }
 
     /**
@@ -824,5 +983,47 @@ return new class extends Migration
 
         DB::unprepared('DROP TRIGGER IF EXISTS trg_upload_setting_file_extension_update');
         DB::unprepared('DROP TRIGGER IF EXISTS trg_upload_setting_file_extension_insert');
+
+        /* =============================================================================================
+            TABLE: COUNTRY
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_country_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_country_insert');
+
+        /* =============================================================================================
+            TABLE: STATE
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_state_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_state_insert');
+
+        /* =============================================================================================
+            TABLE: CITY
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_city_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_city_insert');
+
+        /* =============================================================================================
+            TABLE: NATIONALITY
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_nationality_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_nationality_insert');
+
+        /* =============================================================================================
+            TABLE: CURRENCY
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_currency_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_currency_insert');
+
+        /* =============================================================================================
+            TABLE: COMPANY
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_company_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_company_insert');
     }
 };

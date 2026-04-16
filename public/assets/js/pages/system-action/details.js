@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    ;(async () => {
+    (async () => {
         try {
         const rolePermissionTablePromise = Promise.resolve().then(() =>
             initializeDatatable(config.table)

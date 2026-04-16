@@ -330,6 +330,75 @@ return new class extends Migration
         });
 
         /* =============================================================================================
+            TABLE: Nationality
+        ============================================================================================= */
+
+        Schema::create('nationality', function (Blueprint $table) {
+            $table->id();
+
+            $table->string('nationality_name');
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+        });
+
+        /* =============================================================================================
+            TABLE: Currency
+        ============================================================================================= */
+
+        Schema::create('currency', function (Blueprint $table) {
+            $table->id();
+
+            $table->string('currency_name');
+            $table->string('symbol');
+            $table->string('shorthand');
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+        });
+
+        /* =============================================================================================
+            TABLE: Company
+        ============================================================================================= */
+
+        Schema::create('company', function (Blueprint $table) {
+            $table->id();
+
+            $table->string('company_name');
+            $table->string('company_logo')->nullable();
+            $table->string('address');
+            $table->bigInteger('city_id')
+            ->constrained('city');
+
+            $table->string('city_name');
+
+            $table->bigInteger('state_id')
+            ->constrained('state');
+
+            $table->string('state_name');
+
+            $table->bigInteger('country_id')
+            ->constrained('country');
+
+            $table->string('country_name');
+            
+            $table->string('tax_id')->nullable();
+
+            $table->bigInteger('currency_id')
+            ->constrained('currency');
+
+            $table->string('currency_name');
+
+            $table->string('phone')->nullable();
+            $table->string('telephone')->nullable();
+            $table->string('email')->nullable();
+            $table->string('website')->nullable();
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+        });
+
+        /* =============================================================================================
             TABLE: 
         ============================================================================================= */
     }
@@ -340,9 +409,12 @@ return new class extends Migration
     public function down(): void
     {        
         Schema::dropIfExists('audit_log');
+        Schema::dropIfExists('nationality');
+        Schema::dropIfExists('currency');
         Schema::dropIfExists('city');
         Schema::dropIfExists('state');
         Schema::dropIfExists('country');
+        Schema::dropIfExists('company');
         Schema::dropIfExists('role_user_account');
         Schema::dropIfExists('role_system_action_permission');
         Schema::dropIfExists('role_permission');

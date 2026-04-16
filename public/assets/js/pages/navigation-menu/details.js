@@ -254,7 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    ;(async () => {
+    (async () => {
         try {
         optionsPromise = Promise.all(
             config.dropdown.map((cfg) =>

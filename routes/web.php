@@ -4,15 +4,20 @@ use App\Http\Controllers\AppController;
 use App\Http\Controllers\AppRenderController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\AuthenticationController;
+use App\Http\Controllers\CityController;
+use App\Http\Controllers\CountryController;
+use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\FileExtensionController;
 use App\Http\Controllers\FileTypeController;
 use App\Http\Controllers\ImportController;
+use App\Http\Controllers\NationalityController;
 use App\Http\Controllers\NavigationMenuController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\RoleSystemActionPermissionController;
 use App\Http\Controllers\RoleUserAccountController;
+use App\Http\Controllers\StateController;
 use App\Http\Controllers\SystemActionController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -244,7 +249,7 @@ Route::middleware('auth')->group(function () {
     // Country
     Route::prefix('country')
         ->name('country.')
-        ->controller(FileExtensionController::class)
+        ->controller(CountryController::class)
         ->group(function () {
             Route::post('/save', 'save')->name('save');
             Route::post('/delete', 'delete')->name('delete');
@@ -257,7 +262,7 @@ Route::middleware('auth')->group(function () {
     // State
     Route::prefix('state')
         ->name('state.')
-        ->controller(FileExtensionController::class)
+        ->controller(StateController::class)
         ->group(function () {
             Route::post('/save', 'save')->name('save');
             Route::post('/delete', 'delete')->name('delete');
@@ -270,9 +275,49 @@ Route::middleware('auth')->group(function () {
     // City
     Route::prefix('city')
         ->name('city.')
-        ->controller(FileExtensionController::class)
+        ->controller(CityController::class)
         ->group(function () {
             Route::post('/save', 'save')->name('save');
+            Route::post('/delete', 'delete')->name('delete');
+            Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
+            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
+            Route::post('/generate-table', 'generateTable')->name('generate.table');
+            Route::post('/generate-options', 'generateOptions')->name('generate.options');
+        });
+
+    // Nationality
+    Route::prefix('nationality')
+        ->name('nationality.')
+        ->controller(NationalityController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
+            Route::post('/delete', 'delete')->name('delete');
+            Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
+            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
+            Route::post('/generate-table', 'generateTable')->name('generate.table');
+            Route::post('/generate-options', 'generateOptions')->name('generate.options');
+        });
+
+    // Currency
+    Route::prefix('currency')
+        ->name('currency.')
+        ->controller(CurrencyController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
+            Route::post('/delete', 'delete')->name('delete');
+            Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
+            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
+            Route::post('/generate-table', 'generateTable')->name('generate.table');
+            Route::post('/generate-options', 'generateOptions')->name('generate.options');
+        });
+
+    // Company
+    Route::prefix('company')
+        ->name('company.')
+        ->controller(CurrencyController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
+            Route::post('/upload-app-logo', 'uploadCompanyLogo')->name('upload.logo');
             Route::post('/delete', 'delete')->name('delete');
             Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
             Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');

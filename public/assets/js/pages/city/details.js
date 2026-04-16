@@ -4,41 +4,41 @@ import { attachLogNotesHandler } from '../../util/log-notes.js';
 import { disableButton, enableButton, detailsDeleteButton } from '../../form/button.js';
 import { displayDetails, getPageContext } from '../../form/form.js';
 import { handleSystemError } from '../../util/system-errors.js';
-import { initializeDatatable } from '../../util/datatable.js';
+import { generateDropdownOptions } from '../../form/field.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    const ctx = getPageContext();
-
     let optionsPromise = Promise.resolve();
 
     const config = {
         forms: [
             {
-                selector: '#file_type_form',
+                selector: '#city_form',
                 rules: {
                     rules: {
-                        file_type_name: { required: true},
+                        city_name: { required: true},
+                        state_id: { required: true},
                     },
                     messages: {
-                        file_type_name: { required: 'Enter the file type' },
+                        city_name: { required: 'Enter the city' },
+                        state_id: { required: 'Choose the state' },
                     },
                     submitHandler: async (form) => {
-                        const ctx2 = getPageContext();
+                        const ctx = getPageContext();
                         const formData = new URLSearchParams(new FormData(form));
-                        formData.append('file_type_id', ctx2.detailId ?? '');
-                        formData.append('appId', ctx2.appId ?? '');
-                        formData.append('navigationMenuId', ctx2.navigationMenuId ?? '');
+                        formData.append('city_id', ctx.detailId ?? '');
+                        formData.append('appId', ctx.appId ?? '');
+                        formData.append('navigationMenuId', ctx .navigationMenuId ?? '');
 
                         disableButton('submit-data');
 
                         try {
-                            const response = await fetch('/file-type/save', {
+                            const response = await fetch('/city/save', {
                                 method: 'POST',
                                 body: formData,
                             });
 
                             if (!response.ok) {
-                                throw new Error(`Save file type failed with status: ${response.status}`);
+                                throw new Error(`Save city failed with status: ${response.status}`);
                             }
 
                             const data = await response.json();
@@ -57,31 +57,39 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         ],
-        detailsList: [
+        details: [
             {
-                url: '/file-type/fetch-details',
-                formSelector: '#file_type_form',
+                url: '/city/fetch-details',
+                formSelector: '#city_form',
                 busyHideTargets: ['#submit-data'],
                 onSuccess: async (data) => {
-                    document.getElementById('file_type_name').value = data.fileTypeName || '';
+                    document.getElementById('city_name').value = data.cityName || '';
 
                     await optionsPromise;
+
+                    $('#state_id').val(data.stateId).trigger('change');
                 },
             }
         ],
         delete: {
-            trigger: '#delete-file-type',
-            url: '/file-type/delete',
-            swalTitle: 'Confirm File Type Deletion',
-            swalText: 'Are you sure you want to delete this file type?',
+            trigger: '#delete-city',
+            url: '/city/delete',
+            swalTitle: 'Confirm City Deletion',
+            swalText: 'Are you sure you want to delete this city?',
             confirmButtonText: 'Delete',
-        }
+        },
+        dropdown: {
+            url: '/state/generate-options',
+            dropdownSelector: '#state_id',
+        },
     };
 
-    ;(async () => {
+    (async () => {
         try {
+            optionsPromise = generateDropdownOptions(config.dropdown);
+
             const fetchDetailsPromise = Promise.all(
-                config.detailsList.map((cfg) => displayDetails(cfg))
+                config.details.map((cfg) => displayDetails(cfg))
             );
 
             await Promise.all([

@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    ;(async () => {
+    (async () => {
         try {
             const fetchDetailsPromise = Promise.all(
                 config.detailsList.map((cfg) => displayDetails(cfg))

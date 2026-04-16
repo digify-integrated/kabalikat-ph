@@ -3,17 +3,20 @@ import { showNotification, setNotification } from '../../util/notifications.js';
 import { disableButton, enableButton, discardCreate } from '../../form/button.js';
 import { handleSystemError } from '../../util/system-errors.js';
 import { getPageContext } from '../../form/form.js';
+import { generateDropdownOptions } from '../../form/field.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const config = {
         form: {
-            selector: '#file_type_form',
+            selector: '#city_form',
             rules: {
                 rules: {
-                    file_type_name: { required: true},
+                    city_name: { required: true},
+                    state_id: { required: true},
                 },
                 messages: {
-                    file_type_name: { required: 'Enter the file type' },
+                    city_name: { required: 'Enter the city' },
+                    state_id: { required: 'Choose the state' },
                 },
                 submitHandler: async (form) => {
                     const ctx = getPageContext();
@@ -24,13 +27,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     disableButton('submit-data');
 
                     try {
-                        const response = await fetch('/file-type/save', {
+                        const response = await fetch('/city/save', {
                             method: 'POST',
                             body: formData
                         });
 
                         if (!response.ok) {
-                            throw new Error(`Save file type failed with status: ${response.status}`);
+                            throw new Error(`Save city failed with status: ${response.status}`);
                         }
 
                         const data = await response.json();
@@ -50,10 +53,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 },
             }
+        },
+        dropdown: {
+            url: '/state/generate-options',
+            dropdownSelector: '#state_id',
         }
     }
 
     discardCreate();
+
+    generateDropdownOptions(config.dropdown);
 
     initValidation(config.form.selector, config.form.rules);
 });

@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
     };
 
-    ;(async () => {
+    (async () => {
         try {
             optionsPromise = generateDropdownOptions(config.dropdown);
 

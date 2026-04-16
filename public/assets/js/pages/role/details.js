@@ -368,7 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ]
     };
 
-    ;(async () => {
+    (async () => {
         try {
         const permissionTablePromise = Promise.all(
             config.table.map((cfg) => initializeDatatable(cfg))

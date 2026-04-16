@@ -177,9 +177,7 @@ class FileExtensionController extends Controller
         $filterByFileType = $request->input('filter_by_file_type');
 
         $fileExtensions = DB::table('file_extension')
-        ->when(!empty($filterByFileType), function ($q) use ($filterByFileType) {
-            $q->where('file_type_id', $filterByFileType);
-        })
+        ->when(!empty($filterByFileType), fn($q) => $q->whereIn('file_type_id', $filterByFileType))
         ->orderBy('file_extension_name')
         ->get();
 

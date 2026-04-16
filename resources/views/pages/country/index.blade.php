@@ -14,7 +14,6 @@
 
             <div class="card-toolbar">
                 <div class="d-flex justify-content-end" data-kt-customer-table-toolbar="base">
-
                     @if(($deletePermission ?? 0) > 0 || ($exportPermission ?? 0) > 0)
                         <a href="#"
                         class="btn btn-light-primary btn-flex btn-center btn-active-light-primary show menu-dropdown action-dropdown me-3 d-none"

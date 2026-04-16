@@ -168,11 +168,11 @@ class CountryController extends Controller
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
 
-        $countrys = DB::table('country')
+        $countries = DB::table('country')
         ->orderBy('country_name')
         ->get();
 
-        $response = $countrys->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
+        $response = $countries->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
             $countryId = $row->id;
             $countryName = $row->country_name;
 
@@ -209,13 +209,13 @@ class CountryController extends Controller
             ]);
         }
 
-        $countrys = DB::table('country')
+        $countries = DB::table('country')
             ->select(['id', 'country_name'])
             ->orderBy('country_name')
             ->get();
 
         $response = $response->concat(
-            $countrys->map(fn ($row) => [
+            $countries->map(fn ($row) => [
                 'id'   => $row->id,
                 'text' => $row->country_name,
             ])

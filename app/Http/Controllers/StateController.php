@@ -4,51 +4,63 @@ namespace App\Http\Controllers;
 
 use App\Models\City;
 use App\Models\Country;
-use Auth;
+use App\Models\State;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 
 class StateController extends Controller
 {
     public function save(Request $request)
     {
         $validated = $request->validate([
-            'country_id' => ['nullable', 'integer'],
-            'country_name' => ['required', 'string', 'max:255'],
+            'state_id' => ['nullable', 'integer'],
+            'state_name' => ['required', 'string', 'max:255'],
+            'country_id' => ['integer'],
         ]);
 
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
 
+        $countryId = (int) $validated['country_id'];
+
+        $countryName = (string) Country::query()
+            ->whereKey($countryId)
+            ->value('country_name');
+
         $payload = [
-            'country_name' => $validated['country_name'],
+            'state_name' => $validated['state_name'],
+            'country_id' => $countryId,
+            'country_name' => $countryName,
             'last_log_by' => Auth::id(),
         ];
 
-        $countryId = $validated['country_id'] ?? null;
+        $stateId = $validated['state_id'] ?? null;
 
-        if ($countryId && Country::query()->whereKey($countryId)->exists()) {
-            $country = Country::query()->findOrFail($countryId);
-            $country->update($payload);
+        if ($stateId && State::query()->whereKey($stateId)->exists()) {
+            $state = State::query()->findOrFail($stateId);
+            $state->update($payload);
         } else {
-            $country = Country::query()->create($payload);
+            $state = State::query()->create($payload);
         }
 
         City::query()
-            ->where('country_id', $country->id)
+            ->where('state_id', $state->id)
             ->update([
-                'country_name' => $country->country_name,
+                'state_name' => $state->state_name,
                 'last_log_by' => Auth::id(),
             ]);
 
         $link = route('apps.details', [
             'appId' => $pageAppId,
             'navigationMenuId' => $pageNavigationMenuId,
-            'details_id' => $country->id,
+            'details_id' => $state->id,
         ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'The country has been saved successfully',
+            'message' => 'The state has been saved successfully',
             'redirect_link' => $link,
         ]);
     }
@@ -56,7 +68,7 @@ class StateController extends Controller
     public function delete(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'detailId' => ['required', 'integer', 'min:1', 'exists:country,id'],
+            'detailId' => ['required', 'integer', 'min:1', 'exists:state,id'],
         ]);
 
         $pageAppId = (int) $request->input('appId');
@@ -72,9 +84,9 @@ class StateController extends Controller
         $detailId = (int) $validator->validated()['detailId'];
 
         DB::transaction(function () use ($detailId) {
-            $country = Country::query()->select(['id'])->findOrFail($detailId);
+            $state = State::query()->select(['id'])->findOrFail($detailId);
 
-            $country->delete();
+            $state->delete();
         });        
 
         $link = route('apps.base', [
@@ -84,7 +96,7 @@ class StateController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'The country has been deleted successfully',
+            'message' => 'The state has been deleted successfully',
             'redirect_link' => $link,
         ]);
     }
@@ -93,18 +105,18 @@ class StateController extends Controller
     {
         $validated = $request->validate([
             'selected_id'   => ['required', 'array', 'min:1'],
-            'selected_id.*' => ['integer', 'distinct', 'exists:country,id'],
+            'selected_id.*' => ['integer', 'distinct', 'exists:state,id'],
         ]);
 
         $ids = $validated['selected_id'];
 
         DB::transaction(function () use ($ids) {
-            Country::query()->whereIn('id', $ids)->delete();
+            State::query()->whereIn('id', $ids)->delete();
         });
 
         return response()->json([
             'success' => true,
-            'message' => 'The selected countries have been deleted successfully',
+            'message' => 'The selected states have been deleted successfully',
         ]);
     }
 
@@ -127,11 +139,11 @@ class StateController extends Controller
 
         $validated = $validator->validated();
 
-        $country = DB::table('country')
+        $state = DB::table('state')
             ->where('id', $validated['detailId'])
             ->first();
 
-        if (!$country) {
+        if (!$state) {
             $link = route('apps.base', [
                 'appId' => $pageAppId,
                 'navigationMenuId' => $pageNavigationMenuId,
@@ -141,7 +153,7 @@ class StateController extends Controller
                 'success'  => false,
                 'notExist' => true,
                 'redirect_link' => $link,
-                'message'  => 'Country not found',
+                'message'  => 'File extension not found',
             ]);
         }
         
@@ -149,7 +161,9 @@ class StateController extends Controller
         return response()->json([
             'success' => true,
             'notExist' => false,
-            'countryName' => $country->country_name ?? null,
+            'stateName' => $state->state_name ?? null,
+            'state' => $state->state ?? null,
+            'countryId' => $state->country_id ?? null,
         ]);
     }
 
@@ -157,27 +171,31 @@ class StateController extends Controller
     {
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
+        $filterByCountry = $request->input('filter_by_country');
 
-        $countrys = DB::table('country')
-        ->orderBy('country_name')
+        $states = DB::table('state')
+        ->when(!empty($filterByCountry), fn($q) => $q->whereIn('country_id', $filterByCountry))
+        ->orderBy('state_name')
         ->get();
 
-        $response = $countrys->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
-            $countryId = $row->id;
+        $response = $states->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
+            $stateId = $row->id;
+            $stateName = $row->state_name;
             $countryName = $row->country_name;
 
             $link = route('apps.details', [
                 'appId' => $pageAppId,
                 'navigationMenuId' => $pageNavigationMenuId,
-                'details_id' => $countryId,
+                'details_id' => $stateId,
             ]);
 
             return [
                 'CHECK_BOX' => '
                     <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                        <input class="form-check-input datatable-checkbox-children" type="checkbox" value="'.$countryId.'">
+                        <input class="form-check-input datatable-checkbox-children" type="checkbox" value="'.$stateId.'">
                     </div>
                 ',
+                'STATE' => $stateName,
                 'COUNTRY' => $countryName,
                 'LINK' => $link,
             ];
@@ -199,15 +217,15 @@ class StateController extends Controller
             ]);
         }
 
-        $countrys = DB::table('country')
-            ->select(['id', 'country_name'])
-            ->orderBy('country_name')
+        $countries = DB::table('state')
+            ->select(['id', 'state_name'])
+            ->orderBy('state_name')
             ->get();
 
         $response = $response->concat(
-            $countrys->map(fn ($row) => [
+            $countries->map(fn ($row) => [
                 'id'   => $row->id,
-                'text' => $row->country_name,
+                'text' => $row->state_name,
             ])
         )->values();
 

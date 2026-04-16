@@ -198,7 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ]
     };
 
-    ;(async () => {
+    (async () => {
         try {
             await displayDetails(config.details);
         } catch (err) {

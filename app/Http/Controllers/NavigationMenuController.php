@@ -313,12 +313,8 @@ class NavigationMenuController extends Controller
         $filterByParentMenu = $request->input('filter_by_parent_menu');
 
         $navigationMenus = DB::table('navigation_menu')
-        ->when(!empty($filterByApp), function ($q) use ($filterByApp) {
-            $q->whereIn('app_id', $filterByApp);
-        })
-        ->when(!empty($filterByParentMenu), function ($q) use ($filterByParentMenu) {
-            $q->whereIn('parent_navigation_menu_id', $filterByParentMenu);
-        })
+        ->when(!empty($filterByApp), fn($q) => $q->whereIn('app_id', $filterByApp))
+        ->when(!empty($filterByParentMenu), fn($q) => $q->whereIn('parent_navigation_menu_id', $filterByParentMenu))
         ->orderBy('navigation_menu_name')
         ->get();
 

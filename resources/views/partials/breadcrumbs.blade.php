@@ -16,16 +16,7 @@
         @endphp
 
         <li class="breadcrumb-item {{ $isLast ? 'text-gray-900' : 'text-muted' }}">
-            @if($isNavCrumb && !$isLast)
-                <a
-                    href="{{ route('apps.base', ['appId' => $bc_app_id, 'navigationMenuId' => $item['id']]) }}"
-                    class="text-muted text-hover-primary"
-                >
-                    {{ $item['label'] }}
-                </a>
-            @else
-                {{ $item['label'] }}
-            @endif
+           {{ $item['label'] }}
         </li>
     @endforeach
 </ul>
