@@ -3,7 +3,7 @@
 @section('content')
     <div class="card">
         <div class="card-header d-flex align-items-center">
-            <h5 class="card-title mb-0">User Details</h5>
+            <h5 class="card-title mb-0">User Account Details</h5>
         </div>
         <div class="card-body">
             <form id="user_form" method="post" action="#" novalidate>

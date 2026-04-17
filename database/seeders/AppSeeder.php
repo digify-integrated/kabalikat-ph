@@ -33,7 +33,7 @@ class AppSeeder extends Seeder
                 'app_logo'              => 'app/2/employees.png',
                 'navigation_menu_id'    => 1,
                 'navigation_menu_name'  => 'App',
-                'order_sequence'        => 5,
+                'order_sequence'        => 4,
             ],
             [
                 'app_name'              => 'Point of Sale',
@@ -42,15 +42,15 @@ class AppSeeder extends Seeder
                 'app_logo'              => 'app/3/pos.png',
                 'navigation_menu_id'    => 1,
                 'navigation_menu_name'  => 'App',
-                'order_sequence'        => 5,
+                'order_sequence'        => 6,
             ],
             [
                 'app_name'              => 'Inventory',
-                'app_description'       => 'Manage your stocks and logistics activities.',
+                'app_description'       => 'Manage your products and stocks.',
                 'app_version'           => '1.0.0',
                 'app_logo'              => 'app/4/inventory.png',
-                'navigation_menu_id'    => 1,
-                'navigation_menu_name'  => 'App',
+                'navigation_menu_id'    => 18,
+                'navigation_menu_name'  => 'Dashboard',
                 'order_sequence'        => 5,
             ],
         ];

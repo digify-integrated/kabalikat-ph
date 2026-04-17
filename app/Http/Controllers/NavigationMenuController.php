@@ -362,14 +362,14 @@ class NavigationMenuController extends Controller
         }
 
         $apps = DB::table('navigation_menu')
-            ->select(['id', 'navigation_menu_name'])
+            ->select(['id', 'navigation_menu_name', 'app_name'])
             ->orderBy('navigation_menu_name')
             ->get();
 
         $response = $response->concat(
             $apps->map(fn ($row) => [
                 'id'   => $row->id,
-                'text' => $row->navigation_menu_name,
+                'text' => $row->app_name . ' / ' . $row->navigation_menu_name,
             ])
         )->values();
 

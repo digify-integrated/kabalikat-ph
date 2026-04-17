@@ -358,6 +358,332 @@ class NavigationMenuRouteSeeder extends Seeder
                 'view_file'             => 'pages.import.index',
                 'js_file'               => 'import/import',
             ],
+
+            /* 
+            ------------------------------------------------------------------------------------
+                Inventory App
+            ------------------------------------------------------------------------------------    
+            */
+
+            // Inventory Dashboard
+            [
+                'navigation_menu_id'    => 18,
+                'route_type'            => 'index',
+                'view_file'             => 'pages.inventory-dashboard.index',
+                'js_file'               => 'inventory-dashboard/index',
+            ],
+
+            // Products
+            [
+                'navigation_menu_id'    => 19,
+                'route_type'            => 'index',
+                'view_file'             => 'pages.products.index',
+                'js_file'               => 'products/index',
+            ],
+            [
+                'navigation_menu_id'    => 19,
+                'route_type'            => 'new',
+                'view_file'             => 'pages.products.new',
+                'js_file'               => 'products/new',
+            ],
+            [
+                'navigation_menu_id'    => 19,
+                'route_type'            => 'details',
+                'view_file'             => 'pages.products.details',
+                'js_file'               => 'products/details',
+            ],
+            [
+                'navigation_menu_id'    => 19,
+                'route_type'            => 'import',
+                'view_file'             => 'pages.import.index',
+                'js_file'               => 'import/import',
+            ],
+
+            // Batch Tracking
+            [
+                'navigation_menu_id'    => 21,
+                'route_type'            => 'index',
+                'view_file'             => 'pages.batch-tracking.index',
+                'js_file'               => 'batch-tracking/index',
+            ],
+            [
+                'navigation_menu_id'    => 21,
+                'route_type'            => 'new',
+                'view_file'             => 'pages.batch-tracking.new',
+                'js_file'               => 'batch-tracking/new',
+            ],
+            [
+                'navigation_menu_id'    => 21,
+                'route_type'            => 'details',
+                'view_file'             => 'pages.batch-tracking.details',
+                'js_file'               => 'batch-tracking/details',
+            ],
+            [
+                'navigation_menu_id'    => 21,
+                'route_type'            => 'import',
+                'view_file'             => 'pages.import.index',
+                'js_file'               => 'import/import',
+            ],
+
+            // Stock Adjustments
+            [
+                'navigation_menu_id'    => 22,
+                'route_type'            => 'index',
+                'view_file'             => 'pages.stock-adjustments.index',
+                'js_file'               => 'stock-adjustments/index',
+            ],
+            [
+                'navigation_menu_id'    => 22,
+                'route_type'            => 'new',
+                'view_file'             => 'pages.stock-adjustments.new',
+                'js_file'               => 'stock-adjustments/new',
+            ],
+            [
+                'navigation_menu_id'    => 22,
+                'route_type'            => 'details',
+                'view_file'             => 'pages.stock-adjustments.details',
+                'js_file'               => 'stock-adjustments/details',
+            ],
+            [
+                'navigation_menu_id'    => 22,
+                'route_type'            => 'import',
+                'view_file'             => 'pages.import.index',
+                'js_file'               => 'import/import',
+            ],
+
+            // Stock Transfer
+            [
+                'navigation_menu_id'    => 23,
+                'route_type'            => 'index',
+                'view_file'             => 'pages.stock-transfer.index',
+                'js_file'               => 'stock-transfer/index',
+            ],
+            [
+                'navigation_menu_id'    => 23,
+                'route_type'            => 'new',
+                'view_file'             => 'pages.stock-transfer.new',
+                'js_file'               => 'stock-transfer/new',
+            ],
+            [
+                'navigation_menu_id'    => 23,
+                'route_type'            => 'details',
+                'view_file'             => 'pages.stock-transfer.details',
+                'js_file'               => 'stock-transfer/details',
+            ],
+            [
+                'navigation_menu_id'    => 23,
+                'route_type'            => 'import',
+                'view_file'             => 'pages.import.index',
+                'js_file'               => 'import/import',
+            ],
+
+            // Purchase Order
+            [
+                'navigation_menu_id'    => 24,
+                'route_type'            => 'index',
+                'view_file'             => 'pages.purchase-order.index',
+                'js_file'               => 'purchase-order/index',
+            ],
+            [
+                'navigation_menu_id'    => 24,
+                'route_type'            => 'new',
+                'view_file'             => 'pages.purchase-order.new',
+                'js_file'               => 'purchase-order/new',
+            ],
+            [
+                'navigation_menu_id'    => 24,
+                'route_type'            => 'details',
+                'view_file'             => 'pages.purchase-order.details',
+                'js_file'               => 'purchase-order/details',
+            ],
+            [
+                'navigation_menu_id'    => 24,
+                'route_type'            => 'import',
+                'view_file'             => 'pages.import.index',
+                'js_file'               => 'import/import',
+            ],
+
+            // Product Attribute
+            [
+                'navigation_menu_id'    => 26,
+                'route_type'            => 'index',
+                'view_file'             => 'pages.product-attribute.index',
+                'js_file'               => 'product-attribute/index',
+            ],
+            [
+                'navigation_menu_id'    => 26,
+                'route_type'            => 'new',
+                'view_file'             => 'pages.product-attribute.new',
+                'js_file'               => 'product-attribute/new',
+            ],
+            [
+                'navigation_menu_id'    => 26,
+                'route_type'            => 'details',
+                'view_file'             => 'pages.product-attribute.details',
+                'js_file'               => 'product-attribute/details',
+            ],
+            [
+                'navigation_menu_id'    => 26,
+                'route_type'            => 'import',
+                'view_file'             => 'pages.import.index',
+                'js_file'               => 'import/import',
+            ],
+
+            // Product Category
+            [
+                'navigation_menu_id'    => 27,
+                'route_type'            => 'index',
+                'view_file'             => 'pages.product-category.index',
+                'js_file'               => 'product-category/index',
+            ],
+            [
+                'navigation_menu_id'    => 27,
+                'route_type'            => 'new',
+                'view_file'             => 'pages.product-category.new',
+                'js_file'               => 'product-category/new',
+            ],
+            [
+                'navigation_menu_id'    => 27,
+                'route_type'            => 'details',
+                'view_file'             => 'pages.product-category.details',
+                'js_file'               => 'product-category/details',
+            ],
+            [
+                'navigation_menu_id'    => 27,
+                'route_type'            => 'import',
+                'view_file'             => 'pages.import.index',
+                'js_file'               => 'import/import',
+            ],
+
+            // Stock Adjustment Reason
+            [
+                'navigation_menu_id'    => 28,
+                'route_type'            => 'index',
+                'view_file'             => 'pages.stock-adjustment-reason.index',
+                'js_file'               => 'stock-adjustment-reason/index',
+            ],
+            [
+                'navigation_menu_id'    => 28,
+                'route_type'            => 'new',
+                'view_file'             => 'pages.stock-adjustment-reason.new',
+                'js_file'               => 'stock-adjustment-reason/new',
+            ],
+            [
+                'navigation_menu_id'    => 28,
+                'route_type'            => 'details',
+                'view_file'             => 'pages.stock-adjustment-reason.details',
+                'js_file'               => 'stock-adjustment-reason/details',
+            ],
+            [
+                'navigation_menu_id'    => 28,
+                'route_type'            => 'import',
+                'view_file'             => 'pages.import.index',
+                'js_file'               => 'import/import',
+            ],
+
+            // Suppliers
+            [
+                'navigation_menu_id'    => 29,
+                'route_type'            => 'index',
+                'view_file'             => 'pages.suppliers.index',
+                'js_file'               => 'suppliers/index',
+            ],
+            [
+                'navigation_menu_id'    => 29,
+                'route_type'            => 'new',
+                'view_file'             => 'pages.suppliers.new',
+                'js_file'               => 'suppliers/new',
+            ],
+            [
+                'navigation_menu_id'    => 29,
+                'route_type'            => 'details',
+                'view_file'             => 'pages.suppliers.details',
+                'js_file'               => 'suppliers/details',
+            ],
+            [
+                'navigation_menu_id'    => 29,
+                'route_type'            => 'import',
+                'view_file'             => 'pages.import.index',
+                'js_file'               => 'import/import',
+            ],
+
+            // Units
+            [
+                'navigation_menu_id'    => 30,
+                'route_type'            => 'index',
+                'view_file'             => 'pages.units.index',
+                'js_file'               => 'units/index',
+            ],
+            [
+                'navigation_menu_id'    => 30,
+                'route_type'            => 'new',
+                'view_file'             => 'pages.units.new',
+                'js_file'               => 'units/new',
+            ],
+            [
+                'navigation_menu_id'    => 30,
+                'route_type'            => 'details',
+                'view_file'             => 'pages.units.details',
+                'js_file'               => 'units/details',
+            ],
+            [
+                'navigation_menu_id'    => 30,
+                'route_type'            => 'import',
+                'view_file'             => 'pages.import.index',
+                'js_file'               => 'import/import',
+            ],
+
+            // Warehouse
+            [
+                'navigation_menu_id'    => 31,
+                'route_type'            => 'index',
+                'view_file'             => 'pages.warehouse.index',
+                'js_file'               => 'warehouse/index',
+            ],
+            [
+                'navigation_menu_id'    => 31,
+                'route_type'            => 'new',
+                'view_file'             => 'pages.warehouse.new',
+                'js_file'               => 'warehouse/new',
+            ],
+            [
+                'navigation_menu_id'    => 31,
+                'route_type'            => 'details',
+                'view_file'             => 'pages.warehouse.details',
+                'js_file'               => 'warehouse/details',
+            ],
+            [
+                'navigation_menu_id'    => 31,
+                'route_type'            => 'import',
+                'view_file'             => 'pages.import.index',
+                'js_file'               => 'import/import',
+            ],
+
+            // Warehouse Type
+            [
+                'navigation_menu_id'    => 32,
+                'route_type'            => 'index',
+                'view_file'             => 'pages.warehouse-type.index',
+                'js_file'               => 'warehouse-type/index',
+            ],
+            [
+                'navigation_menu_id'    => 32,
+                'route_type'            => 'new',
+                'view_file'             => 'pages.warehouse-type.new',
+                'js_file'               => 'warehouse-type/new',
+            ],
+            [
+                'navigation_menu_id'    => 32,
+                'route_type'            => 'details',
+                'view_file'             => 'pages.warehouse-type.details',
+                'js_file'               => 'warehouse-type/details',
+            ],
+            [
+                'navigation_menu_id'    => 32,
+                'route_type'            => 'import',
+                'view_file'             => 'pages.import.index',
+                'js_file'               => 'import/import',
+            ],
         ];
 
         DB::table('navigation_menu_route')->insert(

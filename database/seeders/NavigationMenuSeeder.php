@@ -21,7 +21,8 @@ class NavigationMenuSeeder extends Seeder
         ];
 
         $navigationMenus = [
-            // 1
+            // Settings App
+            // Apps ID: 1
             [
                 'navigation_menu_name'          => 'Apps',
                 'navigation_menu_icon'          => 'ki-outline ki-abstract-26',
@@ -32,7 +33,7 @@ class NavigationMenuSeeder extends Seeder
                 'database_table'                => 'app',
                 'order_sequence'                => 1,
             ],
-            // 2
+            // Company ID: 2
             [
                 'navigation_menu_name'          => 'Company',
                 'navigation_menu_icon'          => 'ki-outline ki-shop',
@@ -43,7 +44,7 @@ class NavigationMenuSeeder extends Seeder
                 'database_table'                => 'company',
                 'order_sequence'                => 2,
             ],
-            // 3
+            // Role ID: 3
             [
                 'navigation_menu_name'          => 'Role',
                 'navigation_menu_icon'          => 'ki-outline ki-security-user',
@@ -54,7 +55,7 @@ class NavigationMenuSeeder extends Seeder
                 'database_table'                => 'role',
                 'order_sequence'                => 2
             ],
-            // 4
+            // User Account ID: 4
             [
                 'navigation_menu_name'          => 'User Account',
                 'navigation_menu_icon'          => 'ki-outline ki-user',
@@ -66,7 +67,7 @@ class NavigationMenuSeeder extends Seeder
                 'order_sequence'                => 1,
             ],
 
-            // Configurations 5
+            // Configurations ID: 5
             [
                 'navigation_menu_name'          => 'Configurations',
                 'navigation_menu_icon'          => 'ki-outline ki-wrench',
@@ -78,7 +79,7 @@ class NavigationMenuSeeder extends Seeder
                 'order_sequence'                => 50
             ],
 
-            // Configurations -> Data Classification 6
+            // Configurations -> Data Classification  ID: 6
             [
                 'navigation_menu_name'          => 'Data Classification',
                 'navigation_menu_icon'          => null,
@@ -89,7 +90,7 @@ class NavigationMenuSeeder extends Seeder
                 'database_table'                => null,
                 'order_sequence'                => 4
             ],
-            // 7
+            // Configurations -> Data Classification -> File Type ID: 7
             [
                 'navigation_menu_name'          => 'File Type',
                 'navigation_menu_icon'          => null,
@@ -100,7 +101,7 @@ class NavigationMenuSeeder extends Seeder
                 'database_table'                => 'file_type',
                 'order_sequence'                => 6
             ],
-            // 8
+            // Configurations -> Data Classification -> File Extension ID: 8
             [
                 'navigation_menu_name'          => 'File Extension',
                 'navigation_menu_icon'          => null,
@@ -112,7 +113,7 @@ class NavigationMenuSeeder extends Seeder
                 'order_sequence'                => 6
             ],
 
-            // Configurations -> Localization 9
+            // Configurations -> Localization ID: 9
             [
                 'navigation_menu_name'          => 'Localization',
                 'navigation_menu_icon'          => null,
@@ -123,7 +124,7 @@ class NavigationMenuSeeder extends Seeder
                 'database_table'                => null,
                 'order_sequence'                => 50
             ],
-            // 10
+            // Configurations -> Localization -> Country ID: 10
             [
                 'navigation_menu_name'          => 'Country',
                 'navigation_menu_icon'          => null,
@@ -134,7 +135,7 @@ class NavigationMenuSeeder extends Seeder
                 'database_table'                => 'country',
                 'order_sequence'                => 3
             ],
-            // 11
+            // Configurations -> Localization -> State ID: 11
             [
                 'navigation_menu_name'          => 'State',
                 'navigation_menu_icon'          => null,
@@ -145,7 +146,7 @@ class NavigationMenuSeeder extends Seeder
                 'database_table'                => 'state',
                 'order_sequence'                => 19
             ],
-            // 12
+            // Configurations -> Localization -> City ID: 12
             [
                 'navigation_menu_name'          => 'City',
                 'navigation_menu_icon'          => null,
@@ -156,7 +157,7 @@ class NavigationMenuSeeder extends Seeder
                 'database_table'                => 'city',
                 'order_sequence'                => 3
             ],
-            // 13
+            // Configurations -> Localization -> Currency ID: 13
             [
                 'navigation_menu_name'          => 'Currency',
                 'navigation_menu_icon'          => null,
@@ -168,7 +169,7 @@ class NavigationMenuSeeder extends Seeder
                 'order_sequence'                => 3
             ],
 
-            // Settings 14
+            // Settings ID: 14
             [
                 'navigation_menu_name'          => 'Settings',
                 'navigation_menu_icon'          => 'ki-outline ki-setting-2',
@@ -179,7 +180,7 @@ class NavigationMenuSeeder extends Seeder
                 'database_table'                => null,
                 'order_sequence'                => 80,
             ],
-            // 15
+            // Setting -> Navigation Menu ID: 15
             [
                 'navigation_menu_name'          => 'Navigation Menu',
                 'navigation_menu_icon'          => null,
@@ -190,7 +191,7 @@ class NavigationMenuSeeder extends Seeder
                 'database_table'                => 'navigation_menu',
                 'order_sequence'                => 2
             ],
-            // 16
+            // Setting -> System Action ID: 16
             [
                 'navigation_menu_name'          => 'System Action',
                 'navigation_menu_icon'          => null,
@@ -201,7 +202,7 @@ class NavigationMenuSeeder extends Seeder
                 'database_table'                => 'system_action',
                 'order_sequence'                => 3
             ],
-            // 17
+            // Setting -> Upload Setting ID: 17
             [
                 'navigation_menu_name'          => 'Upload Setting',
                 'navigation_menu_icon'          => null,
@@ -211,6 +212,187 @@ class NavigationMenuSeeder extends Seeder
                 'parent_navigation_menu_name'   => 'Settings',
                 'database_table'                => 'upload_setting',
                 'order_sequence'                => 21
+            ],
+
+            // Inventory App
+            // Inventory Dashboard ID: 18
+            [
+                'navigation_menu_name'          => 'Dashboard',
+                'navigation_menu_icon'          => 'ki-outline ki-category',
+                'app_id'                        => 4,
+                'app_name'                      => 'Inventory',
+                'parent_navigation_menu_id'     => null,
+                'parent_navigation_menu_name'   => null,
+                'database_table'                => null,
+                'order_sequence'                => 1
+            ],
+
+            // Products ID: 19
+            [
+                'navigation_menu_name'          => 'Products',
+                'navigation_menu_icon'          => 'ki-outline ki-lots-shopping',
+                'app_id'                        => 4,
+                'app_name'                      => 'Inventory',
+                'parent_navigation_menu_id'     => null,
+                'parent_navigation_menu_name'   => null,
+                'database_table'                => 'product',
+                'order_sequence'                => 2
+            ],
+
+            // Inventory ID: 20
+            [
+                'navigation_menu_name'          => 'Inventory',
+                'navigation_menu_icon'          => 'ki-outline ki-shop',
+                'app_id'                        => 4,
+                'app_name'                      => 'Inventory',
+                'parent_navigation_menu_id'     => null,
+                'parent_navigation_menu_name'   => null,
+                'database_table'                => null,
+                'order_sequence'                => 3
+            ],
+
+            // Inventory -> Batch Tracking ID: 21
+            [
+                'navigation_menu_name'          => 'Batch Tracking',
+                'navigation_menu_icon'          => null,
+                'app_id'                        => 4,
+                'app_name'                      => 'Inventory',
+                'parent_navigation_menu_id'     => 20,
+                'parent_navigation_menu_name'   => 'Inventory',
+                'database_table'                => 'batch_tracking',
+                'order_sequence'                => 1
+            ],
+
+            // Inventory -> Stock Adjustments ID: 22
+            [
+                'navigation_menu_name'          => 'Stock Adjustments',
+                'navigation_menu_icon'          => null,
+                'app_id'                        => 4,
+                'app_name'                      => 'Inventory',
+                'parent_navigation_menu_id'     => 20,
+                'parent_navigation_menu_name'   => 'Inventory',
+                'database_table'                => 'stock_adjustment',
+                'order_sequence'                => 2
+            ],
+
+            // Inventory -> Stock Transfer ID: 23
+            [
+                'navigation_menu_name'          => 'Stock Transfer',
+                'navigation_menu_icon'          => null,
+                'app_id'                        => 4,
+                'app_name'                      => 'Inventory',
+                'parent_navigation_menu_id'     => 20,
+                'parent_navigation_menu_name'   => 'Inventory',
+                'database_table'                => 'stock_transfer',
+                'order_sequence'                => 3
+            ],
+
+            // Purchase Order ID: 24
+            [
+                'navigation_menu_name'          => 'Purchase Order',
+                'navigation_menu_icon'          => 'ki-outline ki-purchase',
+                'app_id'                        => 4,
+                'app_name'                      => 'Inventory',
+                'parent_navigation_menu_id'     => null,
+                'parent_navigation_menu_name'   => null,
+                'database_table'                => 'purchase_order',
+                'order_sequence'                => 4
+            ],
+
+            // Configurations ID: 25
+            [
+                'navigation_menu_name'          => 'Configurations',
+                'navigation_menu_icon'          => 'ki-outline ki-wrench',
+                'app_id'                        => 4,
+                'app_name'                      => 'Inventory',
+                'parent_navigation_menu_id'     => null,
+                'parent_navigation_menu_name'   => null,
+                'database_table'                => null,
+                'order_sequence'                => 5
+            ],
+
+            // Configurations -> Product Attribute ID: 26
+            [
+                'navigation_menu_name'          => 'Product Attribute',
+                'navigation_menu_icon'          => null,
+                'app_id'                        => 4,
+                'app_name'                      => 'Inventory',
+                'parent_navigation_menu_id'     => 25,
+                'parent_navigation_menu_name'   => 'Configurations',
+                'database_table'                => 'product_attribute',
+                'order_sequence'                => 1
+            ],
+
+            // Configurations -> Product Category ID: 27
+            [
+                'navigation_menu_name'          => 'Product Category',
+                'navigation_menu_icon'          => null,
+                'app_id'                        => 4,
+                'app_name'                      => 'Inventory',
+                'parent_navigation_menu_id'     => 25,
+                'parent_navigation_menu_name'   => 'Configurations',
+                'database_table'                => 'product_category',
+                'order_sequence'                => 2
+            ],
+
+            // Configurations -> Stock Adjustment Reason ID: 28
+            [
+                'navigation_menu_name'          => 'Stock Adjustment Reason',
+                'navigation_menu_icon'          => null,
+                'app_id'                        => 4,
+                'app_name'                      => 'Inventory',
+                'parent_navigation_menu_id'     => 25,
+                'parent_navigation_menu_name'   => 'Configurations',
+                'database_table'                => 'stock_adjustment_reason',
+                'order_sequence'                => 3
+            ],
+
+            // Configurations -> Suppliers ID: 29
+            [
+                'navigation_menu_name'          => 'Suppliers',
+                'navigation_menu_icon'          => null,
+                'app_id'                        => 4,
+                'app_name'                      => 'Inventory',
+                'parent_navigation_menu_id'     => 25,
+                'parent_navigation_menu_name'   => 'Configurations',
+                'database_table'                => 'supplier',
+                'order_sequence'                => 4
+            ],
+
+            // Configurations -> Units ID: 30
+            [
+                'navigation_menu_name'          => 'Units',
+                'navigation_menu_icon'          => null,
+                'app_id'                        => 4,
+                'app_name'                      => 'Inventory',
+                'parent_navigation_menu_id'     => 25,
+                'parent_navigation_menu_name'   => 'Configurations',
+                'database_table'                => 'unit',
+                'order_sequence'                => 5
+            ],
+
+            // Configurations -> Warehouse ID: 31
+            [
+                'navigation_menu_name'          => 'Warehouse',
+                'navigation_menu_icon'          => null,
+                'app_id'                        => 4,
+                'app_name'                      => 'Inventory',
+                'parent_navigation_menu_id'     => 25,
+                'parent_navigation_menu_name'   => 'Configurations',
+                'database_table'                => 'warehouse',
+                'order_sequence'                => 6
+            ],
+
+            // Configurations -> Warehouse Type ID: 32
+            [
+                'navigation_menu_name'          => 'Warehouse Type',
+                'navigation_menu_icon'          => null,
+                'app_id'                        => 4,
+                'app_name'                      => 'Inventory',
+                'parent_navigation_menu_id'     => 25,
+                'parent_navigation_menu_name'   => 'Configurations',
+                'database_table'                => 'warehouse_type',
+                'order_sequence'                => 7
             ],
         ];
 
