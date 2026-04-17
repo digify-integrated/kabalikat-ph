@@ -3,17 +3,22 @@ import { showNotification, setNotification } from '../../util/notifications.js';
 import { disableButton, enableButton, discardCreate } from '../../form/button.js';
 import { handleSystemError } from '../../util/system-errors.js';
 import { getPageContext } from '../../form/form.js';
+import { generateDropdownOptions } from '../../form/field.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const config = {
         form: {
-            selector: '#nationality_form',
+            selector: '#upload_setting_form',
             rules: {
                 rules: {
-                    nationality_name: { required: true},
+                    upload_setting_name: { required: true},
+                    upload_setting_description: { required: true},
+                    max_file_size: { required: true},
                 },
                 messages: {
-                    nationality_name: { required: 'Enter the nationality' },
+                    upload_setting_name: { required: 'Enter the upload setting' },
+                    upload_setting_description: { required: 'Enter the description' },
+                    max_file_size: { required: 'Enter the max file size' },
                 },
                 submitHandler: async (form) => {
                     const ctx = getPageContext();
@@ -24,13 +29,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     disableButton('submit-data');
 
                     try {
-                        const response = await fetch('/nationality/save', {
+                        const response = await fetch('/upload-setting/save', {
                             method: 'POST',
                             body: formData
                         });
 
                         if (!response.ok) {
-                            throw new Error(`Save nationality failed with status: ${response.status}`);
+                            throw new Error(`Save upload setting failed with status: ${response.status}`);
                         }
 
                         const data = await response.json();
@@ -50,10 +55,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 },
             }
+        },
+        dropdown: {
+            url: '/file-extension/generate-options',
+            dropdownSelector: '#file_extension_id',
+            data : {
+                multiple: true
+            }
         }
     }
 
     discardCreate();
+
+    generateDropdownOptions(config.dropdown);
 
     initValidation(config.form.selector, config.form.rules);
 });

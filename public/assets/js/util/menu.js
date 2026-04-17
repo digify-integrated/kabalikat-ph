@@ -2,7 +2,6 @@ export const setHereClassForMenu = (menuContainerSelector) => {
   const menuContainer = document.querySelector(menuContainerSelector);
   if (!menuContainer) return;
 
-  // Normalize current path
   const normalize = (url) => {
     try {
       const u = new URL(url, window.location.origin);
@@ -19,25 +18,30 @@ export const setHereClassForMenu = (menuContainerSelector) => {
     .querySelectorAll('.active, .here, .show')
     .forEach(el => el.classList.remove('active', 'here', 'show'));
 
-  // Find active link
   const links = menuContainer.querySelectorAll('a.menu-link[href]');
   let activeLink = null;
+  let bestMatchLength = 0;
 
-  for (let i = 0; i < links.length; i++) {
-    const linkPath = normalize(links[i].href);
+  links.forEach(link => {
+    const linkPath = normalize(link.href);
+    if (!linkPath) return;
 
-    if (linkPath === currentPath) {
-      activeLink = links[i];
-      break;
+    // Exact match OR partial match
+    if (
+      linkPath === currentPath ||
+      (currentPath.startsWith(linkPath) && linkPath.length > bestMatchLength)
+    ) {
+      activeLink = link;
+      bestMatchLength = linkPath.length;
     }
-  }
+  });
 
   if (!activeLink) {
     console.warn('No active menu match for:', currentPath);
     return;
   }
 
-  // Apply active ONLY to link
+  // Apply active to link
   activeLink.classList.add('active');
 
   // Apply here/show to parents

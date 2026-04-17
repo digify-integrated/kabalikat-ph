@@ -36,13 +36,7 @@
                         ></div>
 
                         @if($canWrite)
-                            <label
-                                class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow"
-                                data-kt-image-input-action="change"
-                                data-bs-toggle="tooltip"
-                                aria-label="Change image"
-                                data-bs-original-title="Change image"
-                            >
+                            <label class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow" data-kt-image-input-action="change" data-bs-toggle="tooltip" aria-label="Change image" data-bs-original-title="Change image">
                                 <i class="ki-outline ki-pencil fs-7"></i>
                                 <input type="file" id="profile_picture" name="profile_picture" accept=".png, .jpg, .jpeg">
                             </label>
@@ -105,63 +99,38 @@
                         <div class="card mb-5">
                             <form id="user_form" method="post" action="#" novalidate>
                                 @csrf
-                                <div class="card-body p-9">
-                                    <div class="row">
-                                        <div class="col">
-                                            <div class="fv-row mb-7">
-                                                <label class="fs-6 fw-semibold required form-label mt-3" for="user_name">
-                                                    User Name
-                                                </label>
-
-                                                <input
-                                                    type="text"
-                                                    class="form-control"
-                                                    id="user_name"
-                                                    name="user_name"
-                                                    maxlength="100"
-                                                    autocomplete="off"
-                                                    @disabled(!$canWrite)
-                                                >
-                                            </div>
+                                <div class="card-header border-0">
+                                    <div class="card-title m-0">
+                                        <h3 class="fw-bold m-0">User Account Details</h3>
+                                    </div>
+                                </div>
+                                <div class="card-body border-top p-9">
+                                    <div class="row mb-6">
+                                        <label class="col-lg-3 col-form-label required fw-semibold fs-6" for="user_name">
+                                            User Name
+                                        </label>
+                                        <div class="col-lg-9">
+                                            <input type="text" class="form-control" id="user_name" name="user_name" maxlength="100" autocomplete="off" @disabled(!$canWrite)>
                                         </div>
                                     </div>
-                                    <div class="row row-cols-1 row-cols-sm-2 rol-cols-md-1 row-cols-lg-2">
-                                        <div class="col">
-                                            <div class="fv-row mb-7">
-                                                <label class="fs-6 fw-semibold required form-label mt-3" for="email">
-                                                    Email
-                                                </label>
-
-                                                <input
-                                                    type="email"
-                                                    class="form-control"
-                                                    id="email"
-                                                    name="email"
-                                                    maxlength="100"
-                                                    autocomplete="off"
-                                                    @disabled(!$canWrite)
-                                                >
-                                            </div>
+                                    <div class="row mb-6">
+                                        <label class="col-lg-3 col-form-label required fw-semibold fs-6" for="email">
+                                            Email
+                                        </label>
+                                        <div class="col-lg-9">
+                                            <input type="email" class="form-control" id="email" name="email" maxlength="100" autocomplete="off" @disabled(!$canWrite)>
                                         </div>
-
-                                        <div class="col">
-                                            <div class="fv-row mb-7">
-                                                <label class="fs-6 fw-semibold form-label mt-3" for="user_name">
-                                                    Password
-                                                </label>
-
-                                                <div class="input-group mb-5">
-                                                    <input
-                                                        type="password"
-                                                        id="password"
-                                                        name="password"
-                                                        class="form-control"
-                                                        @disabled(!$canWrite)
-                                                    >
-                                                    <span class="input-group-text password-addon">
-                                                        <i class="ki-outline ki-eye fs-3"></i>
-                                                    </span>
-                                                </div>
+                                    </div>
+                                    <div class="row">
+                                        <label class="col-lg-3 col-form-label fw-semibold fs-6" for="password">
+                                            Password
+                                        </label>
+                                        <div class="col-lg-9">
+                                            <div class="input-group">
+                                                <input type="password" id="password" name="password" class="form-control" @disabled(!$canWrite)>
+                                                <span class="input-group-text password-addon">
+                                                    <i class="ki-outline ki-eye fs-3"></i>
+                                                </span>
                                             </div>
                                         </div>
                                     </div>

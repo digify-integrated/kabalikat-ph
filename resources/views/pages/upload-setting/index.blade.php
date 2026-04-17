@@ -23,9 +23,7 @@
                             <i class="ki-outline ki-down fs-5 ms-1"></i>
                         </a>
 
-                        <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-125px py-4"
-                            data-kt-menu="true">
-
+                        <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-125px py-4" data-kt-menu="true">
                             @if(($exportPermission ?? 0) > 0)
                                 <div class="menu-item px-3">
                                     <a href="javascript:void(0);"
@@ -47,7 +45,6 @@
                                     </a>
                                 </div>
                             @endif
-
                         </div>
                     @endif
                 </div>
@@ -56,7 +53,7 @@
 
         <div class="card-body pt-9">
             <div class="table-responsive">
-                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5" id="nationality-table">
+                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5" id="upload-setting-table">
                     <thead>
                         <tr class="text-start text-gray-800 fw-bold fs-7 text-uppercase gs-0">
                             <th>
@@ -64,7 +61,9 @@
                                     <input class="form-check-input" id="datatable-checkbox" type="checkbox">
                                 </div>
                             </th>
-                            <th>Nationality</th>
+                            <th>Upload Setting</th>
+                            <th>Max File Size</th>
+                            <th>Allowed File Extension</th>
                         </tr>
                     </thead>
                     <tbody class="fw-semibold text-gray-800"></tbody>

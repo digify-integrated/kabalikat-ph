@@ -27,7 +27,7 @@
                         </div>
                     @endif
                 </div>
-                <div class="card-body">
+                <div class="card-body border-top p-9">
                     <form id="state_form" method="post" action="#" novalidate>
                         @csrf
 
@@ -38,15 +38,7 @@
                                         State
                                     </label>
 
-                                    <input
-                                        type="text"
-                                        class="form-control"
-                                        id="state_name"
-                                        name="state_name"
-                                        maxlength="100"
-                                        autocomplete="off"
-                                        @disabled(!$canWrite)
-                                    >
+                                    <input type="text" class="form-control" id="state_name" name="state_name" maxlength="100" autocomplete="off" @disabled(!$canWrite)>
                                 </div>
                             </div>
 
@@ -56,14 +48,7 @@
                                         Country
                                     </label>
 
-                                    <select
-                                        id="country_id"
-                                        name="country_id"
-                                        class="form-select"
-                                        data-control="select2"
-                                        data-allow-clear="false"
-                                        @disabled(!$canWrite)
-                                    >
+                                    <select id="country_id" name="country_id" class="form-select" data-control="select2" data-allow-clear="false" @disabled(!$canWrite)>
                                         <option>--</option>
                                     </select>
                                 </div>

@@ -129,9 +129,9 @@ export const initializeDatatable = ({
   ],
   onRowClick = null,
   addons = {
-    controls: false,            // true | { table?: selectorOrNode }
-    export: false,              // selectorOrNode (e.g. EXPORT_TABLE) | { table: ... }
-    subControls: false,         // { searchSelector, lengthSelector, table?: selectorOrNode }
+    controls: false,
+    export: false,
+    subControls: false,
   },
   serverSide = true,
   pageLength = 25,
@@ -155,7 +155,7 @@ export const initializeDatatable = ({
 
   const dt = $(table).DataTable({
     serverSide,
-    processing: processing,
+    processing,
     deferRender: true,
     autoWidth: false,
     orderClasses: false,
@@ -198,9 +198,14 @@ export const initializeDatatable = ({
       toggleHideActionDropdown();
     },
 
-    // ✅ Run optional initializers ONCE after DT is ready
-    initComplete: () => {
-      // 1) Standard controls
+    initComplete: function () {
+      // ✅ Fix layout immediately (if visible)
+      dt.columns.adjust();
+
+      // ===============================
+      // Addons
+      // ===============================
+
       if (addons?.controls) {
         const tableRef =
           typeof addons.controls === 'object' && addons.controls?.table
@@ -209,17 +214,14 @@ export const initializeDatatable = ({
         initializeDatatableControls(tableRef);
       }
 
-      // 2) Export feature
       if (addons?.export) {
         const exportRef =
           typeof addons.export === 'object' && addons.export?.table
             ? addons.export.table
-            : addons.export; // allow passing EXPORT_TABLE directly
-        // Assumes initializeExportFeature exists/imported in this module
+            : addons.export;
         initializeExportFeature(exportRef);
       }
 
-      // 3) Sub-datatable controls
       if (addons?.subControls && typeof addons.subControls === 'object') {
         const {
           searchSelector,
@@ -231,11 +233,39 @@ export const initializeDatatable = ({
           initializeSubDatatableControls(searchSelector, lengthSelector, subTableRef);
         }
       }
+
+      // ===============================
+      // 🔥 AUTO-FIX for hidden containers
+      // ===============================
+
+      const adjustTable = () => {
+        if ($.fn.DataTable.isDataTable(table)) {
+          dt.columns.adjust().draw(false);
+        }
+      };
+
+      // 1. Bootstrap Tabs
+      document.addEventListener('shown.bs.tab', adjustTable);
+
+      // 2. Bootstrap Modal
+      document.addEventListener('shown.bs.modal', adjustTable);
+
+      // 3. Bootstrap Collapse (accordion)
+      document.addEventListener('shown.bs.collapse', adjustTable);
+
+      // 4. Resize observer (modern & reliable)
+      if (window.ResizeObserver) {
+        const observer = new ResizeObserver(() => adjustTable());
+        observer.observe(table.closest('.dataTables_wrapper') || table);
+      }
     },
   });
 
   dtByNode.set(table, dt);
 
+  // ===============================
+  // Row click handler
+  // ===============================
   if (typeof onRowClick === 'function') {
     const tbody = table.tBodies?.[0];
     if (tbody) {

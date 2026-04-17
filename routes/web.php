@@ -20,6 +20,7 @@ use App\Http\Controllers\RoleSystemActionPermissionController;
 use App\Http\Controllers\RoleUserAccountController;
 use App\Http\Controllers\StateController;
 use App\Http\Controllers\SystemActionController;
+use App\Http\Controllers\UploadSettingController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -286,18 +287,6 @@ Route::middleware('auth')->group(function () {
             Route::post('/generate-options', 'generateOptions')->name('generate.options');
         });
 
-    // Nationality
-    Route::prefix('nationality')
-        ->name('nationality.')
-        ->controller(NationalityController::class)
-        ->group(function () {
-            Route::post('/save', 'save')->name('save');
-            Route::post('/delete', 'delete')->name('delete');
-            Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
-            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
-            Route::post('/generate-table', 'generateTable')->name('generate.table');
-            Route::post('/generate-options', 'generateOptions')->name('generate.options');
-        });
 
     // Currency
     Route::prefix('currency')
@@ -325,6 +314,19 @@ Route::middleware('auth')->group(function () {
             Route::post('/generate-table', 'generateTable')->name('generate.table');
             Route::post('/generate-options', 'generateOptions')->name('generate.options');
         });
+
+    // Upload Setting
+    Route::prefix('upload-setting')
+        ->name('upload.setting.')
+        ->controller(UploadSettingController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
+            Route::post('/delete', 'delete')->name('delete');
+            Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
+            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
+            Route::post('/generate-table', 'generateTable')->name('generate.table');
+        });
+
 
     // Import
     Route::prefix('import')

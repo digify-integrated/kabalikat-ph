@@ -220,15 +220,15 @@ class FileExtensionController extends Controller
             ]);
         }
 
-        $fileTypes = DB::table('file_extension')
-            ->select(['id', 'file_extension_name'])
+        $fileExtensions = DB::table('file_extension')
+            ->select(['id', 'file_extension_name', 'file_extension'])
             ->orderBy('file_extension_name')
             ->get();
 
         $response = $response->concat(
-            $fileTypes->map(fn ($row) => [
+            $fileExtensions->map(fn ($row) => [
                 'id'   => $row->id,
-                'text' => $row->file_extension_name,
+                'text' => $row->file_extension_name . ' (.' . $row->file_extension . ')',
             ])
         )->values();
 

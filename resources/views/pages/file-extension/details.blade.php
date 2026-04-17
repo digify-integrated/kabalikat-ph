@@ -27,7 +27,7 @@
                         </div>
                     @endif
                 </div>
-                <div class="card-body">
+                <div class="card-body border-top p-9">
                     <form id="file_extension_form" method="post" action="#" novalidate>
                         @csrf
 
@@ -38,15 +38,7 @@
                                         File Extension
                                     </label>
 
-                                    <input
-                                        type="text"
-                                        class="form-control"
-                                        id="file_extension_name"
-                                        name="file_extension_name"
-                                        maxlength="100"
-                                        autocomplete="off"
-                                        @disabled(!$canWrite)
-                                    >
+                                    <input type="text" class="form-control" id="file_extension_name" name="file_extension_name" maxlength="100" autocomplete="off" @disabled(!$canWrite)>
                                 </div>
                             </div>
                             <div class="col">

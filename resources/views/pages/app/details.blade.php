@@ -18,13 +18,7 @@
                         ></div>
 
                         @if($canWrite)
-                            <label
-                                class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow"
-                                data-kt-image-input-action="change"
-                                data-bs-toggle="tooltip"
-                                aria-label="Change logo"
-                                data-bs-original-title="Change logo"
-                            >
+                            <label class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow" data-kt-image-input-action="change" data-bs-toggle="tooltip" aria-label="Change logo" data-bs-original-title="Change logo">
                                 <i class="ki-outline ki-pencil fs-7"></i>
                                 <input type="file" id="app_logo" name="app_logo" accept=".png, .jpg, .jpeg">
                             </label>
@@ -42,7 +36,7 @@
             <div class="card card-flush">
                 <div class="card-header border-0">
                     <div class="card-title m-0">
-                        <h3 class="fw-bold m-0">App Module Details</h3>
+                        <h3 class="fw-bold m-0">App Details</h3>
                     </div>
 
                     @if($canDelete)

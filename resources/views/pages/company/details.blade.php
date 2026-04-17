@@ -18,13 +18,7 @@
                         ></div>
 
                         @if($canWrite)
-                            <label
-                                class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow"
-                                data-kt-image-input-action="change"
-                                data-bs-toggle="tooltip"
-                                aria-label="Change logo"
-                                data-bs-original-title="Change logo"
-                            >
+                            <label class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow" data-kt-image-input-action="change" data-bs-toggle="tooltip" aria-label="Change logo" data-bs-original-title="Change logo">
                                 <i class="ki-outline ki-pencil fs-7"></i>
                                 <input type="file" id="company_logo" name="company_logo" accept=".png, .jpg, .jpeg">
                             </label>
@@ -63,95 +57,85 @@
                 <form id="company_form" method="post" action="#" novalidate>
                     @csrf
                     <div class="card-body border-top p-9">
-                        <div class="row row-cols-1 row-cols-sm-3 rol-cols-md-3 row-cols-lg-3">
-                            <div class="col">
-                                <div class="fv-row mb-4">
-                                    <label class="fs-6 fw-semibold required form-label mt-3" for="company_name">
-                                        Display Name
-                                    </label>
-
-                                    <input type="text" class="form-control" id="company_name" name="company_name" maxlength="100" autocomplete="off" @disabled(!$canWrite)>
-                                </div>
+                        <div class="row mb-6">
+                            <label class="col-lg-3 col-form-label required fw-semibold fs-6" for="company_name">
+                                Display Name
+                            </label>
+                            <div class="col-lg-9">
+                                <input type="text" class="form-control" id="company_name" name="company_name" maxlength="100" autocomplete="off" @disabled(!$canWrite)>
                             </div>
-                            <div class="col">
-                                <div class="fv-row mb-4">
-                                    <label class="fs-6 fw-semibold required form-label mt-3" for="address">
-                                        Address
-                                    </label>
-
-                                    <input type="text" class="form-control" id="address" name="address" maxlength="100" autocomplete="off" @disabled(!$canWrite)>
-                                </div>
-                            </div>
-                            <div class="col">
-                                <div class="fv-row mb-7">
-                                    <label class="fs-6 fw-semibold required form-label mt-3" for="city_id">
-                                        City
-                                    </label>
-
-                                    <select id="city_id" name="city_id" class="form-select" data-control="select2" data-allow-clear="false" @disabled(!$canWrite)>
-                                        <option>--</option>
-                                    </select>
+                        </div>
+                        <div class="row mb-6">
+                            <label class="col-lg-3 col-form-label required fw-semibold fs-6" for="company_name">
+                                Address
+                            </label>
+                            <div class="col-lg-9">
+                                <div class="row">
+                                    <div class="col-lg-6">
+                                        <input type="text" class="form-control" id="address" name="address" maxlength="100" autocomplete="off" @disabled(!$canWrite)>
+                                    </div>
+                                    <div class="col-lg-6">
+                                        <select id="city_id" name="city_id" class="form-select" data-control="select2" data-allow-clear="false" @disabled(!$canWrite)>
+                                            <option>--</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="row row-cols-1 row-cols-sm-3 rol-cols-md-3 row-cols-lg-3">
-                            <div class="col">
-                                <div class="fv-row mb-7">
-                                    <label class="fs-6 fw-semibold form-label mt-3" for="tax_id">
-                                        Tax ID
-                                    </label>
 
-                                    <input type="text" class="form-control" id="tax_id" name="tax_id" maxlength="100" autocomplete="off" @disabled(!$canWrite)>
-                                </div>
-                            </div>
-                            <div class="col">
-                                <div class="fv-row mb-7">
-                                    <label class="fs-6 fw-semibold required form-label mt-3" for="currency_id">
-                                        Currency
-                                    </label>
-
-                                    <select id="currency_id" name="currency_id" class="form-select" data-control="select2" data-allow-clear="false" @disabled(!$canWrite)>
-                                        <option>--</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col">
-                                <div class="fv-row mb-4">
-                                    <label class="fs-6 fw-semibold form-label mt-3" for="phone">
-                                        Phone
-                                    </label>
-
-                                    <input type="text" class="form-control" id="phone" name="phone" maxlength="100" autocomplete="off" @disabled(!$canWrite)>
-                                </div>
+                        <div class="row mb-6">
+                            <label class="col-lg-3 col-form-label fw-semibold fs-6" for="tax_id">
+                                Tax ID
+                            </label>
+                            <div class="col-lg-9">
+                                <input type="text" class="form-control" id="tax_id" name="tax_id" maxlength="100" autocomplete="off" @disabled(!$canWrite)>
                             </div>
                         </div>
-                        <div class="row row-cols-1 row-cols-sm-3 rol-cols-md-3 row-cols-lg-3">
-                            <div class="col">
-                                <div class="fv-row mb-4">
-                                    <label class="fs-6 fw-semibold form-label mt-3" for="telephone">
-                                        Telephone
-                                    </label>
 
-                                    <input type="text" class="form-control" id="telephone" name="telephone" maxlength="100" autocomplete="off" @disabled(!$canWrite)>
-                                </div>
+                        <div class="row mb-6">
+                            <label class="col-lg-3 col-form-label required fw-semibold fs-6" for="currency_id">
+                                Currency
+                            </label>
+                            <div class="col-lg-9">
+                                <select id="currency_id" name="currency_id" class="form-select" data-control="select2" data-allow-clear="false" @disabled(!$canWrite)>
+                                    <option>--</option>
+                                </select>
                             </div>
-                            <div class="col">
-                                <div class="fv-row mb-4">
-                                    <label class="fs-6 fw-semibold form-label mt-3" for="email">
-                                        Email
-                                    </label>
+                        </div>
 
-                                    <input type="email" class="form-control" id="email" name="email" maxlength="100" autocomplete="off" @disabled(!$canWrite)>
-                                </div>
+                        <div class="row mb-6">
+                            <label class="col-lg-3 col-form-label fw-semibold fs-6" for="phone">
+                                Phone
+                            </label>
+                            <div class="col-lg-9">
+                                <input type="text" class="form-control" id="phone" name="phone" maxlength="100" autocomplete="off" @disabled(!$canWrite)>
                             </div>
-                            <div class="col">
-                                <div class="fv-row mb-4">
-                                    <label class="fs-6 fw-semibold form-label mt-3" for="website">
-                                        Website
-                                    </label>
+                        </div>
 
-                                    <input type="text" class="form-control" id="website" name="website" maxlength="100" autocomplete="off" @disabled(!$canWrite)>
-                                </div>
+                        <div class="row mb-6">
+                            <label class="col-lg-3 col-form-label fw-semibold fs-6" for="telephone">
+                                Telephone
+                            </label>
+                            <div class="col-lg-9">
+                                <input type="text" class="form-control" id="telephone" name="telephone" maxlength="100" autocomplete="off" @disabled(!$canWrite)>
+                            </div>
+                        </div>
+
+                        <div class="row mb-6">
+                            <label class="col-lg-3 col-form-label fw-semibold fs-6" for="email">
+                                Email
+                            </label>
+                            <div class="col-lg-9">
+                                <input type="email" class="form-control" id="email" name="email" maxlength="100" autocomplete="off" @disabled(!$canWrite)>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <label class="col-lg-3 col-form-label fw-semibold fs-6" for="website">
+                                Website
+                            </label>
+                            <div class="col-lg-9">
+                                <input type="text" class="form-control" id="website" name="website" maxlength="100" autocomplete="off" @disabled(!$canWrite)>
                             </div>
                         </div>
                     </div>

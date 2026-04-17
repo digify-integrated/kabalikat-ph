@@ -20,216 +20,210 @@
             ->userHasRoleAccessForAction(5, Auth::id());
     @endphp
 
-    <div class="row">
-        <div class="col-lg-6">
-            <div class="card mb-10">
-                <div class="card-header border-0">
-                    <div class="card-title m-0">
-                        <h3 class="fw-bold m-0">Role Details</h3>
-                    </div>
-                    @if($canDelete)
-                        <a href="#" class="btn btn-light-primary btn-flex btn-center btn-active-light-primary show menu-dropdown align-self-center" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
-                            Actions
-                            <i class="ki-outline ki-down fs-5 ms-1"></i>
-                        </a>
-                        <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-125px py-4" data-kt-menu="true" style="z-index: 107; position: fixed; inset: 0px 0px auto auto; margin: 0px; transform: translate(-60px, 539px);" data-popper-placement="bottom-end">
-                            <div class="role px-3">
-                                <a href="javascript:void(0);" class="menu-link px-3" id="delete-role">
-                                    Delete
-                                </a>
-                            </div>
+    <div class="d-flex flex-column flex-row-fluid gap-7 gap-lg-10">
+        <ul class="nav nav-custom nav-tabs nav-line-tabs nav-line-tabs-2x border-0 fs-4 fw-semibold" role="tablist">
+            <li class="nav-item" role="presentation">
+                <a class="nav-link text-active-primary pb-4 active" data-bs-toggle="tab" href="#overview_tab" aria-selected="true" role="tab">Overview</a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link text-active-primary pb-4" data-bs-toggle="tab" href="#role_permission_tab" aria-selected="false" role="tab">Permissions</a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link text-active-primary pb-4" data-bs-toggle="tab" href="#role_user_tab" aria-selected="false" role="tab">User Account</a>
+            </li>
+            <li class="nav-item ms-auto">
+                @if($canDelete)
+                    <a href="#" class="btn btn-light-primary btn-flex btn-center btn-active-light-primary show menu-dropdown align-self-center" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
+                        Actions
+                        <i class="ki-outline ki-down fs-5 ms-1"></i>
+                    </a>
+                    <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-125px py-4" data-kt-menu="true" style="z-index: 107; position: fixed; inset: 0px 0px auto auto; margin: 0px; transform: translate(-60px, 539px);" data-popper-placement="bottom-end">
+                        <div class="role px-3">
+                            <a href="javascript:void(0);" class="menu-link px-3" id="delete-role">
+                                Delete
+                            </a>
                         </div>
-                    @endif
-                </div>
-                <div class="card-body">
-                    <form id="role_form" method="post" action="#" novalidate>
-                        @csrf
-
-                        <div class="fv-row mb-4">
-                            <label class="fs-6 fw-semibold required form-label mt-3" for="role_name">
-                                Display Name
-                            </label>
-
-                            <input
-                                type="text"
-                                class="form-control"
-                                id="role_name"
-                                name="role_name"
-                                maxlength="100"
-                                autocomplete="off"
-                                @disabled(!$canWrite)
-                            >
-                        </div>
-                        <div class="fv-row mb-4">
-                            <label class="fs-6 fw-semibold required form-label mt-3" for="role_description">
-                                Description
-                            </label>
-
-                            <textarea
-                                class="form-control"
-                                id="role_description"
-                                name="role_description"
-                                maxlength="200"
-                                rows="3"
-                                @disabled(!$canWrite)
-                            ></textarea>
-                        </div>
-                    </form>
-                </div>
-
-                @if($canWrite)
-                    <div class="card-footer d-flex justify-content-end py-6 px-9">
-                        <button type="submit" class="btn btn-primary" form="role_form" id="submit-data">
-                            Save Changes
-                        </button>
                     </div>
                 @endif
-            </div>
-        </div>
-
-        <div class="col-lg-6">
-            <div class="card mb-10">
-                <div class="card-header border-0 pt-6">
-                    <div class="card-title">
-                        <div class="d-flex align-items-center position-relative my-1 me-3">
-                            <i class="ki-outline ki-magnifier fs-3 position-absolute ms-5"></i> <input type="text" class="form-control w-250px ps-12" id="role-user-account-datatable-search" placeholder="Search..." autocomplete="off" />
+            </li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-content" id="user_account_tab_content">
+                <div class="tab-pane fade active show" id="overview_tab" role="tabpanel">
+                    <div class="card mb-5">
+                        <div class="card-header border-0">
+                            <div class="card-title m-0">
+                                <h3 class="fw-bold m-0">Role Details</h3>
+                            </div>
                         </div>
-                        <select id="role-user-account-datatable-length" class="form-select w-auto">
-                            <option value="-1">All</option>
-                            <option value="5">5</option>
-                            <option value="10" selected>10</option>
-                            <option value="20">20</option>
-                            <option value="25">25</option>
-                            <option value="50">50</option>
-                            <option value="100">100</option>
-                        </select>
-                    </div>
-                    <div class="card-toolbar">
-                        <div class="d-flex justify-content-end" data-kt-customer-table-toolbar="base">
-                            @if(($canAssignUserAccount ?? false) === true)
-                                <button type="button"
-                                        class="btn btn-light-primary me-3"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#user-account-assignment-modal"
-                                        id="assign-user-account">
-                                    <i class="ki-outline ki-plus fs-2"></i> Assign
+                        <div class="card-body border-top p-9">
+                            <form id="role_form" method="post" action="#" novalidate>
+                                @csrf
+                                <div class="row mb-6">
+                                    <label class="col-lg-3 col-form-label required fw-semibold fs-6" for="role_name">
+                                        Display Name
+                                    </label>
+                                    <div class="col-lg-9">
+                                        <input type="text" class="form-control" id="role_name" name="role_name" maxlength="100" autocomplete="off" @disabled(!$canWrite)>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <label class="col-lg-3 col-form-label required fw-semibold fs-6" for="role_description">
+                                        Description
+                                    </label>
+                                    <div class="col-lg-9">
+                                        <textarea class="form-control" id="role_description" name="role_description" maxlength="200" rows="3" @disabled(!$canWrite)></textarea>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        @if($canWrite)
+                            <div class="card-footer d-flex justify-content-end py-6 px-9">
+                                <button type="submit" class="btn btn-primary" form="role_form" id="submit-data">
+                                    Save Changes
                                 </button>
-                            @endif
-                        </div>
+                            </div>
+                        @endif
                     </div>
                 </div>
-                <div class="card-body pt-9">
-                    <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5 gs-7" id="role-user-account-table">
-                        <thead>
-                            <tr class="fw-semibold fs-6 text-gray-800">
-                                <th>User Account</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody class="fw-semibold text-gray-600"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
+                <div class="tab-pane fade" id="role_permission_tab" role="tabpanel">
+                    <div class="card mb-10">
+                        <div class="card-header border-0 pt-6">
+                            <div class="card-title">
+                                <div class="d-flex align-items-center position-relative my-1 me-3">
+                                    <i class="ki-outline ki-magnifier fs-3 position-absolute ms-5"></i> <input type="text" class="form-control w-250px ps-12" id="navigation-menu-permission-datatable-search" placeholder="Search..." autocomplete="off" />
+                                </div>
+                                <select id="navigation-menu-permission-datatable-length" class="form-select w-auto">
+                                    <option value="-1">All</option>
+                                    <option value="5">5</option>
+                                    <option value="10" selected>10</option>
+                                    <option value="20">20</option>
+                                    <option value="25">25</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                </select>
+                            </div>
+                            <div class="card-toolbar">
+                                <div class="d-flex justify-content-end" data-kt-customer-table-toolbar="base">
+                                    @if(($canAssignNavigationMenu ?? false) === true)
+                                        <button type="button"
+                                                class="btn btn-light-primary me-3"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#navigation-menu-permission-assignment-modal"
+                                                id="assign-navigation-menu-permission">
+                                            <i class="ki-outline ki-plus fs-2"></i> Assign
+                                        </button>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body pt-9">
+                            <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5 gs-7" id="navigation-menu-permission-table">
+                                <thead>
+                                    <tr class="fw-semibold fs-6 text-gray-800">
+                                        <th>Page</th>
+                                        <th>Read</th>
+                                        <th>Create</th>
+                                        <th>Write</th>
+                                        <th>Delete</th>
+                                        <th>Import</th>
+                                        <th>Export</th>
+                                        <th>Logs</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody class="fw-semibold text-gray-600"></tbody>
+                            </table>
+                        </div>
+                    </div>
 
-    <div class="row">
-        <div class="col-lg-12">
-            <div class="card mb-10">
-                <div class="card-header border-0 pt-6">
-                    <div class="card-title">
-                        <div class="d-flex align-items-center position-relative my-1 me-3">
-                            <i class="ki-outline ki-magnifier fs-3 position-absolute ms-5"></i> <input type="text" class="form-control w-250px ps-12" id="navigation-menu-permission-datatable-search" placeholder="Search..." autocomplete="off" />
+                    <div class="card mb-5">
+                        <div class="card-header border-0 pt-6">
+                            <div class="card-title">
+                                <div class="d-flex align-items-center position-relative my-1 me-3">
+                                    <i class="ki-outline ki-magnifier fs-3 position-absolute ms-5"></i> <input type="text" class="form-control w-250px ps-12" id="system-action-permission-datatable-search" placeholder="Search..." autocomplete="off" />
+                                </div>
+                                <select id="system-action-permission-datatable-length" class="form-select w-auto">
+                                    <option value="-1">All</option>
+                                    <option value="5">5</option>
+                                    <option value="10" selected>10</option>
+                                    <option value="20">20</option>
+                                    <option value="25">25</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                </select>
+                            </div>
+                            <div class="card-toolbar">
+                                <div class="d-flex justify-content-end" data-kt-customer-table-toolbar="base">
+                                    @if(($canAssignSystemAction ?? false) === true)
+                                        <button type="button"
+                                                class="btn btn-light-primary me-3"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#system-action-permission-assignment-modal"
+                                                id="assign-system-action-permission">
+                                            <i class="ki-outline ki-plus fs-2"></i> Assign
+                                        </button>
+                                    @endif
+                                </div>
+                            </div>
                         </div>
-                        <select id="navigation-menu-permission-datatable-length" class="form-select w-auto">
-                            <option value="-1">All</option>
-                            <option value="5">5</option>
-                            <option value="10" selected>10</option>
-                            <option value="20">20</option>
-                            <option value="25">25</option>
-                            <option value="50">50</option>
-                            <option value="100">100</option>
-                        </select>
-                    </div>
-                    <div class="card-toolbar">
-                        <div class="d-flex justify-content-end" data-kt-customer-table-toolbar="base">
-                            @if(($canAssignNavigationMenu ?? false) === true)
-                                <button type="button"
-                                        class="btn btn-light-primary me-3"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#navigation-menu-permission-assignment-modal"
-                                        id="assign-navigation-menu-permission">
-                                    <i class="ki-outline ki-plus fs-2"></i> Assign
-                                </button>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-                <div class="card-body pt-9">
-                    <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5 gs-7" id="navigation-menu-permission-table">
-                        <thead>
-                            <tr class="fw-semibold fs-6 text-gray-800">
-                                <th>Navigation Menu</th>
-                                <th>Read Access</th>
-                                <th>Create Access</th>
-                                <th>Write Access</th>
-                                <th>Delete Access</th>
-                                <th>Import Access</th>
-                                <th>Export Access</th>
-                                <th>Log Notes Access</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody class="fw-semibold text-gray-600"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-lg-12">
-            <div class="card">
-                <div class="card-header border-0 pt-6">
-                    <div class="card-title">
-                        <div class="d-flex align-items-center position-relative my-1 me-3">
-                            <i class="ki-outline ki-magnifier fs-3 position-absolute ms-5"></i> <input type="text" class="form-control w-250px ps-12" id="system-action-permission-datatable-search" placeholder="Search..." autocomplete="off" />
-                        </div>
-                        <select id="system-action-permission-datatable-length" class="form-select w-auto">
-                            <option value="-1">All</option>
-                            <option value="5">5</option>
-                            <option value="10" selected>10</option>
-                            <option value="20">20</option>
-                            <option value="25">25</option>
-                            <option value="50">50</option>
-                            <option value="100">100</option>
-                        </select>
-                    </div>
-                    <div class="card-toolbar">
-                        <div class="d-flex justify-content-end" data-kt-customer-table-toolbar="base">
-                            @if(($canAssignSystemAction ?? false) === true)
-                                <button type="button"
-                                        class="btn btn-light-primary me-3"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#system-action-permission-assignment-modal"
-                                        id="assign-system-action-permission">
-                                    <i class="ki-outline ki-plus fs-2"></i> Assign
-                                </button>
-                            @endif
+                        <div class="card-body pt-9">
+                            <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5 gs-7" id="system-action-permission-table">
+                                <thead>
+                                    <tr class="fw-semibold fs-6 text-gray-800">
+                                        <th>System Action</th>
+                                        <th>Access</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody class="fw-semibold text-gray-600"></tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
-                <div class="card-body pt-9">
-                    <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5 gs-7" id="system-action-permission-table">
-                        <thead>
-                            <tr class="fw-semibold fs-6 text-gray-800">
-                                <th>System Action</th>
-                                <th>Access</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody class="fw-semibold text-gray-600"></tbody>
-                    </table>
+                <div class="tab-pane fade" id="role_user_tab" role="tabpanel">
+                    <div class="card mb-5">
+                        <div class="card-header border-0 pt-6">
+                            <div class="card-title">
+                                <div class="d-flex align-items-center position-relative my-1 me-3">
+                                    <i class="ki-outline ki-magnifier fs-3 position-absolute ms-5"></i> <input type="text" class="form-control w-250px ps-12" id="role-user-account-datatable-search" placeholder="Search..." autocomplete="off" />
+                                </div>
+                                <select id="role-user-account-datatable-length" class="form-select w-auto">
+                                    <option value="-1">All</option>
+                                    <option value="5">5</option>
+                                    <option value="10" selected>10</option>
+                                    <option value="20">20</option>
+                                    <option value="25">25</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                </select>
+                            </div>
+                            <div class="card-toolbar">
+                                <div class="d-flex justify-content-end" data-kt-customer-table-toolbar="base">
+                                    @if(($canAssignUserAccount ?? false) === true)
+                                        <button type="button"
+                                                class="btn btn-light-primary me-3"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#user-account-assignment-modal"
+                                                id="assign-user-account">
+                                            <i class="ki-outline ki-plus fs-2"></i> Assign
+                                        </button>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body pt-9">
+                            <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5 gs-7" id="role-user-account-table">
+                                <thead>
+                                    <tr class="fw-semibold fs-6 text-gray-800">
+                                        <th>User Account</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody class="fw-semibold text-gray-600"></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
