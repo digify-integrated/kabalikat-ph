@@ -66,8 +66,8 @@ return new class extends Migration
             $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
             $table->timestamps();
 
-            $table->index(['app_id'], 'navigation_menu_app_id');
-            $table->index(['parent_navigation_menu_id'], 'navigation_menu_parent_navigation_menu_id');
+            $table->index(['app_id'], 'navigation_menu_app_id_idx');
+            $table->index(['parent_navigation_menu_id'], 'navigation_menu_parent_navigation_menu_id_idx');
         });
 
         /* =============================================================================================
@@ -81,13 +81,15 @@ return new class extends Migration
                 ->constrained('navigation_menu')
                 ->cascadeOnDelete();
 
-            $table->enum('route_type', ['index', 'details', 'new', 'import'])->default('index');
+            $table->enum('route_type', ['index', 'details', 'new', 'import'])
+            ->default('index');
+            
             $table->string('view_file');
             $table->string('js_file');
             $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
             $table->timestamps();
 
-            $table->index(['navigation_menu_id', 'route_type'], 'navigation_menu_route_app_id');
+            $table->index(['navigation_menu_id', 'route_type'], 'navigation_menu_route_app_id_idx');
         });
         
         /* =============================================================================================
@@ -146,6 +148,9 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique(['role_id', 'navigation_menu_id']);
+
+            $table->index(['role_id'], 'role_permission_role_id_idx');
+            $table->index(['navigation_menu_id'], 'role_permission_navigation_menu_id_idx');
         });
 
         /* =============================================================================================
@@ -172,6 +177,9 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique(['role_id', 'system_action_id']);
+
+            $table->index(['role_id'], 'role_system_action_permission_role_id_idx');
+            $table->index(['system_action_id'], 'role_system_action_permission_system_action_id_idx');
         });
 
         /* =============================================================================================
@@ -197,6 +205,9 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique(['role_id', 'user_account_id']);
+            
+            $table->index(['role_id'], 'role_user_account_role_id_idx');
+            $table->index(['user_account_id'], 'role_user_account_user_account_id_idx');
         });
 
         /* =============================================================================================
@@ -227,7 +238,7 @@ return new class extends Migration
             $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
             $table->timestamps();
 
-            $table->index(['file_type_id'], 'file_extension_file_type_id');
+            $table->index(['file_type_id'], 'file_extension_file_type_id_idx');
         });
 
         /* =============================================================================================
@@ -264,7 +275,8 @@ return new class extends Migration
             $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
             $table->timestamps();
 
-            $table->index(['upload_setting_id', 'file_extension_id'], 'upload_setting_file_extension_idx');
+            $table->index(['upload_setting_id'], 'upload_setting_file_extension_upload_setting_id_idx');
+            $table->index(['file_extension_id'], 'upload_setting_file_extension_file_extension_id_idx');
         });
 
         /* =============================================================================================
@@ -451,8 +463,6 @@ return new class extends Migration
             $table->id();
 
             $table->string('product_category_name');
-            $table->string('product_category_description');
-            $table->string('color');
 
             $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
             $table->timestamps();
@@ -479,7 +489,7 @@ return new class extends Migration
             $table->id();
 
             $table->string('supplier_name');
-            $table->string('contact_person');
+            $table->string('contact_person')->nullable();
             $table->enum('supplier_status', ['Active', 'Inactive'])
             ->default('Active');
 
@@ -575,13 +585,14 @@ return new class extends Migration
             $table->id();
 
             $table->string('warehouse_name');
-            $table->string('contact_person');
+            $table->string('contact_person')->nullable();
             $table->enum('warehouse_status', ['Active', 'Inactive'])
             ->default('Active');
 
             $table->bigInteger('warehouse_type_id')
             ->constrained('warehouse_type')
             ->cascadeOnDelete();
+            $table->string('warehouse_type_name');
 
             $table->string('address');
             

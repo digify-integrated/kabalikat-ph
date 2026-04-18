@@ -140,9 +140,12 @@
                 <div class="modal-body">
                     <form id="attribute_value_form" method="post" action="#">
                         @csrf
-                        <div class="row">
-                            <div class="col-12">
-                                <select multiple="multiple" size="20" id="role_id" name="role_id[]"></select>
+                         <div class="row mb-6">
+                            <label class="col-lg-3 col-form-label required fw-semibold fs-6" for="attribute_value">
+                                Value
+                            </label>
+                            <div class="col-lg-9">
+                                <input type="text" class="form-control" id="attribute_value" name="attribute_value" maxlength="100" autocomplete="off" @disabled(!$canWrite)>
                             </div>
                         </div>
                     </form>
@@ -150,7 +153,7 @@
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" form="attribute_value_form" class="btn btn-primary" id="submit-assignment">Assign</button>
+                    <button type="submit" form="attribute_value_form" class="btn btn-primary" id="submit-attribute-value">Add</button>
                 </div>
             </div>
         </div>

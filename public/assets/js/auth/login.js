@@ -23,7 +23,7 @@ const parseMaybeJson = async (response) => {
 };
 
 const notify = (data, fallbackMessage = 'Login failed') => {
-  showNotification( data?.message || fallbackMessage);
+  showNotification(data?.message || fallbackMessage);
 };
 
 const getRedirect = (data) =>

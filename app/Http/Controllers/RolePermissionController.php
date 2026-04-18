@@ -162,7 +162,7 @@ class RolePermissionController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'referenceId' => ['required', 'integer', 'min:1', 'exists:role_permission,id'],
+                'referenceId' => ['required', 'integer', 'min:1', Rule::exists('role_permission', 'id')],
                 'accessType'  => ['required', 'string', 'in:read_access,write_access,create_access,delete_access,import_access,export_access,logs_access'],
                 'access'      => ['required'],
             ],
@@ -210,7 +210,7 @@ class RolePermissionController extends Controller
     public function delete(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'referenceId' => ['required', 'integer', 'min:1', 'exists:role_permission,id'],
+            'referenceId' => ['required', 'integer', 'min:1', Rule::exists('role_permission', 'id')],
         ]);
 
         if ($validator->fails()) {

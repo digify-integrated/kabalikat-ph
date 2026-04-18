@@ -3,6 +3,7 @@
 use App\Http\Controllers\AppController;
 use App\Http\Controllers\AppRenderController;
 use App\Http\Controllers\AttributeController;
+use App\Http\Controllers\AttributeValueController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\CityController;
@@ -15,14 +16,21 @@ use App\Http\Controllers\FileTypeController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\NationalityController;
 use App\Http\Controllers\NavigationMenuController;
+use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\RoleSystemActionPermissionController;
 use App\Http\Controllers\RoleUserAccountController;
 use App\Http\Controllers\StateController;
+use App\Http\Controllers\StockAdjustmentReasonController;
+use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SystemActionController;
+use App\Http\Controllers\UnitController;
+use App\Http\Controllers\UnitTypeController;
 use App\Http\Controllers\UploadSettingController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\WarehouseController;
+use App\Http\Controllers\WarehouseTypeController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
@@ -341,6 +349,110 @@ Route::middleware('auth')->group(function () {
             Route::post('/generate-options', 'generateOptions')->name('generate.options');
         });
 
+     // Attribute Value
+    Route::prefix('attribute-value')
+        ->name('attribute.value.')
+        ->controller(AttributeValueController::class)
+        ->group(function () {
+            Route::post('/save', 'save')
+                ->name('save');
+
+            Route::post('/delete', 'delete')->name('delete');
+
+            Route::post('/generate-table', 'generateTable')
+                ->name('generate.table');
+        });
+
+    // Product Category
+    Route::prefix('product-category')
+        ->name('product.category.')
+        ->controller(ProductCategoryController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
+            Route::post('/delete', 'delete')->name('delete');
+            Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
+            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
+            Route::post('/generate-table', 'generateTable')->name('generate.table');
+            Route::post('/generate-options', 'generateOptions')->name('generate.options');
+        });
+
+    // Stock Adjustment Reason
+    Route::prefix('stock-adjustment-reason')
+        ->name('stock.adjustment.reason.')
+        ->controller(StockAdjustmentReasonController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
+            Route::post('/delete', 'delete')->name('delete');
+            Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
+            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
+            Route::post('/generate-table', 'generateTable')->name('generate.table');
+            Route::post('/generate-options', 'generateOptions')->name('generate.options');
+        });
+
+    // Supplier
+    Route::prefix('supplier')
+        ->name('supplier.')
+        ->controller(SupplierController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
+            Route::post('/delete', 'delete')->name('delete');
+            Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
+            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
+            Route::post('/generate-table', 'generateTable')->name('generate.table');
+            Route::post('/generate-options', 'generateOptions')->name('generate.options');
+        });
+
+    // Unit Type
+    Route::prefix('unit-type')
+        ->name('unit.type.')
+        ->controller(UnitTypeController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
+            Route::post('/delete', 'delete')->name('delete');
+            Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
+            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
+            Route::post('/generate-table', 'generateTable')->name('generate.table');
+            Route::post('/generate-options', 'generateOptions')->name('generate.options');
+        });
+
+    // Unit
+    Route::prefix('unit')
+        ->name('unit.')
+        ->controller(UnitController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
+            Route::post('/delete', 'delete')->name('delete');
+            Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
+            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
+            Route::post('/generate-table', 'generateTable')->name('generate.table');
+            Route::post('/generate-options', 'generateOptions')->name('generate.options');
+        });
+
+    // Warehouse Type
+    Route::prefix('warehouse-type')
+        ->name('warehouse.type.')
+        ->controller(WarehouseTypeController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
+            Route::post('/delete', 'delete')->name('delete');
+            Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
+            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
+            Route::post('/generate-table', 'generateTable')->name('generate.table');
+            Route::post('/generate-options', 'generateOptions')->name('generate.options');
+        });
+
+    // Warehouse
+    Route::prefix('warehouse')
+        ->name('warehouse.')
+        ->controller(WarehouseController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
+            Route::post('/delete', 'delete')->name('delete');
+            Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
+            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
+            Route::post('/generate-table', 'generateTable')->name('generate.table');
+            Route::post('/generate-options', 'generateOptions')->name('generate.options');
+        });
 
     // Import
     Route::prefix('import')
@@ -350,7 +462,6 @@ Route::middleware('auth')->group(function () {
             Route::post('/preview', 'preview')->name('preview');
             Route::post('/save', 'save')->name('save.data');
         });
-
 
     // Export
     Route::prefix('export')
@@ -369,7 +480,6 @@ Route::middleware('auth')->group(function () {
         ->group(function () {
             Route::post('/fetch', 'fetch')->name('fetch');
         });
-
 
     Route::get('/logout', [AuthenticationController::class, 'logout'])->name('logout');
 });

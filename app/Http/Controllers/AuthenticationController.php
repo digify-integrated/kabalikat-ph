@@ -19,9 +19,8 @@ class AuthenticationController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Please check the highlighted fields.',
-                'message_type' => 'error'
-            ], 422);
+                'message' => $validator->errors()->first(),
+            ]);
         }
 
         $credentials = [

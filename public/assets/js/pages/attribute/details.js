@@ -6,10 +6,8 @@ import {
   enableButton,
   detailsDeleteButton,
   detailsTableActionButton,
-  permissionToggle
 } from '../../form/button.js';
-import { generateDualListBox } from '../../form/field.js';
-import { displayDetails, getPageContext } from '../../form/form.js';
+import { displayDetails, getPageContext, resetForm } from '../../form/form.js';
 import { handleSystemError } from '../../util/system-errors.js';
 import { initializeDatatable, reloadDatatable } from '../../util/datatable.js';
 
@@ -66,31 +64,37 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             },
             {
-                selector: '#role_permission_assignment_form',
+                selector: '#attribute_value_form',
                 rules: {
+                     rules: {
+                        attribute_value: { required: true},
+                    },
+                    messages: {
+                        attribute_value: { required: 'Enter the value' },
+                    },
                     submitHandler: async (form) => {
                         const formData = new URLSearchParams(new FormData(form));
                         formData.append('attribute_id', ctx.detailId ?? '');
                         formData.append('appId', ctx.appId ?? '');
                         formData.append('navigationMenuId', ctx.navigationMenuId ?? '');
 
-                        disableButton('submit-assignment');
+                        disableButton('submit-attribute-value');
 
                         try {
-                            const response = await fetch('/role-attribute-permission/save-attribute-role-assignment', {
+                            const response = await fetch('/attribute-value/save', {
                                 method: 'POST',
                                 body: formData,
                             });
 
                             if (!response.ok) {
-                                throw new Error(`Save attribute role assignment failed with status: ${response.status}`);
+                                throw new Error(`Save attribute value failed with status: ${response.status}`);
                             }
 
                             const data = await response.json();
 
                             if (data.success) {
-                                reloadDatatable('#role-permission-table');
-                                $('#role-permission-assignment-modal').modal('hide');
+                                reloadDatatable('#attribute-value-table');
+                                $('#attribute-value-modal').modal('hide');
                                 showNotification(data.message, 'success');
                             } else {
                                 showNotification(data.message);
@@ -98,15 +102,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         } catch (error) {
                             handleSystemError(error, 'fetch_failed', `Fetch request failed: ${error.message}`);
                         } finally {
-                            enableButton('submit-assignment');
+                            enableButton('submit-attribute-value');
                         }
                     },
                 }
             },
         ],
         table: {
-            url: '/role-attribute-permission/generate-attribute-role-permission-table',
-            selector: '#role-permission-table',
+            url: '/attribute-value/generate-table',
+            selector: '#attribute-value-table',
             serverSide: false,
             order: [[0, 'asc']],
             ajaxData: {
@@ -114,19 +118,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 page_navigation_menu_id: ctx.navigationMenuId,
             },
             columns: [
-                { data: 'ROLE' },
-                { data: 'SYSTEM_ACTION_ACCESS' },
+                { data: 'VALUE' },
                 { data: 'ACTION' },
             ],
             columnDefs: [
                 { width: 'auto', targets: 0, responsivePriority: 1 },
                 { width: 'auto', bSortable: false, targets: 1, responsivePriority: 2 },
-                { width: 'auto', bSortable: false, targets: 2, responsivePriority: 3 },
             ],
             addons: {
                 subControls: {
-                    searchSelector: '#attribute-permission-datatable-search',
-                    lengthSelector: '#attribute-permission-datatable-length',
+                    searchSelector: '#attribute-value-datatable-search',
+                    lengthSelector: '#attribute-value-datatable-length',
                 },
             },
         },
@@ -137,7 +139,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 busyHideTargets: ['#submit-data'],
                 onSuccess: async (data) => {
                     document.getElementById('attribute_name').value = data.attributeName || '';
-                    document.getElementById('attribute_description').value = data.attributeDescription ?? '';
+
+                    $('#selection_type').val(data.selectionType).trigger('change');
 
                     await optionsPromise;
                 },
@@ -150,35 +153,27 @@ document.addEventListener('DOMContentLoaded', () => {
             swalText: 'Are you sure you want to delete this attribute?',
             confirmButtonText: 'Delete',
         },
-        duallist: {
-            trigger: '#assign-role-permission',
-            url: '/role-attribute-permission/generate-attribute-role-dual-listbox-options',
-            selectSelector: 'role_id',
-            data: {
-                attributeId: ctx.detailId ?? ''
-            }
-        },
         table_action: {
-            trigger: '.delete-role-permission',
-            url: '/role-attribute-permission/delete',
-            table: '#role-permission-table',
-            swalTitle: 'Confirm Role Permission Deletion',
-            swalText: 'Are you sure you want to delete this role permission?',
+            trigger: '.delete-attribute-value',
+            url: '/attribute-value/delete',
+            table: '#attribute-value-table',
+            swalTitle: 'Confirm Attribute Value Deletion',
+            swalText: 'Are you sure you want to delete this attribute value?',
             confirmButtonText: 'Delete'
         },
         permission_toggle: {
-            trigger: '.update-role-permission',
-            url: '/role-attribute-permission/update',
+            trigger: '.update-attribute-value',
+            url: '/attribute-value/update',
         },
         lognotes: {
-            trigger: '.view-role-permission-log-notes',
-            table: 'role_attribute_permission'
+            trigger: '.view-attribute-value-log-notes',
+            table: 'attribute_value'
         }
     };
 
     (async () => {
         try {
-        const rolePermissionTablePromise = Promise.resolve().then(() =>
+        const attributeValueTablePromise = Promise.resolve().then(() =>
             initializeDatatable(config.table)
         );
 
@@ -188,7 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         await Promise.all([
             fetchDetailsPromise,
-            rolePermissionTablePromise,
+            attributeValueTablePromise,
         ]);
         } catch (err) {
             handleSystemError(err, 'init_failed', `Initialization failed: ${err.message}`);
@@ -202,11 +197,16 @@ document.addEventListener('DOMContentLoaded', () => {
     attachLogNotesHandler();
     attachLogNotesClassHandler(config.lognotes.trigger, config.lognotes.table);
 
-    generateDualListBox(config.duallist);
-
     detailsDeleteButton(config.delete);
 
     detailsTableActionButton(config.table_action);
 
-    permissionToggle(config.permission_toggle);
+    document.addEventListener('click', async (event) => {
+        const target = event.target;
+
+        const addAttributeValueBtn = target.closest('#add-attribute-value');
+        if (addAttributeValueBtn) {
+            resetForm('attribute_value_form');
+        }
+    });
 });

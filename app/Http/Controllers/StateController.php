@@ -9,16 +9,26 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class StateController extends Controller
 {
     public function save(Request $request)
     {
-        $validated = $request->validate([
+        $validator = Validator::make($request->all(), [
             'state_id' => ['nullable', 'integer'],
             'state_name' => ['required', 'string', 'max:255'],
             'country_id' => ['integer'],
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ]);
+        }
+
+        $validated = $validator->validated();
 
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
@@ -68,7 +78,7 @@ class StateController extends Controller
     public function delete(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'detailId' => ['required', 'integer', 'min:1', 'exists:state,id'],
+            'detailId' => ['required', 'integer', 'min:1', Rule::exists('state', 'id')],
         ]);
 
         $pageAppId = (int) $request->input('appId');
@@ -105,7 +115,7 @@ class StateController extends Controller
     {
         $validated = $request->validate([
             'selected_id'   => ['required', 'array', 'min:1'],
-            'selected_id.*' => ['integer', 'distinct', 'exists:state,id'],
+            'selected_id.*' => ['integer', 'distinct', Rule::exists('state', 'id')],
         ]);
 
         $ids = $validated['selected_id'];

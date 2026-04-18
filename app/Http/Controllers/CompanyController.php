@@ -18,7 +18,7 @@ class CompanyController extends Controller
 {
     public function save(Request $request)
     {
-        $validated = $request->validate([
+        $validator = Validator::make($request->all(), [
             'company_id' => ['nullable', 'integer'],
             'company_name' => ['required', 'string', 'max:255'],
             'address' => ['required', 'string'],
@@ -30,6 +30,15 @@ class CompanyController extends Controller
             'email' => ['nullable', 'string', 'email'],
             'website' => ['nullable', 'string']
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ]);
+        }
+
+        $validated = $validator->validated();
 
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
@@ -92,7 +101,7 @@ class CompanyController extends Controller
     public function uploadCompanyLogo(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'detailId' => ['required', 'integer', 'min:1', 'exists:company,id'],
+            'detailId' => ['required', 'integer', 'min:1', Rule::exists('company', 'id')],
             'image'    => ['required', 'file'],
         ]);
 
@@ -193,7 +202,7 @@ class CompanyController extends Controller
     public function delete(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'detailId' => ['required', 'integer', 'min:1', 'exists:company,id'],
+            'detailId' => ['required', 'integer', 'min:1', Rule::exists('company', 'id')],
         ]);
 
         $pageAppId = (int) $request->input('appId');
@@ -239,7 +248,7 @@ class CompanyController extends Controller
     {
         $validated = $request->validate([
             'selected_id'   => ['required', 'array', 'min:1'],
-            'selected_id.*' => ['integer', 'distinct', 'exists:company,id'],
+            'selected_id.*' => ['integer', 'distinct', Rule::exists('company', 'id')],
         ]);
 
         $ids = $validated['selected_id'];
@@ -303,7 +312,7 @@ class CompanyController extends Controller
                 'success'  => false,
                 'notExist' => true,
                 'redirect_link' => $link,
-                'message'  => 'App not found',
+                'message'  => 'Company not found',
             ]);
         }
 

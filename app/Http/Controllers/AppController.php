@@ -17,14 +17,23 @@ class AppController extends Controller
 {
     public function save(Request $request)
     {
-        $validated = $request->validate([
-            'app_id' => ['nullable', 'integer'],
-            'app_name' => ['required', 'string', 'max:255'],
-            'app_description' => ['nullable', 'string'],
-            'app_version' => ['nullable', 'string', 'max:50'],
+        $validator = Validator::make($request->all(), [
+            'app_id'             => ['nullable', 'integer'],
+            'app_name'           => ['required', 'string', 'max:255'],
+            'app_description'    => ['nullable', 'string'],
+            'app_version'        => ['nullable', 'string', 'max:50'],
             'navigation_menu_id' => ['required', 'integer', Rule::exists('navigation_menu', 'id')],
-            'order_sequence' => ['nullable', 'integer', 'min:0'],
+            'order_sequence'     => ['nullable', 'integer', 'min:0'],
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ]);
+        }
+
+        $validated = $validator->validated();
 
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
@@ -77,7 +86,7 @@ class AppController extends Controller
     public function uploadAppLogo(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'detailId' => ['required', 'integer', 'min:1', 'exists:app,id'],
+            'detailId' => ['required', 'integer', 'min:1', Rule::exists('app', 'id')],
             'image'    => ['required', 'file'],
         ]);
 
@@ -178,7 +187,7 @@ class AppController extends Controller
     public function delete(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'detailId' => ['required', 'integer', 'min:1', 'exists:app,id'],
+            'detailId' => ['required', 'integer', 'min:1', Rule::exists('app', 'id')],
         ]);
 
         $pageAppId = (int) $request->input('appId');
@@ -224,7 +233,7 @@ class AppController extends Controller
     {
         $validated = $request->validate([
             'selected_id'   => ['required', 'array', 'min:1'],
-            'selected_id.*' => ['integer', 'distinct', 'exists:app,id'],
+            'selected_id.*' => ['integer', 'distinct', Rule::exists('app', 'id')],
         ]);
 
         $ids = $validated['selected_id'];

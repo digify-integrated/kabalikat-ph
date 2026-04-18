@@ -12,17 +12,27 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
     public function save(Request $request)
     {
-        $validated = $request->validate([
+        $validator = Validator::make($request->all(), [
             'user_id'    => ['nullable', 'integer'],
             'user_name'  => ['required', 'string', 'max:255'],
             'email'      => ['required', 'email', 'max:255'],
             'password'   => [$request->filled('user_id') ? 'nullable' : 'required', 'string', 'min:8'],
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ]);
+        }
+
+        $validated = $validator->validated();
 
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
@@ -69,7 +79,7 @@ class UserController extends Controller
     public function uploadProfilePicture(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'detailId' => ['required', 'integer', 'min:1', 'exists:users,id'],
+            'detailId' => ['required', 'integer', 'min:1', Rule::exists('users', 'id')],
             'image'    => ['required', 'file'],
         ]);
 
@@ -170,7 +180,7 @@ class UserController extends Controller
     public function delete(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'detailId' => ['required', 'integer', 'min:1', 'exists:users,id'],
+            'detailId' => ['required', 'integer', 'min:1', Rule::exists('users', 'id')],
         ]);
 
         $pageAppId = (int) $request->input('appId');
@@ -223,7 +233,7 @@ class UserController extends Controller
     {
         $validated = $request->validate([
             'selected_id'   => ['required', 'array', 'min:1'],
-            'selected_id.*' => ['integer', 'distinct', 'exists:app,id'],
+            'selected_id.*' => ['integer', 'distinct', Rule::exists('users', 'id')],
         ]);
 
         $ids = $validated['selected_id'];
@@ -265,7 +275,7 @@ class UserController extends Controller
     public function activate(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'detailId' => ['required', 'integer', 'min:1', 'exists:users,id'],
+            'detailId' => ['required', 'integer', 'min:1', Rule::exists('users', 'id')],
         ]);
 
         $pageAppId = (int) $request->input('appId');
@@ -302,7 +312,7 @@ class UserController extends Controller
     {
         $validated = $request->validate([
             'selected_id'   => ['required', 'array', 'min:1'],
-            'selected_id.*' => ['integer', 'distinct', 'exists:app,id'],
+            'selected_id.*' => ['integer', 'distinct', Rule::exists('users', 'id')],
         ]);
 
         $ids = $validated['selected_id'];
@@ -324,7 +334,7 @@ class UserController extends Controller
     public function deactivate(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'detailId' => ['required', 'integer', 'min:1', 'exists:users,id'],
+            'detailId' => ['required', 'integer', 'min:1', Rule::exists('users', 'id')],
         ]);
 
         $pageAppId = (int) $request->input('appId');
@@ -368,7 +378,7 @@ class UserController extends Controller
     {
         $validated = $request->validate([
             'selected_id'   => ['required', 'array', 'min:1'],
-            'selected_id.*' => ['integer', 'distinct', 'exists:app,id'],
+            'selected_id.*' => ['integer', 'distinct', Rule::exists('users', 'id')],
         ]);
 
         $ids = $validated['selected_id'];

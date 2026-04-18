@@ -17,7 +17,7 @@ class NavigationMenuController extends Controller
 {
     public function save(Request $request)
     {
-        $validated = $request->validate([
+        $validator = Validator::make($request->all(), [
             'navigation_menu_id' => ['nullable', 'integer'],
             'navigation_menu_name' => ['required', 'string', 'max:255'],
             'app_id' => ['required', 'integer', Rule::exists('app', 'id')],
@@ -26,6 +26,15 @@ class NavigationMenuController extends Controller
             'order_sequence' => ['nullable', 'integer', 'min:0'],
             'table_name' => ['nullable', 'string', 'max:100'],
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ]);
+        }
+
+        $validated = $validator->validated();
 
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
@@ -162,7 +171,7 @@ class NavigationMenuController extends Controller
     public function delete(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'detailId' => ['required', 'integer', 'min:1', 'exists:navigation_menu,id'],
+            'detailId' => ['required', 'integer', 'min:1', Rule::exists('navigation_menu', 'id')],
         ]);
 
         $pageAppId = (int) $request->input('appId');
@@ -199,7 +208,7 @@ class NavigationMenuController extends Controller
     {
         $validated = $request->validate([
             'selected_id'   => ['required', 'array', 'min:1'],
-            'selected_id.*' => ['integer', 'distinct', 'exists:navigation_menu,id'],
+            'selected_id.*' => ['integer', 'distinct', Rule::exists('navigation_menu', 'id')],
         ]);
 
         $ids = $validated['selected_id'];

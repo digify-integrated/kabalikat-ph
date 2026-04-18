@@ -156,13 +156,12 @@ class RoleSystemActionPermissionController extends Controller
         ]);
     }
 
-
     public function update(Request $request)
     {
         $validator = Validator::make(
             $request->all(),
             [
-                'referenceId' => ['required', 'integer', 'min:1', 'exists:role_system_action_permission,id'],
+                'referenceId' => ['required', 'integer', 'min:1', Rule::exists('role_system_action_permission', 'id')],
                 'access'      => ['required'],
             ],
             [
@@ -204,7 +203,7 @@ class RoleSystemActionPermissionController extends Controller
     public function delete(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'referenceId' => ['required', 'integer', 'min:1', 'exists:role_system_action_permission,id'],
+            'referenceId' => ['required', 'integer', 'min:1', Rule::exists('role_system_action_permission', 'id')],
         ]);
 
         if ($validator->fails()) {

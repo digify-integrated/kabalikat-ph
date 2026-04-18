@@ -956,14 +956,6 @@ return new class extends Migration
                 IF NEW.product_category_name <> OLD.product_category_name THEN
                     SET audit_log = CONCAT(audit_log, "Product Category: ", OLD.product_category_name, " -> ", NEW.product_category_name, "<br/>");
                 END IF;
-
-                IF NEW.product_category_description <> OLD.product_category_description THEN
-                    SET audit_log = CONCAT(audit_log, "Description: ", OLD.product_category_description, " -> ", NEW.product_category_description, "<br/>");
-                END IF;
-
-                IF NEW.color <> OLD.color THEN
-                    SET audit_log = CONCAT(audit_log, "Color: ", OLD.color, " -> ", NEW.color, "<br/>");
-                END IF;
                 
                 IF audit_log <> 'Product category changed.<br/><br/>' THEN
                     INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 

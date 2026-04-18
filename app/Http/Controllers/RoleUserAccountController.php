@@ -160,7 +160,7 @@ class RoleUserAccountController extends Controller
     public function delete(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'referenceId' => ['required', 'integer', 'min:1', 'exists:role_user_account,id'],
+            'referenceId' => ['required', 'integer', 'min:1', Rule::exists('role_user_account', 'id')],
         ]);
 
         if ($validator->fails()) {

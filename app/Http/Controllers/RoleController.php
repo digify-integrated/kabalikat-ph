@@ -10,16 +10,26 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class RoleController extends Controller
 {
     public function save(Request $request)
     {
-        $validated = $request->validate([
+        $validator = Validator::make($request->all(), [
             'role_id' => ['nullable', 'integer'],
             'role_name' => ['required', 'string', 'max:255'],
             'role_description' => ['required', 'string', 'max:255']
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ]);
+        }
+
+        $validated = $validator->validated();
 
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
@@ -76,7 +86,7 @@ class RoleController extends Controller
     public function delete(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'detailId' => ['required', 'integer', 'min:1', 'exists:role,id'],
+            'detailId' => ['required', 'integer', 'min:1', Rule::exists('role', 'id')],
         ]);
 
         $pageAppId = (int) $request->input('appId');
@@ -113,7 +123,7 @@ class RoleController extends Controller
     {
         $validated = $request->validate([
             'selected_id'   => ['required', 'array', 'min:1'],
-            'selected_id.*' => ['integer', 'distinct', 'exists:role,id'],
+            'selected_id.*' => ['integer', 'distinct', Rule::exists('role', 'id')],
         ]);
 
         $ids = $validated['selected_id'];
