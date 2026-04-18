@@ -27,7 +27,7 @@ return new class extends Migration
 
             $table->timestamps();
 
-            $table->index(['reference_id', 'table_name'], 'audit_log_index');
+            $table->index(['reference_id', 'table_name'], 'audit_log_idx');
         });
         
         /* =============================================================================================
@@ -367,6 +367,7 @@ return new class extends Migration
             $table->string('company_name');
             $table->string('company_logo')->nullable();
             $table->string('address');
+            
             $table->bigInteger('city_id')
             ->constrained('city');
 
@@ -396,6 +397,221 @@ return new class extends Migration
 
             $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
             $table->timestamps();
+
+            $table->index(['city_id'], 'company_city_id_idx');
+            $table->index(['state_id'], 'company_state_id_idx');
+            $table->index(['country_id'], 'company_country_id_idx');
+            $table->index(['currency_id'], 'company_currency_id_idx');
+        });
+
+        /* =============================================================================================
+            TABLE: Attribute
+        ============================================================================================= */
+
+        Schema::create('attribute', function (Blueprint $table) {
+            $table->id();
+
+            $table->string('attribute_name');
+            $table->enum('selection_type', ['Single', 'Multiple'])
+            ->default('Single');
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+
+            $table->index(['selection_type'], 'attribute_selection_type_idx');
+        });
+
+        /* =============================================================================================
+            TABLE: Attribute Value
+        ============================================================================================= */
+
+        Schema::create('attribute_value', function (Blueprint $table) {
+            $table->id();
+
+            $table->string('attribute_value');
+
+            $table->bigInteger('attribute_id')
+            ->constrained('attribute')
+            ->cascadeOnDelete();
+
+            $table->string('attribute_name');
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+
+             $table->index(['attribute_id'], 'attribute_value_attribute_id_idx');
+        });
+
+        
+        /* =============================================================================================
+            TABLE: Product Category
+        ============================================================================================= */
+
+        Schema::create('product_category', function (Blueprint $table) {
+            $table->id();
+
+            $table->string('product_category_name');
+            $table->string('product_category_description');
+            $table->string('color');
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+        });
+        
+        /* =============================================================================================
+            TABLE: Stock Adjustment Reason
+        ============================================================================================= */
+
+        Schema::create('stock_adjustment_reason', function (Blueprint $table) {
+            $table->id();
+
+            $table->string('stock_adjustment_reason_name');
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+        });
+
+        /* =============================================================================================
+            TABLE: Supplier
+        ============================================================================================= */
+
+        Schema::create('supplier', function (Blueprint $table) {
+            $table->id();
+
+            $table->string('supplier_name');
+            $table->string('contact_person');
+            $table->enum('supplier_status', ['Active', 'Inactive'])
+            ->default('Active');
+
+            $table->string('address');
+            
+            $table->bigInteger('city_id')
+            ->constrained('city');
+
+            $table->string('city_name');
+
+            $table->bigInteger('state_id')
+            ->constrained('state');
+
+            $table->string('state_name');
+
+            $table->bigInteger('country_id')
+            ->constrained('country');
+
+            $table->string('country_name');
+
+            $table->string('phone')->nullable();
+            $table->string('telephone')->nullable();
+            $table->string('email')->nullable();
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+
+            $table->index(['supplier_status'], 'supplier_supplier_status_idx');
+            $table->index(['city_id'], 'supplier_city_id_idx');
+            $table->index(['state_id'], 'supplier_state_id_idx');
+            $table->index(['country_id'], 'supplier_country_id_idx');
+        });
+
+        /* =============================================================================================
+            TABLE: Unit Type
+        ============================================================================================= */
+
+        Schema::create('unit_type', function (Blueprint $table) {
+            $table->id();
+
+            $table->string('unit_type_name');
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+        });
+        
+        /* =============================================================================================
+            TABLE: Unit
+        ============================================================================================= */
+
+        Schema::create('unit', function (Blueprint $table) {
+            $table->id();
+
+            $table->string('unit_name');
+            $table->string('abbreviation');
+
+            $table->bigInteger('unit_type_id')
+            ->constrained('unit_type')
+            ->cascadeOnDelete();
+
+            $table->string('unit_type_name');
+
+            $table->enum('is_base_unit', ['Yes', 'No'])
+            ->default('No');
+            
+            $table->double('conversion_factor')
+            ->default(0);
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+
+            $table->index(['unit_type_id'], 'unit_unit_type_id_idx');
+        });
+
+        /* =============================================================================================
+            TABLE: Warehouse Type
+        ============================================================================================= */
+
+        Schema::create('warehouse_type', function (Blueprint $table) {
+            $table->id();
+
+            $table->string('warehouse_type_name');
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+        });
+
+        /* =============================================================================================
+            TABLE: Warehouse
+        ============================================================================================= */
+
+        Schema::create('warehouse', function (Blueprint $table) {
+            $table->id();
+
+            $table->string('warehouse_name');
+            $table->string('contact_person');
+            $table->enum('warehouse_status', ['Active', 'Inactive'])
+            ->default('Active');
+
+            $table->bigInteger('warehouse_type_id')
+            ->constrained('warehouse_type')
+            ->cascadeOnDelete();
+
+            $table->string('address');
+            
+            $table->bigInteger('city_id')
+            ->constrained('city');
+
+            $table->string('city_name');
+
+            $table->bigInteger('state_id')
+            ->constrained('state');
+
+            $table->string('state_name');
+
+            $table->bigInteger('country_id')
+            ->constrained('country');
+
+            $table->string('country_name');
+
+            $table->string('phone')->nullable();
+            $table->string('telephone')->nullable();
+            $table->string('email')->nullable();
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+
+            $table->index(['warehouse_status'], 'warehouse_warehouse_status_idx');
+            $table->index(['warehouse_type_id'], 'warehouse_warehouse_type_id_idx');
+            $table->index(['city_id'], 'warehouse_city_id_idx');
+            $table->index(['state_id'], 'warehouse_state_id_idx');
+            $table->index(['country_id'], 'warehouse_country_id_idx');
         });
 
         /* =============================================================================================
@@ -407,26 +623,48 @@ return new class extends Migration
      * Reverse the migrations.
      */
     public function down(): void
-    {        
+    {
         Schema::dropIfExists('audit_log');
-        Schema::dropIfExists('nationality');
-        Schema::dropIfExists('currency');
-        Schema::dropIfExists('city');
-        Schema::dropIfExists('state');
-        Schema::dropIfExists('country');
-        Schema::dropIfExists('company');
+
+        Schema::dropIfExists('navigation_menu_route');
+
         Schema::dropIfExists('role_user_account');
         Schema::dropIfExists('role_system_action_permission');
         Schema::dropIfExists('role_permission');
-        Schema::dropIfExists('system_action');
-        Schema::dropIfExists('role');
+
         Schema::dropIfExists('upload_setting_file_extension');
-        Schema::dropIfExists('upload_setting');
         Schema::dropIfExists('file_extension');
+
+        Schema::dropIfExists('attribute_value');
+
+        Schema::dropIfExists('unit');
+        Schema::dropIfExists('warehouse');
+
+        Schema::dropIfExists('supplier');
+        Schema::dropIfExists('company');
+
+        Schema::dropIfExists('city');
+        Schema::dropIfExists('state');
+
+        Schema::dropIfExists('attribute');
+        Schema::dropIfExists('unit_type');
+        Schema::dropIfExists('warehouse_type');
+
+        Schema::dropIfExists('upload_setting');
         Schema::dropIfExists('file_type');
-        Schema::dropIfExists('navigation_menu_route');
+
         Schema::dropIfExists('navigation_menu');
         Schema::dropIfExists('app');
+
+        Schema::dropIfExists('system_action');
+        Schema::dropIfExists('role');
+
+        Schema::dropIfExists('product_category');
+        Schema::dropIfExists('stock_adjustment_reason');
+        Schema::dropIfExists('nationality');
+        Schema::dropIfExists('currency');
+        Schema::dropIfExists('country');
+
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
         Schema::dropIfExists('users');

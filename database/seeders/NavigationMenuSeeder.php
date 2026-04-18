@@ -311,15 +311,15 @@ class NavigationMenuSeeder extends Seeder
                 'order_sequence'                => 5
             ],
 
-            // Configurations -> Product Attribute ID: 26
+            // Configurations -> Attribute ID: 26
             [
-                'navigation_menu_name'          => 'Product Attribute',
+                'navigation_menu_name'          => 'Attribute',
                 'navigation_menu_icon'          => null,
                 'app_id'                        => 4,
                 'app_name'                      => 'Inventory',
                 'parent_navigation_menu_id'     => 25,
                 'parent_navigation_menu_name'   => 'Configurations',
-                'database_table'                => 'product_attribute',
+                'database_table'                => 'attribute',
                 'order_sequence'                => 1
             ],
 
@@ -371,7 +371,19 @@ class NavigationMenuSeeder extends Seeder
                 'order_sequence'                => 5
             ],
 
-            // Configurations -> Warehouse ID: 31
+            // Configurations -> Unit Type ID: 31
+            [
+                'navigation_menu_name'          => 'Unit Type',
+                'navigation_menu_icon'          => null,
+                'app_id'                        => 4,
+                'app_name'                      => 'Inventory',
+                'parent_navigation_menu_id'     => 25,
+                'parent_navigation_menu_name'   => 'Configurations',
+                'database_table'                => 'unit_type',
+                'order_sequence'                => 6
+            ],
+
+            // Configurations -> Warehouse ID: 32
             [
                 'navigation_menu_name'          => 'Warehouse',
                 'navigation_menu_icon'          => null,
@@ -380,10 +392,10 @@ class NavigationMenuSeeder extends Seeder
                 'parent_navigation_menu_id'     => 25,
                 'parent_navigation_menu_name'   => 'Configurations',
                 'database_table'                => 'warehouse',
-                'order_sequence'                => 6
+                'order_sequence'                => 7
             ],
 
-            // Configurations -> Warehouse Type ID: 32
+            // Configurations -> Warehouse Type ID: 33
             [
                 'navigation_menu_name'          => 'Warehouse Type',
                 'navigation_menu_icon'          => null,
@@ -392,7 +404,7 @@ class NavigationMenuSeeder extends Seeder
                 'parent_navigation_menu_id'     => 25,
                 'parent_navigation_menu_name'   => 'Configurations',
                 'database_table'                => 'warehouse_type',
-                'order_sequence'                => 7
+                'order_sequence'                => 8
             ],
         ];
 

@@ -503,24 +503,24 @@ class NavigationMenuRouteSeeder extends Seeder
                 'js_file'               => 'import/import',
             ],
 
-            // Product Attribute
+            // Attribute
             [
                 'navigation_menu_id'    => 26,
                 'route_type'            => 'index',
-                'view_file'             => 'pages.product-attribute.index',
-                'js_file'               => 'product-attribute/index',
+                'view_file'             => 'pages.attribute.index',
+                'js_file'               => 'attribute/index',
             ],
             [
                 'navigation_menu_id'    => 26,
                 'route_type'            => 'new',
-                'view_file'             => 'pages.product-attribute.new',
-                'js_file'               => 'product-attribute/new',
+                'view_file'             => 'pages.attribute.new',
+                'js_file'               => 'attribute/new',
             ],
             [
                 'navigation_menu_id'    => 26,
                 'route_type'            => 'details',
-                'view_file'             => 'pages.product-attribute.details',
-                'js_file'               => 'product-attribute/details',
+                'view_file'             => 'pages.attribute.details',
+                'js_file'               => 'attribute/details',
             ],
             [
                 'navigation_menu_id'    => 26,
@@ -633,24 +633,24 @@ class NavigationMenuRouteSeeder extends Seeder
                 'js_file'               => 'import/import',
             ],
 
-            // Warehouse
+            // Unit Type
             [
                 'navigation_menu_id'    => 31,
                 'route_type'            => 'index',
-                'view_file'             => 'pages.warehouse.index',
-                'js_file'               => 'warehouse/index',
+                'view_file'             => 'pages.unit-type.index',
+                'js_file'               => 'unit-type/index',
             ],
             [
                 'navigation_menu_id'    => 31,
                 'route_type'            => 'new',
-                'view_file'             => 'pages.warehouse.new',
-                'js_file'               => 'warehouse/new',
+                'view_file'             => 'pages.unit-type.new',
+                'js_file'               => 'unit-type/new',
             ],
             [
                 'navigation_menu_id'    => 31,
                 'route_type'            => 'details',
-                'view_file'             => 'pages.warehouse.details',
-                'js_file'               => 'warehouse/details',
+                'view_file'             => 'pages.unit-type.details',
+                'js_file'               => 'unit-type/details',
             ],
             [
                 'navigation_menu_id'    => 31,
@@ -659,27 +659,53 @@ class NavigationMenuRouteSeeder extends Seeder
                 'js_file'               => 'import/import',
             ],
 
-            // Warehouse Type
+            // Warehouse
             [
                 'navigation_menu_id'    => 32,
+                'route_type'            => 'index',
+                'view_file'             => 'pages.warehouse.index',
+                'js_file'               => 'warehouse/index',
+            ],
+            [
+                'navigation_menu_id'    => 32,
+                'route_type'            => 'new',
+                'view_file'             => 'pages.warehouse.new',
+                'js_file'               => 'warehouse/new',
+            ],
+            [
+                'navigation_menu_id'    => 32,
+                'route_type'            => 'details',
+                'view_file'             => 'pages.warehouse.details',
+                'js_file'               => 'warehouse/details',
+            ],
+            [
+                'navigation_menu_id'    => 32,
+                'route_type'            => 'import',
+                'view_file'             => 'pages.import.index',
+                'js_file'               => 'import/import',
+            ],
+
+            // Warehouse Type
+            [
+                'navigation_menu_id'    => 33,
                 'route_type'            => 'index',
                 'view_file'             => 'pages.warehouse-type.index',
                 'js_file'               => 'warehouse-type/index',
             ],
             [
-                'navigation_menu_id'    => 32,
+                'navigation_menu_id'    => 33,
                 'route_type'            => 'new',
                 'view_file'             => 'pages.warehouse-type.new',
                 'js_file'               => 'warehouse-type/new',
             ],
             [
-                'navigation_menu_id'    => 32,
+                'navigation_menu_id'    => 33,
                 'route_type'            => 'details',
                 'view_file'             => 'pages.warehouse-type.details',
                 'js_file'               => 'warehouse-type/details',
             ],
             [
-                'navigation_menu_id'    => 32,
+                'navigation_menu_id'    => 33,
                 'route_type'            => 'import',
                 'view_file'             => 'pages.import.index',
                 'js_file'               => 'import/import',

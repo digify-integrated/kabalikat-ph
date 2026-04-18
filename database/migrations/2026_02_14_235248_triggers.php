@@ -736,43 +736,6 @@ return new class extends Migration
         SQL);
 
         /* =============================================================================================
-            TABLE: NATIONALITY
-        ============================================================================================= */
-
-        DB::unprepared('DROP TRIGGER IF EXISTS trg_nationality_update');
-        DB::unprepared('DROP TRIGGER IF EXISTS trg_nationality_insert');
-
-        DB::unprepared(<<<SQL
-            CREATE TRIGGER trg_nationality_update
-            AFTER UPDATE ON nationality
-            FOR EACH ROW
-            BEGIN
-                DECLARE audit_log TEXT DEFAULT 'Nationality changed.<br/><br/>';
-
-                IF NEW.nationality_name <> OLD.nationality_name THEN
-                    SET audit_log = CONCAT(audit_log, "Nationality: ", OLD.nationality_name, " -> ", NEW.nationality_name, "<br/>");
-                END IF;
-                
-                IF audit_log <> 'Nationality changed.<br/><br/>' THEN
-                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
-                    VALUES ('nationality', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
-                END IF;
-            END
-        SQL);
-
-        DB::unprepared(<<<SQL
-            CREATE TRIGGER trg_nationality_insert
-            AFTER INSERT ON city
-            FOR EACH ROW
-            BEGIN
-                DECLARE audit_log TEXT DEFAULT 'Nationality created.';
-
-                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
-                VALUES ('nationality', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
-            END
-        SQL);
-
-        /* =============================================================================================
             TABLE: CURRENCY
         ============================================================================================= */
 
@@ -807,7 +770,7 @@ return new class extends Migration
 
         DB::unprepared(<<<SQL
             CREATE TRIGGER trg_currency_insert
-            AFTER INSERT ON city
+            AFTER INSERT ON currency
             FOR EACH ROW
             BEGIN
                 DECLARE audit_log TEXT DEFAULT 'Currency created.';
@@ -884,13 +847,450 @@ return new class extends Migration
 
         DB::unprepared(<<<SQL
             CREATE TRIGGER trg_company_insert
-            AFTER INSERT ON city
+            AFTER INSERT ON company
             FOR EACH ROW
             BEGIN
                 DECLARE audit_log TEXT DEFAULT 'Company created.';
 
                 INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
                 VALUES ('company', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
+
+        /* =============================================================================================
+            TABLE: ATTRIBUTE
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_attribute_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_attribute_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_attribute_update
+            AFTER UPDATE ON attribute
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Attribute changed.<br/><br/>';
+
+                IF NEW.attribute_name <> OLD.attribute_name THEN
+                    SET audit_log = CONCAT(audit_log, "Attribute: ", OLD.attribute_name, " -> ", NEW.attribute_name, "<br/>");
+                END IF;
+
+                IF NEW.selection_type <> OLD.selection_type THEN
+                    SET audit_log = CONCAT(audit_log, "Selection Type: ", OLD.selection_type, " -> ", NEW.selection_type, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Attribute changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('attribute', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_attribute_insert
+            AFTER INSERT ON attribute
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Attribute created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('attribute', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
+
+        /* =============================================================================================
+            TABLE: ATTRIBUTE VALUE
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_attribute_value_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_attribute_value_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_attribute_value_update
+            AFTER UPDATE ON attribute_value
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Attribute value changed.<br/><br/>';
+
+                IF NEW.attribute_value <> OLD.attribute_value THEN
+                    SET audit_log = CONCAT(audit_log, "Attribute Value: ", OLD.attribute_value, " -> ", NEW.attribute_value, "<br/>");
+                END IF;
+
+                IF NEW.attribute_name <> OLD.attribute_name THEN
+                    SET audit_log = CONCAT(audit_log, "Attribute: ", OLD.attribute_name, " -> ", NEW.attribute_name, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Attribute value changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('attribute_value', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_attribute_value_insert
+            AFTER INSERT ON attribute_value
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Attribute value created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('attribute_value', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
+
+        /* =============================================================================================
+            TABLE: PRODUCT CATEGORY
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_product_category_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_product_category_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_product_category_update
+            AFTER UPDATE ON product_category
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Product category changed.<br/><br/>';
+
+                IF NEW.product_category_name <> OLD.product_category_name THEN
+                    SET audit_log = CONCAT(audit_log, "Product Category: ", OLD.product_category_name, " -> ", NEW.product_category_name, "<br/>");
+                END IF;
+
+                IF NEW.product_category_description <> OLD.product_category_description THEN
+                    SET audit_log = CONCAT(audit_log, "Description: ", OLD.product_category_description, " -> ", NEW.product_category_description, "<br/>");
+                END IF;
+
+                IF NEW.color <> OLD.color THEN
+                    SET audit_log = CONCAT(audit_log, "Color: ", OLD.color, " -> ", NEW.color, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Product category changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('product_category', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_product_category_insert
+            AFTER INSERT ON product_category
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Product category created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('product_category', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
+
+        /* =============================================================================================
+            TABLE: STOCK ADJUSTMENT REASON 
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_adjustment_reason_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_adjustment_reason_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_stock_adjustment_reason_update
+            AFTER UPDATE ON stock_adjustment_reason
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Stock adjustment reason changed.<br/><br/>';
+
+                IF NEW.stock_adjustment_reason_name <> OLD.stock_adjustment_reason_name THEN
+                    SET audit_log = CONCAT(audit_log, "Stock Adjustment Reason: ", OLD.stock_adjustment_reason_name, " -> ", NEW.stock_adjustment_reason_name, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Stock adjustment reason changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('stock_adjustment_reason', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_stock_adjustment_reason_insert
+            AFTER INSERT ON stock_adjustment_reason
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Stock adjustment reason created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('stock_adjustment_reason', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
+
+        /* =============================================================================================
+            TABLE: SUPPLIER
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_supplier_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_supplier_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_supplier_update
+            AFTER UPDATE ON supplier
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Supplier changed.<br/><br/>';
+
+                IF NEW.supplier_name <> OLD.supplier_name THEN
+                    SET audit_log = CONCAT(audit_log, "Supplier: ", OLD.supplier_name, " -> ", NEW.supplier_name, "<br/>");
+                END IF;
+
+                IF NEW.contact_person <> OLD.contact_person THEN
+                    SET audit_log = CONCAT(audit_log, "Contact Person: ", OLD.contact_person, " -> ", NEW.contact_person, "<br/>");
+                END IF;
+
+                IF NEW.supplier_status <> OLD.supplier_status THEN
+                    SET audit_log = CONCAT(audit_log, "Supplier Status: ", OLD.supplier_status, " -> ", NEW.supplier_status, "<br/>");
+                END IF;
+
+                IF NEW.address <> OLD.address THEN
+                    SET audit_log = CONCAT(audit_log, "Address: ", OLD.address, " -> ", NEW.address, "<br/>");
+                END IF;
+
+                IF NEW.city_name <> OLD.city_name THEN
+                    SET audit_log = CONCAT(audit_log, "City: ", OLD.city_name, " -> ", NEW.city_name, "<br/>");
+                END IF;
+
+                IF NEW.state_name <> OLD.state_name THEN
+                    SET audit_log = CONCAT(audit_log, "State: ", OLD.state_name, " -> ", NEW.state_name, "<br/>");
+                END IF;
+
+                IF NEW.country_name <> OLD.country_name THEN
+                    SET audit_log = CONCAT(audit_log, "Country: ", OLD.country_name, " -> ", NEW.country_name, "<br/>");
+                END IF;
+
+                IF NEW.phone <> OLD.phone THEN
+                    SET audit_log = CONCAT(audit_log, "Phone:", OLD.phone, " -> ", NEW.phone, "<br/>");
+                END IF;
+
+                IF NEW.telephone <> OLD.telephone THEN
+                    SET audit_log = CONCAT(audit_log, "Telephone:", OLD.telephone, " -> ", NEW.telephone, "<br/>");
+                END IF;
+
+                IF NEW.email <> OLD.email THEN
+                    SET audit_log = CONCAT(audit_log, "Email:", OLD.email, " -> ", NEW.email, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Supplier changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('supplier', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_supplier_insert
+            AFTER INSERT ON supplier
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Supplier created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('supplier', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
+
+        /* =============================================================================================
+            TABLE: UNIT TYPE
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_unit_type_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_unit_type_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_unit_type_update
+            AFTER UPDATE ON unit_type
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Unit type changed.<br/><br/>';
+
+                IF NEW.unit_type_name <> OLD.unit_type_name THEN
+                    SET audit_log = CONCAT(audit_log, "Unit Type: ", OLD.unit_type_name, " -> ", NEW.unit_type_name, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Unit type changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('unit_type', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_unit_type_insert
+            AFTER INSERT ON unit_type
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Unit type created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('unit_type', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
+
+        /* =============================================================================================
+            TABLE: UNIT
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_unit_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_unit_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_unit_update
+            AFTER UPDATE ON unit
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Unit changed.<br/><br/>';
+
+                IF NEW.unit_name <> OLD.unit_name THEN
+                    SET audit_log = CONCAT(audit_log, "Unit: ", OLD.unit_name, " -> ", NEW.unit_name, "<br/>");
+                END IF;
+
+                IF NEW.abbreviation <> OLD.abbreviation THEN
+                    SET audit_log = CONCAT(audit_log, "Abbreviation: ", OLD.abbreviation, " -> ", NEW.abbreviation, "<br/>");
+                END IF;
+
+                IF NEW.unit_type_name <> OLD.unit_type_name THEN
+                    SET audit_log = CONCAT(audit_log, "Unit Type: ", OLD.unit_type_name, " -> ", NEW.unit_type_name, "<br/>");
+                END IF;
+
+                IF NEW.is_base_unit <> OLD.is_base_unit THEN
+                    SET audit_log = CONCAT(audit_log, "Is Base Unit: ", OLD.is_base_unit, " -> ", NEW.is_base_unit, "<br/>");
+                END IF;
+
+                IF NEW.conversion_factor <> OLD.conversion_factor THEN
+                    SET audit_log = CONCAT(audit_log, "Conversion Factor: ", OLD.conversion_factor, " -> ", NEW.conversion_factor, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Unit changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('unit', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_unit_insert
+            AFTER INSERT ON unit
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Unit created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('unit', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
+        
+        /* =============================================================================================
+            TABLE: WAREHOUSE TYPE
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_warehouse_type_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_warehouse_type_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_warehouse_type_update
+            AFTER UPDATE ON warehouse_type
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Warehouse type changed.<br/><br/>';
+
+                IF NEW.warehouse_type_name <> OLD.warehouse_type_name THEN
+                    SET audit_log = CONCAT(audit_log, "Warehouse Type: ", OLD.warehouse_type_name, " -> ", NEW.warehouse_type_name, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Warehouse type changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('warehouse_type', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_warehouse_type_insert
+            AFTER INSERT ON warehouse_type
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Warehouse type created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('warehouse_type', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
+
+        /* =============================================================================================
+            TABLE: WAREHOUSE
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_warehouse_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_warehouse_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_warehouse_update
+            AFTER UPDATE ON warehouse
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Warehouse changed.<br/><br/>';
+
+                IF NEW.warehouse_name <> OLD.warehouse_name THEN
+                    SET audit_log = CONCAT(audit_log, "Supplier: ", OLD.warehouse_name, " -> ", NEW.warehouse_name, "<br/>");
+                END IF;
+
+                IF NEW.contact_person <> OLD.contact_person THEN
+                    SET audit_log = CONCAT(audit_log, "Contact Person: ", OLD.contact_person, " -> ", NEW.contact_person, "<br/>");
+                END IF;
+
+                IF NEW.warehouse_status <> OLD.warehouse_status THEN
+                    SET audit_log = CONCAT(audit_log, "Warehouse Status: ", OLD.warehouse_status, " -> ", NEW.warehouse_status, "<br/>");
+                END IF;
+
+                IF NEW.address <> OLD.address THEN
+                    SET audit_log = CONCAT(audit_log, "Address: ", OLD.address, " -> ", NEW.address, "<br/>");
+                END IF;
+
+                IF NEW.city_name <> OLD.city_name THEN
+                    SET audit_log = CONCAT(audit_log, "City: ", OLD.city_name, " -> ", NEW.city_name, "<br/>");
+                END IF;
+
+                IF NEW.state_name <> OLD.state_name THEN
+                    SET audit_log = CONCAT(audit_log, "State: ", OLD.state_name, " -> ", NEW.state_name, "<br/>");
+                END IF;
+
+                IF NEW.country_name <> OLD.country_name THEN
+                    SET audit_log = CONCAT(audit_log, "Country: ", OLD.country_name, " -> ", NEW.country_name, "<br/>");
+                END IF;
+
+                IF NEW.phone <> OLD.phone THEN
+                    SET audit_log = CONCAT(audit_log, "Phone:", OLD.phone, " -> ", NEW.phone, "<br/>");
+                END IF;
+
+                IF NEW.telephone <> OLD.telephone THEN
+                    SET audit_log = CONCAT(audit_log, "Telephone:", OLD.telephone, " -> ", NEW.telephone, "<br/>");
+                END IF;
+
+                IF NEW.email <> OLD.email THEN
+                    SET audit_log = CONCAT(audit_log, "Email:", OLD.email, " -> ", NEW.email, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Warehouse changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('warehouse', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_warehouse_insert
+            AFTER INSERT ON warehouse
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Warehouse created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('warehouse', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
             END
         SQL);
     }
@@ -1025,5 +1425,68 @@ return new class extends Migration
 
         DB::unprepared('DROP TRIGGER IF EXISTS trg_company_update');
         DB::unprepared('DROP TRIGGER IF EXISTS trg_company_insert');
+
+        /* =============================================================================================
+            TABLE: ATTRIBUTE
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_attribute_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_attribute_insert');
+
+        /* =============================================================================================
+            TABLE: ATTRIBUTE VALUE
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_attribute_value_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_attribute_value_insert');
+
+        /* =============================================================================================
+            TABLE: PRODUCT CATEGORY
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_product_category_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_product_category_insert');
+
+        /* =============================================================================================
+            TABLE: STOCK ADJUSTMENT REASON
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_adjustment_reason_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_adjustment_reason_insert');
+
+        /* =============================================================================================
+            TABLE: SUPPLIER
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_supplier_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_supplier_insert');
+
+        /* =============================================================================================
+            TABLE: UNIT TYPE
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_unit_type_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_unit_type_insert');
+
+        /* =============================================================================================
+            TABLE: UNIT
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_unit_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_unit_insert');
+
+        /* =============================================================================================
+            TABLE: WAREHOUSE TYPE
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_warehouse_type_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_warehouse_type_insert');
+
+        /* =============================================================================================
+            TABLE: WAREHOUSE
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_warehouse_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_warehouse_insert');
     }
 };
