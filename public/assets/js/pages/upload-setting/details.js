@@ -107,9 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     })();
 
-    config.forms.forEach((cfg) => {
-        initValidation(cfg.selector, cfg.rules);
-    });
+    initValidation(config.form.selector, config.form.rules);
 
     attachLogNotesHandler();
 

@@ -4,11 +4,9 @@ import { attachLogNotesHandler } from '../../util/log-notes.js';
 import { disableButton, enableButton, detailsDeleteButton } from '../../form/button.js';
 import { displayDetails, getPageContext } from '../../form/form.js';
 import { handleSystemError } from '../../util/system-errors.js';
-import { initializeDatatable } from '../../util/datatable.js';
+import { generateDropdownOptions } from '../../form/field.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    const ctx = getPageContext();
-
     let optionsPromise = Promise.resolve();
 
     const config = {
@@ -18,16 +16,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 rules: {
                     rules: {
                         unit_name: { required: true},
+                        abbreviation: { required: true},
+                        unit_type_id: { required: true},
                     },
                     messages: {
                         unit_name: { required: 'Enter the unit' },
+                        abbreviation: { required: 'Enter the abbreviation' },
+                        unit_type_id: { required: 'Choose the unit type' },
                     },
                     submitHandler: async (form) => {
-                        const ctx2 = getPageContext();
+                        const ctx = getPageContext();
                         const formData = new URLSearchParams(new FormData(form));
-                        formData.append('unit_id', ctx2.detailId ?? '');
-                        formData.append('appId', ctx2.appId ?? '');
-                        formData.append('navigationMenuId', ctx2.navigationMenuId ?? '');
+                        formData.append('unit_id', ctx.detailId ?? '');
+                        formData.append('appId', ctx.appId ?? '');
+                        formData.append('navigationMenuId', ctx .navigationMenuId ?? '');
 
                         disableButton('submit-data');
 
@@ -57,15 +59,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         ],
-        detailsList: [
+        details: [
             {
                 url: '/unit/fetch-details',
                 formSelector: '#unit_form',
                 busyHideTargets: ['#submit-data'],
                 onSuccess: async (data) => {
-                    document.getElementById('unit_name').value = data.unitTypeName || '';
+                    document.getElementById('unit_name').value = data.unitName || '';
+                    document.getElementById('abbreviation').value = data.abbreviation || '';
 
                     await optionsPromise;
+
+                    $('#unit_type_id').val(data.unitTypeId).trigger('change');
                 },
             }
         ],
@@ -75,13 +80,19 @@ document.addEventListener('DOMContentLoaded', () => {
             swalTitle: 'Confirm Unit Deletion',
             swalText: 'Are you sure you want to delete this unit?',
             confirmButtonText: 'Delete',
-        }
+        },
+        dropdown: {
+            url: '/unit-type/generate-options',
+            dropdownSelector: '#unit_type_id',
+        },
     };
 
     (async () => {
         try {
+            optionsPromise = generateDropdownOptions(config.dropdown);
+
             const fetchDetailsPromise = Promise.all(
-                config.detailsList.map((cfg) => displayDetails(cfg))
+                config.details.map((cfg) => displayDetails(cfg))
             );
 
             await Promise.all([
@@ -92,9 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     })();
 
-    config.forms.forEach((cfg) => {
-        initValidation(cfg.selector, cfg.rules);
-    });
+    initValidation(config.form.selector, config.form.rules);
 
     attachLogNotesHandler();
 

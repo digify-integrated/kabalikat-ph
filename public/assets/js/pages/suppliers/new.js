@@ -1,24 +1,24 @@
 import { initValidation } from '../../util/validation.js';
 import { showNotification, setNotification } from '../../util/notifications.js';
 import { disableButton, enableButton, discardCreate } from '../../form/button.js';
+import { generateDropdownOptions } from '../../form/field.js';
 import { handleSystemError } from '../../util/system-errors.js';
 import { getPageContext } from '../../form/form.js';
-import { generateDropdownOptions } from '../../form/field.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const config = {
         form: {
-            selector: '#unit_form',
+            selector: '#supplier_form',
             rules: {
                 rules: {
-                    unit_name: { required: true},
-                    abbreviation: { required: true},
-                    unit_type_id: { required: true},
+                    supplier_name: { required: true},
+                    address: { required: true },
+                    city_id: { required: true },
                 },
                 messages: {
-                    unit_name: { required: 'Enter the unit' },
-                    abbreviation: { required: 'Enter the abbreviation' },
-                    unit_type_id: { required: 'Choose the unit type' },
+                    supplier_name: { required: 'Enter the display name' },
+                    address: { required: 'Enter the address' },
+                    city_id: { required: 'Select the city' },
                 },
                 submitHandler: async (form) => {
                     const ctx = getPageContext();
@@ -29,13 +29,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     disableButton('submit-data');
 
                     try {
-                        const response = await fetch('/unit/save', {
+                        const response = await fetch('/supplier/save', {
                             method: 'POST',
                             body: formData
                         });
 
                         if (!response.ok) {
-                            throw new Error(`Save unit failed with status: ${response.status}`);
+                            throw new Error(`Save supplier failed with status: ${response.status}`);
                         }
 
                         const data = await response.json();
@@ -57,9 +57,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         },
         dropdown: {
-            url: '/unit-type/generate-options',
-            dropdownSelector: '#unit_type_id',
-        }
+            url: '/city/generate-options',
+            dropdownSelector: '#city_id',
+        },
     }
 
     discardCreate();

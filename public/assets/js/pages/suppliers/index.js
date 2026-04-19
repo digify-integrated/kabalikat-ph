@@ -5,38 +5,34 @@ import { checkNotification } from '../../util/notifications.js';
 document.addEventListener('DOMContentLoaded', () => {
     const config = {
         table: {
-            url: '/unit/generate-table',
-            selector: '#unit-table',
+            url: '/supplier/generate-table',
+            selector: '#supplier-table',
             serverSide: false,
             columns: [
                 { data: 'CHECK_BOX' },
-                { data: 'UNIT' },
-                { data: 'ABBREVIATION' },
-                { data: 'UNIT_TYPE' },
+                { data: 'SUPPLIER' }
             ],
             columnDefs: [
                 { width: '5%', bSortable: false, targets: 0, responsivePriority: 1 },
-                { width: 'auto', targets: 1, responsivePriority: 2 },
-                { width: 'auto', targets: 2, responsivePriority: 3 },
-                { width: 'auto', targets: 3, responsivePriority: 4 },
+                { width: 'auto', targets: 1, responsivePriority: 2 }
             ],
             onRowClick: (rowData) => {
                 if (rowData?.LINK) window.open(rowData.LINK, '_blank');
             },
             addons: {
                 controls: true,
-                export: 'unit',
+                export: 'app',
             }
         },
         delete: {
             trigger : '#delete-data',
-            url : '/unit/delete-multiple',
-            swalTitle : 'Confirm Multiple Unit Deletion',
-            swalText : 'Are you sure you want to delete these units?',
+            url : '/supplier/delete-multiple',
+            swalTitle : 'Confirm Multiple Suppliers Deletion',
+            swalText : 'Are you sure you want to delete these suppliers?',
             confirmButtonText : 'Delete',
-            validationMessage : 'Please select the units you want to delete',
-            table : '#unit-table'
-        }
+            validationMessage : 'Please select the suppliers you want to delete',
+            table : '#supplier-table'
+        },
     }
     
     checkNotification();

@@ -3,22 +3,22 @@
 namespace App\Http\Controllers;
 
 use App\Models\Unit;
-use App\Models\UnitType;
+use App\Models\UnitConversion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 
-class UnitController extends Controller
+class UnitConversionController extends Controller
 {
     public function save(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'unit_id' => ['nullable', 'integer'],
-            'unit_name' => ['required', 'string', 'max:255'],
-            'abbreviation' => ['required', 'string', 'max:255'],
-            'unit_type_id' => ['required', 'integer', Rule::exists('unit_type', 'id')]
+            'unit_conversion_id' => ['nullable', 'integer'],
+            'from_unit_id' => ['required', 'integer', Rule::exists('unit', 'id')],
+            'to_unit_id' => ['required', 'integer', Rule::exists('unit', 'id')],
+            'conversion_factor' => ['required', 'numeric', 'gt:0'],
         ]);
 
         if ($validator->fails()) {
@@ -33,38 +33,44 @@ class UnitController extends Controller
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
 
-        $unitTypeId = (int) $validated['unit_type_id'];
+        $fromUnitId = (int) $validated['from_unit_id'];
+        $toUnitId = (int) $validated['to_unit_id'];
 
-        $unitTypeName = (string) UnitType::query()
-            ->whereKey($unitTypeId)
-            ->value('unit_type_name');
+        $fromUnitName = (string) Unit::query()
+            ->whereKey($fromUnitId)
+            ->value('unit_name');
+
+        $toUnitName = (string) Unit::query()
+            ->whereKey($toUnitId)
+            ->value('unit_name');
 
         $payload = [
-            'unit_name' => $validated['unit_name'],
-            'abbreviation' => $validated['abbreviation'],
-            'unit_type_id' => $unitTypeId,
-            'unit_type_name' => $unitTypeName,
+            'from_unit_id' => $fromUnitId,
+            'from_unit_name' => $fromUnitName,
+            'to_unit_id' => $toUnitId,
+            'to_unit_name' => $toUnitName,
+            'conversion_factor' => $validated['conversion_factor'],
             'last_log_by' => Auth::id(),
         ];
 
-        $unitId = $validated['unit_id'] ?? null;
+        $unitConversionId = $validated['unit_conversion_id'] ?? null;
 
-        if ($unitId && Unit::query()->whereKey($unitId)->exists()) {
-            $unit = Unit::query()->findOrFail($unitId);
-            $unit->update($payload);
+        if ($unitConversionId && UnitConversion::query()->whereKey($unitConversionId)->exists()) {
+            $unitConversion = UnitConversion::query()->findOrFail($unitConversionId);
+            $unitConversion->update($payload);
         } else {
-            $unit = Unit::query()->create($payload);
+            $unitConversion = UnitConversion::query()->create($payload);
         }
 
         $link = route('apps.details', [
             'appId' => $pageAppId,
             'navigationMenuId' => $pageNavigationMenuId,
-            'details_id' => $unit->id,
+            'details_id' => $unitConversion->id,
         ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'The unit has been saved successfully',
+            'message' => 'The unit conversion has been saved successfully',
             'redirect_link' => $link,
         ]);
     }
@@ -72,7 +78,7 @@ class UnitController extends Controller
     public function delete(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'detailId' => ['required', 'integer', 'min:1', Rule::exists('unit', 'id')],
+            'detailId' => ['required', 'integer', 'min:1', Rule::exists('unit_conversion', 'id')],
         ]);
 
         $pageAppId = (int) $request->input('appId');
@@ -88,7 +94,7 @@ class UnitController extends Controller
         $detailId = (int) $validator->validated()['detailId'];
 
         DB::transaction(function () use ($detailId) {
-            $unit = Unit::query()->select(['id'])->findOrFail($detailId);
+            $unit = UnitConversion::query()->select(['id'])->findOrFail($detailId);
 
             $unit->delete();
         });        
@@ -100,7 +106,7 @@ class UnitController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'The unit has been deleted successfully',
+            'message' => 'The unit conversion has been deleted successfully',
             'redirect_link' => $link,
         ]);
     }
@@ -109,18 +115,18 @@ class UnitController extends Controller
     {
         $validated = $request->validate([
             'selected_id'   => ['required', 'array', 'min:1'],
-            'selected_id.*' => ['integer', 'distinct', Rule::exists('unit', 'id')],
+            'selected_id.*' => ['integer', 'distinct', Rule::exists('unit_conversion', 'id')],
         ]);
 
         $ids = $validated['selected_id'];
 
         DB::transaction(function () use ($ids) {
-            Unit::query()->whereIn('id', $ids)->delete();
+            UnitConversion::query()->whereIn('id', $ids)->delete();
         });
 
         return response()->json([
             'success' => true,
-            'message' => 'The selected units have been deleted successfully',
+            'message' => 'The selected unit conversions have been deleted successfully',
         ]);
     }
 
@@ -143,7 +149,7 @@ class UnitController extends Controller
 
         $validated = $validator->validated();
 
-        $unit = DB::table('unit')
+        $unit = DB::table('unit_conversion')
             ->where('id', $validated['detailId'])
             ->first();
 
@@ -165,9 +171,9 @@ class UnitController extends Controller
         return response()->json([
             'success' => true,
             'notExist' => false,
-            'unitName' => $unit->unit_name ?? null,
-            'abbreviation' => $unit->abbreviation ?? null,
-            'unitTypeId' => $unit->unit_type_id ?? null,
+            'fromUnitId' => $unit->from_unit_id ?? null,
+            'toUnitId' => $unit->to_unit_id ?? null,
+            'conversionFactor' => $unit->conversion_factor ?? null,
         ]);
     }
 
@@ -176,62 +182,43 @@ class UnitController extends Controller
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
 
-        $units = DB::table('unit')
-        ->orderBy('unit_name')
+        $units = DB::table('unit_conversion')
+        ->orderBy('from_unit_name')
         ->get();
 
         $response = $units->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
-            $unitId = $row->id;
-            $unitName = $row->unit_name;
-            $abbreviation = $row->abbreviation;
-            $unitTypeName = $row->unit_type_name;
+            $unitConversionId = $row->id;
+            $fromUnitId = $row->from_unit_id;
+            $fromUnitName = $row->from_unit_name;
+            $toUnitName = $row->to_unit_name;
+            $toUnitId = $row->to_unit_id;
+            $conversionFactor = $row->conversion_factor;
+
+            $fromAbbreviation = (string) Unit::query()
+                ->whereKey($fromUnitId)
+                ->value('abbreviation');
+
+            $toAbbreviation = (string) Unit::query()
+                ->whereKey($toUnitId)
+                ->value('abbreviation');
 
             $link = route('apps.details', [
                 'appId' => $pageAppId,
                 'navigationMenuId' => $pageNavigationMenuId,
-                'details_id' => $unitId,
+                'details_id' => $unitConversionId,
             ]);
 
             return [
                 'CHECK_BOX' => '
                     <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                        <input class="form-check-input datatable-checkbox-children" type="checkbox" value="'.$unitId.'">
+                        <input class="form-check-input datatable-checkbox-children" type="checkbox" value="'.$unitConversionId.'">
                     </div>
                 ',
-                'UNIT' => $unitName,
-                'ABBREVIATION' => $abbreviation,
-                'UNIT_TYPE' => $unitTypeName,
+                'FROM' => '1 '. $fromUnitName . ' ('. $fromAbbreviation .')',
+                'TO' => number_format($conversionFactor, 2) . ' '. $toUnitName . ' ('. $toAbbreviation .')',
                 'LINK' => $link,
             ];
         })->values();
-
-        return response()->json($response);
-    }
-
-    public function generateOptions(Request $request)
-    {
-        $multiple = filter_var($request->input('multiple', false), FILTER_VALIDATE_BOOLEAN);
-
-        $response = collect();
-
-        if (!$multiple) {
-            $response->push([
-                'id'   => '',
-                'text' => '--',
-            ]);
-        }
-
-        $units = DB::table('unit')
-            ->select(['id', 'unit_name', 'abbreviation'])
-            ->orderBy('unit_name')
-            ->get();
-
-        $response = $response->concat(
-            $units->map(fn ($row) => [
-                'id'   => $row->id,
-                'text' => $row->unit_name . ' (' . $row->abbreviation . ')',
-            ])
-        )->values();
 
         return response()->json($response);
     }

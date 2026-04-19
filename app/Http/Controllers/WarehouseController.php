@@ -19,7 +19,7 @@ class WarehouseController extends Controller
             'warehouse_id' => ['nullable', 'integer'],
             'warehouse_name' => ['required', 'string', 'max:255'],
             'contact_person' => ['nullable', 'string'],
-            'warehouse_status' => ['required', 'string'],
+            'warehouse_status' => ['nullable', 'string'],
             'warehouse_type_id' => ['required', 'integer', Rule::exists('warehouse_type', 'id')],
             'address' => ['required', 'string'],
             'city_id' => ['required', 'integer', Rule::exists('city', 'id')],

@@ -552,16 +552,37 @@ return new class extends Migration
 
             $table->string('unit_type_name');
 
-            $table->enum('is_base_unit', ['Yes', 'No'])
-            ->default('No');
-            
-            $table->double('conversion_factor')
-            ->default(0);
-
             $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
             $table->timestamps();
 
             $table->index(['unit_type_id'], 'unit_unit_type_id_idx');
+        });
+        
+        /* =============================================================================================
+            TABLE: Unit Conversion
+        ============================================================================================= */
+
+        Schema::create('unit_conversion', function (Blueprint $table) {
+            $table->id();
+
+            $table->string('from_unit_id')
+            ->constrained('unit')
+            ->cascadeOnDelete();
+
+            $table->string('from_unit_name');
+
+            $table->string('to_unit_id')
+            ->constrained('unit')
+            ->cascadeOnDelete();
+
+            $table->string('to_unit_name');
+            $table->double('conversion_factor');
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+
+            $table->index(['from_unit_id'], 'unit_from_unit_id_idx');
+            $table->index(['to_unit_id'], 'unit_to_unit_id_idx');
         });
 
         /* =============================================================================================
@@ -649,6 +670,7 @@ return new class extends Migration
         Schema::dropIfExists('attribute_value');
 
         Schema::dropIfExists('unit');
+        Schema::dropIfExists('unit_conversion');
         Schema::dropIfExists('warehouse');
 
         Schema::dropIfExists('supplier');

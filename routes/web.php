@@ -26,6 +26,7 @@ use App\Http\Controllers\StockAdjustmentReasonController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SystemActionController;
 use App\Http\Controllers\UnitController;
+use App\Http\Controllers\UnitConversionController;
 use App\Http\Controllers\UnitTypeController;
 use App\Http\Controllers\UploadSettingController;
 use App\Http\Controllers\UserController;
@@ -415,7 +416,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/generate-options', 'generateOptions')->name('generate.options');
         });
 
-    // Unit
+    // Units
     Route::prefix('unit')
         ->name('unit.')
         ->controller(UnitController::class)
@@ -426,6 +427,18 @@ Route::middleware('auth')->group(function () {
             Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
             Route::post('/generate-table', 'generateTable')->name('generate.table');
             Route::post('/generate-options', 'generateOptions')->name('generate.options');
+        });
+
+    // Unit Conversion
+    Route::prefix('unit-conversion')
+        ->name('unit.conversion.')
+        ->controller(UnitConversionController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
+            Route::post('/delete', 'delete')->name('delete');
+            Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
+            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
+            Route::post('/generate-table', 'generateTable')->name('generate.table');
         });
 
     // Warehouse Type

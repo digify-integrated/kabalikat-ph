@@ -8,12 +8,30 @@
         <div class="card-body">
             <form id="unit_form" method="post" action="#" novalidate>
                 @csrf
-                <div class="fv-row mb-4">
-                    <label class="fs-6 fw-semibold required form-label mt-3" for="unit_name">
-                        Unit
-                    </label>
+                <div class="row row-cols-1 row-cols-sm-3 rol-cols-md-3 row-cols-lg-3">
+                    <div class="col">
+                        <label class="fs-6 fw-semibold required form-label mt-3" for="unit_name">
+                            Unit
+                        </label>
 
-                    <input type="text" class="form-control" id="unit_name" name="unit_name" maxlength="100" autocomplete="off">
+                        <input type="text" class="form-control" id="unit_name" name="unit_name" maxlength="100" autocomplete="off">
+                    </div>
+                    <div class="col">
+                        <label class="fs-6 fw-semibold required form-label mt-3" for="abbreviation">
+                            Abbreviation
+                        </label>
+
+                        <input type="text" class="form-control" id="abbreviation" name="abbreviation" maxlength="50" autocomplete="off">
+                    </div>
+                    <div class="col">
+                        <label class="fs-6 fw-semibold required form-label mt-3" for="unit_type_id">
+                            Unit Type
+                        </label>
+
+                        <select id="unit_type_id" name="unit_type_id" class="form-select" data-control="select2" data-allow-clear="false">
+                            <option>--</option>
+                        </select>
+                    </div>
                 </div>
             </form>
         </div>

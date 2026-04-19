@@ -1148,14 +1148,6 @@ return new class extends Migration
                 IF NEW.unit_type_name <> OLD.unit_type_name THEN
                     SET audit_log = CONCAT(audit_log, "Unit Type: ", OLD.unit_type_name, " -> ", NEW.unit_type_name, "<br/>");
                 END IF;
-
-                IF NEW.is_base_unit <> OLD.is_base_unit THEN
-                    SET audit_log = CONCAT(audit_log, "Is Base Unit: ", OLD.is_base_unit, " -> ", NEW.is_base_unit, "<br/>");
-                END IF;
-
-                IF NEW.conversion_factor <> OLD.conversion_factor THEN
-                    SET audit_log = CONCAT(audit_log, "Conversion Factor: ", OLD.conversion_factor, " -> ", NEW.conversion_factor, "<br/>");
-                END IF;
                 
                 IF audit_log <> 'Unit changed.<br/><br/>' THEN
                     INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
@@ -1173,6 +1165,51 @@ return new class extends Migration
 
                 INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
                 VALUES ('unit', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
+
+        /* =============================================================================================
+            TABLE: UNIT CONVERSION
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_unit_conversion_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_unit_conversion_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_unit_conversion_update
+            AFTER UPDATE ON unit_conversion
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Unit changed.<br/><br/>';
+
+                IF NEW.from_unit_name <> OLD.from_unit_name THEN
+                    SET audit_log = CONCAT(audit_log, "From: ", OLD.from_unit_name, " -> ", NEW.from_unit_name, "<br/>");
+                END IF;
+
+                IF NEW.to_unit_name <> OLD.to_unit_name THEN
+                    SET audit_log = CONCAT(audit_log, "To: ", OLD.to_unit_name, " -> ", NEW.to_unit_name, "<br/>");
+                END IF;
+
+                IF NEW.conversion_factor <> OLD.conversion_factor THEN
+                    SET audit_log = CONCAT(audit_log, "Conversion Factor: ", OLD.conversion_factor, " -> ", NEW.conversion_factor, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Unit conversion changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('unit_conversion', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_unit_conversion_insert
+            AFTER INSERT ON unit_conversion
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Unit conversion created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('unit_conversion', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
             END
         SQL);
         

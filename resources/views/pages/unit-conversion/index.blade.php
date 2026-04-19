@@ -57,7 +57,7 @@
 
         <div class="card-body pt-9">
             <div class="table-responsive">
-                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5" id="unit-table">
+                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5" id="unit-conversion-table">
                     <thead>
                         <tr class="text-start text-gray-800 fw-bold fs-7 text-uppercase gs-0">
                             <th>
@@ -65,9 +65,8 @@
                                     <input class="form-check-input" id="datatable-checkbox" type="checkbox">
                                 </div>
                             </th>
-                            <th>Unit</th>
-                            <th>Abbreviation</th>
-                            <th>Unit Type</th>
+                            <th>From</th>
+                            <th>To</th>
                         </tr>
                     </thead>
                     <tbody class="fw-semibold text-gray-800"></tbody>

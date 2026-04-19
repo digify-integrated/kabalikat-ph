@@ -18,7 +18,7 @@ class SupplierController extends Controller
             'supplier_id' => ['nullable', 'integer'],
             'supplier_name' => ['required', 'string', 'max:255'],
             'contact_person' => ['nullable', 'string'],
-            'supplier_status' => ['required', 'string'],
+            'supplier_status' => ['nullable', 'string'],
             'address' => ['required', 'string'],
             'city_id' => ['required', 'integer', Rule::exists('city', 'id')],
             'phone' => ['nullable', 'string'],

@@ -11,7 +11,7 @@
             <div class="card mb-10">
                 <div class="card-header border-0">
                     <div class="card-title m-0">
-                        <h3 class="fw-bold m-0">Unit Details</h3>
+                        <h3 class="fw-bold m-0">Unit Conversion Details</h3>
                     </div>
                     @if($canDelete)
                         <a href="#" class="btn btn-light-primary btn-flex btn-center btn-active-light-primary show menu-dropdown align-self-center" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
@@ -20,7 +20,7 @@
                         </a>
                         <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-125px py-4" data-kt-menu="true" style="z-index: 107; position: fixed; inset: 0px 0px auto auto; margin: 0px; transform: translate(-60px, 539px);" data-popper-placement="bottom-end">
                             <div class="menu-item px-3">
-                                <a href="javascript:void(0);" class="menu-link px-3" id="delete-unit">
+                                <a href="javascript:void(0);" class="menu-link px-3" id="delete-unit-conversion">
                                     Delete
                                 </a>
                             </div>
@@ -28,32 +28,33 @@
                     @endif
                 </div>
                 <div class="card-body border-top p-9">
-                    <form id="unit_form" method="post" action="#" novalidate>
+                    <form id="unit_conversion_form" method="post" action="#" novalidate>
                         @csrf
-                        
                         <div class="row row-cols-1 row-cols-sm-3 rol-cols-md-3 row-cols-lg-3">
                             <div class="col">
-                                <label class="fs-6 fw-semibold required form-label mt-3" for="unit_name">
-                                    Unit
+                                <label class="fs-6 fw-semibold required form-label mt-3" for="from_unit_id">
+                                    From
                                 </label>
 
-                                <input type="text" class="form-control" id="unit_name" name="unit_name" maxlength="100" autocomplete="off" @disabled(!$canWrite)>
-                            </div>
-                            <div class="col">
-                                <label class="fs-6 fw-semibold required form-label mt-3" for="abbreviation">
-                                    Abbreviation
-                                </label>
-
-                                <input type="text" class="form-control" id="abbreviation" name="abbreviation" maxlength="50" autocomplete="off" @disabled(!$canWrite)>
-                            </div>
-                            <div class="col">
-                                <label class="fs-6 fw-semibold required form-label mt-3" for="unit_type_id">
-                                    Unit Type
-                                </label>
-
-                                <select id="unit_type_id" name="unit_type_id" class="form-select" data-control="select2" data-allow-clear="false" @disabled(!$canWrite)>
+                                <select id="from_unit_id" name="from_unit_id" class="form-select" data-control="select2" data-allow-clear="false" @disabled(!$canWrite)>
                                     <option>--</option>
                                 </select>
+                            </div>
+                            <div class="col">
+                                <label class="fs-6 fw-semibold required form-label mt-3" for="to_unit_id">
+                                    To
+                                </label>
+
+                                <select id="to_unit_id" name="to_unit_id" class="form-select" data-control="select2" data-allow-clear="false" @disabled(!$canWrite)>
+                                    <option>--</option>
+                                </select>
+                            </div>
+                            <div class="col">
+                                <label class="fs-6 fw-semibold required form-label mt-3" for="conversion_factor">
+                                    Conversion Factor
+                                </label>
+
+                                <input type="number" class="form-control" id="conversion_factor" name="conversion_factor" min="0.01" step="0.01" @disabled(!$canWrite)>
                             </div>
                         </div>
                     </form>
@@ -61,7 +62,7 @@
 
                 @if($canWrite)
                     <div class="card-footer d-flex justify-content-end py-6 px-9">
-                        <button type="submit" class="btn btn-primary" form="unit_form" id="submit-data">
+                        <button type="submit" class="btn btn-primary" form="unit_conversion_form" id="submit-data">
                             Save Changes
                         </button>
                     </div>

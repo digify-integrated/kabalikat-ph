@@ -11,38 +11,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const config = {
         form: {
-            selector: '#company_form',
+            selector: '#supplier_form',
             rules: {
                 rules: {
-                    company_name: { required: true},
+                    supplier_name: { required: true},
                     address: { required: true },
                     city_id: { required: true },
-                    currency_id: { required: true },
                 },
                 messages: {
-                    company_name: { required: 'Enter the display name' },
+                    supplier_name: { required: 'Enter the display name' },
                     address: { required: 'Enter the address' },
                     city_id: { required: 'Select the city' },
-                    currency_id: { required: 'Select the currency' },
                 },
                 submitHandler: async (form) => {
                     const ctx = getPageContext();
 
                     const formData = new URLSearchParams(new FormData(form));
-                    formData.append('company_id', ctx.detailId ?? '');
+                    formData.append('supplier_id', ctx.detailId ?? '');
                     formData.append('appId', ctx.appId ?? '');
                     formData.append('navigationMenuId', ctx.navigationMenuId ?? '');
 
                     disableButton('submit-data');
 
                     try {
-                        const response = await fetch('/company/save', {
+                        const response = await fetch('/supplier/save', {
                             method: 'POST',
                             body: formData,
                         });
 
                         if (!response.ok) {
-                            throw new Error(`Save company failed with status: ${response.status}`);
+                            throw new Error(`Save supplier failed with status: ${response.status}`);
                         }
 
                         const data = await response.json();
@@ -61,54 +59,39 @@ document.addEventListener('DOMContentLoaded', () => {
             },
         },
         details: {
-            url: '/company/fetch-details',
-            formSelector: '#company_form',
+            url: '/supplier/fetch-details',
+            formSelector: '#supplier_form',
             busyHideTargets: ['#submit-data'],
             onSuccess: async (data) => {
-                document.getElementById('company_name').value = data.companyName || '';
+                document.getElementById('supplier_name').value = data.supplierName || '';
                 document.getElementById('address').value = data.address || '';
-                document.getElementById('tax_id').value = data.taxId || '';
+                document.getElementById('contact_person').value = data.contactPerson || '';
                 document.getElementById('phone').value = data.phone || '';
                 document.getElementById('telephone').value = data.telephone || '';
                 document.getElementById('email').value = data.email || '';
-                document.getElementById('website').value = data.website || '';
-
-                const thumbnail = document.getElementById('company_thumbnail');
-                if (thumbnail) thumbnail.style.backgroundImage = `url(${data.companyLogo || ''})`;
 
                 await optionsPromise;
 
                 $('#city_id').val(data.cityId).trigger('change');
-                $('#currency_id').val(data.currencyId).trigger('change');
+                $('#supplier_status').val(data.supplierStatus).trigger('change');
             },
         },
-        dropdown: [
-            { url: '/city/generate-options', dropdownSelector: '#city_id' },
-            { url: '/currency/generate-options', dropdownSelector: '#currency_id' },
-        ],
+        dropdown: {
+            url: '/city/generate-options',
+            dropdownSelector: '#city_id',
+        },
         delete: {
-            trigger: '#delete-company',
-            url: '/company/delete',
-            swalTitle: 'Confirm Company Deletion',
-            swalText: 'Are you sure you want to delete this company?',
+            trigger: '#delete-supplier',
+            url: '/supplier/delete',
+            swalTitle: 'Confirm Supplier Deletion',
+            swalText: 'Are you sure you want to delete this supplier?',
             confirmButtonText: 'Delete',
-        },
-        upload: {
-            trigger: '#company_logo',
-            url: '/company/upload-company-logo',
-        },
+        }
     };
 
     (async () => {
         try {
-            optionsPromise = Promise.all(
-                config.dropdown.map((cfg) =>
-                    generateDropdownOptions({
-                        url: cfg.url,
-                        dropdownSelector: cfg.dropdownSelector,
-                    })
-                )
-            );
+            optionsPromise = generateDropdownOptions(config.dropdown);
 
             await displayDetails(config.details);
 
@@ -125,6 +108,4 @@ document.addEventListener('DOMContentLoaded', () => {
     attachLogNotesHandler();
 
     detailsDeleteButton(config.delete);
-
-    imageRealtimeUploadButton(config.upload);
 });

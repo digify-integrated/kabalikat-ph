@@ -8,17 +8,17 @@ import { generateDropdownOptions } from '../../form/field.js';
 document.addEventListener('DOMContentLoaded', () => {
     const config = {
         form: {
-            selector: '#unit_form',
+            selector: '#unit_conversion_form',
             rules: {
                 rules: {
-                    unit_name: { required: true},
-                    abbreviation: { required: true},
-                    unit_type_id: { required: true},
-                },
+                    from_unit_id: { required: true},
+                    to_unit_id: { required: true},
+                    conversion_factor: { required: true},
+                    },
                 messages: {
-                    unit_name: { required: 'Enter the unit' },
-                    abbreviation: { required: 'Enter the abbreviation' },
-                    unit_type_id: { required: 'Choose the unit type' },
+                    from_unit_id: { required: 'Choose the from' },
+                    to_unit_id: { required: 'Choose the to' },
+                    conversion_factor: { required: 'Enter the conversion factor' },
                 },
                 submitHandler: async (form) => {
                     const ctx = getPageContext();
@@ -29,13 +29,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     disableButton('submit-data');
 
                     try {
-                        const response = await fetch('/unit/save', {
+                        const response = await fetch('/unit-conversion/save', {
                             method: 'POST',
                             body: formData
                         });
 
                         if (!response.ok) {
-                            throw new Error(`Save unit failed with status: ${response.status}`);
+                            throw new Error(`Save unit conversion failed with status: ${response.status}`);
                         }
 
                         const data = await response.json();
@@ -56,15 +56,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
             }
         },
-        dropdown: {
-            url: '/unit-type/generate-options',
-            dropdownSelector: '#unit_type_id',
-        }
+        dropdown : [
+            { url: '/unit/generate-options', dropdownSelector: '#from_unit_id' },
+            { url: '/unit/generate-options', dropdownSelector: '#to_unit_id' },
+        ]
     }
 
     discardCreate();
 
-    generateDropdownOptions(config.dropdown);
+    config.dropdown.forEach(cfg => {
+        generateDropdownOptions({
+            url: cfg.url,
+            dropdownSelector: cfg.dropdownSelector
+        });
+    });
 
     initValidation(config.form.selector, config.form.rules);
 });
