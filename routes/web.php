@@ -17,6 +17,7 @@ use App\Http\Controllers\ImportController;
 use App\Http\Controllers\NationalityController;
 use App\Http\Controllers\NavigationMenuController;
 use App\Http\Controllers\ProductCategoryController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\RoleSystemActionPermissionController;
@@ -458,6 +459,19 @@ Route::middleware('auth')->group(function () {
     Route::prefix('warehouse')
         ->name('warehouse.')
         ->controller(WarehouseController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
+            Route::post('/delete', 'delete')->name('delete');
+            Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
+            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
+            Route::post('/generate-table', 'generateTable')->name('generate.table');
+            Route::post('/generate-options', 'generateOptions')->name('generate.options');
+        });
+
+    // Products
+    Route::prefix('products')
+        ->name('products')
+        ->controller(ProductController::class)
         ->group(function () {
             Route::post('/save', 'save')->name('save');
             Route::post('/delete', 'delete')->name('delete');
