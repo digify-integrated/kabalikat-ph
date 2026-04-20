@@ -45,7 +45,7 @@ class WarehouseController extends Controller
 
         $warehouseTypeName = (string) WarehouseType::query()
             ->whereKey($warehouseTypeId)
-            ->value('warehouse_type');
+            ->value('warehouse_type_name');
 
         $cityDetails = City::query()->find($cityId);
         $cityName = $cityDetails?->city_name;
@@ -193,6 +193,7 @@ class WarehouseController extends Controller
             'warehouseName' => $warehouse->warehouse_name ?? null,
             'contactPerson' => $warehouse->contact_person ?? null,
             'warehouseStatus' => $warehouse->warehouse_status ?? 'Active',
+            'warehouseTypeId' => $warehouse->warehouse_type_id ?? 'Active',
             'address' => $warehouse->address ?? null,
             'cityId' => $warehouse->city_id ?? null,
             'stateId' => $warehouse->state_id ?? null,
@@ -215,6 +216,10 @@ class WarehouseController extends Controller
         $response = $companies->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
             $warehouseId = $row->id;
             $warehouseName = $row->warehouse_name;
+            $contactPerson = $row->contact_person;
+            $phone = $row->phone;
+            $telephone = $row->telephone;
+            $email = $row->email;
             $address = $row->address . ', ' . $row->city_name . ', ' . $row->state_name . ', ' . $row->country_name;
 
             $link = route('apps.details', [
@@ -239,6 +244,10 @@ class WarehouseController extends Controller
                         </div>
                     </div>
                 ',
+                'CONTACT_PERSON' => $contactPerson,
+                'PHONE' => $phone,
+                'TELEPHONE' => $telephone,
+                'EMAIL' => $email,
                 'LINK' => $link,
             ];
         })->values();

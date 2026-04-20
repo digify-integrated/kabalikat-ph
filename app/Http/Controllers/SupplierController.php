@@ -206,6 +206,10 @@ class SupplierController extends Controller
         $response = $companies->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
             $supplierId = $row->id;
             $supplierName = $row->supplier_name;
+            $contactPerson = $row->contact_person;
+            $phone = $row->phone;
+            $telephone = $row->telephone;
+            $email = $row->email;
             $address = $row->address . ', ' . $row->city_name . ', ' . $row->state_name . ', ' . $row->country_name;
 
             $link = route('apps.details', [
@@ -230,6 +234,10 @@ class SupplierController extends Controller
                         </div>
                     </div>
                 ',
+                'CONTACT_PERSON' => $contactPerson,
+                'PHONE' => $phone,
+                'TELEPHONE' => $telephone,
+                'EMAIL' => $email,
                 'LINK' => $link,
             ];
         })->values();

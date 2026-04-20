@@ -647,6 +647,154 @@ return new class extends Migration
         });
 
         /* =============================================================================================
+            TABLE: Product
+        ============================================================================================= */
+
+        Schema::create('product', function (Blueprint $table) {
+            $table->id();
+
+            $table->string('product_name');
+            $table->string('product_description')
+            ->nullable();
+            
+            $table->string('product_image')
+            ->nullable();
+
+            $table->enum('product_status', ['Active', 'Inactive']);
+            $table->string('sku')->nullable();
+            $table->string('barcode')->nullable();
+            $table->enum('product_type', ['Goods', 'Service']);
+            $table->double('base_price')->default(0);
+            $table->double('cost_price')->default(0);
+            $table->enum('inventory_flow', ['FIFO', 'FEFO', 'LIFO', 'Manual']);
+            $table->enum('tax_classification', ['Vatable', 'VAT Excempt', 'Zero Rated']);
+
+            $table->enum('track_inventory', ['Yes', 'No'])
+            ->default('Yes');
+            $table->enum('is_variant', ['Yes', 'No'])
+            ->default('No');
+            $table->enum('is_addon', ['Yes', 'No'])
+            ->default('No');
+            $table->enum('batch_tracking', ['Yes', 'No'])
+            ->default('No');
+            $table->enum('expiration_tracking', ['Yes', 'No'])
+            ->default('No');
+
+            $table->bigInteger('parent_product_id')
+            ->constrained('product')
+            ->nullable()
+            ->nullOnDelete();
+
+            $table->string('parent_product_name');
+
+            $table->string('variant_signature')
+            ->nullable();
+
+            $table->double('reorder_level')
+            ->default(0);
+
+            $table->bigInteger('base_unit_id')
+            ->constrained('unit')
+            ->nullable()
+            ->nullOnDelete();
+
+            $table->string('base_unit_name');
+            $table->string('base_unit_abbreviation');
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+
+            $table->index(['sku'], 'product_sku_idx');
+            $table->index(['barcode'], 'product_barcode_idx');
+            $table->index(['tax_classification'], 'product_tax_classification_idx');
+            $table->index(['product_type'], 'product_product_type_idx');
+            $table->index(['parent_product_id'], 'product_parent_product_id_idx');
+            $table->index(['variant_signature'], 'product_variant_signature_idx');
+            $table->index(['base_unit_id'], 'product_base_unit_id_idx');
+        });
+
+        /* =============================================================================================
+            TABLE: Stock Level
+        ============================================================================================= */
+
+        Schema::create('stock_level', function (Blueprint $table) {
+            $table->id();
+
+            $table->bigInteger('product_id')
+            ->constrained('product')
+            ->cascadeOnDelete();
+
+            $table->string('product_name');
+
+            $table->bigInteger('warehouse_id')
+            ->constrained('warehouse')
+            ->nullable()
+            ->nullOnDelete();
+
+            $table->string('warehouse_name');
+            $table->double('quantity')
+            ->default(0);
+
+            $table->string('batch_number');
+            $table->date('expiration_date')
+            ->nullable();
+            $table->date('received_date')
+            ->nullable();
+
+            $table->double('cost_per_unit')
+            ->default(0);
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+
+            $table->index(['product_id'], 'stock_level_product_id_idx');
+            $table->index(['warehouse_id'], 'stock_level_warehouse_id_idx');
+            $table->index(['expiration_date'], 'stock_level_expiration_date_idx');
+            $table->index(['received_date'], 'stock_level_received_date_idx');
+            $table->index(['batch_number'], 'stock_batch_number_date_idx');
+        });
+       
+        /* =============================================================================================
+            TABLE: Stock Movement
+        ============================================================================================= */
+
+        Schema::create('stock_movement', function (Blueprint $table) {
+            $table->id();
+
+            $table->bigInteger('product_id')
+            ->constrained('product')
+            ->cascadeOnDelete();
+
+            $table->string('product_name');
+
+            $table->bigInteger('warehouse_id')
+            ->constrained('warehouse')
+            ->nullable()
+            ->nullOnDelete();
+            
+            $table->string('warehouse_name');
+
+            $table->enum('movement_type', ['In', 'Out', 'Transfer In', 'Transfer Out', 'Adjustment', 'Return', 'Loan Issue', 'Loan Return']);
+
+            $table->double('quantity')
+            ->default(0);
+
+            $table->enum('reference_type', ['Purchase Order', 'POS Sale', 'Transfer Ticket', 'Inventory Audit', 'Borrow Agreement']);
+            $table->string('reference_id');
+
+            $table->string('remarks');
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+
+            $table->index(['product_id'], 'stock_movement_product_id_idx');
+            $table->index(['warehouse_id'], 'stock_movement_warehouse_id_idx');
+            $table->index(['movement_type'], 'stock_movement_movement_type_idx');
+            $table->index(['reference_type'], 'stock_movement_reference_type_idx');
+            $table->index(['reference_id'], 'stock_movement_reference_id_idx');
+        });
+
+        /* =============================================================================================
             TABLE: 
         ============================================================================================= */
     }
@@ -666,6 +814,8 @@ return new class extends Migration
 
         Schema::dropIfExists('upload_setting_file_extension');
         Schema::dropIfExists('file_extension');
+
+        Schema::dropIfExists('product');
 
         Schema::dropIfExists('attribute_value');
 

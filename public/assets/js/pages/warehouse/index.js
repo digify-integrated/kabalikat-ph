@@ -5,12 +5,12 @@ import { checkNotification } from '../../util/notifications.js';
 document.addEventListener('DOMContentLoaded', () => {
     const config = {
         table: {
-            url: '/supplier/generate-table',
-            selector: '#supplier-table',
+            url: '/warehouse/generate-table',
+            selector: '#warehouse-table',
             serverSide: false,
             columns: [
                 { data: 'CHECK_BOX' },
-                { data: 'SUPPLIER' },
+                { data: 'WAREHOUSE' },
                 { data: 'CONTACT_PERSON' },
                 { data: 'PHONE' },
                 { data: 'TELEPHONE' },
@@ -34,12 +34,12 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         delete: {
             trigger : '#delete-data',
-            url : '/supplier/delete-multiple',
-            swalTitle : 'Confirm Multiple Suppliers Deletion',
-            swalText : 'Are you sure you want to delete these suppliers?',
+            url : '/warehouse/delete-multiple',
+            swalTitle : 'Confirm Multiple Warehouses Deletion',
+            swalText : 'Are you sure you want to delete these warehouses?',
             confirmButtonText : 'Delete',
-            validationMessage : 'Please select the suppliers you want to delete',
-            table : '#supplier-table'
+            validationMessage : 'Please select the warehouses you want to delete',
+            table : '#warehouse-table'
         },
     }
     
