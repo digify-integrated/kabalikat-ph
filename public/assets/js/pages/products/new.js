@@ -3,35 +3,34 @@ import { showNotification, setNotification } from '../../util/notifications.js';
 import { disableButton, enableButton, discardCreate, passwordAddOn } from '../../form/button.js';
 import { handleSystemError } from '../../util/system-errors.js';
 import { getPageContext } from '../../form/form.js';
+import { generateDropdownOptions } from '../../form/field.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const config = {
         form: {
-            selector: '#user_form',
+            selector: '#product_form',
             rules: {
                 rules: {
-                    user_name: { required: true},
-                    email: { 
-                        required: true,
-                        typeEmail: true
-                    },
-                    password: { 
-                        required: true,
-                        minlength: 8,
-                        pattern: '(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).+',
-                    },
+                    product_name: { required: true},
+                    product_type: { required: true},
+                    product_status: { required: true},
+                    tax_classification: { required: true},
+                    base_price: { required: true},
+                    cost_price: { required: true},
+                    base_unit_id: { required: true},
+                    inventory_flow: { required: true},
+                    reorder_level: { required: true},
                 },
                 messages: {
-                    user_name: { required: 'Enter the user name' },
-                    email: { 
-                        required: 'Enter the email',
-                        typeEmail: 'Enter a valid email'
-                    },
-                    password: {
-                        required: 'Enter the password',
-                        minlength: 'Password must be at least 8 characters.',
-                        pattern: 'Password must include uppercase, lowercase, number, and special character.',
-                    },
+                    product_name: { required: 'Enter the product name' },
+                    product_type: { required: 'Choose the product type' },
+                    product_status: { required: 'Choose the product status' },
+                    tax_classification: { required: 'Choose the tax classification' },
+                    base_price: { required: 'Enter the base price' },
+                    cost_price: { required: 'Enter the cost price' },
+                    base_unit_id: { required: 'Choose the base unit' },
+                    inventory_flow: { required: 'Choose the inventory flow' },
+                    reorder_level: { required: 'Enter the reorder level' },
                 },
                 submitHandler: async (form) => {
                     const ctx = getPageContext();
@@ -42,13 +41,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     disableButton('submit-data');
 
                     try {
-                        const response = await fetch('/user/save', {
+                        const response = await fetch('/products/save', {
                             method: 'POST',
                             body: formData
                         });
 
                         if (!response.ok) {
-                            throw new Error(`Save user failed with status: ${response.status}`);
+                            throw new Error(`Save product failed with status: ${response.status}`);
                         }
 
                         const data = await response.json();
@@ -68,12 +67,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 },
             }
+        },
+        dropdown: {
+            url: '/unit/generate-options',
+            dropdownSelector: '#base_unit_id'
         }
     }
 
-    passwordAddOn();
-
     discardCreate();
+ 
+    generateDropdownOptions(config.dropdown);
 
     initValidation(config.form.selector, config.form.rules);
 });

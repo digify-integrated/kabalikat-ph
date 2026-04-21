@@ -667,7 +667,7 @@ return new class extends Migration
             $table->double('base_price')->default(0);
             $table->double('cost_price')->default(0);
             $table->enum('inventory_flow', ['FIFO', 'FEFO', 'LIFO', 'Manual']);
-            $table->enum('tax_classification', ['Vatable', 'VAT Excempt', 'Zero Rated']);
+            $table->enum('tax_classification', ['Vatable', 'VAT Exempt', 'Zero Rated']);
 
             $table->enum('track_inventory', ['Yes', 'No'])
             ->default('Yes');
@@ -685,7 +685,9 @@ return new class extends Migration
             ->nullable()
             ->nullOnDelete();
 
-            $table->string('parent_product_name');
+            $table->string('parent_product_name')
+            ->nullable()
+            ->nullOnDelete();
 
             $table->string('variant_signature')
             ->nullable();

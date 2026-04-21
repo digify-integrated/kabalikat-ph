@@ -10,15 +10,6 @@
         $canWrite  = ($writePermission ?? 0) > 0;
         $canDelete = ($deletePermission ?? 0) > 0;
 
-        $activateUser = app(\App\Http\Controllers\SystemActionController::class)
-            ->userHasRoleAccessForAction(1, Auth::id());
-
-        $deactivateUser = app(\App\Http\Controllers\SystemActionController::class)
-            ->userHasRoleAccessForAction(2, Auth::id());
-
-        $canAssignUserAccount = app(\App\Http\Controllers\SystemActionController::class)
-            ->userHasRoleAccessForAction(3, Auth::id());
-
         $user = DB::table('users')
             ->where('id', $detailsId)
             ->first();
@@ -31,23 +22,140 @@
                     <div class="image-input image-input-outline" data-kt-image-input="true">
                         <div
                             class="image-input-wrapper w-125px h-125px"
-                            id="profile_picture_image"
-                            style="background-image: url('{{ asset('assets/media/default/default-avatar.jpg') }}')"
+                            id="product_image_image"
+                            style="background-image: url('{{ asset('assets/media/default/upload-placeholder.png') }}')"
                         ></div>
 
                         @if($canWrite)
                             <label class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow" data-kt-image-input-action="change" data-bs-toggle="tooltip" aria-label="Change image" data-bs-original-title="Change image">
                                 <i class="ki-outline ki-pencil fs-7"></i>
-                                <input type="file" id="profile_picture" name="profile_picture" accept=".png, .jpg, .jpeg">
+                                <input type="file" id="product_image" name="product_image" accept=".png, .jpg, .jpeg">
                             </label>
                         @endif
                     </div>
 
                     <div class="form-text mt-5">
-                        Set the user profile image. Only *.png, *.jpg and *.jpeg image files are accepted.
+                        Set the product image. Only *.png, *.jpg and *.jpeg image files are accepted.
                     </div>
                 </div>
             </div>
+            <div class="card mb-5 mb-xl-8">
+            <div class="card-header border-0">
+                <div class="card-title">
+                    <h3 class="fw-bold m-0">Product Settings</h3>
+                </div>
+            </div>
+            
+            <div class="card-body pt-2">                
+                <div class="py-2">
+                    <div class="d-flex flex-stack">
+                        <div class="d-flex">
+                            <div class="d-flex flex-column">
+                                <div class="fs-5 text-gray-900 fw-bold">Track Inventory</div>
+                                <div class="fs-7 fw-semibold text-muted">Check if you want this product's quantity to be tracked.</div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end">
+                            <label class="form-check form-switch form-switch-sm form-check-custom form-check-solid">
+                                <input class="form-check-input" type="checkbox" id="track-inventory">
+                                <span class="form-check-label fw-semibold text-muted" for="track-inventory"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="separator separator-dashed my-5"></div>
+
+                    <div class="d-flex flex-stack">
+                        <div class="d-flex">
+                            <div class="d-flex flex-column">
+                                <div class="fs-5 text-gray-900 fw-bold">Sales</div>
+                                <div class="fs-7 fw-semibold text-muted">Check if you want this product to be sellable.</div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end">
+                            <label class="form-check form-switch form-switch-sm form-check-custom form-check-solid">
+                                <input class="form-check-input" type="checkbox" id="is-sellable">
+                                <span class="form-check-label fw-semibold text-muted" for="is-sellable"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="separator separator-dashed my-5"></div>
+
+                    <div class="d-flex flex-stack">
+                        <div class="d-flex">
+                            <div class="d-flex flex-column">
+                                <div class="fs-5 text-gray-900 fw-bold">Purchase</div>
+                                <div class="fs-7 fw-semibold text-muted">Check if you want this product to be purchasable.</div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end">
+                            <label class="form-check form-switch form-switch-sm form-check-custom form-check-solid">
+                                <input class="form-check-input" type="checkbox" id="is-purchasable">
+                                <span class="form-check-label fw-semibold text-muted" for="is-purchasable"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="separator separator-dashed my-5"></div>
+
+                    <div class="d-flex flex-stack">
+                        <div class="d-flex">
+                            <div class="d-flex flex-column">
+                                <div class="fs-5 text-gray-900 fw-bold">Is Add-On</div>
+                                <div class="fs-7 fw-semibold text-muted">Check if this product is an add-on.</div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end">
+                            <label class="form-check form-switch form-switch-sm form-check-custom form-check-solid">
+                                <input class="form-check-input" type="checkbox" id="track-inventory">
+                                <span class="form-check-label fw-semibold text-muted" for="track-inventory"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="separator separator-dashed my-5"></div>
+
+                    <div class="d-flex flex-stack">
+                        <div class="d-flex">
+                            <div class="d-flex flex-column">
+                                <div class="fs-5 text-gray-900 fw-bold">Batch Tracking</div>
+                                <div class="fs-7 fw-semibold text-muted">Check if you want this product.</div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end">
+                            <label class="form-check form-switch form-switch-sm form-check-custom form-check-solid">
+                                <input class="form-check-input" type="checkbox" id="track-inventory">
+                                <span class="form-check-label fw-semibold text-muted" for="track-inventory"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="separator separator-dashed my-5"></div>
+
+                    <div class="d-flex flex-stack">
+                        <div class="d-flex">
+                            <div class="d-flex flex-column">
+                                <div class="fs-5 text-gray-900 fw-bold">Expiration Tracking</div>
+                                <div class="fs-7 fw-semibold text-muted">Check if you to track this product's expiration.</div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end">
+                            <label class="form-check form-switch form-switch-sm form-check-custom form-check-solid">
+                                <input class="form-check-input" type="checkbox" id="track-inventory">
+                                <span class="form-check-label fw-semibold text-muted" for="track-inventory"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         </div>
 
         <div class="d-flex flex-column flex-row-fluid gap-7 gap-lg-10">
@@ -56,32 +164,15 @@
                     <a class="nav-link text-active-primary pb-4 active" data-bs-toggle="tab" href="#overview_tab" aria-selected="true" role="tab">Overview</a>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <a class="nav-link text-active-primary pb-4" data-bs-toggle="tab" href="#user_role_tab" aria-selected="false" role="tab">Role</a>
+                    <a class="nav-link text-active-primary pb-4" data-bs-toggle="tab" href="#product_role_tab" aria-selected="false" role="tab">Role</a>
                 </li>
                 <li class="nav-item ms-auto">
-                     @if($canDelete || ($activateUser ?? false) === true && $user->status === 'Inactive' || ($deactivateUser ?? false) === true && $user->status === 'Active')
+                    @if($canDelete)
                        <a href="#" class="btn btn-light-primary btn-flex btn-center btn-active-light-primary show menu-dropdown align-self-center" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
                             Actions
                             <i class="ki-outline ki-down fs-5 ms-1"></i>
                         </a>
                         <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-125px py-4" data-kt-menu="true" style="z-index: 107; position: fixed; inset: 0px 0px auto auto; margin: 0px; transform: translate(-60px, 539px);" data-popper-placement="bottom-end">
-
-                            @if(($activateUser ?? false) === true && $user->status === 'Inactive')
-                                <div class="menu-item px-3">
-                                    <a href="javascript:void(0);" class="menu-link px-3" id="activate-user">
-                                        Activate
-                                    </a>
-                                </div>                            
-                            @endif
-
-                            @if(($deactivateUser ?? false) === true && $user->status === 'Active')
-                                <div class="menu-item px-3">
-                                    <a href="javascript:void(0);" class="menu-link px-3" id="deactivate-user">
-                                        Deactivate
-                                    </a>
-                                </div>
-                            @endif
-
                             @if($canDelete)
                                 <div class="menu-item px-3">
                                     <a href="javascript:void(0);" class="menu-link px-3" id="delete-user">
@@ -94,23 +185,23 @@
                 </li>
             </ul>
             <div class="tab-content">
-                <div class="tab-content" id="user_account_tab_content">
+                <div class="tab-content" id="product_account_tab_content">
                     <div class="tab-pane fade active show" id="overview_tab" role="tabpanel">
                         <div class="card mb-5">
-                            <form id="user_form" method="post" action="#" novalidate>
+                            <form id="product_form" method="post" action="#" novalidate>
                                 @csrf
                                 <div class="card-header border-0">
                                     <div class="card-title m-0">
-                                        <h3 class="fw-bold m-0">User Account Details</h3>
+                                        <h3 class="fw-bold m-0">Product Details</h3>
                                     </div>
                                 </div>
                                 <div class="card-body border-top p-9">
                                     <div class="row mb-6">
-                                        <label class="col-lg-3 col-form-label required fw-semibold fs-6" for="user_name">
+                                        <label class="col-lg-3 col-form-label required fw-semibold fs-6" for="product_name">
                                             User Name
                                         </label>
                                         <div class="col-lg-9">
-                                            <input type="text" class="form-control" id="user_name" name="user_name" maxlength="100" autocomplete="off" @disabled(!$canWrite)>
+                                            <input type="text" class="form-control" id="product_name" name="product_name" maxlength="100" autocomplete="off" @disabled(!$canWrite)>
                                         </div>
                                     </div>
                                     <div class="row mb-6">
@@ -146,7 +237,7 @@
                             </form>
                         </div>
                     </div>
-                    <div class="tab-pane fade" id="user_role_tab" role="tabpanel">
+                    <div class="tab-pane fade" id="product_role_tab" role="tabpanel">
                         <div class="card mb-5">
                             <div class="card-header border-0 pt-6">
                                 <div class="card-title">

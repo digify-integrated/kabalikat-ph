@@ -19,7 +19,7 @@
                         </div>
                     </div>
                     <div class="col">
-                        <div class="fv-row mb-7">
+                        <div class="fv-row mb-4">
                             <label class="fs-6 fw-semibold required form-label mt-3" for="navigation_menu_id">
                                 Default Page
                             </label>
@@ -30,7 +30,7 @@
                         </div>
                     </div>
                     <div class="col">
-                        <div class="fv-row mb-7">
+                        <div class="fv-row mb-4">
                             <label class="fs-6 fw-semibold required form-label mt-3" for="app_version">
                                 App Version
                             </label>
@@ -39,7 +39,7 @@
                         </div>
                     </div>
                     <div class="col">
-                        <div class="fv-row mb-7">
+                        <div class="fv-row mb-4">
                             <label class="fs-6 fw-semibold required form-label mt-3" for="order_sequence">
                                 Order Sequence
                             </label>

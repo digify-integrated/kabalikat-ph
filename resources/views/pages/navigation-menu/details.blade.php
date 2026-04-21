@@ -139,7 +139,7 @@
                                 @csrf
                                 <div class="row row-cols-1 row-cols-sm-2 rol-cols-md-1 row-cols-lg-2">
                                     <div class="col">
-                                        <div class="fv-row mb-7">
+                                        <div class="fv-row mb-4">
                                             <label class="fs-6 fw-semibold form-label mt-3" for="index_view_file">
                                                 Index View File
                                             </label>
@@ -149,7 +149,7 @@
                                     </div>
 
                                     <div class="col">
-                                        <div class="fv-row mb-7">
+                                        <div class="fv-row mb-4">
                                             <label class="fs-6 fw-semibold form-label mt-3" for="index_js_file">
                                                 Index JS File
                                             </label>
@@ -161,7 +161,7 @@
 
                                 <div class="row row-cols-1 row-cols-sm-2 rol-cols-md-1 row-cols-lg-2">
                                     <div class="col">
-                                        <div class="fv-row mb-7">
+                                        <div class="fv-row mb-4">
                                             <label class="fs-6 fw-semibold form-label mt-3" for="new_view_file">
                                                 New View File
                                             </label>
@@ -171,7 +171,7 @@
                                     </div>
 
                                     <div class="col">
-                                        <div class="fv-row mb-7">
+                                        <div class="fv-row mb-4">
                                             <label class="fs-6 fw-semibold form-label mt-3" for="new_js_file">
                                                 New JS File
                                             </label>
@@ -183,7 +183,7 @@
 
                                 <div class="row row-cols-1 row-cols-sm-2 rol-cols-md-1 row-cols-lg-2">
                                     <div class="col">
-                                        <div class="fv-row mb-7">
+                                        <div class="fv-row mb-4">
                                             <label class="fs-6 fw-semibold form-label mt-3" for="details_view_file">
                                                 Details View File
                                             </label>
@@ -193,7 +193,7 @@
                                     </div>
 
                                     <div class="col">
-                                        <div class="fv-row mb-7">
+                                        <div class="fv-row mb-4">
                                             <label class="fs-6 fw-semibold form-label mt-3" for="details_js_file">
                                                 Details JS File
                                             </label>
@@ -205,7 +205,7 @@
 
                                 <div class="row row-cols-1 row-cols-sm-2 rol-cols-md-1 row-cols-lg-2">
                                     <div class="col">
-                                        <div class="fv-row mb-7">
+                                        <div class="fv-row mb-4">
                                             <label class="fs-6 fw-semibold form-label mt-3" for="import_view_file">
                                                 Import View File
                                             </label>
@@ -215,7 +215,7 @@
                                     </div>
 
                                     <div class="col">
-                                        <div class="fv-row mb-7">
+                                        <div class="fv-row mb-4">
                                             <label class="fs-6 fw-semibold form-label mt-3" for="import_js_file">
                                                 Import JS File
                                             </label>

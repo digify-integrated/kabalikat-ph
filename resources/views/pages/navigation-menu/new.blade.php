@@ -11,7 +11,7 @@
                 
                 <div class="row row-cols-1 row-cols-sm-2 rol-cols-md-1 row-cols-lg-2">
                     <div class="col">
-                        <div class="fv-row mb-7">
+                        <div class="fv-row mb-4">
                             <label class="fs-6 fw-semibold required form-label mt-3" for="navigation_menu_name">
                                 Display Name
                             </label>
@@ -21,7 +21,7 @@
                     </div>
 
                     <div class="col">
-                        <div class="fv-row mb-7">
+                        <div class="fv-row mb-4">
                             <label class="fs-6 fw-semibold required form-label mt-3" for="app_id">
                                 App
                             </label>
@@ -35,7 +35,7 @@
 
                 <div class="row row-cols-1 row-cols-sm-2 rol-cols-md-1 row-cols-lg-2">
                     <div class="col">
-                        <div class="fv-row mb-7">
+                        <div class="fv-row mb-4">
                             <label class="fs-6 fw-semibold form-label mt-3" for="parent_id">
                                 Parent Menu
                             </label>
@@ -47,7 +47,7 @@
                     </div>
 
                     <div class="col">
-                        <div class="fv-row mb-7">
+                        <div class="fv-row mb-4">
                             <label class="fs-6 fw-semibold form-label mt-3" for="navigation_menu_icon">
                                 Icon
                             </label>
@@ -62,7 +62,7 @@
 
                 <div class="row row-cols-1 row-cols-sm-2 rol-cols-md-1 row-cols-lg-2">
                     <div class="col">
-                        <div class="fv-row mb-7">
+                        <div class="fv-row mb-4">
                             <label class="fs-6 fw-semibold required form-label mt-3" for="parent_id">
                                 Order Sequence
                             </label>
@@ -72,7 +72,7 @@
                     </div>
 
                     <div class="col">
-                        <div class="fv-row mb-7">
+                        <div class="fv-row mb-4">
                             <label class="fs-6 fw-semibold form-label mt-3" for="table_name">
                                 Database Table
                             </label>

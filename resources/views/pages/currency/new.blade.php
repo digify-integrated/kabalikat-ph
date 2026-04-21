@@ -10,7 +10,7 @@
                 @csrf
                 <div class="row row-cols-1 row-cols-sm-3 rol-cols-md-3 row-cols-lg-3">
                     <div class="col">
-                        <div class="fv-row mb-7">
+                        <div class="fv-row mb-4">
                             <label class="fs-6 fw-semibold required form-label mt-3" for="currency_name">
                                 Currency
                             </label>
@@ -20,7 +20,7 @@
                     </div>
 
                     <div class="col">
-                        <div class="fv-row mb-7">
+                        <div class="fv-row mb-4">
                             <label class="fs-6 fw-semibold required form-label mt-3" for="symbol">
                                 Symbol
                             </label>
@@ -30,7 +30,7 @@
                     </div>
 
                     <div class="col">
-                        <div class="fv-row mb-7">
+                        <div class="fv-row mb-4">
                             <label class="fs-6 fw-semibold required form-label mt-3" for="shorthand">
                                 Shorthand
                             </label>

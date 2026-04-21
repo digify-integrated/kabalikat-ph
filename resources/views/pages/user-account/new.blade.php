@@ -11,7 +11,7 @@
                 
                 <div class="row">
                     <div class="col">
-                        <div class="fv-row mb-7">
+                        <div class="fv-row mb-4">
                             <label class="fs-6 fw-semibold required form-label mt-3" for="user_name">
                                 User Name
                             </label>
@@ -22,7 +22,7 @@
                 </div>
                 <div class="row row-cols-1 row-cols-sm-2 rol-cols-md-1 row-cols-lg-2">
                     <div class="col">
-                        <div class="fv-row mb-7">
+                        <div class="fv-row mb-4">
                             <label class="fs-6 fw-semibold required form-label mt-3" for="email">
                                 Email
                             </label>
@@ -32,7 +32,7 @@
                     </div>
 
                     <div class="col">
-                        <div class="fv-row mb-7">
+                        <div class="fv-row mb-4">
                             <label class="fs-6 fw-semibold required form-label mt-3" for="user_name">
                                 Password
                             </label>
