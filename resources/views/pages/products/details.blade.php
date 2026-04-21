@@ -123,7 +123,13 @@
                     <a class="nav-link text-active-primary pb-4 active" data-bs-toggle="tab" href="#overview_tab" aria-selected="true" role="tab">Overview</a>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <a class="nav-link text-active-primary pb-4" data-bs-toggle="tab" href="#product_role_tab" aria-selected="false" role="tab">Role</a>
+                    <a class="nav-link text-active-primary pb-4" data-bs-toggle="tab" href="#product_attribute_tab" aria-selected="false" role="tab">Attributes & Variations</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link text-active-primary pb-4" data-bs-toggle="tab" href="#product_bom_tab" aria-selected="false" role="tab">Bill of Materials</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link text-active-primary pb-4" data-bs-toggle="tab" href="#product_addons_tab" aria-selected="false" role="tab">Add-Ons</a>
                 </li>
                 <li class="nav-item ms-auto">
                     @if($canDelete)
@@ -157,31 +163,125 @@
                                 <div class="card-body border-top p-9">
                                     <div class="row mb-6">
                                         <label class="col-lg-3 col-form-label required fw-semibold fs-6" for="product_name">
-                                            User Name
+                                            Product Name
                                         </label>
                                         <div class="col-lg-9">
                                             <input type="text" class="form-control" id="product_name" name="product_name" maxlength="100" autocomplete="off" @disabled(!$canWrite)>
                                         </div>
                                     </div>
+
                                     <div class="row mb-6">
-                                        <label class="col-lg-3 col-form-label required fw-semibold fs-6" for="email">
-                                            Email
+                                        <label class="col-lg-3 col-form-label fw-semibold fs-6" for="sku">
+                                            SKU
                                         </label>
                                         <div class="col-lg-9">
-                                            <input type="email" class="form-control" id="email" name="email" maxlength="100" autocomplete="off" @disabled(!$canWrite)>
+                                            <input type="text" class="form-control" id="sku" name="sku" maxlength="100" autocomplete="off" @disabled(!$canWrite)>
                                         </div>
                                     </div>
-                                    <div class="row">
-                                        <label class="col-lg-3 col-form-label fw-semibold fs-6" for="password">
-                                            Password
+
+                                    <div class="row mb-6">
+                                        <label class="col-lg-3 col-form-label fw-semibold fs-6" for="barcode">
+                                            Barcode
                                         </label>
                                         <div class="col-lg-9">
-                                            <div class="input-group">
-                                                <input type="password" id="password" name="password" class="form-control" @disabled(!$canWrite)>
-                                                <span class="input-group-text password-addon">
-                                                    <i class="ki-outline ki-eye fs-3"></i>
-                                                </span>
-                                            </div>
+                                            <input type="text" class="form-control" id="barcode" name="barcode" maxlength="100" autocomplete="off" @disabled(!$canWrite)>
+                                        </div>
+                                    </div>
+
+                                    <div class="row mb-6">
+                                        <label class="col-lg-3 col-form-label required fw-semibold fs-6" for="product_type">
+                                            Product Type
+                                        </label>
+                                        <div class="col-lg-9">
+                                            <select id="product_type" name="product_type" class="form-select" data-control="select2" data-hide-search="true" @disabled(!$canWrite)>
+                                                <option value="Goods">Goods</option>
+                                                <option value="Service">Service</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="row mb-6">
+                                        <label class="col-lg-3 col-form-label required fw-semibold fs-6" for="product_status">
+                                            Product Status
+                                        </label>
+                                        <div class="col-lg-9">
+                                            <select id="product_status" name="product_status" class="form-select" data-control="select2" data-hide-search="true" @disabled(!$canWrite)>
+                                                <option value="Active">Active</option>
+                                                <option value="Inactive">Inactive</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="row mb-6">
+                                        <label class="col-lg-3 col-form-label required fw-semibold fs-6" for="tax_classification">
+                                            Tax Classification
+                                        </label>
+                                        <div class="col-lg-9">
+                                            <select id="tax_classification" name="tax_classification" class="form-select" data-control="select2" data-hide-search="true" @disabled(!$canWrite)>
+                                                <option value="Vatable">Vatable</option>
+                                                <option value="VAT Exempt">VAT Exempt</option>
+                                                <option value="Zero Rated">Zero Rated</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="row mb-6">
+                                        <label class="col-lg-3 col-form-label required fw-semibold fs-6" for="base_price">
+                                            Base Price
+                                        </label>
+                                        <div class="col-lg-9">
+                                            <input type="number" class="form-control" id="base_price" name="base_price" min="0" step="0.01" @disabled(!$canWrite)>
+                                        </div>
+                                    </div>
+
+                                    <div class="row mb-6">
+                                        <label class="col-lg-3 col-form-label required fw-semibold fs-6" for="cost_price">
+                                            Cost Price
+                                        </label>
+                                        <div class="col-lg-9">
+                                            <input type="number" class="form-control" id="cost_price" name="cost_price" min="0" step="0.01" @disabled(!$canWrite)>
+                                        </div>
+                                    </div>
+
+                                    <div class="row mb-6">
+                                        <label class="col-lg-3 col-form-label required fw-semibold fs-6" for="base_unit_id">
+                                            Base Unit
+                                        </label>
+                                        <div class="col-lg-9">
+                                            <select id="base_unit_id" name="base_unit_id" class="form-select" data-control="select2" @disabled(!$canWrite)>
+                                                <option>--</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="row mb-6">
+                                        <label class="col-lg-3 col-form-label required fw-semibold fs-6" for="inventory_flow">
+                                            Inventory Flow
+                                        </label>
+                                        <div class="col-lg-9">
+                                            <select id="inventory_flow" name="inventory_flow" class="form-select" data-control="select2" data-hide-search="true" @disabled(!$canWrite)>
+                                                <option value="FIFO">FIFO</option>
+                                                <option value="FEFO">FEFO</option>
+                                                <option value="LIFO">LIFO</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="row mb-6">
+                                        <label class="col-lg-3 col-form-label required fw-semibold fs-6" for="reorder_level">
+                                            Reorder Level
+                                        </label>
+                                        <div class="col-lg-9">
+                                            <input type="number" class="form-control" id="reorder_level" name="reorder_level" min="0" step="0.01" @disabled(!$canWrite)>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <label class="col-lg-3 col-form-label fw-semibold fs-6" for="product_description">
+                                            Description
+                                        </label>
+                                        <div class="col-lg-9">
+                                            <textarea class="form-control" id="product_description" name="product_description" maxlength="200" rows="3" @disabled(!$canWrite)></textarea>
                                         </div>
                                     </div>
                                 </div>
