@@ -5,59 +5,46 @@ import { checkNotification } from '../../util/notifications.js';
 document.addEventListener('DOMContentLoaded', () => {
     const config = {
         table: {
-            url: '/user/generate-table',
-            selector: '#user-table',
+            url: '/products/generate-table',
+            selector: '#product-table',
             serverSide: false,
             ajaxData: () => ({
-                filter_by_user_status: $('#filter_by_user_status').val()
+                filter_by_product_status: $('#filter_by_product_status').val()
             }),
             columns: [
                 { data: 'CHECK_BOX' },
-                { data: 'USER' },
+                { data: 'PRODUCT' },
+                { data: 'SKU' },
+                { data: 'PRODUCT_TYPE' },
+                { data: 'BASE_PRICE' },
                 { data: 'STATUS' },
             ],
             columnDefs: [
                 { width: '5%', bSortable: false, targets: 0, responsivePriority: 1 },
                 { width: 'auto', targets: 1, responsivePriority: 2 },
                 { width: 'auto', targets: 2, responsivePriority: 3 },
+                { width: 'auto', targets: 3, responsivePriority: 4 },
+                { width: 'auto', targets: 4, responsivePriority: 5 },
+                { width: 'auto', targets: 5, responsivePriority: 6 },
             ],
             onRowClick: (rowData) => {
                 if (rowData?.LINK) window.open(rowData.LINK, '_blank');
             },
             addons: {
                 controls: true,
-                export: 'users',
+                export: 'product',
             }
         },
         action: [
             {
                 trigger : '#delete-data',
-                url : '/user/delete-multiple',
-                swalTitle : 'Confirm Multiple User Deletion',
-                swalText : 'Are you sure you want to delete these user?',
+                url : '/product/delete-multiple',
+                swalTitle : 'Confirm Multiple Product Deletion',
+                swalText : 'Are you sure you want to delete these product?',
                 confirmButtonText : 'Delete',
-                validationMessage : 'Please select the users you want to delete',
-                table : '#user-table'
+                validationMessage : 'Please select the products you want to delete',
+                table : '#product-table'
             },
-            {
-                trigger : '#activate-data',
-                url : '/user/activate-multiple',
-                swalTitle : 'Confirm Multiple User Activation',
-                swalText : 'Are you sure you want to activate these user?',
-                confirmButtonText : 'Activate',
-                validationMessage : 'Please select the users you want to activate',
-                confirmButtonClass : 'success',
-                table : '#user-table'
-            },
-            {
-                trigger : '#deactivate-data',
-                url : '/user/deactivate-multiple',
-                swalTitle : 'Confirm Multiple User Deactivation',
-                swalText : 'Are you sure you want to deactivate these user?',
-                confirmButtonText : 'Activate',
-                validationMessage : 'Please select the users you want to deactivate',
-                table : '#user-table'
-            }
         ],
     }
     
@@ -68,14 +55,14 @@ document.addEventListener('DOMContentLoaded', () => {
     config.action.forEach((cfg) => multipleActionButton(cfg));
 
     document.addEventListener('click', async (event) => {
-        if (event.target.closest('#apply-filter')) {
+        /*if (event.target.closest('#apply-filter')) {
             initializeDatatable(config.table);
         }
 
         if (event.target.closest('#reset-filter')) {
-            $('#filter_by_user_status').val(null).trigger('change');
+            $('#filter_by_product_status').val(null).trigger('change');
 
             initializeDatatable(config.table);
-        }
+        }*/
     });
 });

@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             addons: {
                 controls: true,
-                export: 'app',
+                export: 'supplier',
             }
         },
         delete: {

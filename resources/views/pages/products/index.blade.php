@@ -89,7 +89,7 @@
                         <div class="px-7 py-5">
                             <div class="mb-5">
                                 <label class="form-label fs-6 fw-semibold" for="filter_by_app">Filter By Status:</label>
-                                <select id="filter_by_user_status" class="form-select" data-control="select2" data-allow-clear="false">
+                                <select id="filter_by_product_status" class="form-select" data-control="select2" data-allow-clear="false">
                                     <option value="">--</option>
                                     <option value="Active">Active</option>
                                     <option value="Inactive">Inactive</option>
@@ -107,7 +107,7 @@
 
         <div class="card-body pt-9">
             <div class="table-responsive">
-                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5" id="user-table">
+                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5" id="product-table">
                     <thead>
                         <tr class="text-start text-gray-800 fw-bold fs-7 text-uppercase gs-0">
                             <th>
