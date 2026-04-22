@@ -201,4 +201,38 @@ class AttributeController extends Controller
 
         return response()->json($response);
     }
+
+    public function generateProductAttributeOptions(Request $request)
+    {
+        $productId = $request->input('product_id');
+        $multiple = filter_var($request->input('multiple', false), FILTER_VALIDATE_BOOLEAN);
+
+        $response = collect();
+
+        if (!$multiple) {
+            $response->push([
+                'id'   => '',
+                'text' => '--',
+            ]);
+        }
+
+        $states = DB::table('attribute')
+            ->select(['id', 'attribute_name'])
+            ->whereNotIn('id', function ($query) use ($productId) {
+                $query->select('attribute_id')
+                    ->from('product_attribute')
+                    ->where('product_id', $productId);
+            })
+            ->orderBy('attribute_name')
+            ->get();
+
+        $response = $response->concat(
+            $states->map(fn ($row) => [
+                'id'   => $row->id,
+                'text' => $row->attribute_name,
+            ])
+        )->values();
+
+        return response()->json($response);
+    }
 }

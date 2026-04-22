@@ -716,6 +716,93 @@ return new class extends Migration
         });
 
         /* =============================================================================================
+            TABLE: Product Attribute
+        ============================================================================================= */
+
+        Schema::create('product_attribute', function (Blueprint $table) {
+            $table->id();
+
+            $table->bigInteger('product_id')
+            ->constrained('product')
+            ->cascadeOnDelete();
+
+            $table->string('product_name');
+
+            $table->bigInteger('attribute_id')
+            ->constrained('attribute')
+            ->nullOnDelete();
+
+            $table->string('attribute_name');
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+
+            $table->index(['product_id'], 'product_attribute_product_id_idx');
+            $table->index(['attribute_id'], 'product_attribute_attribute_id_idx');
+        });
+
+        /* =============================================================================================
+            TABLE: Product BOM
+        ============================================================================================= */
+
+        Schema::create('product_bom', function (Blueprint $table) {
+            $table->id();
+
+            $table->bigInteger('product_id')
+            ->constrained('product')
+            ->cascadeOnDelete();
+
+            $table->string('product_name');
+
+            $table->bigInteger('bom_product_id')
+            ->constrained('product')
+            ->nullOnDelete();
+
+            $table->string('bom_product_name');
+
+            $table->double('quantity')
+            ->default(0);
+
+            $table->enum('stock_policy', ['Strict', 'Allow Negative'])
+            ->default('Strict');
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+
+            $table->index(['product_id'], 'product_bom_product_id_idx');
+            $table->index(['bom_product_id'], 'product_bom_bom_product_id_idx');
+        });
+
+        /* =============================================================================================
+            TABLE: Product Add-on
+        ============================================================================================= */
+
+        Schema::create('product_addon', function (Blueprint $table) {
+            $table->id();
+
+            $table->bigInteger('product_id')
+            ->constrained('product')
+            ->cascadeOnDelete();
+
+            $table->string('product_name');
+
+            $table->bigInteger('addon_product_id')
+            ->constrained('product')
+            ->nullOnDelete();
+
+            $table->string('addon_product_name');
+
+            $table->double('max_quantity')
+            ->default(0);
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+
+            $table->index(['product_id'], 'product_addon_product_id_idx');
+            $table->index(['addon_product_id'], 'product_addon_addon_product_id_idx');
+        });
+
+        /* =============================================================================================
             TABLE: Stock Level
         ============================================================================================= */
 

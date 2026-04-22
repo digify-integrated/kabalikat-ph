@@ -1549,6 +1549,141 @@ return new class extends Migration
                 VALUES ('stock_movement', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
             END
         SQL);
+
+        /* =============================================================================================
+            TABLE: PRODUCT ATTRIBUTE
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_product_attribute_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_product_attribute_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_product_attribute_update
+            AFTER UPDATE ON product_attribute
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Product attribute changed.<br/><br/>';
+
+                IF NEW.product_name <> OLD.product_name THEN
+                    SET audit_log = CONCAT(audit_log, "Product: ", OLD.product_name, " -> ", NEW.product_name, "<br/>");
+                END IF;
+
+                IF NEW.attribute_name <> OLD.attribute_name THEN
+                    SET audit_log = CONCAT(audit_log, "Attribute: ", OLD.attribute_name, " -> ", NEW.attribute_name, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Product attribute changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('product_attribute', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_product_attribute_insert
+            AFTER INSERT ON product_attribute
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Product attribute created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('product_attribute', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
+
+        /* =============================================================================================
+            TABLE: PRODUCT BON
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_product_bom_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_product_bom_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_product_bom_update
+            AFTER UPDATE ON product_bom
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Product BOM changed.<br/><br/>';
+
+                IF NEW.product_name <> OLD.product_name THEN
+                    SET audit_log = CONCAT(audit_log, "Product: ", OLD.product_name, " -> ", NEW.product_name, "<br/>");
+                END IF;
+
+                IF NEW.bom_product_name <> OLD.bom_product_name THEN
+                    SET audit_log = CONCAT(audit_log, "BOM Product: ", OLD.bom_product_name, " -> ", NEW.bom_product_name, "<br/>");
+                END IF;
+
+                IF NEW.quantity <> OLD.quantity THEN
+                    SET audit_log = CONCAT(audit_log, "Quantity: ", OLD.quantity, " -> ", NEW.quantity, "<br/>");
+                END IF;
+
+                IF NEW.stock_policy <> OLD.stock_policy THEN
+                    SET audit_log = CONCAT(audit_log, "Stock Policy: ", OLD.stock_policy, " -> ", NEW.stock_policy, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Product BOM changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('product_bom', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_product_bom_insert
+            AFTER INSERT ON product_bom
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Product BOM created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('product_bom', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
+
+        /* =============================================================================================
+            TABLE: PRODUCT ADD-ON
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_product_addon_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_product_addon_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_product_addon_update
+            AFTER UPDATE ON product_addon
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Product add-on changed.<br/><br/>';
+
+                IF NEW.product_name <> OLD.product_name THEN
+                    SET audit_log = CONCAT(audit_log, "Product: ", OLD.product_name, " -> ", NEW.product_name, "<br/>");
+                END IF;
+
+                IF NEW.addon_product_name <> OLD.addon_product_name THEN
+                    SET audit_log = CONCAT(audit_log, "Add-On Product: ", OLD.addon_product_name, " -> ", NEW.addon_product_name, "<br/>");
+                END IF;
+
+                IF NEW.max_quantity <> OLD.max_quantity THEN
+                    SET audit_log = CONCAT(audit_log, "Max Quantity: ", OLD.max_quantity, " -> ", NEW.max_quantity, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Product add-on changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('product_addon', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_product_addon_insert
+            AFTER INSERT ON product_addon
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Product add-on created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('product_addon', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
     }
 
     /**
@@ -1765,5 +1900,26 @@ return new class extends Migration
 
         DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_movement_update');
         DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_movement_insert');
+
+        /* =============================================================================================
+            TABLE: PRODUCT ATTRIBUTE
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_product_attribute_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_product_attribute_insert');
+
+        /* =============================================================================================
+            TABLE: PRODUCT BOM
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_product_bom_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_product_bom_insert');
+
+        /* =============================================================================================
+            TABLE: PRODUCT ADD-ON
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_product_addon_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_product_addon_insert');
     }
 };

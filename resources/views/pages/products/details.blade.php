@@ -137,7 +137,7 @@
                     <a class="nav-link text-active-primary pb-4" data-bs-toggle="tab" href="#product_bom_tab" aria-selected="false" role="tab">Bill of Materials</a>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <a class="nav-link text-active-primary pb-4" data-bs-toggle="tab" href="#product_addons_tab" aria-selected="false" role="tab">Add-Ons</a>
+                    <a class="nav-link text-active-primary pb-4" data-bs-toggle="tab" href="#product_addon_tab" aria-selected="false" role="tab">Add-Ons</a>
                 </li>
                 <li class="nav-item ms-auto">
                     @if($canDelete)
@@ -396,7 +396,7 @@
                                 </div>
                                 <div class="card-toolbar">
                                     <div class="d-flex justify-content-end" data-kt-customer-table-toolbar="base">
-                                        @if(($canAssignUserAccount ?? false) === true)
+                                        @if($canWrite)
                                             <button type="button"
                                                     class="btn btn-light-primary me-3"
                                                     data-bs-toggle="modal"
@@ -423,14 +423,14 @@
                             </div>
                         </div>
                     </div>
-                    <div class="tab-pane fade" id="product_addons_tab" role="tabpanel">
+                    <div class="tab-pane fade" id="product_addon_tab" role="tabpanel">
                         <div class="card mb-5">
                             <div class="card-header border-0 pt-6">
                                 <div class="card-title">
                                     <div class="d-flex align-items-center position-relative my-1 me-3">
-                                        <i class="ki-outline ki-magnifier fs-3 position-absolute ms-5"></i> <input type="text" class="form-control w-250px ps-12" id="addons-datatable-search" placeholder="Search..." autocomplete="off" />
+                                        <i class="ki-outline ki-magnifier fs-3 position-absolute ms-5"></i> <input type="text" class="form-control w-250px ps-12" id="addon-datatable-search" placeholder="Search..." autocomplete="off" />
                                     </div>
-                                    <select id="addons-datatable-length" class="form-select w-auto">
+                                    <select id="addon-datatable-length" class="form-select w-auto">
                                         <option value="-1">All</option>
                                         <option value="5">5</option>
                                         <option value="10" selected>10</option>
@@ -442,12 +442,12 @@
                                 </div>
                                 <div class="card-toolbar">
                                     <div class="d-flex justify-content-end" data-kt-customer-table-toolbar="base">
-                                        @if(($canAssignUserAccount ?? false) === true)
+                                        @if($canWrite)
                                             <button type="button"
                                                     class="btn btn-light-primary me-3"
                                                     data-bs-toggle="modal"
-                                                    data-bs-target="#addons-modal"
-                                                    id="add-addons">
+                                                    data-bs-target="#addon-modal"
+                                                    id="add-addon">
                                                 <i class="ki-outline ki-plus fs-2"></i> Add
                                             </button>
                                         @endif
@@ -455,7 +455,7 @@
                                 </div>
                             </div>
                             <div class="card-body pt-9">
-                                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5 gs-7" id="addons-table">
+                                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5 gs-7" id="addon-table">
                                     <thead>
                                         <tr class="fw-semibold fs-6 text-gray-800">
                                             <th>Add-On</th>
@@ -473,22 +473,25 @@
         </div>
     </div>
 
-    <div id="role-assignment-modal" class="modal fade" tabindex="-1" aria-labelledby="role-assignment-modal" aria-hidden="true">
+    <div id="attribute-modal" class="modal fade" tabindex="-1" aria-labelledby="attribute-modal" aria-hidden="true">
         <div class="modal-dialog modal-dialog-scrollable modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3 class="modal-title">Assign Role</h3>
+                    <h3 class="modal-title">Attribute</h3>
                     <div class="btn btn-icon btn-sm btn-active-light-primary ms-2" data-bs-dismiss="modal" aria-label="Close">
                         <i class="ki-duotone ki-cross fs-1"><span class="path1"></span><span class="path2"></span></i>
                     </div>
                 </div>
 
                 <div class="modal-body">
-                    <form id="role_assignment_form" method="post" action="#">
+                    <form id="attribute_form" method="post" action="#">
                         @csrf
-                        <div class="row">
-                            <div class="col-12">
-                                <select multiple="multiple" size="20" id="role_id" name="role_id[]"></select>
+                        <div class="row mb-6">
+                            <label class="col-lg-3 col-form-label required fw-semibold fs-6" for="attribute_id">
+                                Attribute
+                            </label>
+                            <div class="col-lg-9">
+                                <select id="attribute_id" name="attribute_id[]" multiple="multiple" class="form-select" data-control="select2" data-allow-clear="false"></select>
                             </div>
                         </div>
                     </form>
@@ -496,7 +499,98 @@
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" form="role_assignment_form" class="btn btn-primary" id="submit-assignment">Assign</button>
+                    <button type="submit" form="attribute_form" class="btn btn-primary" id="submit-attribute">Add</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="bom-modal" class="modal fade" tabindex="-1" aria-labelledby="bom-modal" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">Bill of Materials</h3>
+                    <div class="btn btn-icon btn-sm btn-active-light-primary ms-2" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ki-duotone ki-cross fs-1"><span class="path1"></span><span class="path2"></span></i>
+                    </div>
+                </div>
+
+                <div class="modal-body">
+                    <form id="bom_form" method="post" action="#">
+                        @csrf
+                        <div class="row mb-6">
+                            <label class="col-lg-3 col-form-label required fw-semibold fs-6" for="bom_product_id">
+                                Component Product
+                            </label>
+                            <div class="col-lg-9">
+                                <select id="bom_product_id" name="bom_product_id" class="form-select" data-control="select2" data-allow-clear="false"></select>
+                            </div>
+                        </div>
+                        <div class="row mb-6">
+                            <label class="col-lg-3 col-form-label required fw-semibold fs-6" for="quantity">
+                                Required Quantity
+                            </label>
+                            <div class="col-lg-9">
+                                <input type="number" class="form-control" id="quantity" name="quantity" min="0.01" step="0.01">
+                            </div>
+                        </div>
+                        <div class="row mb-6">
+                            <label class="col-lg-3 col-form-label required fw-semibold fs-6" for="stock_policy">
+                                Stock Policy
+                            </label>
+                            <div class="col-lg-9">
+                                <select id="stock_policy" name="stock_policy" class="form-select" data-control="select2" data-hide-search="true">
+                                    <option value="Strict">Strict</option>
+                                    <option value="Allow Negative">Allow Negative</option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" form="bom_form" class="btn btn-primary" id="submit-bom">Add</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="addon-modal" class="modal fade" tabindex="-1" aria-labelledby="addon-modal" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">Add-ons</h3>
+                    <div class="btn btn-icon btn-sm btn-active-light-primary ms-2" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ki-duotone ki-cross fs-1"><span class="path1"></span><span class="path2"></span></i>
+                    </div>
+                </div>
+
+                <div class="modal-body">
+                    <form id="addon_form" method="post" action="#">
+                        @csrf
+                        <div class="row mb-6">
+                            <label class="col-lg-3 col-form-label required fw-semibold fs-6" for="addon_product_id">
+                                Add-on Product
+                            </label>
+                            <div class="col-lg-9">
+                                <select id="addon_product_id" name="addon_product_id" class="form-select" data-control="select2" data-allow-clear="false"></select>
+                            </div>
+                        </div>
+                        <div class="row mb-6">
+                            <label class="col-lg-3 col-form-label required fw-semibold fs-6" for="max_quantity">
+                                Max Quantity
+                            </label>
+                            <div class="col-lg-9">
+                                <input type="number" class="form-control" id="max_quantity" name="max_quantity" min="0.01" step="0.01">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" form="bom_form" class="btn btn-primary" id="submit-addon">Add</button>
                 </div>
             </div>
         </div>

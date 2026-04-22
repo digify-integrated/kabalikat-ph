@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Product extends Model
 {
@@ -34,4 +35,19 @@ class Product extends Model
         'base_unit_abbreviation',
         'last_log_by'
     ];
+
+    public function productAttributes(): HasMany
+    {
+        return $this->hasMany(ProductAttribute::class, 'product_ud', 'id');
+    }
+
+    public function productBOMs(): HasMany
+    {
+        return $this->hasMany(ProductBOM::class, 'product_ud', 'id');
+    }
+
+    public function productAddons(): HasMany
+    {
+        return $this->hasMany(ProductAddon::class, 'product_ud', 'id');
+    }
 }

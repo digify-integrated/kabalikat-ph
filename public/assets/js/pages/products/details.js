@@ -72,8 +72,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
             },
             {
-                selector: '#role_assignment_form',
+                selector: '#attribute_form',
                 rules: {
+                    rules: {
+                        attribute_id: { required: true},
+                    },
+                    messages: {
+                        attribute_id: { required: 'Choose the product type' },
+                    },
                     submitHandler: async (form) => {
                         const formData = new URLSearchParams(new FormData(form));
                         formData.append('product_account_id', ctx.detailId ?? '');
@@ -112,26 +118,80 @@ document.addEventListener('DOMContentLoaded', () => {
         ],
         table: [
             {
-                url: '/role-product-account/generate-product-account-role-table',
-                selector: '#role-table',
+                url: '/product-attribute/generate-table',
+                selector: '#attribute-table',
                 serverSide: false,
                 order: [[0, 'asc']],
                 ajaxData: {
-                    product_account_id: ctx.detailId,
+                    product_id: ctx.detailId,
                     page_navigation_menu_id: ctx.navigationMenuId,
                 },
                  columns: [
-                    { data: 'ROLE' },
+                    { data: 'ATTRIBUTE' },
                     { data: 'ACTION' },
                 ],
                 columnDefs: [
                     { width: 'auto', targets: 0, responsivePriority: 1 },
                     { width: 'auto', bSortable: false, targets: 1, responsivePriority: 2 },
                 ],
-                addons: {
+                addon: {
                     subControls: {
-                        searchSelector: '#role-datatable-search',
-                        lengthSelector: '#role-datatable-length',
+                        searchSelector: '#attribute-datatable-search',
+                        lengthSelector: '#attribute-datatable-length',
+                    },
+                },
+            },
+            {
+                url: '/product-bom/generate-table',
+                selector: '#bom-table',
+                serverSide: false,
+                order: [[0, 'asc']],
+                ajaxData: {
+                    product_id: ctx.detailId,
+                    page_navigation_menu_id: ctx.navigationMenuId,
+                },
+                 columns: [
+                    { data: 'BOM_PRODUCT' },
+                    { data: 'QUANTITY' },
+                    { data: 'STOCK_POLICY' },
+                    { data: 'ACTION' },
+                ],
+                columnDefs: [
+                    { width: 'auto', targets: 0, responsivePriority: 1 },
+                    { width: 'auto', targets: 1, responsivePriority: 2 },
+                    { width: 'auto', targets: 2, responsivePriority: 3 },
+                    { width: 'auto', bSortable: false, targets: 3, responsivePriority: 4 },
+                ],
+                addon: {
+                    subControls: {
+                        searchSelector: '#bom-datatable-search',
+                        lengthSelector: '#bom-datatable-length',
+                    },
+                },
+            },
+            {
+                url: '/product-addon/generate-table',
+                selector: '#addon-table',
+                serverSide: false,
+                order: [[0, 'asc']],
+                ajaxData: {
+                    product_id: ctx.detailId,
+                    page_navigation_menu_id: ctx.navigationMenuId,
+                },
+                 columns: [
+                    { data: 'ADDON_PRODUCT' },
+                    { data: 'MAX_QUANTITY' },
+                    { data: 'ACTION' },
+                ],
+                columnDefs: [
+                    { width: 'auto', targets: 0, responsivePriority: 1 },
+                    { width: 'auto', targets: 1, responsivePriority: 2 },
+                    { width: 'auto', bSortable: false, targets: 2, responsivePriority: 3 },
+                ],
+                addon: {
+                    subControls: {
+                        searchSelector: '#bom-datatable-search',
+                        lengthSelector: '#bom-datatable-length',
                     },
                 },
             },
@@ -197,6 +257,14 @@ document.addEventListener('DOMContentLoaded', () => {
         ],
         dropdown: [
             { url: '/unit/generate-options', dropdownSelector: '#base_unit_id' },
+            {
+                url: '/attribute/generate-product-attribute-options',
+                dropdownSelector: '#attribute_id',
+                data : {
+                    product_id : ctx.detailId,
+                    multiple: true
+                }
+            }
         ],
     };
 
@@ -224,7 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
     })();
 
     config.forms.map((cfg) => initValidation(cfg.selector, cfg.rules));
-    //config.table.map((cfg) => initializeDatatable(cfg))
+    config.table.map((cfg) => initializeDatatable(cfg))
 
     attachLogNotesHandler();
     config.lognotes.map((cfg) => attachLogNotesClassHandler(cfg.trigger, cfg.table));
@@ -232,7 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
     detailsDeleteButton(config.delete);
 
     //config.action.map((cfg) => detailsActionButton(cfg));
-    //config.table_action.map((cfg) => detailsTableActionButton(cfg));
+    config.table_action.map((cfg) => detailsTableActionButton(cfg));
 
     imageRealtimeUploadButton(config.upload);
 

@@ -16,8 +16,11 @@ use App\Http\Controllers\FileTypeController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\NationalityController;
 use App\Http\Controllers\NavigationMenuController;
+use App\Http\Controllers\ProductAddonController;
+use App\Http\Controllers\ProductBOMController;
 use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductAttributeController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\RoleSystemActionPermissionController;
@@ -349,6 +352,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
             Route::post('/generate-table', 'generateTable')->name('generate.table');
             Route::post('/generate-options', 'generateOptions')->name('generate.options');
+            Route::post('/generate-product-attribute-options', 'generateProductAttributeOptions')->name('generate.options');
         });
 
      // Attribute Value
@@ -481,6 +485,39 @@ Route::middleware('auth')->group(function () {
             Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
             Route::post('/generate-table', 'generateTable')->name('generate.table');
             Route::post('/generate-options', 'generateOptions')->name('generate.options');
+        });
+
+    // Product Attribute
+    Route::prefix('product-attribute')
+        ->name('product.attribute.')
+        ->controller(ProductAttributeController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
+            Route::post('/delete', 'delete')->name('delete');
+            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
+            Route::post('/generate-table', 'generateTable')->name('generate.table');
+        });
+
+    // Product BOM
+    Route::prefix('product-bom')
+        ->name('product.bom.')
+        ->controller(ProductBOMController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
+            Route::post('/delete', 'delete')->name('delete');
+            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
+            Route::post('/generate-table', 'generateTable')->name('generate.table');
+        });
+
+    // Product Addon
+    Route::prefix('product-addon')
+        ->name('product.addon.')
+        ->controller(ProductAddonController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
+            Route::post('/delete', 'delete')->name('delete');
+            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
+            Route::post('/generate-table', 'generateTable')->name('generate.table');
         });
 
     // Import
