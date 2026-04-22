@@ -474,6 +474,8 @@ Route::middleware('auth')->group(function () {
         ->controller(ProductController::class)
         ->group(function () {
             Route::post('/save', 'save')->name('save');
+            Route::post('/save-product-setting', 'saveProductSetting')->name('save.product.setting');
+            Route::post('/upload-product-image', 'uploadProductImage')->name('upload.product-image');
             Route::post('/delete', 'delete')->name('delete');
             Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
             Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');

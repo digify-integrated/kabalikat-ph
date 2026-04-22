@@ -96,10 +96,70 @@ class ProductController extends Controller
         ]);
     }
 
+    public function saveProductSetting(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'product_id' => ['required', 'integer', Rule::exists('product', 'id')],
+            'setting'    => ['required', 'string'],
+            'value'      => ['required'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ]);
+        }
+
+        $validated = $validator->validated();
+
+        $pageAppId = (int) $request->input('appId');
+        $pageNavigationMenuId = (int) $request->input('navigationMenuId');
+
+        $settingMap = [
+            'track-inventory'     => 'track_inventory',
+            'is-addon'            => 'is_addon',
+            'batch-tracking'      => 'batch_tracking',
+            'expiration-tracking' => 'expiration_tracking',
+        ];
+
+        $settingKey = $validated['setting'];
+
+        if (!array_key_exists($settingKey, $settingMap)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid setting provided.',
+            ]);
+        }
+
+        $column = $settingMap[$settingKey];
+
+        $product = Product::query()->findOrFail($validated['product_id']);
+
+        $payload = [
+            $column => $validated['value'],
+            'last_log_by' => Auth::id(),
+        ];
+
+        $product->update($payload);
+
+        $link = route('apps.details', [
+            'appId' => $pageAppId,
+            'navigationMenuId' => $pageNavigationMenuId,
+            'details_id' => $product->id,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'The product setting has been updated successfully.',
+            'redirect_link' => $link,
+        ]);
+    }
+
     public function uploadProductImage(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'detailId' => ['required', 'integer', 'min:1', Rule::exists('products', 'id')],
+            'detailId' => ['required', 'integer', 'min:1', Rule::exists('product', 'id')],
             'image'    => ['required', 'file'],
         ]);
 
@@ -304,7 +364,7 @@ class ProductController extends Controller
 
         $validated = $validator->validated();
 
-        $product = DB::table('products')
+        $product = DB::table('product')
             ->where('id', $validated['detailId'])
             ->first();
 
@@ -332,18 +392,22 @@ class ProductController extends Controller
         return response()->json([
             'success'               => true,
             'notExist'              => false,
-            'product_name'          => $product->product_name ?? null,
+            'productName'           => $product->product_name ?? null,
             'sku'                   => $product->sku ?? null,
             'barcode'               => $product->barcode ?? null,
-            'product_type'          => $product->product_type ?? null,
-            'product_status'        => $product->product_status ?? null,
-            'tax_classification'    => $product->tax_classification ?? null,
-            'base_price'            => $product->base_price ?? null,
-            'cost_price'            => $product->cost_price ?? null,
-            'base_unit_id'          => $product->base_unit_id ?? null,
-            'inventory_flow'        => $product->inventory_flow ?? null,
-            'reorder_level'         => $product->reorder_level ?? null,
-            'product_description'   => $product->product_description ?? null,
+            'productType'           => $product->product_type ?? null,
+            'productStatus'         => $product->product_status ?? null,
+            'taxClassification'     => $product->tax_classification ?? null,
+            'basePrice'             => $product->base_price ?? null,
+            'costPrice'             => $product->cost_price ?? null,
+            'baseUnitId'            => $product->base_unit_id ?? null,
+            'inventoryFlow'         => $product->inventory_flow ?? null,
+            'reorderLevel'          => $product->reorder_level ?? null,
+            'productDescription'    => $product->product_description ?? null,
+            'trackInventory'        => $product->track_inventory ?? 'Yes',
+            'isAddon'               => $product->is_addon ?? 'No',
+            'batchTracking'         => $product->batch_tracking ?? 'No',
+            'expirationTracking'    => $product->expiration_tracking ?? 'No',
             'productImage'          => $productImageUrl,
         ]);
     }

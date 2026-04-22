@@ -18,7 +18,7 @@
                     <div class="image-input image-input-outline" data-kt-image-input="true">
                         <div
                             class="image-input-wrapper w-125px h-125px"
-                            id="product_image_image"
+                            id="product_image_thumbnail"
                             style="background-image: url('{{ asset('assets/media/default/upload-placeholder.png') }}')"
                         ></div>
 
@@ -48,14 +48,16 @@
                             <div class="d-flex">
                                 <div class="d-flex flex-column">
                                     <div class="fs-5 text-gray-900 fw-bold">Track Inventory</div>
-                                    <div class="fs-7 fw-semibold text-muted">Check if you want this product's quantity to be tracked.</div>
+                                    <div class="fs-7 fw-semibold text-muted">
+                                        Enable this to automatically monitor stock levels and prevent overselling.
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="d-flex justify-content-end">
                                 <label class="form-check form-switch form-switch-sm form-check-custom form-check-solid">
-                                    <input class="form-check-input" type="checkbox" id="track-inventory">
-                                    <span class="form-check-label fw-semibold text-muted" for="track-inventory"></span>
+                                    <input class="form-check-input product-setting" data-setting="track-inventory" type="checkbox" id="track-inventory">
+                                    <span class="form-check-label"></span>
                                 </label>
                             </div>
                         </div>
@@ -65,15 +67,17 @@
                         <div class="d-flex flex-stack">
                             <div class="d-flex">
                                 <div class="d-flex flex-column">
-                                    <div class="fs-5 text-gray-900 fw-bold">Is Add-On</div>
-                                    <div class="fs-7 fw-semibold text-muted">Check if this product is an add-on.</div>
+                                    <div class="fs-5 text-gray-900 fw-bold">Add-On Item</div>
+                                    <div class="fs-7 fw-semibold text-muted">
+                                        Mark this if the product is an optional extra that can be added to a main item.
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="d-flex justify-content-end">
                                 <label class="form-check form-switch form-switch-sm form-check-custom form-check-solid">
-                                    <input class="form-check-input" type="checkbox" id="track-inventory">
-                                    <span class="form-check-label fw-semibold text-muted" for="track-inventory"></span>
+                                    <input class="form-check-input product-setting" data-setting="is-addon" type="checkbox" id="is-addon">
+                                    <span class="form-check-label"></span>
                                 </label>
                             </div>
                         </div>
@@ -84,14 +88,16 @@
                             <div class="d-flex">
                                 <div class="d-flex flex-column">
                                     <div class="fs-5 text-gray-900 fw-bold">Batch Tracking</div>
-                                    <div class="fs-7 fw-semibold text-muted">Check if you want this product.</div>
+                                    <div class="fs-7 fw-semibold text-muted">
+                                        Enable this to track items by batch or lot number for better inventory control.
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="d-flex justify-content-end">
                                 <label class="form-check form-switch form-switch-sm form-check-custom form-check-solid">
-                                    <input class="form-check-input" type="checkbox" id="track-inventory">
-                                    <span class="form-check-label fw-semibold text-muted" for="track-inventory"></span>
+                                    <input class="form-check-input product-setting" data-setting="batch-tracking" type="checkbox" id="batch-tracking">
+                                    <span class="form-check-label"></span>
                                 </label>
                             </div>
                         </div>
@@ -102,14 +108,16 @@
                             <div class="d-flex">
                                 <div class="d-flex flex-column">
                                     <div class="fs-5 text-gray-900 fw-bold">Expiration Tracking</div>
-                                    <div class="fs-7 fw-semibold text-muted">Check if you to track this product's expiration.</div>
+                                    <div class="fs-7 fw-semibold text-muted">
+                                        Enable this to monitor expiration dates and avoid selling expired products.
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="d-flex justify-content-end">
                                 <label class="form-check form-switch form-switch-sm form-check-custom form-check-solid">
-                                    <input class="form-check-input" type="checkbox" id="track-inventory">
-                                    <span class="form-check-label fw-semibold text-muted" for="track-inventory"></span>
+                                    <input class="form-check-input product-setting" data-setting="expiration-tracking" type="checkbox" id="expiration-tracking">
+                                    <span class="form-check-label"></span>
                                 </label>
                             </div>
                         </div>
@@ -296,14 +304,87 @@
                             </form>
                         </div>
                     </div>
-                    <div class="tab-pane fade" id="product_role_tab" role="tabpanel">
+                    <div class="tab-pane fade" id="product_attribute_tab" role="tabpanel">
                         <div class="card mb-5">
                             <div class="card-header border-0 pt-6">
                                 <div class="card-title">
                                     <div class="d-flex align-items-center position-relative my-1 me-3">
-                                        <i class="ki-outline ki-magnifier fs-3 position-absolute ms-5"></i> <input type="text" class="form-control w-250px ps-12" id="role-datatable-search" placeholder="Search..." autocomplete="off" />
+                                        <i class="ki-outline ki-magnifier fs-3 position-absolute ms-5"></i> <input type="text" class="form-control w-250px ps-12" id="attribute-datatable-search" placeholder="Search..." autocomplete="off" />
                                     </div>
-                                    <select id="role-datatable-length" class="form-select w-auto">
+                                    <select id="attribute-datatable-length" class="form-select w-auto">
+                                        <option value="-1">All</option>
+                                        <option value="5">5</option>
+                                        <option value="10" selected>10</option>
+                                        <option value="20">20</option>
+                                        <option value="25">25</option>
+                                        <option value="50">50</option>
+                                        <option value="100">100</option>
+                                    </select>
+                                </div>
+                                <div class="card-toolbar">
+                                    <div class="d-flex justify-content-end" data-kt-customer-table-toolbar="base">
+                                        @if($canWrite)
+                                            <button type="button"
+                                                    class="btn btn-light-primary me-3"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#attribute-modal"
+                                                    id="add-attribute">
+                                                <i class="ki-outline ki-plus fs-2"></i> Add
+                                            </button>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body pt-9">
+                                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5 gs-7" id="attribute-table">
+                                    <thead>
+                                        <tr class="fw-semibold fs-6 text-gray-800">
+                                            <th>Attribute</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="fw-semibold text-gray-600"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="card mb-5">
+                            <div class="card-header border-0 pt-6">
+                                <div class="card-title">
+                                    <div class="d-flex align-items-center position-relative my-1 me-3">
+                                        <i class="ki-outline ki-magnifier fs-3 position-absolute ms-5"></i> <input type="text" class="form-control w-250px ps-12" id="variation-datatable-search" placeholder="Search..." autocomplete="off" />
+                                    </div>
+                                    <select id="variation-datatable-length" class="form-select w-auto">
+                                        <option value="-1">All</option>
+                                        <option value="5">5</option>
+                                        <option value="10" selected>10</option>
+                                        <option value="20">20</option>
+                                        <option value="25">25</option>
+                                        <option value="50">50</option>
+                                        <option value="100">100</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="card-body pt-9">
+                                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5 gs-7" id="variation-table">
+                                    <thead>
+                                        <tr class="fw-semibold fs-6 text-gray-800">
+                                            <th>Variation</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="fw-semibold text-gray-600"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="product_bom_tab" role="tabpanel">
+                        <div class="card mb-5">
+                            <div class="card-header border-0 pt-6">
+                                <div class="card-title">
+                                    <div class="d-flex align-items-center position-relative my-1 me-3">
+                                        <i class="ki-outline ki-magnifier fs-3 position-absolute ms-5"></i> <input type="text" class="form-control w-250px ps-12" id="bom-datatable-search" placeholder="Search..." autocomplete="off" />
+                                    </div>
+                                    <select id="bom-datatable-length" class="form-select w-auto">
                                         <option value="-1">All</option>
                                         <option value="5">5</option>
                                         <option value="10" selected>10</option>
@@ -319,19 +400,66 @@
                                             <button type="button"
                                                     class="btn btn-light-primary me-3"
                                                     data-bs-toggle="modal"
-                                                    data-bs-target="#role-assignment-modal"
-                                                    id="assign-role">
-                                                <i class="ki-outline ki-plus fs-2"></i> Assign
+                                                    data-bs-target="#bom-modal"
+                                                    id="add-bom">
+                                                <i class="ki-outline ki-plus fs-2"></i> Add
                                             </button>
                                         @endif
                                     </div>
                                 </div>
                             </div>
                             <div class="card-body pt-9">
-                                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5 gs-7" id="role-table">
+                                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5 gs-7" id="bom-table">
                                     <thead>
                                         <tr class="fw-semibold fs-6 text-gray-800">
-                                            <th>Role</th>
+                                            <th>Component</th>
+                                            <th>Quantity</th>
+                                            <th>Stock Policy</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="fw-semibold text-gray-600"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="product_addons_tab" role="tabpanel">
+                        <div class="card mb-5">
+                            <div class="card-header border-0 pt-6">
+                                <div class="card-title">
+                                    <div class="d-flex align-items-center position-relative my-1 me-3">
+                                        <i class="ki-outline ki-magnifier fs-3 position-absolute ms-5"></i> <input type="text" class="form-control w-250px ps-12" id="addons-datatable-search" placeholder="Search..." autocomplete="off" />
+                                    </div>
+                                    <select id="addons-datatable-length" class="form-select w-auto">
+                                        <option value="-1">All</option>
+                                        <option value="5">5</option>
+                                        <option value="10" selected>10</option>
+                                        <option value="20">20</option>
+                                        <option value="25">25</option>
+                                        <option value="50">50</option>
+                                        <option value="100">100</option>
+                                    </select>
+                                </div>
+                                <div class="card-toolbar">
+                                    <div class="d-flex justify-content-end" data-kt-customer-table-toolbar="base">
+                                        @if(($canAssignUserAccount ?? false) === true)
+                                            <button type="button"
+                                                    class="btn btn-light-primary me-3"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#addons-modal"
+                                                    id="add-addons">
+                                                <i class="ki-outline ki-plus fs-2"></i> Add
+                                            </button>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body pt-9">
+                                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5 gs-7" id="addons-table">
+                                    <thead>
+                                        <tr class="fw-semibold fs-6 text-gray-800">
+                                            <th>Add-On</th>
+                                            <th>Max Quantity</th>
                                             <th></th>
                                         </tr>
                                     </thead>

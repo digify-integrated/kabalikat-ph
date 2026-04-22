@@ -1,11 +1,11 @@
 import { initValidation } from '../../util/validation.js';
 import { showNotification } from '../../util/notifications.js';
 import { attachLogNotesHandler, attachLogNotesClassHandler } from '../../util/log-notes.js';
-import { disableButton, enableButton, detailsDeleteButton, detailsActionButton, imageRealtimeUploadButton, passwordAddOn, detailsTableActionButton, } from '../../form/button.js';
-import { generateDualListBox } from '../../form/field.js';
-import { displayDetails, getPageContext } from '../../form/form.js';
+import { disableButton, enableButton, detailsDeleteButton, detailsActionButton, imageRealtimeUploadButton, detailsTableActionButton, } from '../../form/button.js';
+import { displayDetails, getPageContext, getCsrfToken } from '../../form/form.js';
 import { initializeDatatable, reloadDatatable } from '../../util/datatable.js';
 import { handleSystemError } from '../../util/system-errors.js';
+import { generateDropdownOptions } from '../../form/field.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     let optionsPromise = Promise.resolve();
@@ -18,17 +18,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 rules: {
                     rules: {
                         product_name: { required: true},
-                        email: { 
-                            required: true,
-                            typeEmail: true
-                        }
+                        product_type: { required: true},
+                        product_status: { required: true},
+                        tax_classification: { required: true},
+                        base_price: { required: true},
+                        cost_price: { required: true},
+                        base_unit_id: { required: true},
+                        inventory_flow: { required: true},
+                        reorder_level: { required: true},
                     },
                     messages: {
                         product_name: { required: 'Enter the product name' },
-                        email: { 
-                            required: 'Enter the email',
-                            typeEmail: 'Enter a valid email'
-                        },
+                        product_type: { required: 'Choose the product type' },
+                        product_status: { required: 'Choose the product status' },
+                        tax_classification: { required: 'Choose the tax classification' },
+                        base_price: { required: 'Enter the base price' },
+                        cost_price: { required: 'Enter the cost price' },
+                        base_unit_id: { required: 'Choose the base unit' },
+                        inventory_flow: { required: 'Choose the inventory flow' },
+                        reorder_level: { required: 'Enter the reorder level' },
                     },
                     submitHandler: async (form) => {
                         const formData = new URLSearchParams(new FormData(form));
@@ -39,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         disableButton('submit-data');
 
                         try {
-                            const response = await fetch('/product/save', {
+                            const response = await fetch('/products/save', {
                                 method: 'POST',
                                 body: formData,
                             });
@@ -128,54 +136,45 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
             },
         ],
-        details: {
-            url: '/product/fetch-details',
-            formSelector: '#product_form',
-            busyHideTargets: ['#submit-data'],
-            onSuccess: async (data) => {
-                document.getElementById('product_name').value = data.name || '';
-                document.getElementById('email').value = data.email || '';
-                
-                const thumbnail = document.getElementById('profile_picture_image');
-                if (thumbnail) thumbnail.style.backgroundImage = `url(${data.profilePicture || ''})`;
-
-                await optionsPromise;
-            },
-        },
-        duallist: [
+        details:[
             {
-                trigger: '#assign-role',
-                url: '/role-product-account/generate-product-account-role-dual-listbox-options',
-                selectSelector: 'role_id',
-                data: {
-                    productAccountId: ctx.detailId ?? ''
-                }
-            },
+                url: '/products/fetch-details',
+                formSelector: '#product_form',
+                busyHideTargets: ['#submit-data'],
+                onSuccess: async (data) => {
+                    document.getElementById('product_name').value = data.productName || '';
+                    document.getElementById('sku').value = data.sku || '';
+                    document.getElementById('barcode').value = data.barcode || '';
+                    document.getElementById('base_price').value = data.basePrice || '';
+                    document.getElementById('cost_price').value = data.costPrice || '';
+                    document.getElementById('reorder_level').value = data.reorderLevel || '';
+                    document.getElementById('product_description').value = data.productDescription || '';
+                    
+                    const thumbnail = document.getElementById('product_image_thumbnail');
+                    if (thumbnail) thumbnail.style.backgroundImage = `url(${data.productImage || ''})`;
+
+                    await optionsPromise;
+                    
+                    $('#product_type').val(data.productType ?? '').trigger('change');
+                    $('#product_status').val(data.productStatus ?? 'Active').trigger('change');
+                    $('#tax_classification').val(data.taxClassification ?? '').trigger('change');
+                    $('#base_unit_id').val(data.baseUnitId ?? '').trigger('change');
+                    $('#inventory_flow').val(data.inventoryFlow ?? '').trigger('change');
+
+                    document.getElementById('track-inventory').checked = data.trackInventory === 'Yes';
+                    document.getElementById('is-addon').checked = data.isAddon === 'Yes';
+                    document.getElementById('batch-tracking').checked = data.batchTracking === 'Yes';
+                    document.getElementById('expiration-tracking').checked = data.expirationTracking === 'Yes';
+                },
+            }
         ],
         delete: {
             trigger: '#delete-product',
-            url: '/product/delete',
+            url: '/products/delete',
             swalTitle: 'Confirm User Deletion',
             swalText: 'Are you sure you want to delete this product?',
             confirmButtonText: 'Delete',
         },
-        action: [
-            {
-                trigger: '#activate-product',
-                url: '/product/activate',
-                swalTitle: 'Confirm User Activation',
-                confirmButtonClass : 'success',
-                swalText: 'Are you sure you want to activate this product?',
-                confirmButtonText: 'Activate',
-            },
-            {
-                trigger: '#deactivate-product',
-                url: '/product/deactivate',
-                swalTitle: 'Confirm User Deactivation',
-                swalText: 'Are you sure you want to deactivate this product?',
-                confirmButtonText: 'Deactivate',
-            },
-        ],
         table_action: [
             {
                 trigger: '.delete-role-permission',
@@ -187,38 +186,94 @@ document.addEventListener('DOMContentLoaded', () => {
             },
         ],
         upload: {
-            trigger: '#profile_picture',
-            url: '/product/upload-product-profile-picture',
+            trigger: '#product_image',
+            url: '/products/upload-product-image',
         },
         lognotes: [
             {
                 trigger: '.view-role-permission-log-notes',
                 table: 'role_product_account'
             },
-        ]
+        ],
+        dropdown: [
+            { url: '/unit/generate-options', dropdownSelector: '#base_unit_id' },
+        ],
     };
 
     (async () => {
         try {
-            await displayDetails(config.details);
+            optionsPromise = Promise.all(
+                config.dropdown.map((cfg) =>
+                    generateDropdownOptions({
+                        url: cfg.url,
+                        dropdownSelector: cfg.dropdownSelector,
+                    })
+                )
+            );
+
+            const fetchDetailsPromise = Promise.all(
+                config.details.map((cfg) => displayDetails(cfg))
+            );
+
+            await Promise.all([
+                fetchDetailsPromise,
+            ]);
         } catch (err) {
             handleSystemError(err, 'init_failed', `Initialization failed: ${err.message}`);
         }
     })();
 
-    passwordAddOn();
-
     config.forms.map((cfg) => initValidation(cfg.selector, cfg.rules));
     //config.table.map((cfg) => initializeDatatable(cfg))
-    config.duallist.map((cfg) => generateDualListBox(cfg))
 
     attachLogNotesHandler();
     config.lognotes.map((cfg) => attachLogNotesClassHandler(cfg.trigger, cfg.table));
 
     detailsDeleteButton(config.delete);
 
-    config.action.map((cfg) => detailsActionButton(cfg));
-    config.table_action.map((cfg) => detailsTableActionButton(cfg));
+    //config.action.map((cfg) => detailsActionButton(cfg));
+    //config.table_action.map((cfg) => detailsTableActionButton(cfg));
 
     imageRealtimeUploadButton(config.upload);
+
+    document.addEventListener('change', async (e) => {
+        const btn = e.target.closest('.product-setting');
+        if (!btn) return;
+        const setting = btn.dataset.setting;
+        const value = btn.checked ? 'Yes' : 'No';
+    
+        e.preventDefault();
+    
+        try {
+          const csrf = getCsrfToken();
+          const ctx = getPageContext();
+    
+          const formData = new URLSearchParams();
+          formData.append('setting', setting);
+          formData.append('value', value);
+          formData.append('product_id', ctx.detailId ?? '');
+          formData.append('appId', ctx.appId ?? '');
+          formData.append('navigationMenuId', ctx.navigationMenuId ?? '')
+    
+          const response = await fetch('/products/save-product-setting', {
+            method: 'POST',
+            body: formData,
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+              Accept: 'application/json',
+              ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+            },
+          });
+    
+          if (!response.ok) throw new Error(`Request failed with status: ${response.status}`);
+    
+          const data = await response.json();
+    
+          if (!data.success) {
+            showNotification(data.message);
+          }
+        } catch (error) {
+            handleSystemError(error, 'fetch_failed', `Failed to settings: ${error.message}`);
+        }
+    });
 });
