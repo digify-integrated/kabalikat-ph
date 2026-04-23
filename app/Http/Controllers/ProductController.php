@@ -96,6 +96,197 @@ class ProductController extends Controller
         ]);
     }
 
+    public function saveProductVariation(Request $request)
+    {
+        $request->validate([
+            'product_id' => ['required', 'integer', Rule::exists('product', 'id')]
+        ]);
+
+        $product = Product::findOrFail($request->product_id);
+
+        DB::transaction(function () use ($product) {
+
+            // 1. Get attribute values grouped
+            $groupedValues = $this->getGroupedAttributeValues($product->id);
+
+            if (empty($groupedValues)) return;
+
+            // 2. Generate combinations (ONLY FULL)
+            $combinations = $this->generateCombinations($groupedValues);
+
+            // 3. Get existing signatures (avoid N+1)
+            $existing = Product::where('parent_product_id', $product->id)
+                ->pluck('variant_signature')
+                ->toArray();
+
+            $existingMap = array_flip($existing);
+
+            // 4. Prepare bulk insert
+            $variantsToInsert = [];
+            $now = now();
+
+            foreach ($combinations as $combo) {
+
+                $signature = $this->buildSignature($combo);
+
+                if (isset($existingMap[$signature])) {
+                    continue;
+                }
+
+                $variantsToInsert[] = [
+                    'product_name' => $this->buildVariantName($product->product_name, $combo),
+                    'parent_product_id' => $product->id,
+                    'parent_product_name' => $product->product_name,
+                    'variant_signature' => $signature,
+                    'attribute_count' => count($combo),
+                    'is_variant' => 'Yes',
+                    'product_status' => 'Active',
+
+                    'product_type' => $product->product_type,
+                    'base_price' => $product->base_price,
+                    'cost_price' => $product->cost_price,
+                    'inventory_flow' => $product->inventory_flow,
+                    'tax_classification' => $product->tax_classification,
+                    'track_inventory' => $product->track_inventory,
+                    'base_unit_id' => $product->base_unit_id,
+                    'base_unit_name' => $product->base_unit_name,
+                    'base_unit_abbreviation' => $product->base_unit_abbreviation,
+
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+            }
+
+            // 5. Bulk insert (FAST)
+            if (!empty($variantsToInsert)) {
+                Product::insert($variantsToInsert);
+            }
+
+            // 6. Duplicate BOM (NEW)
+            $this->duplicateBomToVariants($product->id);
+
+            // 7. Ensure only complete variants active
+            $this->activateOnlyCompleteVariants($product->id);
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Variations generated successfully.'
+        ]);
+    }
+
+    private function getGroupedAttributeValues(int $productId): array
+    {
+        $rows = DB::table('product_attribute as pa')
+            ->join('attribute_value as av', 'pa.attribute_id', '=', 'av.attribute_id')
+            ->where('pa.product_id', $productId)
+            ->select(
+                'av.id',
+                'av.attribute_id',
+                'av.attribute_value'
+            )
+            ->get();
+
+        return $rows->groupBy('attribute_id')
+            ->map(fn($group) => $group->map(fn($v) => [
+                'id' => (int) $v->id,
+                'attribute_id' => (int) $v->attribute_id,
+                'name' => $v->attribute_value
+            ])->values()->toArray())
+            ->values()
+            ->toArray();
+    }
+
+    private function buildSignature(array $combo): string
+    {
+        usort($combo, fn($a, $b) => $a['attribute_id'] <=> $b['attribute_id']);
+
+        return implode('|', array_map(
+            fn($v) => "{$v['attribute_id']}:{$v['id']}",
+            $combo
+        ));
+    }
+
+    private function buildVariantName(string $base, array $combo): string
+    {
+        return $base . ' - ' . implode(' - ', array_column($combo, 'name'));
+    }
+
+    private function duplicateBomToVariants(int $parentId): void
+    {
+        // Get parent BOM once
+        $bomItems = DB::table('product_bom')
+            ->where('product_id', $parentId)
+            ->get();
+
+        if ($bomItems->isEmpty()) return;
+
+        // Get all variants
+        $variants = DB::table('product')
+            ->where('parent_product_id', $parentId)
+            ->pluck('id', 'product_name');
+
+        $insert = [];
+        $now = now();
+
+        foreach ($variants as $variantId => $variantName) {
+            foreach ($bomItems as $bom) {
+                $insert[] = [
+                    'product_id' => $variantId,
+                    'product_name' => $variantName,
+                    'bom_product_id' => $bom->bom_product_id,
+                    'bom_product_name' => $bom->bom_product_name,
+                    'quantity' => $bom->quantity,
+                    'stock_policy' => $bom->stock_policy,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+            }
+        }
+
+        // Avoid duplicates (optional but recommended)
+        if (!empty($insert)) {
+            DB::table('product_bom')->insert($insert);
+        }
+    }
+
+    private function activateOnlyCompleteVariants(int $parentId): void
+    {
+        $required = DB::table('product_attribute')
+            ->where('product_id', $parentId)
+            ->count();
+
+        DB::table('product')
+            ->where('parent_product_id', $parentId)
+            ->update([
+                'product_status' => DB::raw("
+                    CASE 
+                        WHEN attribute_count = {$required} THEN 'Active'
+                        ELSE 'Inactive'
+                    END
+                ")
+            ]);
+    }
+
+    private function generateCombinations(array $groupedValues): array
+{
+        $result = [[]];
+
+        foreach ($groupedValues as $values) {
+            $new = [];
+
+            foreach ($result as $existingCombination) {
+                foreach ($values as $value) {
+                    $new[] = [...$existingCombination, $value];
+                }
+            }
+
+            $result = $new;
+        }
+
+        return $result;
+    }
+
     public function saveProductSetting(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -469,6 +660,34 @@ class ProductController extends Controller
                 'BASE_PRICE' => number_format($basePrice, 2),
                 'STATUS' => $activeBadge,
                 'LINK' => $link,
+            ];
+        })->values();
+
+        return response()->json($response);
+    }
+
+    public function generateVariationTable(Request $request)
+    {
+        $productId = (int) $request->input('product_id');
+        $pageNavigationNenuId = (int) $request->input('page_navigation_menu_id');
+
+        $productVariations = DB::table('product')
+        ->where('parent_product_id', $productId)
+        ->where('is_variant', 'Yes')
+        ->where('product_status', 'Active')
+        ->orderBy('product_name')
+        ->get();
+
+        $writeAccess = $request->user()->menuPermissions($pageNavigationNenuId)['write'] ?? 0;
+        $logsAccess = $request->user()->menuPermissions($pageNavigationNenuId)['logs'] ?? 0;
+
+        $response = $productVariations->map(function ($row) use ($writeAccess, $logsAccess)  {
+            $productId = $row->id;
+            $productName = $row->product_name;
+
+            return [
+                'VARIANT' => $productName,
+                'ACTION' => ''
             ];
         })->values();
 

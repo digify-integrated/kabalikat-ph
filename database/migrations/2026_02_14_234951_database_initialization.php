@@ -668,6 +668,7 @@ return new class extends Migration
             $table->double('cost_price')->default(0);
             $table->enum('inventory_flow', ['FIFO', 'FEFO', 'LIFO', 'Manual']);
             $table->enum('tax_classification', ['Vatable', 'VAT Exempt', 'Zero Rated']);
+            $table->integer('attribute_count')->default(0);
 
             $table->enum('track_inventory', ['Yes', 'No'])
             ->default('Yes');
@@ -705,6 +706,11 @@ return new class extends Migration
 
             $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
             $table->timestamps();
+
+            $table->unique(
+                ['parent_product_id', 'variant_signature'],
+                'unique_variant_signature'
+            );
 
             $table->index(['sku'], 'product_sku_idx');
             $table->index(['barcode'], 'product_barcode_idx');

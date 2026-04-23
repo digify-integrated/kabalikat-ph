@@ -479,6 +479,7 @@ Route::middleware('auth')->group(function () {
         ->group(function () {
             Route::post('/save', 'save')->name('save');
             Route::post('/save-product-setting', 'saveProductSetting')->name('save.product.setting');
+            Route::post('/save-product-variation', 'saveProductVariation')->name('save.product.variation');
             Route::post('/upload-product-image', 'uploadProductImage')->name('upload.product-image');
             Route::post('/delete', 'delete')->name('delete');
             Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');

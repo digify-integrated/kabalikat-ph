@@ -238,6 +238,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
             },
             {
+                url: '/products/generate-variation-table',
+                selector: '#variation-table',
+                serverSide: false,
+                order: [[0, 'asc']],
+                ajaxData: {
+                    product_id: ctx.detailId,
+                    page_navigation_menu_id: ctx.navigationMenuId,
+                },
+                 columns: [
+                    { data: 'VARIANT' },
+                    { data: 'ACTION' },
+                ],
+                columnDefs: [
+                    { width: 'auto', targets: 0, responsivePriority: 1 },
+                    { width: 'auto', bSortable: false, targets: 1, responsivePriority: 2 },
+                ],
+                addons: {
+                    subControls: {
+                        searchSelector: '#variation-datatable-search',
+                        lengthSelector: '#variation-datatable-length',
+                    },
+                },
+            },
+            {
                 url: '/product-bom/generate-table',
                 selector: '#bom-table',
                 serverSide: false,
@@ -476,7 +500,44 @@ document.addEventListener('DOMContentLoaded', () => {
     
         const generateVariant = target.closest('#generate-variant');
         if (generateVariant) {
-                     
+            try {
+                const csrf = getCsrfToken();
+                const ctx = getPageContext();
+
+                disableButton('generate-variant');
+            
+                const formData = new URLSearchParams();
+                formData.append('product_id', ctx.detailId ?? '');
+                formData.append('appId', ctx.appId ?? '');
+                formData.append('navigationMenuId', ctx.navigationMenuId ?? '')
+            
+                const response = await fetch('/products/save-product-variation', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    Accept: 'application/json',
+                    ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+                    },
+                });
+            
+                if (!response.ok) {
+                    throw new Error(`Generate variant failed with status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    reloadDatatable('#variation-table');
+                } else {
+                    showNotification(data.message);
+                }
+
+                enableButton('generate-variant');
+            } catch (error) {
+                handleSystemError(error, 'fetch_failed', `Failed to settings: ${error.message}`);
+            }
         }
     });
 
