@@ -484,7 +484,10 @@ Route::middleware('auth')->group(function () {
             Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
             Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
             Route::post('/generate-table', 'generateTable')->name('generate.table');
+            Route::post('/generate-variation-table', 'generateVariationTable')->name('generate.variation.table');
             Route::post('/generate-options', 'generateOptions')->name('generate.options');
+            Route::post('/generate-product-bom-options', 'generateBomOptions')->name('generate.bom.options');
+            Route::post('/generate-product-addon-options', 'generateAddOnOptions')->name('generate.addon.options');
         });
 
     // Product Attribute

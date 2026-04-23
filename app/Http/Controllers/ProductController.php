@@ -63,13 +63,13 @@ class ProductController extends Controller
             'product_type' => $validated['product_type'] ?? null,
             'product_status' => $validated['product_status'] ?? 'Active',
             'tax_classification' => $validated['tax_classification'] ?? null,
-            'base_price' => $validated['base_price'] ?? null,
-            'cost_price' => $validated['cost_price'] ?? null,
+            'base_price' => $validated['base_price'] ?? 0,
+            'cost_price' => $validated['cost_price'] ?? 0,
             'base_unit_id' => $validated['base_unit_id'] ?? null,
             'base_unit_name' => $baseUnitName,
             'base_unit_abbreviation' => $baseUnitabbreviation,
             'inventory_flow' => $validated['inventory_flow'] ?? null,
-            'reorder_level' => $validated['reorder_level'] ?? null,
+            'reorder_level' => $validated['reorder_level'] ?? 0,
             'product_description' => $validated['product_description'] ?? null,
             'last_log_by' => Auth::id(),
         ];   
@@ -495,6 +495,80 @@ class ProductController extends Controller
 
         $response = $response->concat(
             $product->map(fn ($row) => [
+                'id'   => $row->id,
+                'text' => $row->product_name,
+            ])
+        )->values();
+
+        return response()->json($response);
+    }
+
+    public function generateBomOptions(Request $request)
+    {
+        $productId = $request->input('product_id');
+        $multiple = filter_var($request->input('multiple', false), FILTER_VALIDATE_BOOLEAN);
+
+        $response = collect();
+
+        if (!$multiple) {
+            $response->push([
+                'id'   => '',
+                'text' => '--',
+            ]);
+        }
+
+        $boms = DB::table('product')
+            ->select(['id', 'product_name'])
+            ->whereNotIn('id', function ($query) use ($productId) {
+                $query->select('product_id')
+                    ->from('product_bom')
+                    ->where('product_id', $productId);
+            })
+            ->where('track_inventory', 'Yes')
+            ->where('product_status', 'Active')
+            ->where('id', '!=', $productId)
+            ->orderBy('product_name')
+            ->get();
+
+        $response = $response->concat(
+            $boms->map(fn ($row) => [
+                'id'   => $row->id,
+                'text' => $row->product_name,
+            ])
+        )->values();
+
+        return response()->json($response);
+    }
+
+    public function generateAddOnOptions(Request $request)
+    {
+        $productId = $request->input('product_id');
+        $multiple = filter_var($request->input('multiple', false), FILTER_VALIDATE_BOOLEAN);
+
+        $response = collect();
+
+        if (!$multiple) {
+            $response->push([
+                'id'   => '',
+                'text' => '--',
+            ]);
+        }
+
+        $boms = DB::table('product')
+            ->select(['id', 'product_name'])
+            ->whereNotIn('id', function ($query) use ($productId) {
+                $query->select('product_id')
+                    ->from('product_addon')
+                    ->where('product_id', $productId);
+            })
+            ->where('is_addon', 'Yes')
+            ->where('product_status', 'Active')
+            ->where('id', '!=', $productId)
+            ->orderBy('product_name')
+            ->get();
+
+        $response = $response->concat(
+            $boms->map(fn ($row) => [
                 'id'   => $row->id,
                 'text' => $row->product_name,
             ])

@@ -2,7 +2,7 @@ import { initValidation } from '../../util/validation.js';
 import { showNotification } from '../../util/notifications.js';
 import { attachLogNotesHandler, attachLogNotesClassHandler } from '../../util/log-notes.js';
 import { disableButton, enableButton, detailsDeleteButton, detailsActionButton, imageRealtimeUploadButton, detailsTableActionButton, } from '../../form/button.js';
-import { displayDetails, getPageContext, getCsrfToken } from '../../form/form.js';
+import { displayDetails, getPageContext, getCsrfToken, resetForm } from '../../form/form.js';
 import { initializeDatatable, reloadDatatable } from '../../util/datatable.js';
 import { handleSystemError } from '../../util/system-errors.js';
 import { generateDropdownOptions } from '../../form/field.js';
@@ -82,14 +82,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     },
                     submitHandler: async (form) => {
                         const formData = new URLSearchParams(new FormData(form));
-                        formData.append('product_account_id', ctx.detailId ?? '');
+                        formData.append('product_id', ctx.detailId ?? '');
                         formData.append('appId', ctx.appId ?? '');
                         formData.append('navigationMenuId', ctx.navigationMenuId ?? '');
             
-                        disableButton('submit-assignment');
+                        disableButton('submit-attribute');
             
                         try {
-                            const response = await fetch('/role-product-account/save-product-account-role-assignment', {
+                            const response = await fetch('/product-attribute/save', {
                                 method: 'POST',
                                 body: formData,
                             });
@@ -101,8 +101,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             const data = await response.json();
             
                             if (data.success) {
-                                reloadDatatable('#role-table');
-                                $('#role-assignment-modal').modal('hide');
+                                reloadDatatable('#attribute-table');
+                                $('#attribute-modal').modal('hide');
                                 showNotification(data.message, 'success');
                             } else {
                                 showNotification(data.message);
@@ -110,7 +110,101 @@ document.addEventListener('DOMContentLoaded', () => {
                         } catch (error) {
                             handleSystemError(error, 'fetch_failed', `Fetch request failed: ${error.message}`);
                         } finally {
-                            enableButton('submit-assignment');
+                            enableButton('submit-attribute');
+                        }
+                    },
+                }
+            },
+            {
+                selector: '#bom_form',
+                rules: {
+                    rules: {
+                        bom_product_id: { required: true},
+                        quantity: { required: true},
+                        stock_policy: { required: true},
+                    },
+                    messages: {
+                        bom_product_id: { required: 'Choose the component product' },
+                        quantity: { required: 'Enter the required quantity' },
+                        stock_policy: { required: 'Choose the stock policy' },
+                    },
+                    submitHandler: async (form) => {
+                        const formData = new URLSearchParams(new FormData(form));
+                        formData.append('product_id', ctx.detailId ?? '');
+                        formData.append('appId', ctx.appId ?? '');
+                        formData.append('navigationMenuId', ctx.navigationMenuId ?? '');
+            
+                        disableButton('submit-bom');
+            
+                        try {
+                            const response = await fetch('/product-bom/save', {
+                                method: 'POST',
+                                body: formData,
+                            });
+            
+                            if (!response.ok) {
+                                throw new Error(`Save role assignment failed with status: ${response.status}`);
+                            }
+            
+                            const data = await response.json();
+            
+                            if (data.success) {
+                                reloadDatatable('#bom-table');
+                                $('#bom-modal').modal('hide');
+                                showNotification(data.message, 'success');
+                            } else {
+                                showNotification(data.message);
+                            }
+                        } catch (error) {
+                            handleSystemError(error, 'fetch_failed', `Fetch request failed: ${error.message}`);
+                        } finally {
+                            enableButton('submit-bom');
+                        }
+                    },
+                }
+            },
+            {
+                selector: '#addon_form',
+                rules: {
+                    rules: {
+                        addon_product_id: { required: true},
+                        max_quantity: { required: true},
+                    },
+                    messages: {
+                        addon_product_id: { required: 'Choose the add-on product' },
+                        max_quantity: { required: 'Enter the max quantity' },
+                    },
+                    submitHandler: async (form) => {
+                        const formData = new URLSearchParams(new FormData(form));
+                        formData.append('product_id', ctx.detailId ?? '');
+                        formData.append('appId', ctx.appId ?? '');
+                        formData.append('navigationMenuId', ctx.navigationMenuId ?? '');
+            
+                        disableButton('submit-addon');
+            
+                        try {
+                            const response = await fetch('/product-addon/save', {
+                                method: 'POST',
+                                body: formData,
+                            });
+            
+                            if (!response.ok) {
+                                throw new Error(`Save role assignment failed with status: ${response.status}`);
+                            }
+            
+                            const data = await response.json();
+            
+                            if (data.success) {
+                                reloadDatatable('#addon-table');
+                                $('#addon-modal').modal('hide');
+                                showNotification(data.message, 'success');
+                            } else {
+                                showNotification(data.message);
+                            }
+                        } catch (error) {
+                            handleSystemError(error, 'fetch_failed', `Fetch request failed: ${error.message}`);
+                        } finally {
+                            enableButton('submit-addon');
                         }
                     },
                 }
@@ -128,13 +222,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                  columns: [
                     { data: 'ATTRIBUTE' },
+                    { data: 'ATTRIBUTE_VALUE' },
                     { data: 'ACTION' },
                 ],
                 columnDefs: [
                     { width: 'auto', targets: 0, responsivePriority: 1 },
-                    { width: 'auto', bSortable: false, targets: 1, responsivePriority: 2 },
+                    { width: 'auto', targets: 1, responsivePriority: 2 },
+                    { width: 'auto', bSortable: false, targets: 2, responsivePriority: 3 },
                 ],
-                addon: {
+                addons: {
                     subControls: {
                         searchSelector: '#attribute-datatable-search',
                         lengthSelector: '#attribute-datatable-length',
@@ -162,7 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     { width: 'auto', targets: 2, responsivePriority: 3 },
                     { width: 'auto', bSortable: false, targets: 3, responsivePriority: 4 },
                 ],
-                addon: {
+                addons: {
                     subControls: {
                         searchSelector: '#bom-datatable-search',
                         lengthSelector: '#bom-datatable-length',
@@ -188,10 +284,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     { width: 'auto', targets: 1, responsivePriority: 2 },
                     { width: 'auto', bSortable: false, targets: 2, responsivePriority: 3 },
                 ],
-                addon: {
+                addons: {
                     subControls: {
-                        searchSelector: '#bom-datatable-search',
-                        lengthSelector: '#bom-datatable-length',
+                        searchSelector: '#addon-datatable-search',
+                        lengthSelector: '#addon-datatable-length',
                     },
                 },
             },
@@ -205,9 +301,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('product_name').value = data.productName || '';
                     document.getElementById('sku').value = data.sku || '';
                     document.getElementById('barcode').value = data.barcode || '';
-                    document.getElementById('base_price').value = data.basePrice || '';
-                    document.getElementById('cost_price').value = data.costPrice || '';
-                    document.getElementById('reorder_level').value = data.reorderLevel || '';
+                    document.getElementById('base_price').value = data.basePrice || 0;
+                    document.getElementById('cost_price').value = data.costPrice || 0;
+                    document.getElementById('reorder_level').value = data.reorderLevel || 0;
                     document.getElementById('product_description').value = data.productDescription || '';
                     
                     const thumbnail = document.getElementById('product_image_thumbnail');
@@ -237,11 +333,27 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         table_action: [
             {
-                trigger: '.delete-role-permission',
-                url: '/role-product-account/delete',
-                table: '#role-table',
-                swalTitle: 'Confirm Role Deletion',
-                swalText: 'Are you sure you want to delete this role?',
+                trigger: '.delete-attribute',
+                url: '/product-attribute/delete',
+                table: '#attribute-table',
+                swalTitle: 'Confirm Attribute Deletion',
+                swalText: 'Are you sure you want to delete this attribute?',
+                confirmButtonText: 'Delete'
+            },
+            {
+                trigger: '.delete-bom',
+                url: '/product-bom/delete',
+                table: '#bom-table',
+                swalTitle: 'Confirm Component Deletion',
+                swalText: 'Are you sure you want to delete this component?',
+                confirmButtonText: 'Delete'
+            },
+            {
+                trigger: '.delete-addon',
+                url: '/product-addon/delete',
+                table: '#addon-table',
+                swalTitle: 'Confirm Add-on Deletion',
+                swalText: 'Are you sure you want to delete this add-on?',
                 confirmButtonText: 'Delete'
             },
         ],
@@ -251,21 +363,43 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         lognotes: [
             {
-                trigger: '.view-role-permission-log-notes',
-                table: 'role_product_account'
+                trigger: '.view-attribute-log-notes',
+                table: 'product_attribute'
+            },
+            {
+                trigger: '.view-bom-log-notes',
+                table: 'product_bom'
+            },
+            {
+                trigger: '.view-addon-log-notes',
+                table: 'product_addon'
             },
         ],
         dropdown: [
-            { url: '/unit/generate-options', dropdownSelector: '#base_unit_id' },
-            {
-                url: '/attribute/generate-product-attribute-options',
-                dropdownSelector: '#attribute_id',
-                data : {
-                    product_id : ctx.detailId,
-                    multiple: true
-                }
-            }
+            { url: '/unit/generate-options', dropdownSelector: '#base_unit_id' }
         ],
+        attributeDropdown: {
+            url: '/attribute/generate-product-attribute-options',
+            dropdownSelector: '#attribute_id',
+            data : {
+                product_id : ctx.detailId,
+                multiple: true
+            }
+        },
+        bomDropdown: {
+            url: '/products/generate-product-bom-options',
+            dropdownSelector: '#bom_product_id',
+            data : {
+                product_id : ctx.detailId,
+            }
+        },
+        addonDropdown: {
+            url: '/products/generate-product-addon-options',
+            dropdownSelector: '#addon_product_id',
+            data : {
+                product_id : ctx.detailId,
+            }
+        },
     };
 
     (async () => {
@@ -275,6 +409,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     generateDropdownOptions({
                         url: cfg.url,
                         dropdownSelector: cfg.dropdownSelector,
+                        data : cfg.data
                     })
                 )
             );
@@ -299,10 +434,51 @@ document.addEventListener('DOMContentLoaded', () => {
 
     detailsDeleteButton(config.delete);
 
-    //config.action.map((cfg) => detailsActionButton(cfg));
     config.table_action.map((cfg) => detailsTableActionButton(cfg));
 
     imageRealtimeUploadButton(config.upload);
+
+    document.addEventListener('click', async (event) => {
+        const target = event.target;
+    
+        const addAttribute = target.closest('#add-attribute');
+        if (addAttribute) {
+            resetForm('attribute_form');
+
+            generateDropdownOptions({
+                url: config.attributeDropdown.url,
+                dropdownSelector: config.attributeDropdown.dropdownSelector,
+                data: config.attributeDropdown.data
+            });            
+        }
+    
+        const addBom = target.closest('#add-bom');
+        if (addBom) {
+            resetForm('bom_form');
+
+            generateDropdownOptions({
+                url: config.bomDropdown.url,
+                dropdownSelector: config.bomDropdown.dropdownSelector,
+                data: config.bomDropdown.data
+            });            
+        }
+    
+        const addAddon = target.closest('#add-addon');
+        if (addAddon) {
+            resetForm('addon_form');
+
+            generateDropdownOptions({
+                url: config.addonDropdown.url,
+                dropdownSelector: config.addonDropdown.dropdownSelector,
+                data: config.addonDropdown.data
+            });            
+        }
+    
+        const generateVariant = target.closest('#generate-variant');
+        if (generateVariant) {
+                     
+        }
+    });
 
     document.addEventListener('change', async (e) => {
         const btn = e.target.closest('.product-setting');
@@ -313,33 +489,33 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
     
         try {
-          const csrf = getCsrfToken();
-          const ctx = getPageContext();
-    
-          const formData = new URLSearchParams();
-          formData.append('setting', setting);
-          formData.append('value', value);
-          formData.append('product_id', ctx.detailId ?? '');
-          formData.append('appId', ctx.appId ?? '');
-          formData.append('navigationMenuId', ctx.navigationMenuId ?? '')
-    
-          const response = await fetch('/products/save-product-setting', {
-            method: 'POST',
-            body: formData,
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-              Accept: 'application/json',
-              ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
-            },
-          });
-    
-          if (!response.ok) throw new Error(`Request failed with status: ${response.status}`);
-    
-          const data = await response.json();
-    
-          if (!data.success) {
-            showNotification(data.message);
-          }
+            const csrf = getCsrfToken();
+            const ctx = getPageContext();
+        
+            const formData = new URLSearchParams();
+            formData.append('setting', setting);
+            formData.append('value', value);
+            formData.append('product_id', ctx.detailId ?? '');
+            formData.append('appId', ctx.appId ?? '');
+            formData.append('navigationMenuId', ctx.navigationMenuId ?? '')
+        
+            const response = await fetch('/products/save-product-setting', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                Accept: 'application/json',
+                ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+                },
+            });
+        
+            if (!response.ok) throw new Error(`Request failed with status: ${response.status}`);
+        
+            const data = await response.json();
+        
+            if (!data.success) {
+                showNotification(data.message);
+            }
         } catch (error) {
             handleSystemError(error, 'fetch_failed', `Failed to settings: ${error.message}`);
         }

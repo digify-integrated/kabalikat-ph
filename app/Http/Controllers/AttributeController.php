@@ -216,7 +216,7 @@ class AttributeController extends Controller
             ]);
         }
 
-        $states = DB::table('attribute')
+        $attributes = DB::table('attribute')
             ->select(['id', 'attribute_name'])
             ->whereNotIn('id', function ($query) use ($productId) {
                 $query->select('attribute_id')
@@ -227,7 +227,7 @@ class AttributeController extends Controller
             ->get();
 
         $response = $response->concat(
-            $states->map(fn ($row) => [
+            $attributes->map(fn ($row) => [
                 'id'   => $row->id,
                 'text' => $row->attribute_name,
             ])

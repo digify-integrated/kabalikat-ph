@@ -16,10 +16,9 @@ class ProductAddonController extends Controller
     public function save(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'product_addon_id' => ['nullable', 'integer'],
             'product_id' => ['required', 'integer', Rule::exists('product', 'id')],
-            'attribute_id' => ['required', 'integer', Rule::exists('attribute', 'id')],
-            'max_quantity' => ['required', 'numeric', 'min:0.01'],
+            'addon_product_id' => ['required', 'integer', Rule::exists('product', 'id')],
+            'max_quantity' => ['required', 'numeric'],
         ]);
 
         if ($validator->fails()) {
@@ -31,38 +30,31 @@ class ProductAddonController extends Controller
 
         $validated = $validator->validated();
 
-        $attributeId = $validated['attribute_id'] ?? null;
         $productId = $validated['product_id'] ?? null;
-
-        $attributeName = (string) Attribute::query()
-            ->whereKey($attributeId)
-            ->value('attribute_name');
+        $addonProductId = $validated['addon_product_id'] ?? null;
 
         $productName = (string) Product::query()
             ->whereKey($productId)
             ->value('product_name');
 
+        $addonProductName = (string) Product::query()
+            ->whereKey($addonProductId)
+            ->value('product_name');
+
         $payload = [
             'product_id' => $productId,
             'product_name' => $productName,
-            'attribute_id' => $attributeId,
-            'attribute_name' => $attributeName,
+            'addon_product_id' => $addonProductId,
+            'addon_product_name' => $addonProductName,
             'max_quantity' => $validated['max_quantity'] ?? 0.01,
             'last_log_by' => Auth::id(),
         ];
 
-        $productAddonId = $validated['product_addon_id'] ?? null;
-
-        if ($productAddonId && ProductAddon::query()->whereKey($productAddonId)->exists()) {
-            $productAddon = ProductAddon::query()->findOrFail($productAddonId);
-            $productAddon->update($payload);
-        } else {
-            $productAddon = ProductAddon::query()->create($payload);
-        }
+        ProductAddon::query()->create($payload);
 
         return response()->json([
             'success' => true,
-            'message' => 'The product add-on has been saved successfully',
+            'message' => 'The add-on has been saved successfully',
         ]);
     }
 

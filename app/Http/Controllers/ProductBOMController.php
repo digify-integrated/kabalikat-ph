@@ -15,7 +15,6 @@ class ProductBOMController extends Controller
     public function save(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'product_bom_id' => ['nullable', 'integer'],
             'product_id' => ['required', 'integer', Rule::exists('product', 'id')],
             'bom_product_id' => ['required', 'integer', Rule::exists('product', 'id')],
             'quantity' => ['required', 'numeric'],
@@ -52,18 +51,11 @@ class ProductBOMController extends Controller
             'last_log_by' => Auth::id(),
         ];
 
-        $productBomId = $validated['product_bom_id'] ?? null;
-
-        if ($productBomId && ProductBOM::query()->whereKey($productBomId)->exists()) {
-            $productBom = ProductBOM::query()->findOrFail($productBomId);
-            $productBom->update($payload);
-        } else {
-            $productBom = ProductBOM::query()->create($payload);
-        }
+        ProductBOM::query()->create($payload);
 
         return response()->json([
             'success' => true,
-            'message' => 'The product BOM has been saved successfully',
+            'message' => 'The component has been saved successfully',
         ]);
     }
 
@@ -90,7 +82,7 @@ class ProductBOMController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'The product BOM has been deleted successfully',
+            'message' => 'The component has been deleted successfully',
         ]);
     }
 
@@ -115,7 +107,7 @@ class ProductBOMController extends Controller
 
             $deleteButton = '';
             if($writeAccess > 0){
-                $deleteButton = '<button class="btn btn-icon btn-light btn-active-light-danger delete-bom" data-reference-id="' . $productBomId . '" title="Delete Product BOM">
+                $deleteButton = '<button class="btn btn-icon btn-light btn-active-light-danger delete-bom" data-reference-id="' . $productBomId . '" title="Delete Component">
                                     <i class="ki-outline ki-trash fs-3 m-0 fs-5"></i>
                                 </button>';
             }

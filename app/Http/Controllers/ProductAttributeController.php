@@ -16,9 +16,7 @@ class ProductAttributeController extends Controller
     public function save(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'product_attribute_id' => ['nullable', 'integer'],
             'product_id' => ['required', 'integer', Rule::exists('product', 'id')],
-            'attribute_id' => ['required', 'integer', Rule::exists('attribute', 'id')]
         ]);
 
         if ($validator->fails()) {
@@ -36,20 +34,37 @@ class ProductAttributeController extends Controller
         $productName = (string) Product::query()
             ->whereKey($productId)
             ->value('product_name');
+        
+        $attributeIds = $request->input('attribute_id') ?? [];
 
-        $attributeName = (string) Attribute::query()
+        if (empty($attributeIds)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please select the attributes you wish to add to the product',
+            ]);
+        }
+
+        foreach ($attributeIds as $attributeId) {
+            $attribute = Attribute::find($attributeId);
+
+            if (!$attribute) {
+                continue;
+            }
+
+            $attributeName = (string) Attribute::query()
             ->whereKey($attributeId)
             ->value('attribute_name');
 
-        $payload = [
-            'product_id' => $productId,
-            'product_name' => $productName,
-            'attribute_id' => $attributeId,
-            'attribute_name' => $attributeName,
-            'last_log_by' => Auth::id(),
-        ];
+            $payload = [
+                'product_id' => $productId,
+                'product_name' => $productName,
+                'attribute_id' => $attributeId,
+                'attribute_name' => $attributeName,
+                'last_log_by' => Auth::id(),
+            ];
 
-        ProductAttribute::query()->create($payload);
+            ProductAttribute::query()->create($payload);
+        }
 
         return response()->json([
             'success' => true,
@@ -99,6 +114,7 @@ class ProductAttributeController extends Controller
 
         $response = $productAttributes->map(function ($row) use ($writeAccess, $logsAccess)  {
             $productAttributeId = $row->id;
+            $attributeId = $row->attribute_id;
             $attributeName = $row->attribute_name;
 
             $deleteButton = '';
@@ -115,8 +131,24 @@ class ProductAttributeController extends Controller
                             </button>';
             }
 
+            $attributeValues = DB::table('attribute_value')
+                ->where('attribute_id', $attributeId)
+                ->pluck('attribute_value');
+
+            $badges = $attributeValues
+            ->chunk(5)
+            ->map(function ($group) {
+                return '<div class="mb-1">' .
+                    $group->map(function ($ext) {
+                        return '<span class="badge bg-primary me-1">'.e($ext).'</span>';
+                    })->implode('') .
+                '</div>';
+            })
+            ->implode('');
+
             return [
                 'ATTRIBUTE' => $attributeName,
+                'ATTRIBUTE_VALUE' => $badges,
                 'ACTION' => '<div class="d-flex justify-content-end gap-3">
                                 '. $logNotes .'
                                 '. $deleteButton .'

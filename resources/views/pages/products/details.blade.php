@@ -331,6 +331,11 @@
                                                     id="add-attribute">
                                                 <i class="ki-outline ki-plus fs-2"></i> Add
                                             </button>
+                                            <button type="button"
+                                                    class="btn btn-light-primary"
+                                                    id="generate-variant">
+                                                    Generate Variants
+                                            </button>
                                         @endif
                                     </div>
                                 </div>
@@ -340,6 +345,7 @@
                                     <thead>
                                         <tr class="fw-semibold fs-6 text-gray-800">
                                             <th>Attribute</th>
+                                            <th>Values</th>
                                             <th></th>
                                         </tr>
                                     </thead>
@@ -474,7 +480,7 @@
     </div>
 
     <div id="attribute-modal" class="modal fade" tabindex="-1" aria-labelledby="attribute-modal" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-scrollable modal-lg">
+        <div class="modal-dialog modal-dialog-scrollable modal-md">
             <div class="modal-content">
                 <div class="modal-header">
                     <h3 class="modal-title">Attribute</h3>
@@ -486,12 +492,15 @@
                 <div class="modal-body">
                     <form id="attribute_form" method="post" action="#">
                         @csrf
-                        <div class="row mb-6">
-                            <label class="col-lg-3 col-form-label required fw-semibold fs-6" for="attribute_id">
-                                Attribute
-                            </label>
-                            <div class="col-lg-9">
-                                <select id="attribute_id" name="attribute_id[]" multiple="multiple" class="form-select" data-control="select2" data-allow-clear="false"></select>
+                        <div class="row">
+                            <div class="col">
+                                <div class="fv-row mb-4">
+                                    <label class="fs-6 fw-semibold required form-label mt-3" for="attribute_id">
+                                        Attribute
+                                    </label>
+
+                                    <select id="attribute_id" name="attribute_id[]" multiple="multiple" class="form-select" data-control="select2" data-allow-clear="false"></select>
+                                </div>
                             </div>
                         </div>
                     </form>
@@ -506,7 +515,7 @@
     </div>
 
     <div id="bom-modal" class="modal fade" tabindex="-1" aria-labelledby="bom-modal" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-scrollable modal-lg">
+        <div class="modal-dialog modal-dialog-scrollable modal-md">
             <div class="modal-content">
                 <div class="modal-header">
                     <h3 class="modal-title">Bill of Materials</h3>
@@ -518,31 +527,41 @@
                 <div class="modal-body">
                     <form id="bom_form" method="post" action="#">
                         @csrf
-                        <div class="row mb-6">
-                            <label class="col-lg-3 col-form-label required fw-semibold fs-6" for="bom_product_id">
-                                Component Product
-                            </label>
-                            <div class="col-lg-9">
-                                <select id="bom_product_id" name="bom_product_id" class="form-select" data-control="select2" data-allow-clear="false"></select>
+                        <div class="row">
+                            <div class="col">
+                                <div class="fv-row mb-4">
+                                    <label class="fs-6 fw-semibold required form-label mt-3" for="bom_product_id">
+                                        Component Product
+                                    </label>
+
+                                    <select id="bom_product_id" name="bom_product_id" class="form-select" data-control="select2" data-allow-clear="false"></select>
+                                </div>
                             </div>
                         </div>
-                        <div class="row mb-6">
-                            <label class="col-lg-3 col-form-label required fw-semibold fs-6" for="quantity">
-                                Required Quantity
-                            </label>
-                            <div class="col-lg-9">
-                                <input type="number" class="form-control" id="quantity" name="quantity" min="0.01" step="0.01">
+                        <div class="row">
+                            <div class="col">
+                                <div class="fv-row mb-4">
+                                    <label class="fs-6 fw-semibold required form-label mt-3" for="quantity">
+                                        Required Quantity
+                                    </label>
+
+                                    <input type="number" class="form-control" id="quantity" name="quantity" min="0.01" step="0.01">
+                                </div>
                             </div>
                         </div>
-                        <div class="row mb-6">
-                            <label class="col-lg-3 col-form-label required fw-semibold fs-6" for="stock_policy">
-                                Stock Policy
-                            </label>
-                            <div class="col-lg-9">
-                                <select id="stock_policy" name="stock_policy" class="form-select" data-control="select2" data-hide-search="true">
-                                    <option value="Strict">Strict</option>
-                                    <option value="Allow Negative">Allow Negative</option>
-                                </select>
+                        <div class="row">
+                            <div class="col">
+                                <div class="fv-row">
+                                    <label class="fs-6 fw-semibold required form-label mt-3" for="stock_policy">
+                                        Stock Policy
+                                    </label>
+
+                                    <select id="stock_policy" name="stock_policy" class="form-select" data-control="select2" data-hide-search="true">
+                                        <option value="">--</option>
+                                        <option value="Strict">Strict</option>
+                                        <option value="Allow Negative">Allow Negative</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
                     </form>
@@ -557,7 +576,7 @@
     </div>
 
     <div id="addon-modal" class="modal fade" tabindex="-1" aria-labelledby="addon-modal" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-scrollable modal-lg">
+        <div class="modal-dialog modal-dialog-scrollable modal-md">
             <div class="modal-content">
                 <div class="modal-header">
                     <h3 class="modal-title">Add-ons</h3>
@@ -569,20 +588,26 @@
                 <div class="modal-body">
                     <form id="addon_form" method="post" action="#">
                         @csrf
-                        <div class="row mb-6">
-                            <label class="col-lg-3 col-form-label required fw-semibold fs-6" for="addon_product_id">
-                                Add-on Product
-                            </label>
-                            <div class="col-lg-9">
-                                <select id="addon_product_id" name="addon_product_id" class="form-select" data-control="select2" data-allow-clear="false"></select>
+                        <div class="row">
+                            <div class="col">
+                                <div class="fv-row mb-4">
+                                    <label class="fs-6 fw-semibold required form-label mt-3" for="addon_product_id">
+                                        Add-on Product
+                                    </label>
+
+                                    <select id="addon_product_id" name="addon_product_id" class="form-select" data-control="select2" data-allow-clear="false"></select>
+                                </div>
                             </div>
                         </div>
-                        <div class="row mb-6">
-                            <label class="col-lg-3 col-form-label required fw-semibold fs-6" for="max_quantity">
-                                Max Quantity
-                            </label>
-                            <div class="col-lg-9">
-                                <input type="number" class="form-control" id="max_quantity" name="max_quantity" min="0.01" step="0.01">
+                        <div class="row">
+                            <div class="col">
+                                <div class="fv-row">
+                                    <label class="fs-6 fw-semibold required form-label mt-3" for="max_quantity">
+                                        Max Quantity
+                                    </label>
+
+                                    <input type="number" class="form-control" id="max_quantity" name="max_quantity" min="0.01" step="0.01">
+                                </div>
                             </div>
                         </div>
                     </form>
@@ -590,7 +615,7 @@
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" form="bom_form" class="btn btn-primary" id="submit-addon">Add</button>
+                    <button type="submit" form="addon_form" class="btn btn-primary" id="submit-addon">Add</button>
                 </div>
             </div>
         </div>
