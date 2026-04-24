@@ -35,10 +35,25 @@
                     </div>
                 </div>
             </div>
+
             <div class="card mb-5 mb-xl-8">
-                <div class="card-header border-0">
+                <div class="card-header">
                     <div class="card-title">
-                        <h3 class="fw-bold m-0">Product Settings</h3>
+                        <h2>Categories</h2>
+                    </div>
+                </div>
+                                
+                <div class="card-body border-top p-9">
+                    <div class="fv-row mb-0">
+                        <select id="product_category_id" name="product_category_id[]" multiple="multiple" class="form-select" data-control="select2" data-allow-clear="false"  @disabled(!$canWrite)></select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mb-5 mb-xl-8">
+                <div class="card-header">
+                    <div class="card-title">
+                        <h2>Product Option</h2>
                     </div>
                 </div>
                 
@@ -56,7 +71,7 @@
 
                             <div class="d-flex justify-content-end">
                                 <label class="form-check form-switch form-switch-sm form-check-custom form-check-solid">
-                                    <input class="form-check-input product-setting" data-setting="track-inventory" type="checkbox" id="track-inventory">
+                                    <input class="form-check-input product-setting" data-setting="track-inventory" type="checkbox" id="track-inventory" @disabled(!$canWrite)>
                                     <span class="form-check-label"></span>
                                 </label>
                             </div>
@@ -76,7 +91,7 @@
 
                             <div class="d-flex justify-content-end">
                                 <label class="form-check form-switch form-switch-sm form-check-custom form-check-solid">
-                                    <input class="form-check-input product-setting" data-setting="is-addon" type="checkbox" id="is-addon">
+                                    <input class="form-check-input product-setting" data-setting="is-addon" type="checkbox" id="is-addon" @disabled(!$canWrite)>
                                     <span class="form-check-label"></span>
                                 </label>
                             </div>
@@ -96,7 +111,7 @@
 
                             <div class="d-flex justify-content-end">
                                 <label class="form-check form-switch form-switch-sm form-check-custom form-check-solid">
-                                    <input class="form-check-input product-setting" data-setting="batch-tracking" type="checkbox" id="batch-tracking">
+                                    <input class="form-check-input product-setting" data-setting="batch-tracking" type="checkbox" id="batch-tracking" @disabled(!$canWrite)>
                                     <span class="form-check-label"></span>
                                 </label>
                             </div>
@@ -116,7 +131,7 @@
 
                             <div class="d-flex justify-content-end">
                                 <label class="form-check form-switch form-switch-sm form-check-custom form-check-solid">
-                                    <input class="form-check-input product-setting" data-setting="expiration-tracking" type="checkbox" id="expiration-tracking">
+                                    <input class="form-check-input product-setting" data-setting="expiration-tracking" type="checkbox" id="expiration-tracking" @disabled(!$canWrite)>
                                     <span class="form-check-label"></span>
                                 </label>
                             </div>

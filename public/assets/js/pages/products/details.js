@@ -400,7 +400,15 @@ document.addEventListener('DOMContentLoaded', () => {
             },
         ],
         dropdown: [
-            { url: '/unit/generate-options', dropdownSelector: '#base_unit_id' }
+            { url: '/unit/generate-options', dropdownSelector: '#base_unit_id' },
+            {
+                url: '/product-category/generate-options',
+                dropdownSelector: '#product_category_id',
+                data : {
+                    product_id : ctx.detailId,
+                    multiple: true
+                }
+            }
         ],
         attributeDropdown: {
             url: '/attribute/generate-product-attribute-options',
@@ -541,44 +549,45 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    document.addEventListener('change', async (e) => {
-        const btn = e.target.closest('.product-setting');
-        if (!btn) return;
-        const setting = btn.dataset.setting;
-        const value = btn.checked ? 'Yes' : 'No';
-    
-        e.preventDefault();
-    
-        try {
-            const csrf = getCsrfToken();
-            const ctx = getPageContext();
+    document.addEventListener('change', async (event) => {
+        const target = event.target;
+
+        const productSetting = target.closest('.product-setting');
+        if (productSetting) {
+            const setting = target.dataset.setting;
+            const value = target.checked ? 'Yes' : 'No';
         
-            const formData = new URLSearchParams();
-            formData.append('setting', setting);
-            formData.append('value', value);
-            formData.append('product_id', ctx.detailId ?? '');
-            formData.append('appId', ctx.appId ?? '');
-            formData.append('navigationMenuId', ctx.navigationMenuId ?? '')
-        
-            const response = await fetch('/products/save-product-setting', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                Accept: 'application/json',
-                ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
-                },
-            });
-        
-            if (!response.ok) throw new Error(`Request failed with status: ${response.status}`);
-        
-            const data = await response.json();
-        
-            if (!data.success) {
-                showNotification(data.message);
+            try {
+                const csrf = getCsrfToken();
+                const ctx = getPageContext();
+            
+                const formData = new URLSearchParams();
+                formData.append('setting', setting);
+                formData.append('value', value);
+                formData.append('product_id', ctx.detailId ?? '');
+                formData.append('appId', ctx.appId ?? '');
+                formData.append('navigationMenuId', ctx.navigationMenuId ?? '')
+            
+                const response = await fetch('/products/save-product-setting', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    Accept: 'application/json',
+                    ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+                    },
+                });
+            
+                if (!response.ok) throw new Error(`Request failed with status: ${response.status}`);
+            
+                const data = await response.json();
+            
+                if (!data.success) {
+                    showNotification(data.message);
+                }
+            } catch (error) {
+                handleSystemError(error, 'fetch_failed', `Failed to settings: ${error.message}`);
             }
-        } catch (error) {
-            handleSystemError(error, 'fetch_failed', `Failed to settings: ${error.message}`);
         }
     });
 });

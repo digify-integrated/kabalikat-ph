@@ -109,63 +109,63 @@ class ProductController extends Controller
             // 1. Get attribute values grouped
             $groupedValues = $this->getGroupedAttributeValues($product->id);
 
-            if (empty($groupedValues)) return;
+            // 🔥 DO NOT RETURN HERE
+            if (!empty($groupedValues)) {
 
-            // 2. Generate combinations (ONLY FULL)
-            $combinations = $this->generateCombinations($groupedValues);
+                // 2. Generate combinations
+                $combinations = $this->generateCombinations($groupedValues);
 
-            // 3. Get existing signatures (avoid N+1)
-            $existing = Product::where('parent_product_id', $product->id)
-                ->pluck('variant_signature')
-                ->toArray();
+                // 3. Get existing signatures
+                $existing = Product::where('parent_product_id', $product->id)
+                    ->pluck('variant_signature')
+                    ->toArray();
 
-            $existingMap = array_flip($existing);
+                $existingMap = array_flip($existing);
 
-            // 4. Prepare bulk insert
-            $variantsToInsert = [];
-            $now = now();
+                $variantsToInsert = [];
+                $now = now();
 
-            foreach ($combinations as $combo) {
+                foreach ($combinations as $combo) {
 
-                $signature = $this->buildSignature($combo);
+                    $signature = $this->buildSignature($combo);
 
-                if (isset($existingMap[$signature])) {
-                    continue;
+                    if (isset($existingMap[$signature])) {
+                        continue;
+                    }
+
+                    $variantsToInsert[] = [
+                        'product_name' => $this->buildVariantName($product->product_name, $combo),
+                        'parent_product_id' => $product->id,
+                        'parent_product_name' => $product->product_name,
+                        'variant_signature' => $signature,
+                        'attribute_count' => count($combo),
+                        'is_variant' => 'Yes',
+                        'product_status' => 'Active',
+
+                        'product_type' => $product->product_type,
+                        'base_price' => $product->base_price,
+                        'cost_price' => $product->cost_price,
+                        'inventory_flow' => $product->inventory_flow,
+                        'tax_classification' => $product->tax_classification,
+                        'track_inventory' => $product->track_inventory,
+                        'base_unit_id' => $product->base_unit_id,
+                        'base_unit_name' => $product->base_unit_name,
+                        'base_unit_abbreviation' => $product->base_unit_abbreviation,
+
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ];
                 }
 
-                $variantsToInsert[] = [
-                    'product_name' => $this->buildVariantName($product->product_name, $combo),
-                    'parent_product_id' => $product->id,
-                    'parent_product_name' => $product->product_name,
-                    'variant_signature' => $signature,
-                    'attribute_count' => count($combo),
-                    'is_variant' => 'Yes',
-                    'product_status' => 'Active',
+                if (!empty($variantsToInsert)) {
+                    Product::insert($variantsToInsert);
+                }
 
-                    'product_type' => $product->product_type,
-                    'base_price' => $product->base_price,
-                    'cost_price' => $product->cost_price,
-                    'inventory_flow' => $product->inventory_flow,
-                    'tax_classification' => $product->tax_classification,
-                    'track_inventory' => $product->track_inventory,
-                    'base_unit_id' => $product->base_unit_id,
-                    'base_unit_name' => $product->base_unit_name,
-                    'base_unit_abbreviation' => $product->base_unit_abbreviation,
-
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ];
+                // Duplicate BOM only if variants exist
+                $this->duplicateBomToVariants($product->id);
             }
 
-            // 5. Bulk insert (FAST)
-            if (!empty($variantsToInsert)) {
-                Product::insert($variantsToInsert);
-            }
-
-            // 6. Duplicate BOM (NEW)
-            $this->duplicateBomToVariants($product->id);
-
-            // 7. Ensure only complete variants active
+            // ✅ ALWAYS RUN THIS (critical fix)
             $this->activateOnlyCompleteVariants($product->id);
         });
 
@@ -252,24 +252,60 @@ class ProductController extends Controller
 
     private function activateOnlyCompleteVariants(int $parentId): void
     {
-        $required = DB::table('product_attribute')
+        $attributeIds = DB::table('product_attribute')
             ->where('product_id', $parentId)
-            ->count();
+            ->pluck('attribute_id')
+            ->sort()
+            ->values()
+            ->toArray();
 
+        // If no attributes → deactivate ALL variants
+        if (empty($attributeIds)) {
+            DB::table('product')
+                ->where('parent_product_id', $parentId)
+                ->update(['product_status' => 'Inactive']);
+            return;
+        }
+
+        $variants = DB::table('product')
+            ->where('parent_product_id', $parentId)
+            ->select('id', 'variant_signature')
+            ->get();
+
+        $validIds = [];
+
+        foreach ($variants as $variant) {
+
+            $signatureParts = explode('|', $variant->variant_signature);
+
+            $variantAttrIds = collect($signatureParts)
+                ->map(fn($part) => (int) explode(':', $part)[0])
+                ->sort()
+                ->values()
+                ->toArray();
+
+            // EXACT MATCH (this is the key fix)
+            if ($variantAttrIds === $attributeIds) {
+                $validIds[] = $variant->id;
+            }
+        }
+
+        // Activate valid
+        if (!empty($validIds)) {
+            DB::table('product')
+                ->whereIn('id', $validIds)
+                ->update(['product_status' => 'Active']);
+        }
+
+        // Deactivate invalid
         DB::table('product')
             ->where('parent_product_id', $parentId)
-            ->update([
-                'product_status' => DB::raw("
-                    CASE 
-                        WHEN attribute_count = {$required} THEN 'Active'
-                        ELSE 'Inactive'
-                    END
-                ")
-            ]);
+            ->whereNotIn('id', $validIds)
+            ->update(['product_status' => 'Inactive']);
     }
 
     private function generateCombinations(array $groupedValues): array
-{
+    {
         $result = [[]];
 
         foreach ($groupedValues as $values) {
@@ -607,9 +643,16 @@ class ProductController extends Controller
     {
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
-        //$filterByStatus = $request->input('filter_by_user_status');
+        $filterByProductType = $request->input('filter_by_product_type');
+        $filterByProductStatus = $request->input('filter_by_product_status');
 
         $products = DB::table('product')
+        ->when(!empty($filterByProductType), function ($q) use ($filterByProductType) {
+            $q->where('product_type', $filterByProductType);
+        })
+        ->when(!empty($filterByProductStatus), function ($q) use ($filterByProductStatus) {
+            $q->where('product_status', $filterByProductStatus);
+        })
         ->orderBy('product_name')
         ->get();
 
@@ -617,7 +660,9 @@ class ProductController extends Controller
             $productId = $row->id;
             $productName = $row->product_name;
             $productDescription = $row->product_description;
-            $sku = $row->sku;
+            $parentProductName = $row->parent_product_name ?? '--';
+            $sku = $row->sku ?? '--';
+            $barcode = $row->barcode ?? '--';
             $productType = $row->product_type;
             $basePrice = $row->base_price;
             $productStatus = $row->product_status;
@@ -656,6 +701,8 @@ class ProductController extends Controller
                     </div>
                 ',
                 'SKU' => $sku,
+                'BARCODE' => $barcode,
+                'PARENT_PRODUCT' => $parentProductName,
                 'PRODUCT_TYPE' => $productType,
                 'BASE_PRICE' => number_format($basePrice, 2),
                 'STATUS' => $activeBadge,

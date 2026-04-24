@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     })();
 
-    initValidation(config.form.selector, config.form.rules);
+    config.forms.map((cfg) => initValidation(cfg.selector, cfg.rules));
 
     attachLogNotesHandler();
 

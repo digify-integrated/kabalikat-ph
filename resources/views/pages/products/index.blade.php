@@ -88,10 +88,18 @@
                         <div class="separator border-gray-200"></div>
                         <div class="px-7 py-5">
                             <div class="mb-5">
-                                <label class="form-label fs-6 fw-semibold" for="filter_by_app">Filter By Status:</label>
+                                <label class="form-label fs-6 fw-semibold" for="filter_by_product_type">Filter By Type:</label>
+                                <select id="filter_by_product_type" class="form-select" data-control="select2" data-allow-clear="false">
+                                    <option value="">--</option>
+                                    <option value="Goods">Goods</option>
+                                    <option value="Service">Service</option>
+                                </select>
+                            </div>
+                            <div class="mb-5">
+                                <label class="form-label fs-6 fw-semibold" for="filter_by_product_status">Filter By Status:</label>
                                 <select id="filter_by_product_status" class="form-select" data-control="select2" data-allow-clear="false">
                                     <option value="">--</option>
-                                    <option value="Active">Active</option>
+                                    <option value="Active" selected>Active</option>
                                     <option value="Inactive">Inactive</option>
                                 </select>
                             </div>
@@ -117,6 +125,8 @@
                             </th>
                             <th>Product</th>
                             <th>SKU</th>
+                            <th>Barcode</th>
+                            <th>Parent Product</th>
                             <th>Type</th>
                             <th>Price</th>
                             <th>Status</th>

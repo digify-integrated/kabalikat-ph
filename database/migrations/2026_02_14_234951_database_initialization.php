@@ -37,12 +37,25 @@ return new class extends Migration
         Schema::create('app', function (Blueprint $table) {
             $table->id();
             $table->string('app_name');
-            $table->string('app_description')->nullable();
-            $table->string('app_version')->default('1.0.0');
-            $table->string('app_logo')->nullable();
-            $table->bigInteger('navigation_menu_id');
-            $table->string('navigation_menu_name');
-            $table->integer('order_sequence')->default(0);
+
+            $table->string('app_description')
+            ->nullable();
+
+            $table->string('app_version')
+            ->default('1.0.0');
+
+            $table->string('app_logo')
+            ->nullable();
+
+            $table->foreignId('navigation_menu_id')
+            ->nullable();
+
+            $table->string('navigation_menu_name')
+            ->nullable();
+            
+            $table->integer('order_sequence')
+            ->default(0);
+
             $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
             $table->timestamps();
 
@@ -56,13 +69,28 @@ return new class extends Migration
         Schema::create('navigation_menu', function (Blueprint $table) {
             $table->id();
             $table->string('navigation_menu_name');
-            $table->string('navigation_menu_icon')->nullable();
-            $table->bigInteger('app_id');
-            $table->string('app_name');
-            $table->bigInteger('parent_navigation_menu_id')->nullable();
-            $table->string('parent_navigation_menu_name')->nullable();
-            $table->string('database_table')->nullable();
-            $table->integer('order_sequence')->default(0);
+
+            $table->string('navigation_menu_icon')
+            ->nullable();
+
+            $table->foreignId('app_id')
+            ->nullable();
+
+            $table->string('app_name')
+            ->nullable();
+
+            $table->bigInteger('parent_navigation_menu_id')
+            ->nullable();
+
+            $table->string('parent_navigation_menu_name')
+            ->nullable();
+
+            $table->string('database_table')
+            ->nullable();
+
+            $table->integer('order_sequence')
+            ->default(0);
+
             $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
             $table->timestamps();
 
@@ -78,8 +106,8 @@ return new class extends Migration
             $table->id();
 
             $table->foreignId('navigation_menu_id')
-                ->constrained('navigation_menu')
-                ->cascadeOnDelete();
+            ->constrained('navigation_menu')
+            ->cascadeOnDelete();
 
             $table->enum('route_type', ['index', 'details', 'new', 'import'])
             ->default('index');
@@ -124,15 +152,14 @@ return new class extends Migration
             $table->id();
 
             $table->foreignId('role_id')
-                ->constrained('role')
-                ->cascadeOnDelete()
-                ->cascade;
+            ->constrained('role')
+            ->cascadeOnDelete();
 
             $table->string('role_name');
 
             $table->foreignId('navigation_menu_id')
-                ->constrained('navigation_menu')
-                ->cascadeOnDelete();
+            ->constrained('navigation_menu')
+            ->cascadeOnDelete();
 
             $table->string('navigation_menu_name');
 
@@ -161,14 +188,14 @@ return new class extends Migration
             $table->id();
 
             $table->foreignId('role_id')
-                ->constrained('role')
-                ->cascadeOnDelete();
+            ->constrained('role')
+            ->cascadeOnDelete();
 
             $table->string('role_name');
 
             $table->foreignId('system_action_id')
-                ->constrained('system_action')
-                ->cascadeOnDelete();
+            ->constrained('system_action')
+            ->cascadeOnDelete();
 
             $table->string('system_action_name');
 
@@ -190,14 +217,14 @@ return new class extends Migration
             $table->id();
 
             $table->foreignId('role_id')
-                ->constrained('role')
-                ->cascadeOnDelete();
+            ->constrained('role')
+            ->cascadeOnDelete();
                 
             $table->string('role_name');
 
             $table->foreignId('user_account_id')
-                ->constrained('users')
-                ->cascadeOnDelete();
+            ->constrained('users')
+            ->cascadeOnDelete();
 
             $table->string('user_name');
             $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
@@ -230,7 +257,7 @@ return new class extends Migration
             $table->string('file_extension_name');
             $table->string('file_extension');
 
-            $table->bigInteger('file_type_id')
+            $table->foreignId('file_type_id')
             ->constrained('file_type')
             ->cascadeOnDelete();
 
@@ -260,13 +287,13 @@ return new class extends Migration
 
         Schema::create('upload_setting_file_extension', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger(column: 'upload_setting_id')
+            $table->foreignId(column: 'upload_setting_id')
             ->constrained('upload_setting')
             ->cascadeOnDelete();
 
             $table->string('upload_setting_name');
 
-            $table->bigInteger('file_extension_id')
+            $table->foreignId('file_extension_id')
             ->constrained('file_extension')
             ->cascadeOnDelete();
 
@@ -301,7 +328,7 @@ return new class extends Migration
 
             $table->string('state_name');
 
-            $table->bigInteger('country_id')
+            $table->foreignId('country_id')
             ->constrained('country')
             ->cascadeOnDelete();
 
@@ -322,13 +349,13 @@ return new class extends Migration
 
             $table->string('city_name');
 
-            $table->bigInteger('state_id')
+            $table->foreignId('state_id')
             ->constrained('state')
             ->cascadeOnDelete();
 
             $table->string('state_name');
 
-            $table->bigInteger('country_id')
+            $table->foreignId('country_id')
             ->constrained('country')
             ->cascadeOnDelete();
 
@@ -380,24 +407,24 @@ return new class extends Migration
             $table->string('company_logo')->nullable();
             $table->string('address');
             
-            $table->bigInteger('city_id')
+            $table->foreignId('city_id')
             ->constrained('city');
 
             $table->string('city_name');
 
-            $table->bigInteger('state_id')
+            $table->foreignId('state_id')
             ->constrained('state');
 
             $table->string('state_name');
 
-            $table->bigInteger('country_id')
+            $table->foreignId('country_id')
             ->constrained('country');
 
             $table->string('country_name');
             
             $table->string('tax_id')->nullable();
 
-            $table->bigInteger('currency_id')
+            $table->foreignId('currency_id')
             ->constrained('currency');
 
             $table->string('currency_name');
@@ -424,6 +451,7 @@ return new class extends Migration
             $table->id();
 
             $table->string('attribute_name');
+
             $table->enum('selection_type', ['Single', 'Multiple'])
             ->default('Single');
 
@@ -442,7 +470,7 @@ return new class extends Migration
 
             $table->string('attribute_value');
 
-            $table->bigInteger('attribute_id')
+            $table->foreignId('attribute_id')
             ->constrained('attribute')
             ->cascadeOnDelete();
 
@@ -451,7 +479,7 @@ return new class extends Migration
             $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
             $table->timestamps();
 
-             $table->index(['attribute_id'], 'attribute_value_attribute_id_idx');
+            $table->index(['attribute_id'], 'attribute_value_attribute_id_idx');
         });
 
         
@@ -489,30 +517,38 @@ return new class extends Migration
             $table->id();
 
             $table->string('supplier_name');
-            $table->string('contact_person')->nullable();
+
+            $table->string('contact_person')
+            ->nullable();
+
             $table->enum('supplier_status', ['Active', 'Inactive'])
             ->default('Active');
 
             $table->string('address');
             
-            $table->bigInteger('city_id')
+            $table->foreignId('city_id')
             ->constrained('city');
 
             $table->string('city_name');
 
-            $table->bigInteger('state_id')
+            $table->foreignId('state_id')
             ->constrained('state');
 
             $table->string('state_name');
 
-            $table->bigInteger('country_id')
+            $table->foreignId('country_id')
             ->constrained('country');
 
             $table->string('country_name');
 
-            $table->string('phone')->nullable();
-            $table->string('telephone')->nullable();
-            $table->string('email')->nullable();
+            $table->string('phone')
+            ->nullable();
+
+            $table->string('telephone')
+            ->nullable();
+
+            $table->string('email')
+            ->nullable();
 
             $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
             $table->timestamps();
@@ -546,7 +582,7 @@ return new class extends Migration
             $table->string('unit_name');
             $table->string('abbreviation');
 
-            $table->bigInteger('unit_type_id')
+            $table->foreignId('unit_type_id')
             ->constrained('unit_type')
             ->cascadeOnDelete();
 
@@ -565,13 +601,13 @@ return new class extends Migration
         Schema::create('unit_conversion', function (Blueprint $table) {
             $table->id();
 
-            $table->string('from_unit_id')
+            $table->foreignId('from_unit_id')
             ->constrained('unit')
             ->cascadeOnDelete();
 
             $table->string('from_unit_name');
 
-            $table->string('to_unit_id')
+            $table->foreignId('to_unit_id')
             ->constrained('unit')
             ->cascadeOnDelete();
 
@@ -606,35 +642,43 @@ return new class extends Migration
             $table->id();
 
             $table->string('warehouse_name');
-            $table->string('contact_person')->nullable();
+            
+            $table->string('contact_person')
+            ->nullable();
+
             $table->enum('warehouse_status', ['Active', 'Inactive'])
             ->default('Active');
 
-            $table->bigInteger('warehouse_type_id')
+            $table->foreignId('warehouse_type_id')
             ->constrained('warehouse_type')
             ->cascadeOnDelete();
-            $table->string('warehouse_type_name');
 
+            $table->string('warehouse_type_name');
             $table->string('address');
             
-            $table->bigInteger('city_id')
+            $table->foreignId('city_id')
             ->constrained('city');
 
             $table->string('city_name');
 
-            $table->bigInteger('state_id')
+            $table->foreignId('state_id')
             ->constrained('state');
 
             $table->string('state_name');
 
-            $table->bigInteger('country_id')
+            $table->foreignId('country_id')
             ->constrained('country');
 
             $table->string('country_name');
 
-            $table->string('phone')->nullable();
-            $table->string('telephone')->nullable();
-            $table->string('email')->nullable();
+            $table->string('phone')
+            ->nullable();
+
+            $table->string('telephone')
+            ->nullable();
+
+            $table->string('email')
+            ->nullable();
 
             $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
             $table->timestamps();
@@ -654,6 +698,7 @@ return new class extends Migration
             $table->id();
 
             $table->string('product_name');
+
             $table->string('product_description')
             ->nullable();
             
@@ -661,34 +706,48 @@ return new class extends Migration
             ->nullable();
 
             $table->enum('product_status', ['Active', 'Inactive']);
-            $table->string('sku')->nullable();
-            $table->string('barcode')->nullable();
+            $table->string('sku')
+            ->nullable();
+
+            $table->string('barcode')
+            ->nullable();
+
             $table->enum('product_type', ['Goods', 'Service']);
-            $table->double('base_price')->default(0);
-            $table->double('cost_price')->default(0);
+
+            $table->double('base_price')
+            ->default(0);
+
+            $table->double('cost_price')
+            ->default(0);
+
             $table->enum('inventory_flow', ['FIFO', 'FEFO', 'LIFO', 'Manual']);
             $table->enum('tax_classification', ['Vatable', 'VAT Exempt', 'Zero Rated']);
-            $table->integer('attribute_count')->default(0);
+
+            $table->integer('attribute_count')
+            ->default(0);
 
             $table->enum('track_inventory', ['Yes', 'No'])
             ->default('Yes');
+
             $table->enum('is_variant', ['Yes', 'No'])
             ->default('No');
+
             $table->enum('is_addon', ['Yes', 'No'])
             ->default('No');
+
             $table->enum('batch_tracking', ['Yes', 'No'])
             ->default('No');
+
             $table->enum('expiration_tracking', ['Yes', 'No'])
             ->default('No');
 
-            $table->bigInteger('parent_product_id')
-            ->constrained('product')
+            $table->foreignId('parent_product_id')
             ->nullable()
+            ->constrained('product')
             ->nullOnDelete();
 
             $table->string('parent_product_name')
-            ->nullable()
-            ->nullOnDelete();
+            ->nullable();
 
             $table->string('variant_signature')
             ->nullable();
@@ -696,9 +755,9 @@ return new class extends Migration
             $table->double('reorder_level')
             ->default(0);
 
-            $table->bigInteger('base_unit_id')
-            ->constrained('unit')
+            $table->foreignId('base_unit_id')
             ->nullable()
+            ->constrained('unit')
             ->nullOnDelete();
 
             $table->string('base_unit_name');
@@ -728,15 +787,14 @@ return new class extends Migration
         Schema::create('product_attribute', function (Blueprint $table) {
             $table->id();
 
-            $table->bigInteger('product_id')
+            $table->foreignId('product_id')
             ->constrained('product')
             ->cascadeOnDelete();
 
             $table->string('product_name');
 
-            $table->bigInteger('attribute_id')
-            ->constrained('attribute')
-            ->nullOnDelete();
+            $table->foreignId('attribute_id')
+            ->constrained('attribute');
 
             $table->string('attribute_name');
 
@@ -754,15 +812,15 @@ return new class extends Migration
         Schema::create('product_bom', function (Blueprint $table) {
             $table->id();
 
-            $table->bigInteger('product_id')
+            $table->foreignId('product_id')
             ->constrained('product')
             ->cascadeOnDelete();
 
             $table->string('product_name');
 
-            $table->bigInteger('bom_product_id')
+            $table->foreignId('bom_product_id')
             ->constrained('product')
-            ->nullOnDelete();
+            ->cascadeOnDelete();
 
             $table->string('bom_product_name');
 
@@ -786,15 +844,15 @@ return new class extends Migration
         Schema::create('product_addon', function (Blueprint $table) {
             $table->id();
 
-            $table->bigInteger('product_id')
+            $table->foreignId('product_id')
             ->constrained('product')
             ->cascadeOnDelete();
 
             $table->string('product_name');
 
-            $table->bigInteger('addon_product_id')
+            $table->foreignId('addon_product_id')
             ->constrained('product')
-            ->nullOnDelete();
+            ->cascadeOnDelete();
 
             $table->string('addon_product_name');
 
@@ -815,24 +873,28 @@ return new class extends Migration
         Schema::create('stock_level', function (Blueprint $table) {
             $table->id();
 
-            $table->bigInteger('product_id')
+            $table->foreignId('product_id')
             ->constrained('product')
             ->cascadeOnDelete();
 
             $table->string('product_name');
 
-            $table->bigInteger('warehouse_id')
-            ->constrained('warehouse')
+            $table->foreignId('warehouse_id')
             ->nullable()
+            ->constrained('warehouse')
             ->nullOnDelete();
 
-            $table->string('warehouse_name');
+            $table->string('warehouse_name')
+            ->nullable();
+
             $table->double('quantity')
             ->default(0);
 
             $table->string('batch_number');
+
             $table->date('expiration_date')
             ->nullable();
+
             $table->date('received_date')
             ->nullable();
 
@@ -856,18 +918,19 @@ return new class extends Migration
         Schema::create('stock_movement', function (Blueprint $table) {
             $table->id();
 
-            $table->bigInteger('product_id')
+            $table->foreignId('product_id')
             ->constrained('product')
             ->cascadeOnDelete();
 
             $table->string('product_name');
 
-            $table->bigInteger('warehouse_id')
-            ->constrained('warehouse')
+            $table->foreignId('warehouse_id')
             ->nullable()
+            ->constrained('warehouse')
             ->nullOnDelete();
             
-            $table->string('warehouse_name');
+            $table->string('warehouse_name')
+            ->nullable();
 
             $table->enum('movement_type', ['In', 'Out', 'Transfer In', 'Transfer Out', 'Adjustment', 'Return', 'Loan Issue', 'Loan Return']);
 
@@ -899,52 +962,50 @@ return new class extends Migration
      */
     public function down(): void
     {
+        // 1. Disable constraints
+        Schema::disableForeignKeyConstraints();
+
+        // 2. Now you can drop them in any order
         Schema::dropIfExists('audit_log');
-
         Schema::dropIfExists('navigation_menu_route');
-
         Schema::dropIfExists('role_user_account');
         Schema::dropIfExists('role_system_action_permission');
         Schema::dropIfExists('role_permission');
-
         Schema::dropIfExists('upload_setting_file_extension');
         Schema::dropIfExists('file_extension');
-
+        Schema::dropIfExists('product_attribute');
+        Schema::dropIfExists('product_bom');
+        Schema::dropIfExists('product_addon');
         Schema::dropIfExists('product');
-
         Schema::dropIfExists('attribute_value');
-
         Schema::dropIfExists('unit');
         Schema::dropIfExists('unit_conversion');
         Schema::dropIfExists('warehouse');
-
         Schema::dropIfExists('supplier');
         Schema::dropIfExists('company');
-
         Schema::dropIfExists('city');
         Schema::dropIfExists('state');
-
         Schema::dropIfExists('attribute');
         Schema::dropIfExists('unit_type');
         Schema::dropIfExists('warehouse_type');
-
         Schema::dropIfExists('upload_setting');
         Schema::dropIfExists('file_type');
-
         Schema::dropIfExists('navigation_menu');
         Schema::dropIfExists('app');
-
         Schema::dropIfExists('system_action');
         Schema::dropIfExists('role');
-
         Schema::dropIfExists('product_category');
         Schema::dropIfExists('stock_adjustment_reason');
+        Schema::dropIfExists('stock_level');
+        Schema::dropIfExists('stock_movement');
         Schema::dropIfExists('nationality');
         Schema::dropIfExists('currency');
         Schema::dropIfExists('country');
-
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
         Schema::dropIfExists('users');
+
+        // 3. Re-enable constraints
+        Schema::enableForeignKeyConstraints();
     }
 };

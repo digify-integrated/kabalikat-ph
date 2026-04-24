@@ -15,6 +15,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 { data: 'CHECK_BOX' },
                 { data: 'PRODUCT' },
                 { data: 'SKU' },
+                { data: 'BARCODE' },
+                { data: 'PARENT_PRODUCT' },
                 { data: 'PRODUCT_TYPE' },
                 { data: 'BASE_PRICE' },
                 { data: 'STATUS' },
@@ -26,6 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 { width: 'auto', targets: 3, responsivePriority: 4 },
                 { width: 'auto', targets: 4, responsivePriority: 5 },
                 { width: 'auto', targets: 5, responsivePriority: 6 },
+                { width: 'auto', targets: 6, responsivePriority: 7 },
+                { width: 'auto', targets: 7, responsivePriority: 8 },
             ],
             onRowClick: (rowData) => {
                 if (rowData?.LINK) window.open(rowData.LINK, '_blank');
@@ -55,14 +59,15 @@ document.addEventListener('DOMContentLoaded', () => {
     config.action.forEach((cfg) => multipleActionButton(cfg));
 
     document.addEventListener('click', async (event) => {
-        /*if (event.target.closest('#apply-filter')) {
+        if (event.target.closest('#apply-filter')) {
             initializeDatatable(config.table);
         }
 
         if (event.target.closest('#reset-filter')) {
-            $('#filter_by_product_status').val(null).trigger('change');
+            $('#filter_by_product_type').val(null).trigger('change');
+            $('#filter_by_product_status').val('Active').trigger('change');
 
             initializeDatatable(config.table);
-        }*/
+        }
     });
 });

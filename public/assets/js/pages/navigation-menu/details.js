@@ -283,9 +283,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     })();
 
-    config.forms.forEach((cfg) => {
-        initValidation(cfg.selector, cfg.rules);
-    });
+    config.forms.map((cfg) => initValidation(cfg.selector, cfg.rules));
 
     attachLogNotesHandler();
     attachLogNotesClassHandler(config.lognotes.trigger, config.lognotes.table);

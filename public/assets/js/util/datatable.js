@@ -109,13 +109,9 @@ export const clearDatatable = (tableSelectorOrNode) => {
   if (dt) dt.clear().draw(false);
 };
 
-/**
- * Initialize DataTable (FAST defaults)
- *
- * IMPORTANT:
- * - For thousands of records, use serverSide: true and return DT format:
- *   { draw, recordsTotal, recordsFiltered, data: [...] }
- */
+let globalDtEventsBound = false;
+let resizeObserverInstance = null;
+
 export const initializeDatatable = ({
   selector,
   url,
@@ -179,11 +175,13 @@ export const initializeDatatable = ({
       headers: csrf ? { 'X-CSRF-Token': csrf } : {},
       data: (d) => {
         const ctx = getPageContext();
-        const extra = typeof ajaxData === 'function' ? ajaxData(d) : (ajaxData || {});
+        const extra =
+          typeof ajaxData === 'function' ? ajaxData(d) : ajaxData || {};
         return { ...d, ...extra, ...ctx };
       },
       dataSrc: serverSide ? 'data' : '',
-      error: (xhr, status, err) => handleSystemError(xhr, status, err),
+      error: (xhr, status, err) =>
+        handleSystemError(xhr, status, err),
     },
 
     language: {
@@ -199,7 +197,7 @@ export const initializeDatatable = ({
     },
 
     initComplete: function () {
-      // ✅ Fix layout immediately (if visible)
+      // ✅ Fix layout once on init
       dt.columns.adjust();
 
       // ===============================
@@ -230,42 +228,57 @@ export const initializeDatatable = ({
         } = addons.subControls;
 
         if (searchSelector && lengthSelector) {
-          initializeSubDatatableControls(searchSelector, lengthSelector, subTableRef);
+          initializeSubDatatableControls(
+            searchSelector,
+            lengthSelector,
+            subTableRef
+          );
         }
-      }
-
-      // ===============================
-      // 🔥 AUTO-FIX for hidden containers
-      // ===============================
-
-      const adjustTable = () => {
-        if ($.fn.DataTable.isDataTable(table)) {
-          dt.columns.adjust().draw(false);
-        }
-      };
-
-      // 1. Bootstrap Tabs
-      document.addEventListener('shown.bs.tab', adjustTable);
-
-      // 2. Bootstrap Modal
-      document.addEventListener('shown.bs.modal', adjustTable);
-
-      // 3. Bootstrap Collapse (accordion)
-      document.addEventListener('shown.bs.collapse', adjustTable);
-
-      // 4. Resize observer (modern & reliable)
-      if (window.ResizeObserver) {
-        const observer = new ResizeObserver(() => adjustTable());
-        observer.observe(table.closest('.dataTables_wrapper') || table);
       }
     },
   });
 
   dtByNode.set(table, dt);
 
-  // ===============================
+  // ========================================
+  // 🧠 GLOBAL EVENT BINDING (ONLY ONCE)
+  // ========================================
+  if (!globalDtEventsBound) {
+    globalDtEventsBound = true;
+
+    const adjustAllTables = () => {
+      $('.dataTable').each(function () {
+        if ($.fn.DataTable.isDataTable(this)) {
+          $(this).DataTable().columns.adjust().draw(false);
+        }
+      });
+    };
+
+    // Bootstrap events
+    document.addEventListener('shown.bs.tab', adjustAllTables);
+    document.addEventListener('shown.bs.modal', adjustAllTables);
+    document.addEventListener('shown.bs.collapse', adjustAllTables);
+
+    // ResizeObserver (debounced)
+    if (window.ResizeObserver) {
+      let resizeTimeout;
+
+      resizeObserverInstance = new ResizeObserver(() => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          adjustAllTables();
+        }, 100);
+      });
+
+      document.querySelectorAll('.dataTables_wrapper').forEach((el) => {
+        resizeObserverInstance.observe(el);
+      });
+    }
+  }
+
+  // ========================================
   // Row click handler
-  // ===============================
+  // ========================================
   if (typeof onRowClick === 'function') {
     const tbody = table.tBodies?.[0];
     if (tbody) {
