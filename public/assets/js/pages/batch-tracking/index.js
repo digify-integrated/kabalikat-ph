@@ -6,8 +6,8 @@ import { generateDropdownOptions } from '../../form/field.js';
 document.addEventListener('DOMContentLoaded', () => {
     const config = {
         table: {
-            url: '/file-extension/generate-table',
-            selector: '#file-extension-table',
+            url: '/batch-tracking/generate-table',
+            selector: '#batch-tracking-table',
             serverSide: false,
             ajaxData: () => ({
                 filter_by_file_type: $('#filter_by_file_type').val(),
@@ -27,20 +27,20 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             addons: {
                 controls: true,
-                export: 'file_extension',
+                export: 'batch_tracking',
             }
         },
         delete: {
             trigger : '#delete-data',
-            url : '/file-extension/delete-multiple',
-            swalTitle : 'Confirm Multiple File Extension Deletion',
-            swalText : 'Are you sure you want to delete these file extension?',
+            url : '/batch-tracking/delete-multiple',
+            swalTitle : 'Confirm Multiple Batch Tracking Deletion',
+            swalText : 'Are you sure you want to delete these batch tracking?',
             confirmButtonText : 'Delete',
-            validationMessage : 'Please select the file extension you want to delete',
-            table : '#file-extension-table'
+            validationMessage : 'Please select the batch tracking you want to delete',
+            table : '#batch-tracking-table'
         },
         dropdown: [
-            { url: '/file-type/generate-options', dropdownSelector: '#filter_by_file_type' },
+            { url: '/file-type/generate-options', dropdownSelector: '#filter_by_file_type', data: { multiple : true } },
         ]
     }
     
@@ -48,13 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initializeDatatable(config.table);
 
-    config.dropdown.forEach(cfg => {
-        generateDropdownOptions({
-            url: cfg.url,
-            dropdownSelector: cfg.dropdownSelector,
-            data: { multiple : true }
-        });
-    });
+    config.dropdown.map((cfg) => generateDropdownOptions(cfg));
 
     multipleActionButton(config.delete);
 

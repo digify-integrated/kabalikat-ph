@@ -90,12 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
     (async () => {
         try {
             optionsPromise = Promise.all(
-                config.dropdown.map((cfg) =>
-                    generateDropdownOptions({
-                        url: cfg.url,
-                        dropdownSelector: cfg.dropdownSelector,
-                    })
-                )
+                config.dropdown.map((cfg) => generateDropdownOptions(cfg))
             );
 
             const fetchDetailsPromise = Promise.all(

@@ -192,12 +192,16 @@ export const initializeTinyMCE = (tiny_mce_id, disabled = 0) => {
     }
 }
 
-export const initializeDatePicker = (selector, enableTime = false, dateFormat = "M d, Y") => {
+export const initializeDatePicker = ({
+  selector,
+  enableTime = false,
+  dateFormat = "M d, Y"
+}) => {
   $(selector).flatpickr({
-    enableTime: enableTime,
-    dateFormat: dateFormat
+    enableTime,
+    dateFormat
   });
-}
+};
 
 export const initializeDateRangePicker = (
   selector,

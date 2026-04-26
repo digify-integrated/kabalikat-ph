@@ -82,19 +82,17 @@ document.addEventListener('DOMContentLoaded', () => {
             swalText: 'Are you sure you want to delete this upload setting?',
             confirmButtonText: 'Delete',
         },
-        dropdown: {
-            url: '/file-extension/generate-options',
-            dropdownSelector: '#file_extension_id',
-            data : {
-                multiple: true
-            }
-        }
+        dropdown: [
+            { url: '/file-extension/generate-options', dropdownSelector: '#file_extension_id', data : { multiple: true } }
+        ]
     };
 
     (async () => {
         try {
-            optionsPromise = generateDropdownOptions(config.dropdown);
-
+            optionsPromise = Promise.all(
+                config.dropdown.map((cfg) => generateDropdownOptions(cfg))
+            );
+            
             const fetchDetailsPromise = Promise.all(
                 config.details.map((cfg) => displayDetails(cfg))
             );

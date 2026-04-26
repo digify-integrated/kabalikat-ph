@@ -848,4 +848,35 @@ class ProductController extends Controller
 
         return response()->json($response);
     }
+
+    public function generateBatchTrackingOptions(Request $request)
+    {
+        $productId = $request->input('product_id');
+        $multiple = filter_var($request->input('multiple', false), FILTER_VALIDATE_BOOLEAN);
+
+        $response = collect();
+
+        if (!$multiple) {
+            $response->push([
+                'id'   => '',
+                'text' => '--',
+            ]);
+        }
+
+        $boms = DB::table('product')
+            ->select(['id', 'product_name'])
+            ->where('batch_tracking', 'Yes')
+            ->where('product_status', 'Active')
+            ->orderBy('product_name')
+            ->get();
+
+        $response = $response->concat(
+            $boms->map(fn ($row) => [
+                'id'   => $row->id,
+                'text' => $row->product_name,
+            ])
+        )->values();
+
+        return response()->json($response);
+    }
 }

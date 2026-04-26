@@ -43,8 +43,8 @@ document.addEventListener('DOMContentLoaded', () => {
             table : '#city-table'
         },
         dropdown: [
-            { url: '/state/generate-options', dropdownSelector: '#filter_by_state' },
-            { url: '/country/generate-options', dropdownSelector: '#filter_by_country' },
+            { url: '/state/generate-options', dropdownSelector: '#filter_by_state', data: { multiple : true } },
+            { url: '/country/generate-options', dropdownSelector: '#filter_by_country', data: { multiple : true } },
         ]
     }
     
@@ -52,13 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initializeDatatable(config.table);
 
-    config.dropdown.forEach(cfg => {
-        generateDropdownOptions({
-            url: cfg.url,
-            dropdownSelector: cfg.dropdownSelector,
-            data: { multiple : true }
-        });
-    });
+    config.dropdown.map((cfg) => generateDropdownOptions(cfg));
 
     multipleActionButton(config.delete);
 

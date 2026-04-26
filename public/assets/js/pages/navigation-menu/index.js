@@ -45,8 +45,8 @@ document.addEventListener('DOMContentLoaded', () => {
             table : '#navigation-menu-table'
         },
         dropdown: [
-            { url: '/app/generate-options', dropdownSelector: '#filter_by_app' },
-            { url: '/navigation-menu/generate-options', dropdownSelector: '#filter_by_parent_menu' },
+            { url: '/app/generate-options', dropdownSelector: '#filter_by_app', data: { multiple : true } },
+            { url: '/navigation-menu/generate-options', dropdownSelector: '#filter_by_parent_menu', data: { multiple : true } },
         ]
     }
     
@@ -54,14 +54,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initializeDatatable(config.table);
 
-    config.dropdown.forEach(cfg => {
-        generateDropdownOptions({
-            url: cfg.url,
-            dropdownSelector: cfg.dropdownSelector,
-            data: { multiple : true }
-        });
-    });
-
+    config.dropdown.map((cfg) => generateDropdownOptions(cfg));
+    
     multipleActionButton(config.delete);
 
     document.addEventListener('click', async (event) => {

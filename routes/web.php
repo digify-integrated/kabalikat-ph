@@ -6,6 +6,7 @@ use App\Http\Controllers\AttributeController;
 use App\Http\Controllers\AttributeValueController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\AuthenticationController;
+use App\Http\Controllers\BatchTrackingController;
 use App\Http\Controllers\CityController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\CountryController;
@@ -490,6 +491,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/generate-options', 'generateOptions')->name('generate.options');
             Route::post('/generate-product-bom-options', 'generateBomOptions')->name('generate.bom.options');
             Route::post('/generate-product-addon-options', 'generateAddOnOptions')->name('generate.addon.options');
+            Route::post('/generate-product-batch-tracking-options', 'generateBatchTrackingOptions')->name('generate.batch.tracking.options');
         });
 
     // Product Attribute
@@ -531,6 +533,19 @@ Route::middleware('auth')->group(function () {
             Route::post('/delete', 'delete')->name('delete');
             Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
             Route::post('/generate-table', 'generateTable')->name('generate.table');
+        });
+
+    // Batch Tracking
+    Route::prefix('batch-tracking')
+        ->name('batch.tracking.')
+        ->controller(BatchTrackingController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
+            Route::post('/delete', 'delete')->name('delete');
+            Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
+            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
+            Route::post('/generate-table', 'generateTable')->name('generate.table');
+            Route::post('/generate-options', 'generateOptions')->name('generate.options');
         });
 
     // Import

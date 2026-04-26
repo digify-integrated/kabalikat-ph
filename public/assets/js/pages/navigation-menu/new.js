@@ -7,55 +7,57 @@ import { getPageContext } from '../../form/form.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const config = {
-        form: {
-            selector: 'navigation_menu_form',
-            rules: {
+        forms: [
+            {
+                selector: 'navigation_menu_form',
                 rules: {
-                    navigation_menu_name: { required: true },
-                    app_id: { required: true },
-                    order_sequence: { required: true }
-                },
-                messages: {
-                    navigation_menu_name: { required: 'Enter the display name' },
-                    app_id: { required: 'Choose the app' },
-                    order_sequence: { required: 'Enter the order sequence' }
-                },
-                submitHandler: async (form) => {
-                    const ctx = getPageContext();
-                    const formData = new URLSearchParams(new FormData(form));
-                    formData.append('appId', ctx.appId ?? '');
-                    formData.append('navigationMenuId', ctx.navigationMenuId ?? '');
+                    rules: {
+                        navigation_menu_name: { required: true },
+                        app_id: { required: true },
+                        order_sequence: { required: true }
+                    },
+                    messages: {
+                        navigation_menu_name: { required: 'Enter the display name' },
+                        app_id: { required: 'Choose the app' },
+                        order_sequence: { required: 'Enter the order sequence' }
+                    },
+                    submitHandler: async (form) => {
+                        const ctx = getPageContext();
+                        const formData = new URLSearchParams(new FormData(form));
+                        formData.append('appId', ctx.appId ?? '');
+                        formData.append('navigationMenuId', ctx.navigationMenuId ?? '');
 
-                    disableButton('submit-data');
+                        disableButton('submit-data');
 
-                    try {
-                        const response = await fetch('/navigation-menu/save', {
-                            method: 'POST',
-                            body: formData
-                        });
+                        try {
+                            const response = await fetch('/navigation-menu/save', {
+                                method: 'POST',
+                                body: formData
+                            });
 
-                        if (!response.ok) {
-                            throw new Error(`Save navigation menu failed with status: ${response.status}`);
-                        }
+                            if (!response.ok) {
+                                throw new Error(`Save navigation menu failed with status: ${response.status}`);
+                            }
 
-                        const data = await response.json();
+                            const data = await response.json();
 
-                        if (data.success) {
-                            setNotification(data.message, 'success');
-                            window.location.assign(data.redirect_link);
-                        }
-                        else{
-                            showNotification(data.message);
+                            if (data.success) {
+                                setNotification(data.message, 'success');
+                                window.location.assign(data.redirect_link);
+                            }
+                            else{
+                                showNotification(data.message);
+                                enableButton('submit-data');
+                            }
+                        } catch (error) {
                             enableButton('submit-data');
+                            handleSystemError(error, 'fetch_failed', `Fetch request failed: ${error.message}`);
                         }
-                    } catch (error) {
-                        enableButton('submit-data');
-                        handleSystemError(error, 'fetch_failed', `Fetch request failed: ${error.message}`);
-                    }
 
-                },
+                    },
+                }
             }
-        },
+        ],
         dropdown : [
             { url: '/app/generate-options', dropdownSelector: '#app_id' },
             { url: '/navigation-menu/generate-options', dropdownSelector: '#parent_id' },
@@ -65,12 +67,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     discardCreate();
 
-    config.dropdown.forEach(cfg => {
-        generateDropdownOptions({
-            url: cfg.url,
-            dropdownSelector: cfg.dropdownSelector
-        });
-    });
+    config.dropdown.map(cfg => 
+  generateDropdownOptions({
+    url: cfg.url,
+    dropdownSelector: cfg.dropdownSelector
+  })
+);
 
-    initValidation(config.form.selector, config.form.rules);
+    config.forms.map((cfg) => initValidation(cfg.selector, cfg.rules));
 });

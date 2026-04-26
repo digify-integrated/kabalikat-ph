@@ -81,15 +81,16 @@ document.addEventListener('DOMContentLoaded', () => {
             swalText: 'Are you sure you want to delete this file extension?',
             confirmButtonText: 'Delete',
         },
-        dropdown: {
-            url: '/file-type/generate-options',
-            dropdownSelector: '#file_type_id',
-        },
+        dropdown: [
+            { url: '/file-type/generate-options', dropdownSelector: '#file_type_id' }
+        ],
     };
 
     (async () => {
         try {
-            optionsPromise = generateDropdownOptions(config.dropdown);
+            optionsPromise = Promise.all(
+                config.dropdown.map((cfg) => generateDropdownOptions(cfg))
+            );
 
             const fetchDetailsPromise = Promise.all(
                 config.details.map((cfg) => displayDetails(cfg))

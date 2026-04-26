@@ -402,14 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ],
         dropdown: [
             { url: '/unit/generate-options', dropdownSelector: '#base_unit_id' },
-            {
-                url: '/product-category/generate-options',
-                dropdownSelector: '#product_category_id',
-                data : {
-                    product_id : ctx.detailId,
-                    multiple: true
-                }
-            }
+            { url: '/product-category/generate-options', dropdownSelector: '#product_category_id', data : { product_id : ctx.detailId, multiple: true } }
         ],
         attributeDropdown: {
             url: '/attribute/generate-product-attribute-options',
@@ -438,13 +431,7 @@ document.addEventListener('DOMContentLoaded', () => {
     (async () => {
         try {
             optionsPromise = Promise.all(
-                config.dropdown.map((cfg) =>
-                    generateDropdownOptions({
-                        url: cfg.url,
-                        dropdownSelector: cfg.dropdownSelector,
-                        data : cfg.data
-                    })
-                )
+                config.dropdown.map((cfg) => generateDropdownOptions(cfg))
             );
 
             const fetchDetailsPromise = Promise.all(

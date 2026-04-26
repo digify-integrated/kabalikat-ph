@@ -76,7 +76,7 @@
 
         <div class="card-body pt-9">
             <div class="table-responsive">
-                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5" id="file-extension-table">
+                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5" id="batch-tracking-table">
                     <thead>
                         <tr class="text-start text-gray-800 fw-bold fs-7 text-uppercase gs-0">
                             <th>
@@ -84,7 +84,7 @@
                                     <input class="form-check-input" id="datatable-checkbox" type="checkbox">
                                 </div>
                             </th>
-                            <th>File Extension</th>
+                            <th>Batch Tracking</th>
                             <th>File Type</th>
                         </tr>
                     </thead>

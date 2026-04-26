@@ -78,15 +78,16 @@ document.addEventListener('DOMContentLoaded', () => {
             swalText: 'Are you sure you want to delete this state?',
             confirmButtonText: 'Delete',
         },
-        dropdown: {
-            url: '/country/generate-options',
-            dropdownSelector: '#country_id',
-        },
+        dropdown: [
+            { url: '/country/generate-options', dropdownSelector: '#country_id' }
+        ],
     };
 
     (async () => {
         try {
-            optionsPromise = generateDropdownOptions(config.dropdown);
+            optionsPromise = Promise.all(
+                config.dropdown.map((cfg) => generateDropdownOptions(cfg))
+            );
 
             const fetchDetailsPromise = Promise.all(
                 config.details.map((cfg) => displayDetails(cfg))

@@ -10,56 +10,58 @@ document.addEventListener('DOMContentLoaded', () => {
     let optionsPromise = Promise.resolve();
 
     const config = {
-        form: {
-            selector: '#company_form',
-            rules: {
+        forms: [
+            {
+                selector: '#company_form',
                 rules: {
-                    company_name: { required: true},
-                    address: { required: true },
-                    city_id: { required: true },
-                    currency_id: { required: true },
-                },
-                messages: {
-                    company_name: { required: 'Enter the display name' },
-                    address: { required: 'Enter the address' },
-                    city_id: { required: 'Select the city' },
-                    currency_id: { required: 'Select the currency' },
-                },
-                submitHandler: async (form) => {
-                    const ctx = getPageContext();
+                    rules: {
+                        company_name: { required: true},
+                        address: { required: true },
+                        city_id: { required: true },
+                        currency_id: { required: true },
+                    },
+                    messages: {
+                        company_name: { required: 'Enter the display name' },
+                        address: { required: 'Enter the address' },
+                        city_id: { required: 'Select the city' },
+                        currency_id: { required: 'Select the currency' },
+                    },
+                    submitHandler: async (form) => {
+                        const ctx = getPageContext();
 
-                    const formData = new URLSearchParams(new FormData(form));
-                    formData.append('company_id', ctx.detailId ?? '');
-                    formData.append('appId', ctx.appId ?? '');
-                    formData.append('navigationMenuId', ctx.navigationMenuId ?? '');
+                        const formData = new URLSearchParams(new FormData(form));
+                        formData.append('company_id', ctx.detailId ?? '');
+                        formData.append('appId', ctx.appId ?? '');
+                        formData.append('navigationMenuId', ctx.navigationMenuId ?? '');
 
-                    disableButton('submit-data');
+                        disableButton('submit-data');
 
-                    try {
-                        const response = await fetch('/company/save', {
-                            method: 'POST',
-                            body: formData,
-                        });
+                        try {
+                            const response = await fetch('/company/save', {
+                                method: 'POST',
+                                body: formData,
+                            });
 
-                        if (!response.ok) {
-                            throw new Error(`Save company failed with status: ${response.status}`);
+                            if (!response.ok) {
+                                throw new Error(`Save company failed with status: ${response.status}`);
+                            }
+
+                            const data = await response.json();
+
+                            if (data.success) {
+                                showNotification(data.message, 'success');
+                            } else {
+                                showNotification(data.message);
+                            }
+                        } catch (error) {
+                            handleSystemError(error, 'fetch_failed', `Fetch request failed: ${error.message}`);
+                        } finally {
+                            enableButton('submit-data');
                         }
-
-                        const data = await response.json();
-
-                        if (data.success) {
-                            showNotification(data.message, 'success');
-                        } else {
-                            showNotification(data.message);
-                        }
-                    } catch (error) {
-                        handleSystemError(error, 'fetch_failed', `Fetch request failed: ${error.message}`);
-                    } finally {
-                        enableButton('submit-data');
-                    }
+                    },
                 },
-            },
-        },
+            }
+        ],
         details: {
             url: '/company/fetch-details',
             formSelector: '#company_form',
@@ -102,12 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
     (async () => {
         try {
             optionsPromise = Promise.all(
-                config.dropdown.map((cfg) =>
-                    generateDropdownOptions({
-                        url: cfg.url,
-                        dropdownSelector: cfg.dropdownSelector,
-                    })
-                )
+                config.dropdown.map((cfg) => generateDropdownOptions(cfg))
             );
 
             await displayDetails(config.details);
@@ -120,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     })();
 
-    initValidation(config.form.selector, config.form.rules);
+    config.forms.map((cfg) => initValidation(cfg.selector, cfg.rules));
 
     attachLogNotesHandler();
 

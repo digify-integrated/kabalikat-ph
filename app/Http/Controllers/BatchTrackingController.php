@@ -2,16 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class BatchTrackingController extends Controller
 {
     public function save(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'file_extension_id' => ['nullable', 'integer'],
-            'file_extension_name' => ['required', 'string', 'max:255'],
-            'file_extension' => ['required', 'string', 'max:255'],
+            'batch_tracking_id' => ['nullable', 'integer'],
+            'batch_tracking_name' => ['required', 'string', 'max:255'],
+            'batch_tracking' => ['required', 'string', 'max:255'],
             'file_type_id' => ['integer'],
         ]);
 
@@ -34,14 +39,14 @@ class BatchTrackingController extends Controller
             ->value('file_type_name');
 
         $payload = [
-            'file_extension_name' => $validated['file_extension_name'],
-            'file_extension' => $validated['file_extension'],
+            'batch_tracking_name' => $validated['batch_tracking_name'],
+            'batch_tracking' => $validated['batch_tracking'],
             'file_type_id' => $fileTypeId,
             'file_type_name' => $fileTypeName,
             'last_log_by' => Auth::id(),
         ];
 
-        $fileExtensionId = $validated['file_extension_id'] ?? null;
+        $fileExtensionId = $validated['batch_tracking_id'] ?? null;
 
         if ($fileExtensionId && FileExtension::query()->whereKey($fileExtensionId)->exists()) {
             $fileExtension = FileExtension::query()->findOrFail($fileExtensionId);
@@ -51,10 +56,10 @@ class BatchTrackingController extends Controller
         }
 
         UploadSettingFileExtension::query()
-            ->where('file_extension_id', $fileExtension->id)
+            ->where('batch_tracking_id', $fileExtension->id)
             ->update([
-                'file_extension_name' => $fileExtension->file_extension_name,
-                'file_extension' => $fileExtension->file_extension,
+                'batch_tracking_name' => $fileExtension->batch_tracking_name,
+                'batch_tracking' => $fileExtension->batch_tracking,
                 'last_log_by' => Auth::id(),
             ]);
 
@@ -66,7 +71,7 @@ class BatchTrackingController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'The file extension has been saved successfully',
+            'message' => 'The batch tracking has been saved successfully',
             'redirect_link' => $link,
         ]);
     }
@@ -74,7 +79,7 @@ class BatchTrackingController extends Controller
     public function delete(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'detailId' => ['required', 'integer', 'min:1', Rule::exists('file_extension', 'id')],
+            'detailId' => ['required', 'integer', 'min:1', Rule::exists('batch_tracking', 'id')],
         ]);
 
         $pageAppId = (int) $request->input('appId');
@@ -102,7 +107,7 @@ class BatchTrackingController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'The file extension has been deleted successfully',
+            'message' => 'The batch tracking has been deleted successfully',
             'redirect_link' => $link,
         ]);
     }
@@ -111,7 +116,7 @@ class BatchTrackingController extends Controller
     {
         $validated = $request->validate([
             'selected_id'   => ['required', 'array', 'min:1'],
-            'selected_id.*' => ['integer', 'distinct', Rule::exists('file_extension', 'id')],
+            'selected_id.*' => ['integer', 'distinct', Rule::exists('batch_tracking', 'id')],
         ]);
 
         $ids = $validated['selected_id'];
@@ -122,7 +127,7 @@ class BatchTrackingController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'The selected file extensions have been deleted successfully',
+            'message' => 'The selected batch trackings have been deleted successfully',
         ]);
     }
 
@@ -145,7 +150,7 @@ class BatchTrackingController extends Controller
 
         $validated = $validator->validated();
 
-        $fileExtension = DB::table('file_extension')
+        $fileExtension = DB::table('batch_tracking')
             ->where('id', $validated['detailId'])
             ->first();
 
@@ -167,8 +172,8 @@ class BatchTrackingController extends Controller
         return response()->json([
             'success' => true,
             'notExist' => false,
-            'fileExtensionName' => $fileExtension->file_extension_name ?? null,
-            'fileExtension' => $fileExtension->file_extension ?? null,
+            'fileExtensionName' => $fileExtension->batch_tracking_name ?? null,
+            'fileExtension' => $fileExtension->batch_tracking ?? null,
             'fileTypeId' => $fileExtension->file_type_id ?? null,
         ]);
     }
@@ -179,14 +184,14 @@ class BatchTrackingController extends Controller
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
         $filterByFileType = $request->input('filter_by_file_type');
 
-        $fileExtensions = DB::table('file_extension')
+        $fileExtensions = DB::table('batch_tracking')
         ->when(!empty($filterByFileType), fn($q) => $q->whereIn('file_type_id', $filterByFileType))
-        ->orderBy('file_extension_name')
+        ->orderBy('batch_tracking_name')
         ->get();
 
         $response = $fileExtensions->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
             $fileExtensionId = $row->id;
-            $fileExtensionName = $row->file_extension_name;
+            $fileExtensionName = $row->batch_tracking_name;
             $fileTypeName = $row->file_type_name;
 
             $link = route('apps.details', [
@@ -223,15 +228,15 @@ class BatchTrackingController extends Controller
             ]);
         }
 
-        $fileExtensions = DB::table('file_extension')
-            ->select(['id', 'file_extension_name', 'file_extension'])
-            ->orderBy('file_extension_name')
+        $fileExtensions = DB::table('batch_tracking')
+            ->select(['id', 'batch_tracking_name', 'batch_tracking'])
+            ->orderBy('batch_tracking_name')
             ->get();
 
         $response = $response->concat(
             $fileExtensions->map(fn ($row) => [
                 'id'   => $row->id,
-                'text' => $row->file_extension_name . ' (.' . $row->file_extension . ')',
+                'text' => $row->batch_tracking_name . ' (.' . $row->batch_tracking . ')',
             ])
         )->values();
 

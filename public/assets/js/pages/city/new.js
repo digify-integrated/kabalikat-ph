@@ -7,62 +7,63 @@ import { generateDropdownOptions } from '../../form/field.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const config = {
-        form: {
-            selector: '#city_form',
-            rules: {
+        forms: [
+            {
+                selector: '#city_form',
                 rules: {
-                    city_name: { required: true},
-                    state_id: { required: true},
-                },
-                messages: {
-                    city_name: { required: 'Enter the city' },
-                    state_id: { required: 'Choose the state' },
-                },
-                submitHandler: async (form) => {
-                    const ctx = getPageContext();
-                    const formData = new URLSearchParams(new FormData(form));
-                    formData.append('appId', ctx.appId ?? '');
-                    formData.append('navigationMenuId', ctx.navigationMenuId ?? '');
+                    rules: {
+                        city_name: { required: true},
+                        state_id: { required: true},
+                    },
+                    messages: {
+                        city_name: { required: 'Enter the city' },
+                        state_id: { required: 'Choose the state' },
+                    },
+                    submitHandler: async (form) => {
+                        const ctx = getPageContext();
+                        const formData = new URLSearchParams(new FormData(form));
+                        formData.append('appId', ctx.appId ?? '');
+                        formData.append('navigationMenuId', ctx.navigationMenuId ?? '');
 
-                    disableButton('submit-data');
+                        disableButton('submit-data');
 
-                    try {
-                        const response = await fetch('/city/save', {
-                            method: 'POST',
-                            body: formData
-                        });
+                        try {
+                            const response = await fetch('/city/save', {
+                                method: 'POST',
+                                body: formData
+                            });
 
-                        if (!response.ok) {
-                            throw new Error(`Save city failed with status: ${response.status}`);
-                        }
+                            if (!response.ok) {
+                                throw new Error(`Save city failed with status: ${response.status}`);
+                            }
 
-                        const data = await response.json();
+                            const data = await response.json();
 
-                        if (data.success) {
-                            setNotification(data.message, 'success');
-                            window.location.assign(data.redirect_link);
-                        }
-                        else{
-                            showNotification(data.message);
+                            if (data.success) {
+                                setNotification(data.message, 'success');
+                                window.location.assign(data.redirect_link);
+                            }
+                            else{
+                                showNotification(data.message);
+                                enableButton('submit-data');
+                            }
+                        } catch (error) {
                             enableButton('submit-data');
+                            handleSystemError(error, 'fetch_failed', `Fetch request failed: ${error.message}`);
                         }
-                    } catch (error) {
-                        enableButton('submit-data');
-                        handleSystemError(error, 'fetch_failed', `Fetch request failed: ${error.message}`);
-                    }
 
-                },
+                    },
+                }
             }
-        },
-        dropdown: {
-            url: '/state/generate-options',
-            dropdownSelector: '#state_id',
-        }
+        ],
+        dropdown: [
+            { url: '/state/generate-options', dropdownSelector: '#state_id' }
+        ]
     }
 
     discardCreate();
 
-    generateDropdownOptions(config.dropdown);
+    config.dropdown.map((cfg) => generateDropdownOptions(cfg));
 
-    initValidation(config.form.selector, config.form.rules);
+    config.forms.map((cfg) => initValidation(cfg.selector, cfg.rules));
 });
