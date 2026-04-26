@@ -340,13 +340,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     $('#tax_classification').val(data.taxClassification ?? '').trigger('change');
                     $('#base_unit_id').val(data.baseUnitId ?? '').trigger('change');
                     $('#inventory_flow').val(data.inventoryFlow ?? '').trigger('change');
+                    $('#product_category_id').val(data.productCategoryId ?? '').trigger('change');
 
                     document.getElementById('track-inventory').checked = data.trackInventory === 'Yes';
                     document.getElementById('is-addon').checked = data.isAddon === 'Yes';
                     document.getElementById('batch-tracking').checked = data.batchTracking === 'Yes';
                     document.getElementById('expiration-tracking').checked = data.expirationTracking === 'Yes';
                 },
-            }
+            },
         ],
         delete: {
             trigger: '#delete-product',
@@ -588,6 +589,40 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (error) {
                 handleSystemError(error, 'fetch_failed', `Failed to settings: ${error.message}`);
             }
+        }
+    });
+
+    $('#product_category_id').on('change', async function () {
+        try {
+            const productCategoryId = $(this).val();
+            const csrf = getCsrfToken();
+            const ctx = getPageContext();
+            
+            const formData = new URLSearchParams();
+            formData.append('product_category_id', productCategoryId);
+            formData.append('product_id', ctx.detailId ?? '');
+            formData.append('appId', ctx.appId ?? '');
+            formData.append('navigationMenuId', ctx.navigationMenuId ?? '');
+            
+            const response = await fetch('/product-category-map/save', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    Accept: 'application/json',
+                    ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+                },
+            });
+            
+            if (!response.ok) throw new Error(`Request failed with status: ${response.status}`);
+            
+            const data = await response.json();
+            
+            if (!data.success) {
+                showNotification(data.message);
+            }
+        } catch (error) {
+            handleSystemError(error, 'fetch_failed', `Failed to settings: ${error.message}`);
         }
     });
 });

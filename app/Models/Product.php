@@ -38,16 +38,21 @@ class Product extends Model
 
     public function productAttributes(): HasMany
     {
-        return $this->hasMany(ProductAttribute::class, 'product_ud', 'id');
+        return $this->hasMany(ProductAttribute::class, 'product_id', 'id');
     }
 
     public function productBOMs(): HasMany
     {
-        return $this->hasMany(ProductBOM::class, 'product_ud', 'id');
+        return $this->hasMany(ProductBOM::class, 'product_id', 'id');
     }
 
     public function productAddons(): HasMany
     {
-        return $this->hasMany(ProductAddon::class, 'product_ud', 'id');
+        return $this->hasMany(ProductAddon::class, 'product_id', 'id');
+    }
+
+    public function productCategory(): HasMany
+    {
+        return $this->hasMany(ProductCategoryMap::class, 'product_id', 'id');
     }
 }

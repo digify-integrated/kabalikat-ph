@@ -251,7 +251,19 @@ class NavigationMenuSeeder extends Seeder
                 'order_sequence'                => 3
             ],
 
-            // Inventory -> Batch Tracking ID: 21
+            // Inventory -> Stock Adjustments ID: 21
+            [
+                'navigation_menu_name'          => 'Stock Level',
+                'navigation_menu_icon'          => null,
+                'app_id'                        => 4,
+                'app_name'                      => 'Inventory',
+                'parent_navigation_menu_id'     => 20,
+                'parent_navigation_menu_name'   => 'Inventory',
+                'database_table'                => 'stock_level',
+                'order_sequence'                => 1
+            ],
+
+            // Inventory -> Batch Tracking ID: 22
             [
                 'navigation_menu_name'          => 'Batch Tracking',
                 'navigation_menu_icon'          => null,
@@ -260,18 +272,6 @@ class NavigationMenuSeeder extends Seeder
                 'parent_navigation_menu_id'     => 20,
                 'parent_navigation_menu_name'   => 'Inventory',
                 'database_table'                => 'batch_tracking',
-                'order_sequence'                => 1
-            ],
-
-            // Inventory -> Stock Adjustments ID: 22
-            [
-                'navigation_menu_name'          => 'Stock Adjustments',
-                'navigation_menu_icon'          => null,
-                'app_id'                        => 4,
-                'app_name'                      => 'Inventory',
-                'parent_navigation_menu_id'     => 20,
-                'parent_navigation_menu_name'   => 'Inventory',
-                'database_table'                => 'stock_adjustment',
                 'order_sequence'                => 2
             ],
 

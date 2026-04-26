@@ -19,6 +19,7 @@ use App\Http\Controllers\NavigationMenuController;
 use App\Http\Controllers\ProductAddonController;
 use App\Http\Controllers\ProductBOMController;
 use App\Http\Controllers\ProductCategoryController;
+use App\Http\Controllers\ProductCategoryMapController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductAttributeController;
 use App\Http\Controllers\RoleController;
@@ -500,6 +501,14 @@ Route::middleware('auth')->group(function () {
             Route::post('/delete', 'delete')->name('delete');
             Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
             Route::post('/generate-table', 'generateTable')->name('generate.table');
+        });
+
+    // Product Category Map
+    Route::prefix('product-category-map')
+        ->name('product.category.map.')
+        ->controller(ProductCategoryMapController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
         });
 
     // Product BOM

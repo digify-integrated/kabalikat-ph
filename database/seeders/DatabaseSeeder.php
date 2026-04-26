@@ -34,6 +34,7 @@ class DatabaseSeeder extends Seeder
             CitySeeder::class,
             UnitTypeSeeder::class,
             UnitSeeder::class,
+            WarehouseTypeSeeder::class,
         ]);
     }
 }

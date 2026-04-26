@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 
 class UnitTypeSeeder extends Seeder
 {
-   public function run(): void
+    public function run(): void
     {
         $defaults = [
             'created_at' => now(),

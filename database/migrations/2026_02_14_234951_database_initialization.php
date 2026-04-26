@@ -781,6 +781,31 @@ return new class extends Migration
         });
 
         /* =============================================================================================
+            TABLE: Product Category Map
+        ============================================================================================= */
+
+        Schema::create('product_category_map', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('product_id')
+            ->constrained('product')
+            ->cascadeOnDelete();
+
+            $table->string('product_name');
+
+            $table->foreignId('product_category_id')
+            ->constrained('product_category');
+
+            $table->string('product_category_name');
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+
+            $table->index(['product_id'], 'product_category_map_product_id_idx');
+            $table->index(['product_category_id'], 'product_category_map_product_category_id_idx');
+        });
+
+        /* =============================================================================================
             TABLE: Product Attribute
         ============================================================================================= */
 
@@ -867,6 +892,73 @@ return new class extends Migration
         });
 
         /* =============================================================================================
+            TABLE: Batch Tracking
+        ============================================================================================= */
+
+        Schema::create('batch_tracking', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('product_id')
+            ->constrained('product')
+            ->cascadeOnDelete();
+
+            $table->string('product_name');
+
+            $table->foreignId('warehouse_id')
+            ->nullable()
+            ->constrained('warehouse')
+            ->nullOnDelete();
+
+            $table->string('warehouse_name')
+            ->nullable();
+
+            $table->enum('batch_status', ['Draft', 'For Approval', 'Approved', 'Cancelled'])
+            ->default('Draft');
+
+            $table->double('quantity')
+            ->default(0);
+
+            $table->string('batch_number');
+
+            $table->double('cost_per_unit')
+            ->default(0);
+
+            $table->string('remarks')
+            ->nullable();
+
+            $table->date('expiration_date')
+            ->nullable();
+
+            $table->date('received_date')
+            ->nullable();
+
+            $table->date('for_approval_date')
+            ->nullable();
+
+            $table->date('approved_date')
+            ->nullable();
+
+            $table->date('cancellation_date')
+            ->nullable();
+
+            $table->date('set_to_draft_date')
+            ->nullable();
+            
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+
+            $table->index(['product_id'], 'batch_tracking_product_id_idx');
+            $table->index(['warehouse_id'], 'batch_tracking_warehouse_id_idx');
+            $table->index(['expiration_date'], 'batch_tracking_expiration_date_idx');
+            $table->index(['received_date'], 'batch_tracking_received_date_idx');
+            $table->index(['for_approval_date'], 'batch_tracking_for_approval_date_idx');
+            $table->index(['approved_date'], 'batch_tracking_approved_date_idx');
+            $table->index(['cancellation_date'], 'batch_tracking_cancellation_date_idx');
+            $table->index(['set_to_draft_date'], 'batch_tracking_set_to_draft_date_idx');
+            $table->index(['batch_number'], 'batch_tracking_batch_number_idx');
+        });
+
+        /* =============================================================================================
             TABLE: Stock Level
         ============================================================================================= */
 
@@ -887,10 +979,19 @@ return new class extends Migration
             $table->string('warehouse_name')
             ->nullable();
 
-            $table->double('quantity')
+            $table->enum('stock_status', ['In Stock', 'Low Stock', 'Out of Stock'])
+            ->default('In Stock');
+
+            $table->double('received_quantity')
             ->default(0);
 
-            $table->string('batch_number');
+            $table->double('remaining_quantity')
+            ->default(0);
+
+            $table->foreignId('batch_tracking_id')
+            ->nullable()
+            ->constrained('batch_tracking')
+            ->nullOnDelete();
 
             $table->date('expiration_date')
             ->nullable();
@@ -906,11 +1007,12 @@ return new class extends Migration
 
             $table->index(['product_id'], 'stock_level_product_id_idx');
             $table->index(['warehouse_id'], 'stock_level_warehouse_id_idx');
+            $table->index(['stock_status'], 'stock_level_stock_status_idx');
             $table->index(['expiration_date'], 'stock_level_expiration_date_idx');
             $table->index(['received_date'], 'stock_level_received_date_idx');
-            $table->index(['batch_number'], 'stock_batch_number_date_idx');
+            $table->index(['batch_tracking_id'], 'stock_level_batch_tracking_id_idx');
         });
-       
+
         /* =============================================================================================
             TABLE: Stock Movement
         ============================================================================================= */
@@ -973,6 +1075,7 @@ return new class extends Migration
         Schema::dropIfExists('role_permission');
         Schema::dropIfExists('upload_setting_file_extension');
         Schema::dropIfExists('file_extension');
+        Schema::dropIfExists('product_category_map');
         Schema::dropIfExists('product_attribute');
         Schema::dropIfExists('product_bom');
         Schema::dropIfExists('product_addon');
@@ -997,6 +1100,7 @@ return new class extends Migration
         Schema::dropIfExists('product_category');
         Schema::dropIfExists('stock_adjustment_reason');
         Schema::dropIfExists('stock_level');
+        Schema::dropIfExists('batch_tracking');
         Schema::dropIfExists('stock_movement');
         Schema::dropIfExists('nationality');
         Schema::dropIfExists('currency');

@@ -55,6 +55,13 @@ class RoleSystemActionPermissionSeeder extends Seeder
                 'system_action_name' => 'Update Role System Action Access',
                 'system_action_access' => true,
             ],
+            [
+                'role_id' => 1,
+                'role_name' => 'Super Admin',
+                'system_action_id' => 6,
+                'system_action_name' => 'Approve Batch Tracking',
+                'system_action_access' => true,
+            ],
         ];
 
         DB::table('role_system_action_permission')->insert(

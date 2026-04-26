@@ -399,24 +399,24 @@ class NavigationMenuRouteSeeder extends Seeder
                 'js_file'               => 'import/import',
             ],
 
-            // Batch Tracking
+            // Stock Level
             [
                 'navigation_menu_id'    => 21,
                 'route_type'            => 'index',
-                'view_file'             => 'pages.batch-tracking.index',
-                'js_file'               => 'batch-tracking/index',
+                'view_file'             => 'pages.stock-level.index',
+                'js_file'               => 'stock-level/index',
             ],
             [
                 'navigation_menu_id'    => 21,
                 'route_type'            => 'new',
-                'view_file'             => 'pages.batch-tracking.new',
-                'js_file'               => 'batch-tracking/new',
+                'view_file'             => 'pages.stock-level.new',
+                'js_file'               => 'stock-level/new',
             ],
             [
                 'navigation_menu_id'    => 21,
                 'route_type'            => 'details',
-                'view_file'             => 'pages.batch-tracking.details',
-                'js_file'               => 'batch-tracking/details',
+                'view_file'             => 'pages.stock-level.details',
+                'js_file'               => 'stock-level/details',
             ],
             [
                 'navigation_menu_id'    => 21,
@@ -425,24 +425,24 @@ class NavigationMenuRouteSeeder extends Seeder
                 'js_file'               => 'import/import',
             ],
 
-            // Stock Adjustments
+            // Batch Tracking
             [
                 'navigation_menu_id'    => 22,
                 'route_type'            => 'index',
-                'view_file'             => 'pages.stock-adjustments.index',
-                'js_file'               => 'stock-adjustments/index',
+                'view_file'             => 'pages.batch-tracking.index',
+                'js_file'               => 'batch-tracking/index',
             ],
             [
                 'navigation_menu_id'    => 22,
                 'route_type'            => 'new',
-                'view_file'             => 'pages.stock-adjustments.new',
-                'js_file'               => 'stock-adjustments/new',
+                'view_file'             => 'pages.batch-tracking.new',
+                'js_file'               => 'batch-tracking/new',
             ],
             [
                 'navigation_menu_id'    => 22,
                 'route_type'            => 'details',
-                'view_file'             => 'pages.stock-adjustments.details',
-                'js_file'               => 'stock-adjustments/details',
+                'view_file'             => 'pages.batch-tracking.details',
+                'js_file'               => 'batch-tracking/details',
             ],
             [
                 'navigation_menu_id'    => 22,

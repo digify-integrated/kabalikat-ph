@@ -616,6 +616,11 @@ class ProductController extends Controller
             ? Storage::url($path)
             : $defaultProductImage;
 
+        $productCategoryIds = DB::table('product_category_map')
+            ->where('product_id', $product->id)
+            ->pluck('product_category_id')
+            ->toArray();
+
         return response()->json([
             'success'               => true,
             'notExist'              => false,
@@ -636,6 +641,7 @@ class ProductController extends Controller
             'batchTracking'         => $product->batch_tracking ?? 'No',
             'expirationTracking'    => $product->expiration_tracking ?? 'No',
             'productImage'          => $productImageUrl,
+            'productCategoryId'    => $productCategoryIds,
         ]);
     }
 

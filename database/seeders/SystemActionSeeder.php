@@ -40,6 +40,10 @@ class SystemActionSeeder extends Seeder
                 'system_action_name' => 'Update Role System Action Access',
                 'system_action_description' => 'Access to update the role system action access.',
             ],
+            [
+                'system_action_name' => 'Approve Batch Tracking',
+                'system_action_description' => 'Access to approve batch tracking requests.',
+            ],
         ];
 
         DB::table('system_action')->insert(
