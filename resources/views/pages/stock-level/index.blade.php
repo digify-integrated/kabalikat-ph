@@ -79,9 +79,10 @@
                             <div class="mb-5">
                                 <label class="form-label fs-6 fw-semibold" for="filter_by_status">Filter By Status:</label>
                                 <select id="filter_by_status" multiple="multiple" class="form-select" data-control="select2" data-allow-clear="false">
-                                    <option value="In Stock">In Stock</option>
-                                    <option value="Low Stock">Low Stock</option>
-                                    <option value="Out of Stock">Out of Stock</option>
+                                    <option value="Draft" selected>Draft</option>
+                                    <option value="For Approval" selected>For Approval</option>
+                                    <option value="Approved">Approved</option>
+                                    <option value="Cancelled">Cancelled</option>
                                 </select>
                             </div>
                             <div class="d-flex justify-content-end">
@@ -96,18 +97,22 @@
 
         <div class="card-body pt-9">
             <div class="table-responsive">
-                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5" id="batch-tracking-table">
+                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5" id="stock-level-table">
                     <thead>
                         <tr class="text-start text-gray-800 fw-bold fs-7 text-uppercase gs-0">
+                            <th>
+                                <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
+                                    <input class="form-check-input" id="datatable-checkbox" type="checkbox">
+                                </div>
+                            </th>
                             <th>Product</th>
                             <th>Warehouse</th>
+                            <th>Batch / Lot No.</th>
                             <th>Qty</th>
                             <th>Cost/Unit</th>
-                            <th>Value</th>
-                            <th>Batch / Lot No.</th>
-                            <th>Expiry</th>
-                            <th>Received Date</th>
+                            <th>Received</th>
                             <th>Status</th>
+                            <th>Expiry</th>
                         </tr>
                     </thead>
                     <tbody class="fw-semibold text-gray-800"></tbody>

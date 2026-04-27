@@ -15,7 +15,6 @@ use App\Http\Controllers\ExportController;
 use App\Http\Controllers\FileExtensionController;
 use App\Http\Controllers\FileTypeController;
 use App\Http\Controllers\ImportController;
-use App\Http\Controllers\NationalityController;
 use App\Http\Controllers\NavigationMenuController;
 use App\Http\Controllers\ProductAddonController;
 use App\Http\Controllers\ProductBOMController;
@@ -28,8 +27,12 @@ use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\RoleSystemActionPermissionController;
 use App\Http\Controllers\RoleUserAccountController;
 use App\Http\Controllers\StateController;
+use App\Http\Controllers\StockAdjustmentController;
 use App\Http\Controllers\StockAdjustmentReasonController;
 use App\Http\Controllers\StockLevelController;
+use App\Http\Controllers\StockMovementController;
+use App\Http\Controllers\StockTransferController;
+use App\Http\Controllers\StockTransferReasonController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SystemActionController;
 use App\Http\Controllers\UnitController;
@@ -398,6 +401,19 @@ Route::middleware('auth')->group(function () {
             Route::post('/generate-options', 'generateOptions')->name('generate.options');
         });
 
+    // Stock Transfer Reason
+    Route::prefix('stock-transfer-reason')
+        ->name('stock.transfer.reason.')
+        ->controller(StockTransferReasonController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
+            Route::post('/delete', 'delete')->name('delete');
+            Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
+            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
+            Route::post('/generate-table', 'generateTable')->name('generate.table');
+            Route::post('/generate-options', 'generateOptions')->name('generate.options');
+        });
+
     // Supplier
     Route::prefix('supplier')
         ->name('supplier.')
@@ -490,6 +506,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/generate-table', 'generateTable')->name('generate.table');
             Route::post('/generate-variation-table', 'generateVariationTable')->name('generate.variation.table');
             Route::post('/generate-options', 'generateOptions')->name('generate.options');
+            Route::post('/generate-active-product-options', 'generateActiveProductOptions')->name('generate.active.product.options');
             Route::post('/generate-product-bom-options', 'generateBomOptions')->name('generate.bom.options');
             Route::post('/generate-product-addon-options', 'generateAddOnOptions')->name('generate.addon.options');
             Route::post('/generate-product-batch-tracking-options', 'generateBatchTrackingOptions')->name('generate.batch.tracking.options');
@@ -558,7 +575,59 @@ Route::middleware('auth')->group(function () {
         ->name('stock.level.')
         ->controller(StockLevelController::class)
         ->group(function () {
+            Route::post('/save', 'save')->name('save');
+            Route::post('/delete', 'delete')->name('delete');
+            Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
+            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
             Route::post('/generate-table', 'generateTable')->name('generate.table');
+            Route::post('/generate-options', 'generateOptions')->name('generate.options');
+        });
+
+    // Stock Adjustment
+    Route::prefix('stock-adjustment')
+        ->name('stock.adjustment.')
+        ->controller(StockAdjustmentController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
+            Route::post('/for-approval', 'forApproval')->name('for.approval');
+            Route::post('/cancel', 'cancel')->name('cancel');
+            Route::post('/approve', 'approve')->name('approve');
+            Route::post('/set-to-draft', 'setToDraft')->name('set.to.draft');
+            Route::post('/delete', 'delete')->name('delete');
+            Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
+            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
+            Route::post('/generate-table', 'generateTable')->name('generate.table');
+            Route::post('/generate-options', 'generateOptions')->name('generate.options');
+        });
+
+     // Stock Transfer
+    Route::prefix('stock-transfer')
+        ->name('stock.transfer.')
+        ->controller(StockTransferController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
+            Route::post('/for-approval', 'forApproval')->name('for.approval');
+            Route::post('/cancel', 'cancel')->name('cancel');
+            Route::post('/approve', 'approve')->name('approve');
+            Route::post('/set-to-draft', 'setToDraft')->name('set.to.draft');
+            Route::post('/delete', 'delete')->name('delete');
+            Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
+            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
+            Route::post('/generate-table', 'generateTable')->name('generate.table');
+            Route::post('/generate-options', 'generateOptions')->name('generate.options');
+        });
+
+    // Stock Movement
+    Route::prefix('stock-movement')
+        ->name('stock.movement.')
+        ->controller(StockMovementController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
+            Route::post('/delete', 'delete')->name('delete');
+            Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
+            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
+            Route::post('/generate-table', 'generateTable')->name('generate.table');
+            Route::post('/generate-options', 'generateOptions')->name('generate.options');
         });
 
     // Import

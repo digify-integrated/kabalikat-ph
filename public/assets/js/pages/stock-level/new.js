@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const config = {
         forms: [
             {
-                selector: '#batch_tracking_form',
+                selector: '#stock_level_form',
                 rules: {
                     rules: {
                         product_id: { required: true},
@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         received_date: { required: true},
                     },
                     messages: {
-                        product_id: { required: 'Choose the product' },
+                        product_id: { required: 'Choose the stock level' },
                         warehouse_id: { required: 'Choose the warehouse' },
                         batch_number: { required: 'Enter the batch number' },
                         quantity: { required: 'Enter the quantity' },
@@ -36,13 +36,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         disableButton('submit-data');
 
                         try {
-                            const response = await fetch('/batch-tracking/save', {
+                            const response = await fetch('/stock-level/save', {
                                 method: 'POST',
                                 body: formData
                             });
 
                             if (!response.ok) {
-                                throw new Error(`Save batch tracking failed with status: ${response.status}`);
+                                throw new Error(`Save stock level failed with status: ${response.status}`);
                             }
 
                             const data = await response.json();
@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         ],
         dropdown: [
-            { url: '/products/generate-product-batch-tracking-options', dropdownSelector: '#product_id' },
+            { url: '/products/generate-product-stock-level-options', dropdownSelector: '#product_id' },
             { url: '/warehouse/generate-options', dropdownSelector: '#warehouse_id' },
         ],
         datepickers: [

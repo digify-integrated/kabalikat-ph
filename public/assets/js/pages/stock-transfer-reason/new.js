@@ -3,29 +3,18 @@ import { showNotification, setNotification } from '../../util/notifications.js';
 import { disableButton, enableButton, discardCreate } from '../../form/button.js';
 import { handleSystemError } from '../../util/system-errors.js';
 import { getPageContext } from '../../form/form.js';
-import { generateDropdownOptions, initializeDatePicker } from '../../form/field.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const config = {
         forms: [
             {
-                selector: '#batch_tracking_form',
+                selector: '#stock_transfer_reason_form',
                 rules: {
                     rules: {
-                        product_id: { required: true},
-                        warehouse_id: { required: true},
-                        batch_number: { required: true},
-                        quantity: { required: true},
-                        cost_per_unit: { required: true},
-                        received_date: { required: true},
+                        stock_transfer_reason_name: { required: true},
                     },
                     messages: {
-                        product_id: { required: 'Choose the product' },
-                        warehouse_id: { required: 'Choose the warehouse' },
-                        batch_number: { required: 'Enter the batch number' },
-                        quantity: { required: 'Enter the quantity' },
-                        cost_per_unit: { required: 'Enter the cost per unit' },
-                        received_date: { required: 'Enter the received date' },
+                        stock_transfer_reason_name: { required: 'Enter the stock transfer reason' },
                     },
                     submitHandler: async (form) => {
                         const ctx = getPageContext();
@@ -36,13 +25,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         disableButton('submit-data');
 
                         try {
-                            const response = await fetch('/batch-tracking/save', {
+                            const response = await fetch('/stock-transfer-reason/save', {
                                 method: 'POST',
                                 body: formData
                             });
 
                             if (!response.ok) {
-                                throw new Error(`Save batch tracking failed with status: ${response.status}`);
+                                throw new Error(`Save stock transfer reason failed with status: ${response.status}`);
                             }
 
                             const data = await response.json();
@@ -63,21 +52,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     },
                 }
             }
-        ],
-        dropdown: [
-            { url: '/products/generate-product-batch-tracking-options', dropdownSelector: '#product_id' },
-            { url: '/warehouse/generate-options', dropdownSelector: '#warehouse_id' },
-        ],
-        datepickers: [
-            { selector: '#expiration_date' },
-            { selector: '#received_date' },
         ]
     }
 
     discardCreate();
-
-    config.dropdown.map((cfg) => generateDropdownOptions(cfg));
-    config.datepickers.map((cfg) => initializeDatePicker(cfg));
 
     config.forms.map((cfg) => initValidation(cfg.selector, cfg.rules));
 });

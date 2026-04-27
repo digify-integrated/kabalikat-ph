@@ -35,6 +35,8 @@ class DatabaseSeeder extends Seeder
             UnitTypeSeeder::class,
             UnitSeeder::class,
             WarehouseTypeSeeder::class,
+            StockAdjustmentReasonSeeder::class,
+            StockTransferReasonSeeder::class,
         ]);
     }
 }

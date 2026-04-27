@@ -5,12 +5,12 @@ import { checkNotification } from '../../util/notifications.js';
 document.addEventListener('DOMContentLoaded', () => {
     const config = {
         table: {
-            url: '/warehouse-type/generate-table',
-            selector: '#warehouse-type-table',
+            url: '/stock-transfer-reason/generate-table',
+            selector: '#stock-transfer-reason-table',
             serverSide: false,
             columns: [
                 { data: 'CHECK_BOX' },
-                { data: 'WAREHOUSE_TYPE' }
+                { data: 'STOCK_TRANSFER_REASON' }
             ],
             columnDefs: [
                 { width: '5%', bSortable: false, targets: 0, responsivePriority: 1 },
@@ -21,17 +21,17 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             addons: {
                 controls: true,
-                export: 'warehouse_type',
+                export: 'stock_transfer_reason',
             }
         },
         delete: {
             trigger : '#delete-data',
-            url : '/warehouse-type/delete-multiple',
-            swalTitle : 'Confirm Multiple Warehouse Type Deletion',
-            swalText : 'Are you sure you want to delete these warehouse types?',
+            url : '/stock-transfer-reason/delete-multiple',
+            swalTitle : 'Confirm Multiple Stock Transfer Reason Deletion',
+            swalText : 'Are you sure you want to delete these stock transfer reasons?',
             confirmButtonText : 'Delete',
-            validationMessage : 'Please select the warehouse types you want to delete',
-            table : '#warehouse-type-table'
+            validationMessage : 'Please select the stock transfer reasons you want to delete',
+            table : '#stock-transfer-reason-table'
         }
     }
     

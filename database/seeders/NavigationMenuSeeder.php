@@ -263,7 +263,19 @@ class NavigationMenuSeeder extends Seeder
                 'order_sequence'                => 1
             ],
 
-            // Inventory -> Batch Tracking ID: 22
+            // Inventory -> Stock Adjustments ID: 22
+            [
+                'navigation_menu_name'          => 'Stock Adjustment',
+                'navigation_menu_icon'          => null,
+                'app_id'                        => 4,
+                'app_name'                      => 'Inventory',
+                'parent_navigation_menu_id'     => 20,
+                'parent_navigation_menu_name'   => 'Inventory',
+                'database_table'                => 'stock_adjustment',
+                'order_sequence'                => 2
+            ],
+
+            // Inventory -> Batch Tracking ID: 23
             [
                 'navigation_menu_name'          => 'Batch Tracking',
                 'navigation_menu_icon'          => null,
@@ -272,10 +284,10 @@ class NavigationMenuSeeder extends Seeder
                 'parent_navigation_menu_id'     => 20,
                 'parent_navigation_menu_name'   => 'Inventory',
                 'database_table'                => 'batch_tracking',
-                'order_sequence'                => 2
+                'order_sequence'                => 3
             ],
 
-            // Inventory -> Stock Transfer ID: 23
+            // Inventory -> Stock Transfer ID: 24
             [
                 'navigation_menu_name'          => 'Stock Transfer',
                 'navigation_menu_icon'          => null,
@@ -284,10 +296,22 @@ class NavigationMenuSeeder extends Seeder
                 'parent_navigation_menu_id'     => 20,
                 'parent_navigation_menu_name'   => 'Inventory',
                 'database_table'                => 'stock_transfer',
-                'order_sequence'                => 3
+                'order_sequence'                => 4
             ],
 
-            // Purchase Order ID: 24
+            // Inventory -> Stock Movement ID: 25
+            [
+                'navigation_menu_name'          => 'Stock Movement',
+                'navigation_menu_icon'          => null,
+                'app_id'                        => 4,
+                'app_name'                      => 'Inventory',
+                'parent_navigation_menu_id'     => 20,
+                'parent_navigation_menu_name'   => 'Inventory',
+                'database_table'                => 'stock_movement',
+                'order_sequence'                => 5
+            ],
+
+            // Purchase Order ID: 26
             [
                 'navigation_menu_name'          => 'Purchase Order',
                 'navigation_menu_icon'          => 'ki-outline ki-purchase',
@@ -299,7 +323,7 @@ class NavigationMenuSeeder extends Seeder
                 'order_sequence'                => 4
             ],
 
-            // Configurations -> Suppliers ID: 25
+            // Configurations -> Suppliers ID: 27
             [
                 'navigation_menu_name'          => 'Suppliers',
                 'navigation_menu_icon'          => 'ki-outline ki-parcel-tracking',
@@ -311,7 +335,7 @@ class NavigationMenuSeeder extends Seeder
                 'order_sequence'                => 5
             ],
 
-            // Warehouse ID: 26
+            // Warehouse ID: 28
             [
                 'navigation_menu_name'          => 'Warehouse',
                 'navigation_menu_icon'          => 'ki-outline ki-parcel',
@@ -323,7 +347,7 @@ class NavigationMenuSeeder extends Seeder
                 'order_sequence'                => 6
             ],
 
-            // Configurations ID: 27
+            // Configurations ID: 29
             [
                 'navigation_menu_name'          => 'Configurations',
                 'navigation_menu_icon'          => 'ki-outline ki-wrench',
@@ -335,97 +359,109 @@ class NavigationMenuSeeder extends Seeder
                 'order_sequence'                => 7
             ],
 
-            // Configurations -> Attribute ID: 28
+            // Configurations -> Attribute ID: 30
             [
                 'navigation_menu_name'          => 'Attribute',
                 'navigation_menu_icon'          => null,
                 'app_id'                        => 4,
                 'app_name'                      => 'Inventory',
-                'parent_navigation_menu_id'     => 27,
+                'parent_navigation_menu_id'     => 29,
                 'parent_navigation_menu_name'   => 'Configurations',
                 'database_table'                => 'attribute',
                 'order_sequence'                => 1
             ],
 
-            // Configurations -> Product Category ID: 29
+            // Configurations -> Product Category ID: 31
             [
                 'navigation_menu_name'          => 'Product Category',
                 'navigation_menu_icon'          => null,
                 'app_id'                        => 4,
                 'app_name'                      => 'Inventory',
-                'parent_navigation_menu_id'     => 27,
+                'parent_navigation_menu_id'     => 29,
                 'parent_navigation_menu_name'   => 'Configurations',
                 'database_table'                => 'product_category',
                 'order_sequence'                => 2
             ],
 
-            // Configurations -> Stock Adjustment Reason ID: 30
+            // Configurations -> Stock Adjustment Reason ID: 32
             [
                 'navigation_menu_name'          => 'Stock Adjustment Reason',
                 'navigation_menu_icon'          => null,
                 'app_id'                        => 4,
                 'app_name'                      => 'Inventory',
-                'parent_navigation_menu_id'     => 27,
+                'parent_navigation_menu_id'     => 29,
                 'parent_navigation_menu_name'   => 'Configurations',
                 'database_table'                => 'stock_adjustment_reason',
                 'order_sequence'                => 3
             ],
 
-            // Configurations -> Units ID: 31
+            // Configurations -> Stock Adjustment Reason ID: 33
+            [
+                'navigation_menu_name'          => 'Stock Transfer Reason',
+                'navigation_menu_icon'          => null,
+                'app_id'                        => 4,
+                'app_name'                      => 'Inventory',
+                'parent_navigation_menu_id'     => 29,
+                'parent_navigation_menu_name'   => 'Configurations',
+                'database_table'                => 'stock_transfer_reason',
+                'order_sequence'                => 3
+            ],
+
+            // Configurations -> Unit Management ID: 34
             [
                 'navigation_menu_name'          => 'Unit Management',
                 'navigation_menu_icon'          => null,
                 'app_id'                        => 4,
                 'app_name'                      => 'Inventory',
-                'parent_navigation_menu_id'     => 27,
+                'parent_navigation_menu_id'     => 29,
                 'parent_navigation_menu_name'   => 'Configurations',
                 'database_table'                => null,
                 'order_sequence'                => 5
             ],
 
-            // Configurations -> Unit Management -> Units ID: 32
+            // Configurations -> Unit Management -> Units ID: 35
             [
                 'navigation_menu_name'          => 'Units',
                 'navigation_menu_icon'          => null,
                 'app_id'                        => 4,
                 'app_name'                      => 'Inventory',
-                'parent_navigation_menu_id'     => 31,
+                'parent_navigation_menu_id'     => 34,
                 'parent_navigation_menu_name'   => 'Unit Management',
                 'database_table'                => 'unit',
                 'order_sequence'                => 1
             ],
 
-            // Configurations -> Unit Management -> Unit Conversion ID: 33
+            // Configurations -> Unit Management -> Unit Conversion ID: 36
             [
                 'navigation_menu_name'          => 'Unit Conversion',
                 'navigation_menu_icon'          => null,
                 'app_id'                        => 4,
                 'app_name'                      => 'Inventory',
-                'parent_navigation_menu_id'     => 31,
+                'parent_navigation_menu_id'     => 34,
                 'parent_navigation_menu_name'   => 'Unit Management',
                 'database_table'                => 'unit_type',
                 'order_sequence'                => 2
             ],
 
-            // Configurations -> Unit Management ->Unit Type ID: 34
+            // Configurations -> Unit Management ->Unit Type ID: 37
             [
                 'navigation_menu_name'          => 'Unit Type',
                 'navigation_menu_icon'          => null,
                 'app_id'                        => 4,
                 'app_name'                      => 'Inventory',
-                'parent_navigation_menu_id'     => 31,
+                'parent_navigation_menu_id'     => 34,
                 'parent_navigation_menu_name'   => 'Unit Management',
                 'database_table'                => 'unit_type',
                 'order_sequence'                => 3
             ],
 
-            // Configurations -> Warehouse Type ID: 35
+            // Configurations -> Warehouse Type ID: 38
             [
                 'navigation_menu_name'          => 'Warehouse Type',
                 'navigation_menu_icon'          => null,
                 'app_id'                        => 4,
                 'app_name'                      => 'Inventory',
-                'parent_navigation_menu_id'     => 27,
+                'parent_navigation_menu_id'     => 29,
                 'parent_navigation_menu_name'   => 'Configurations',
                 'database_table'                => 'warehouse_type',
                 'order_sequence'                => 6

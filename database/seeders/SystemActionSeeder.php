@@ -44,6 +44,10 @@ class SystemActionSeeder extends Seeder
                 'system_action_name' => 'Approve Batch Tracking',
                 'system_action_description' => 'Access to approve batch tracking requests.',
             ],
+            [
+                'system_action_name' => 'Approve Stock Adjustment',
+                'system_action_description' => 'Access to approve stock adjustment requests.',
+            ],
         ];
 
         DB::table('system_action')->insert(

@@ -17,18 +17,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 filter_by_status: $('#filter_by_status').val(),
             }),
             columns: [
+                { data: 'CHECK_BOX' },
                 { data: 'PRODUCT' },
                 { data: 'WAREHOUSE' },
+                { data: 'BATCH_NUMBER' },
                 { data: 'QUANTITY' },
                 { data: 'COST_PER_UNIT' },
-                { data: 'TOTAL_VALUE' },
-                { data: 'BATCH_NUMBER' },
                 { data: 'RECEIVED_DATE' },
-                { data: 'EXPIRATION_DATE' },
                 { data: 'STATUS' },
+                { data: 'EXPIRATION_DATE' },
             ],
             columnDefs: [
-                { width: 'auto', targets: 0, responsivePriority: 1 },
+                { width: '5%', bSortable: false, targets: 0, responsivePriority: 1 },
                 { width: 'auto', targets: 1, responsivePriority: 2 },
                 { width: 'auto', targets: 2, responsivePriority: 3 },
                 { width: 'auto', targets: 3, responsivePriority: 4 },
@@ -46,8 +46,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 export: 'stock_level',
             }
         },
+        delete: {
+            trigger : '#delete-data',
+            url : '/stock-level/delete-multiple',
+            swalTitle : 'Confirm Multiple Stock Level Deletion',
+            swalText : 'Are you sure you want to delete these stock level?',
+            confirmButtonText : 'Delete',
+            validationMessage : 'Please select the stock level you want to delete',
+            table : '#stock-level-table'
+        },
         dropdown: [
-            { url: '/products/generate-options', dropdownSelector: '#filter_by_product', data: { multiple : true } },
+            { url: '/products/generate-product-stock-level-options', dropdownSelector: '#filter_by_product', data: { multiple : true } },
             { url: '/warehouse/generate-options', dropdownSelector: '#filter_by_warehouse', data: { multiple : true } },
         ],
         datepickers: [
@@ -62,6 +71,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     config.dropdown.map((cfg) => generateDropdownOptions(cfg));
     config.datepickers.map(({ selector }) => initializeDateRangePicker(selector));
+
+    multipleActionButton(config.delete);
 
     document.addEventListener('click', async (event) => {
         if (event.target.closest('#apply-filter')) {
