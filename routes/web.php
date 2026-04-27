@@ -29,6 +29,7 @@ use App\Http\Controllers\RoleSystemActionPermissionController;
 use App\Http\Controllers\RoleUserAccountController;
 use App\Http\Controllers\StateController;
 use App\Http\Controllers\StockAdjustmentReasonController;
+use App\Http\Controllers\StockLevelController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SystemActionController;
 use App\Http\Controllers\UnitController;
@@ -541,11 +542,23 @@ Route::middleware('auth')->group(function () {
         ->controller(BatchTrackingController::class)
         ->group(function () {
             Route::post('/save', 'save')->name('save');
+            Route::post('/for-approval', 'forApproval')->name('for.approval');
+            Route::post('/cancel', 'cancel')->name('cancel');
+            Route::post('/approve', 'approve')->name('approve');
+            Route::post('/set-to-draft', 'setToDraft')->name('set.to.draft');
             Route::post('/delete', 'delete')->name('delete');
             Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
             Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
             Route::post('/generate-table', 'generateTable')->name('generate.table');
             Route::post('/generate-options', 'generateOptions')->name('generate.options');
+        });
+
+    // Stock Level
+    Route::prefix('stock-level')
+        ->name('stock.level.')
+        ->controller(StockLevelController::class)
+        ->group(function () {
+            Route::post('/generate-table', 'generateTable')->name('generate.table');
         });
 
     // Import

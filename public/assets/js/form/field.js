@@ -206,11 +206,11 @@ export const initializeDatePicker = ({
 export const initializeDateRangePicker = (
   selector,
   {
-    startDate = moment().startOf("day"),
-    endDate = moment().endOf("day"),
+    startDate = null, // Removed default moment()
+    endDate = null,   // Removed default moment()
     ranges = {
-      "Today": [moment(), moment()],
-      "Yesterday": [
+      Today: [moment(), moment()],
+      Yesterday: [
         moment().subtract(1, "days"),
         moment().subtract(1, "days")
       ],
@@ -228,21 +228,51 @@ export const initializeDateRangePicker = (
     callback = null
   } = {}
 ) => {
-
   const cb = (start, end) => {
     if (typeof callback === "function") {
       callback(start, end);
     }
   };
 
-  $(selector).daterangepicker(
-    {
-      startDate,
-      endDate,
-      ranges
-    },
-    cb
-  );
+  const options = {
+    autoUpdateInput: false, // Prevents the plugin from auto-filling the input
+    ranges,
+    locale: {
+      cancelLabel: "Clear" // Optional: changes the 'Cancel' button to say 'Clear'
+    }
+  };
 
-  cb(startDate, endDate);
+  // Only pass startDate and endDate to options if they exist
+  if (startDate) options.startDate = startDate;
+  if (endDate) options.endDate = endDate;
+
+  const $element = $(selector);
+
+  // Initialize the picker
+  $element.daterangepicker(options, cb);
+
+  // Update the input field only when the user clicks "Apply"
+  $element.on("apply.daterangepicker", function (ev, picker) {
+    $(this).val(
+      picker.startDate.format("MM/DD/YYYY") +
+        " - " +
+        picker.endDate.format("MM/DD/YYYY")
+    );
+  });
+
+  // Clear the input field when the user clicks "Clear" (Cancel)
+  $element.on("cancel.daterangepicker", function (ev, picker) {
+    $(this).val("");
+  });
+
+  // Trigger the initial callback and set initial value ONLY if dates were explicitly provided
+  if (startDate && endDate) {
+    cb(startDate, endDate);
+    $element.val(
+      startDate.format("MM/DD/YYYY") + " - " + endDate.format("MM/DD/YYYY")
+    );
+  } else {
+    // Ensure the input starts completely blank
+    $element.val("");
+  }
 };

@@ -14,7 +14,6 @@ class BatchTracking extends Model
         'warehouse_id',
         'warehouse_name',
         'batch_status',
-        'batch_status',
         'quantity',
         'batch_number',
         'cost_per_unit',

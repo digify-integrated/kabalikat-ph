@@ -12,14 +12,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 selector: '#batch_tracking_form',
                 rules: {
                     rules: {
-                        batch_tracking_name: { required: true},
-                        batch_tracking: { required: true},
-                        file_type_id: { required: true},
+                        product_id: { required: true},
+                        warehouse_id: { required: true},
+                        batch_number: { required: true},
+                        quantity: { required: true},
+                        cost_per_unit: { required: true},
+                        received_date: { required: true},
                     },
                     messages: {
-                        batch_tracking_name: { required: 'Enter the batch tracking' },
-                        batch_tracking: { required: 'Enter the extension' },
-                        file_type_id: { required: 'Choose the file type' },
+                        product_id: { required: 'Choose the batch tracking' },
+                        warehouse_id: { required: 'Choose the warehouse' },
+                        batch_number: { required: 'Enter the batch number' },
+                        quantity: { required: 'Enter the quantity' },
+                        cost_per_unit: { required: 'Enter the cost per unit' },
+                        received_date: { required: 'Enter the received date' },
                     },
                     submitHandler: async (form) => {
                         const ctx = getPageContext();

@@ -59,7 +59,7 @@
                     <a class="nav-link text-active-primary pb-4" data-bs-toggle="tab" href="#user_role_tab" aria-selected="false" role="tab">Role</a>
                 </li>
                 <li class="nav-item ms-auto">
-                     @if($canDelete || ($activateUser ?? false) === true && $user->status === 'Inactive' || ($deactivateUser ?? false) === true && $user->status === 'Active')
+                    @if($canDelete || ($activateUser ?? false) === true && $user->status === 'Inactive' || ($deactivateUser ?? false) === true && $user->status === 'Active')
                        <a href="#" class="btn btn-light-primary btn-flex btn-center btn-active-light-primary show menu-dropdown align-self-center" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
                             Actions
                             <i class="ki-outline ki-down fs-5 ms-1"></i>

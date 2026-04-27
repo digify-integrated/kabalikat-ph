@@ -6,8 +6,8 @@ import { generateDropdownOptions, initializeDateRangePicker } from '../../form/f
 document.addEventListener('DOMContentLoaded', () => {
     const config = {
         table: {
-            url: '/batch-tracking/generate-table',
-            selector: '#batch-tracking-table',
+            url: '/stock-level/generate-table',
+            selector: '#stock-level-table',
             serverSide: false,
             ajaxData: () => ({
                 filter_by_product: $('#filter_by_product').val(),
@@ -17,18 +17,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 filter_by_status: $('#filter_by_status').val(),
             }),
             columns: [
-                { data: 'CHECK_BOX' },
                 { data: 'PRODUCT' },
                 { data: 'WAREHOUSE' },
-                { data: 'BATCH_NUMBER' },
                 { data: 'QUANTITY' },
                 { data: 'COST_PER_UNIT' },
+                { data: 'TOTAL_VALUE' },
+                { data: 'BATCH_NUMBER' },
                 { data: 'RECEIVED_DATE' },
-                { data: 'STATUS' },
                 { data: 'EXPIRATION_DATE' },
+                { data: 'STATUS' },
             ],
             columnDefs: [
-                { width: '5%', bSortable: false, targets: 0, responsivePriority: 1 },
+                { width: 'auto', targets: 0, responsivePriority: 1 },
                 { width: 'auto', targets: 1, responsivePriority: 2 },
                 { width: 'auto', targets: 2, responsivePriority: 3 },
                 { width: 'auto', targets: 3, responsivePriority: 4 },
@@ -43,20 +43,11 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             addons: {
                 controls: true,
-                export: 'batch_tracking',
+                export: 'stock_level',
             }
         },
-        delete: {
-            trigger : '#delete-data',
-            url : '/batch-tracking/delete-multiple',
-            swalTitle : 'Confirm Multiple Batch Tracking Deletion',
-            swalText : 'Are you sure you want to delete these batch tracking?',
-            confirmButtonText : 'Delete',
-            validationMessage : 'Please select the batch tracking you want to delete',
-            table : '#batch-tracking-table'
-        },
         dropdown: [
-            { url: '/products/generate-product-batch-tracking-options', dropdownSelector: '#filter_by_product', data: { multiple : true } },
+            { url: '/products/generate-options', dropdownSelector: '#filter_by_product', data: { multiple : true } },
             { url: '/warehouse/generate-options', dropdownSelector: '#filter_by_warehouse', data: { multiple : true } },
         ],
         datepickers: [
@@ -71,8 +62,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     config.dropdown.map((cfg) => generateDropdownOptions(cfg));
     config.datepickers.map(({ selector }) => initializeDateRangePicker(selector));
-
-    multipleActionButton(config.delete);
 
     document.addEventListener('click', async (event) => {
         if (event.target.closest('#apply-filter')) {

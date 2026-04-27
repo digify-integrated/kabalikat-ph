@@ -2,7 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BatchTracking;
 use App\Models\Product;
+use App\Models\StockLevel;
+use App\Models\Warehouse;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -15,9 +19,14 @@ class BatchTrackingController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'batch_tracking_id' => ['nullable', 'integer'],
-            'batch_tracking_name' => ['required', 'string', 'max:255'],
-            'batch_tracking' => ['required', 'string', 'max:255'],
-            'file_type_id' => ['integer'],
+            'product_id' => ['required', 'integer'],
+            'warehouse_id' => ['required', 'integer'],
+            'batch_number' => ['required', 'string', 'max:255'],
+            'quantity' => ['required', 'numeric', 'min:0.01'],
+            'cost_per_unit' => ['required', 'numeric', 'min:0.01'],
+            'expiration_date' => ['nullable', 'date'],
+            'received_date' => ['nullable', 'date'],
+            'remarks' => ['nullable', 'string'],
         ]);
 
         if ($validator->fails()) {
@@ -32,46 +41,236 @@ class BatchTrackingController extends Controller
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
 
-        $fileTypeId = (int) $validated['file_type_id'];
+        $productId = (int) $validated['product_id'];
+        $warehouseId = (int) $validated['warehouse_id'];
 
-        $fileTypeName = (string) FileType::query()
-            ->whereKey($fileTypeId)
-            ->value('file_type_name');
+        $validated['expiration_date'] = !empty($validated['expiration_date'])
+            ? Carbon::parse($validated['expiration_date'])->format('Y-m-d')
+            : null;
+
+        $validated['received_date'] = !empty($validated['received_date'])
+            ? Carbon::parse($validated['received_date'])->format('Y-m-d')
+            : null;
+
+        $productName = (string) Product::query()
+            ->whereKey($productId)
+            ->value('product_name');
+
+        $warehouseName = (string) Warehouse::query()
+            ->whereKey($warehouseId)
+            ->value('warehouse_name');
 
         $payload = [
-            'batch_tracking_name' => $validated['batch_tracking_name'],
-            'batch_tracking' => $validated['batch_tracking'],
-            'file_type_id' => $fileTypeId,
-            'file_type_name' => $fileTypeName,
+            'product_id' => $productId,
+            'product_name' => $productName,
+            'warehouse_id' => $warehouseId,
+            'warehouse_name' => $warehouseName,
+            'quantity' => $validated['quantity'],
+            'batch_number' => $validated['batch_number'],
+            'cost_per_unit' => $validated['cost_per_unit'],
+            'remarks' => $validated['remarks'],
+            'expiration_date' => $validated['expiration_date'],
+            'received_date' => $validated['received_date'],
             'last_log_by' => Auth::id(),
         ];
 
-        $fileExtensionId = $validated['batch_tracking_id'] ?? null;
+        $batchTrackingId = $validated['batch_tracking_id'] ?? null;
 
-        if ($fileExtensionId && FileExtension::query()->whereKey($fileExtensionId)->exists()) {
-            $fileExtension = FileExtension::query()->findOrFail($fileExtensionId);
-            $fileExtension->update($payload);
+        if ($batchTrackingId && BatchTracking::query()->whereKey($batchTrackingId)->exists()) {
+            $batchTracking = BatchTracking::query()->findOrFail($batchTrackingId);
+            $batchTracking->update($payload);
         } else {
-            $fileExtension = FileExtension::query()->create($payload);
+            $batchTracking = BatchTracking::query()->create($payload);
         }
-
-        UploadSettingFileExtension::query()
-            ->where('batch_tracking_id', $fileExtension->id)
-            ->update([
-                'batch_tracking_name' => $fileExtension->batch_tracking_name,
-                'batch_tracking' => $fileExtension->batch_tracking,
-                'last_log_by' => Auth::id(),
-            ]);
 
         $link = route('apps.details', [
             'appId' => $pageAppId,
             'navigationMenuId' => $pageNavigationMenuId,
-            'details_id' => $fileExtension->id,
+            'details_id' => $batchTracking->id,
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'The batch tracking has been saved successfully',
+            'redirect_link' => $link,
+        ]);
+    }
+
+    public function forApproval(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'detailId' => ['required', 'integer', 'min:1', Rule::exists('batch_tracking', 'id')],
+        ]);
+
+        $pageAppId = (int) $request->input('appId');
+        $pageNavigationMenuId = (int) $request->input('navigationMenuId');
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first('detailId') ?? 'Validation failed',
+            ]);
+        }
+
+        $detailId = (int) $validator->validated()['detailId'];
+
+        DB::transaction(function () use ($detailId) {
+            $batchTracking = BatchTracking::query()->select(['id'])->findOrFail($detailId);
+
+            $batchTracking->update(['batch_status' => 'For Approval', 'for_approval_date' => Carbon::now()]);
+        });        
+
+        $link = route('apps.base', [
+            'appId' => $pageAppId,
+            'navigationMenuId' => $pageNavigationMenuId,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'The batch tracking has been submitted for approval successfully',
+            'redirect_link' => $link,
+        ]);
+    }
+
+    public function cancel(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'detailId' => ['required', 'integer', 'min:1', Rule::exists('batch_tracking', 'id')],
+        ]);
+
+        $pageAppId = (int) $request->input('appId');
+        $pageNavigationMenuId = (int) $request->input('navigationMenuId');
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first('detailId') ?? 'Validation failed',
+            ]);
+        }
+
+        $detailId = (int) $validator->validated()['detailId'];
+
+        DB::transaction(function () use ($detailId) {
+            $batchTracking = BatchTracking::query()->select(['id'])->findOrFail($detailId);
+
+            $batchTracking->update(['batch_status' => 'Cancelled', 'cancellation_date' => Carbon::now()]);
+        });        
+
+        $link = route('apps.base', [
+            'appId' => $pageAppId,
+            'navigationMenuId' => $pageNavigationMenuId,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'The batch tracking has been cancelled successfully',
+            'redirect_link' => $link,
+        ]);
+    }
+
+    public function setToDraft(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'detailId' => ['required', 'integer', 'min:1', Rule::exists('batch_tracking', 'id')],
+        ]);
+
+        $pageAppId = (int) $request->input('appId');
+        $pageNavigationMenuId = (int) $request->input('navigationMenuId');
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first('detailId') ?? 'Validation failed',
+            ]);
+        }
+
+        $detailId = (int) $validator->validated()['detailId'];
+
+        DB::transaction(function () use ($detailId) {
+            $batchTracking = BatchTracking::query()->select(['id'])->findOrFail($detailId);
+
+            $batchTracking->update(['batch_status' => 'Draft', 'set_to_draft_date' => Carbon::now()]);
+        });        
+
+        $link = route('apps.base', [
+            'appId' => $pageAppId,
+            'navigationMenuId' => $pageNavigationMenuId,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'The batch tracking has been set to draft successfully',
+            'redirect_link' => $link,
+        ]);
+    }
+
+    public function approve(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'detailId' => ['required', 'integer', 'min:1', Rule::exists('batch_tracking', 'id')],
+        ]);
+
+        $pageAppId = (int) $request->input('appId');
+        $pageNavigationMenuId = (int) $request->input('navigationMenuId');
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first('detailId') ?? 'Validation failed',
+            ]);
+        }
+
+        $detailId = (int) $validator->validated()['detailId'];
+
+        DB::transaction(function () use ($detailId) {
+            $batchTracking = BatchTracking::query()->select(['id'])->findOrFail($detailId);
+
+            $batchTracking->update(['batch_status' => 'Approved', 'approval_date' => Carbon::now()]);
+        });
+
+        $batchTracking = DB::table('batch_tracking')
+            ->where('id', $detailId)
+            ->first();
+
+        if ($batchTracking) {
+            $reorderLevel = DB::table('product')
+            ->where('id', $batchTracking->product_id)
+            ->value('reorder_level');
+
+            $quantity = $batchTracking->quantity;
+
+            if ($quantity == 0) {
+                $stockStatus = 'Out of Stock';
+            } elseif ($quantity > 0 && $quantity <= $reorderLevel) {
+                $stockStatus = 'Low Stock';
+            } else {
+                $stockStatus = 'In Stock';
+            }
+            
+            StockLevel::create([
+                'product_id' => $batchTracking->product_id,
+                'product_name' => $batchTracking->product_name,
+                'warehouse_id' => $batchTracking->warehouse_id,
+                'warehouse_name' => $batchTracking->warehouse_name,
+                'stock_status' => $stockStatus,
+                'received_quantity' => $quantity,
+                'remaining_quantity' => $quantity,
+                'batch_tracking_id' => $batchTracking->id,
+                'expiration_date' => $batchTracking->expiration_date,
+                'received_date' => $batchTracking->received_date,
+                'cost_per_unit' => $batchTracking->cost_per_unit,
+                'last_log_by' => auth()->id(),
+            ]);
+        }
+
+        $link = route('apps.base', [
+            'appId' => $pageAppId,
+            'navigationMenuId' => $pageNavigationMenuId,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'The batch tracking has been approved successfully',
             'redirect_link' => $link,
         ]);
     }
@@ -95,9 +294,9 @@ class BatchTrackingController extends Controller
         $detailId = (int) $validator->validated()['detailId'];
 
         DB::transaction(function () use ($detailId) {
-            $fileExtension = FileExtension::query()->select(['id'])->findOrFail($detailId);
+            $batchTracking = BatchTracking::query()->select(['id'])->findOrFail($detailId);
 
-            $fileExtension->delete();
+            $batchTracking->delete();
         });        
 
         $link = route('apps.base', [
@@ -122,7 +321,7 @@ class BatchTrackingController extends Controller
         $ids = $validated['selected_id'];
 
         DB::transaction(function () use ($ids) {
-            FileExtension::query()->whereIn('id', $ids)->delete();
+            BatchTracking::query()->whereIn('id', $ids)->delete();
         });
 
         return response()->json([
@@ -150,11 +349,11 @@ class BatchTrackingController extends Controller
 
         $validated = $validator->validated();
 
-        $fileExtension = DB::table('batch_tracking')
+        $batchTracking = DB::table('batch_tracking')
             ->where('id', $validated['detailId'])
             ->first();
 
-        if (!$fileExtension) {
+        if (!$batchTracking) {
             $link = route('apps.base', [
                 'appId' => $pageAppId,
                 'navigationMenuId' => $pageNavigationMenuId,
@@ -164,17 +363,25 @@ class BatchTrackingController extends Controller
                 'success'  => false,
                 'notExist' => true,
                 'redirect_link' => $link,
-                'message'  => 'File extension not found',
+                'message'  => 'Batch tracking not found',
             ]);
         }
         
-
         return response()->json([
             'success' => true,
             'notExist' => false,
-            'fileExtensionName' => $fileExtension->batch_tracking_name ?? null,
-            'fileExtension' => $fileExtension->batch_tracking ?? null,
-            'fileTypeId' => $fileExtension->file_type_id ?? null,
+            'productId' => $batchTracking->product_id ?? null,
+            'warehouseId' => $batchTracking->warehouse_id ?? null,
+            'quantity' => $batchTracking->quantity ?? 0.01,
+            'batchNumber' => $batchTracking->batch_number ?? null,
+            'costPerUnit' => $batchTracking->cost_per_unit ?? 0.01,
+            'remarks' => $batchTracking->remarks ?? null,
+            'expirationDate' => $batchTracking->expiration_date
+            ? date('M d, Y', strtotime($batchTracking->expiration_date))
+            : '',
+            'receivedDate' => $batchTracking->received_date
+            ? date('M d, Y', strtotime($batchTracking->received_date))
+            : '',
         ]);
     }
 
@@ -182,32 +389,121 @@ class BatchTrackingController extends Controller
     {
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
-        $filterByFileType = $request->input('filter_by_file_type');
 
-        $fileExtensions = DB::table('batch_tracking')
-        ->when(!empty($filterByFileType), fn($q) => $q->whereIn('file_type_id', $filterByFileType))
-        ->orderBy('batch_tracking_name')
-        ->get();
+        $filterByProduct = $request->input('filter_by_product');
+        $filterByWarehouse = $request->input('filter_by_warehouse');
+        $filterByExpirationDate = $request->input('filter_by_expiration_date');
+        $filterByReceivedDate = $request->input('filter_by_received_date');
+        $filterByStatus = $request->input('filter_by_status');
 
-        $response = $fileExtensions->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
-            $fileExtensionId = $row->id;
-            $fileExtensionName = $row->batch_tracking_name;
-            $fileTypeName = $row->file_type_name;
+        $parseRange = function ($range) {
+            if (!$range) return null;
+
+            $dates = explode(' - ', $range);
+
+            if (count($dates) !== 2) return null;
+
+            return [
+                Carbon::createFromFormat('m/d/Y', trim($dates[0]))->startOfDay(),
+                Carbon::createFromFormat('m/d/Y', trim($dates[1]))->endOfDay(),
+            ];
+        };
+
+        $expirationRange = $parseRange($filterByExpirationDate);
+        $receivedRange = $parseRange($filterByReceivedDate);
+
+        $batchTrackings = DB::table('batch_tracking')
+            ->when(!empty($filterByProduct), fn($q) =>
+                $q->whereIn('product_id', (array) $filterByProduct)
+            )
+            ->when(!empty($filterByWarehouse), fn($q) =>
+                $q->whereIn('warehouse_id', (array) $filterByWarehouse)
+            )
+            ->when($expirationRange, fn($q) =>
+                $q->whereBetween('expiration_date', $expirationRange)
+            )
+            ->when($receivedRange, fn($q) =>
+                $q->whereBetween('received_date', $receivedRange)
+            )
+            ->when(!empty($filterByStatus), fn($q) =>
+                $q->whereIn('batch_status', (array) $filterByStatus)
+            )
+            ->orderBy('product_name')
+            ->get();
+
+        $response = $batchTrackings->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
+            $batchTrackingId = $row->id;
+            $productName = $row->product_name;
+            $warehouseName = $row->warehouse_name;
+            $batchStatus = $row->batch_status;
+            $quantity = $row->quantity;
+            $batchNumber = $row->batch_number;
+            $costPerUnit = $row->cost_per_unit;
+            $expiration_date = $row->expiration_date
+            ? date('M d, Y', strtotime($row->expiration_date))
+            : 'No expiry';
+            $received_date = $row->received_date
+            ? date('M d, Y', strtotime($row->received_date))
+            : 'No received date';
+
+            $statusClass = match ($batchStatus) {
+                'Draft' => 'badge badge-secondary',
+                'For Approval' => 'badge badge-warning',
+                'Approved' => 'badge badge-success',
+                'Cancelled' => 'badge badge-danger',
+                default => 'badge badge-light',
+            };
+
+            $statusBadge = '<span class="'.$statusClass.'">'.$batchStatus.'</span>';
+
+           if ($row->expiration_date) {
+                $expDate = Carbon::parse($row->expiration_date);
+                $today = Carbon::today();
+
+                $formattedDate = $expDate->format('M d, Y');
+
+                if ($expDate->isPast()) {
+                    $daysExpired = $expDate->diffInDays($today);
+                    $expiration_date = '
+                        '.$formattedDate.'<br>
+                        <small class="text-danger">(Expired '.$daysExpired.' day'.($daysExpired > 1 ? 's' : '').' ago)</small>
+                    ';
+                } elseif ($expDate->isFuture()) {
+                    $daysRemaining = $today->diffInDays($expDate);
+                    $expiration_date = '
+                        '.$formattedDate.'<br>
+                        <small class="text-warning">(Expiring in '.$daysRemaining.' day'.($daysRemaining > 1 ? 's' : '').')</small>
+                    ';
+                } else {
+                    $expiration_date = '
+                        '.$formattedDate.'<br>
+                        <small class="text-warning">(Expires today)</small>
+                    ';
+                }
+            } else {
+                $expiration_date = 'No expiry';
+            }
 
             $link = route('apps.details', [
                 'appId' => $pageAppId,
                 'navigationMenuId' => $pageNavigationMenuId,
-                'details_id' => $fileExtensionId,
+                'details_id' => $batchTrackingId,
             ]);
 
             return [
                 'CHECK_BOX' => '
                     <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                        <input class="form-check-input datatable-checkbox-children" type="checkbox" value="'.$fileExtensionId.'">
+                        <input class="form-check-input datatable-checkbox-children" type="checkbox" value="'.$batchTrackingId.'">
                     </div>
                 ',
-                'FILE_EXTENSION' => $fileExtensionName,
-                'FILE_TYPE' => $fileTypeName,
+                'PRODUCT' => $productName,
+                'WAREHOUSE' => $warehouseName,
+                'BATCH_NUMBER' => $batchNumber,
+                'QUANTITY' => number_format($quantity, 2),
+                'COST_PER_UNIT' => number_format($costPerUnit, 2),
+                'STATUS' => $statusBadge,
+                'EXPIRATION_DATE' => $expiration_date,
+                'RECEIVED_DATE' => $received_date,
                 'LINK' => $link,
             ];
         })->values();
@@ -228,13 +524,13 @@ class BatchTrackingController extends Controller
             ]);
         }
 
-        $fileExtensions = DB::table('batch_tracking')
+        $batchTrackings = DB::table('batch_tracking')
             ->select(['id', 'batch_tracking_name', 'batch_tracking'])
             ->orderBy('batch_tracking_name')
             ->get();
 
         $response = $response->concat(
-            $fileExtensions->map(fn ($row) => [
+            $batchTrackings->map(fn ($row) => [
                 'id'   => $row->id,
                 'text' => $row->batch_tracking_name . ' (.' . $row->batch_tracking . ')',
             ])
