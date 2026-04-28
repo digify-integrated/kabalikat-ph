@@ -562,6 +562,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/for-approval', 'forApproval')->name('for.approval');
             Route::post('/cancel', 'cancel')->name('cancel');
             Route::post('/approve', 'approve')->name('approve');
+            Route::post('/approve-multiple', 'approveMultiple')->name('approve.multiple');
             Route::post('/set-to-draft', 'setToDraft')->name('set.to.draft');
             Route::post('/delete', 'delete')->name('delete');
             Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');

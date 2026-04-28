@@ -9,21 +9,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const config = {
         forms: [
             {
-                selector: '#stock_level_form',
+                selector: '#stock_adjustment_form',
                 rules: {
                     rules: {
-                        product_id: { required: true},
-                        warehouse_id: { required: true},
+                        stock_level_id: { required: true},
+                        adjustment_type: { required: true},
                         quantity: { required: true},
-                        cost_per_unit: { required: true},
-                        received_date: { required: true},
+                        stock_adjustment_reason_id: { required: true},
                     },
                     messages: {
-                        product_id: { required: 'Choose the stock level' },
-                        warehouse_id: { required: 'Choose the warehouse' },
+                        stock_level_id: { required: 'Choose the stock' },
+                        adjustment_type: { required: 'Choose the adjustment type' },
                         quantity: { required: 'Enter the quantity' },
-                        cost_per_unit: { required: 'Enter the cost per unit' },
-                        received_date: { required: 'Enter the received date' },
+                        stock_adjustment_reason_id: { required: 'Choose the adjustment reason' },
                     },
                     submitHandler: async (form) => {
                         const ctx = getPageContext();
@@ -34,13 +32,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         disableButton('submit-data');
 
                         try {
-                            const response = await fetch('/stock-level/save', {
+                            const response = await fetch('/stock-adjustment/save', {
                                 method: 'POST',
                                 body: formData
                             });
 
                             if (!response.ok) {
-                                throw new Error(`Save stock level failed with status: ${response.status}`);
+                                throw new Error(`Save stock adjustment failed with status: ${response.status}`);
                             }
 
                             const data = await response.json();
@@ -63,13 +61,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         ],
         dropdown: [
-            { url: '/products/generate-active-product-options', dropdownSelector: '#product_id' },
-            { url: '/warehouse/generate-options', dropdownSelector: '#warehouse_id' },
+            { url: '/stock-level/generate-options', dropdownSelector: '#stock_level_id' },
+            { url: '/stock-adjustment-reason/generate-options', dropdownSelector: '#stock_adjustment_reason_id' },
         ],
-        datepickers: [
-            { selector: '#expiration_date' },
-            { selector: '#received_date' },
-        ]
     }
 
     discardCreate();

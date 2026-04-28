@@ -141,7 +141,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 config.dropdown.map((cfg) => generateDropdownOptions(cfg))
             );
 
-
             const fetchDetailsPromise = Promise.all(
                 config.details.map((cfg) => displayDetails(cfg))
             );

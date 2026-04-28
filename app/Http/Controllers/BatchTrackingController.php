@@ -115,9 +115,21 @@ class BatchTrackingController extends Controller
         $detailId = (int) $validator->validated()['detailId'];
 
         DB::transaction(function () use ($detailId) {
-            $batchTracking = BatchTracking::query()->select(['id'])->findOrFail($detailId);
+            $batchTracking = BatchTracking::query()
+            ->select(['id', 'batch_status'])
+            ->findOrFail($detailId);
 
-            $batchTracking->update(['batch_status' => 'For Approval', 'for_approval_date' => Carbon::now()]);
+            if ($batchTracking->batch_status !== 'Draft') {
+                 return response()->json([
+                    'success' => false,
+                    'message' => 'The batch tracking is not "Draft" status',
+                ]);
+            }
+
+            $batchTracking->update([
+                'batch_status' => 'For Approval',
+                'for_approval_date' => Carbon::now()
+            ]);
         });        
 
         $link = route('apps.base', [
@@ -151,9 +163,21 @@ class BatchTrackingController extends Controller
         $detailId = (int) $validator->validated()['detailId'];
 
         DB::transaction(function () use ($detailId) {
-            $batchTracking = BatchTracking::query()->select(['id'])->findOrFail($detailId);
+            $batchTracking = BatchTracking::query()
+                ->select(['id', 'batch_status'])
+                ->findOrFail($detailId);
 
-            $batchTracking->update(['batch_status' => 'Cancelled', 'cancellation_date' => Carbon::now()]);
+            if ($batchTracking->batch_status !== 'For Approval' && $batchTracking->batch_status !== 'Draft') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'The batch tracking is not "For Approval" or "Draft" status',
+                ]);
+            }
+
+            $batchTracking->update([
+                'batch_status' => 'Cancelled',
+                'cancellation_date' => Carbon::now()
+            ]);
         });        
 
         $link = route('apps.base', [
@@ -187,9 +211,21 @@ class BatchTrackingController extends Controller
         $detailId = (int) $validator->validated()['detailId'];
 
         DB::transaction(function () use ($detailId) {
-            $batchTracking = BatchTracking::query()->select(['id'])->findOrFail($detailId);
+            $batchTracking = BatchTracking::query()
+                ->select(['id', 'batch_status'])
+                ->findOrFail($detailId);
 
-            $batchTracking->update(['batch_status' => 'Draft', 'set_to_draft_date' => Carbon::now()]);
+            if ($batchTracking->batch_status !== 'For Approval') {
+                 return response()->json([
+                    'success' => false,
+                    'message' => 'The batch tracking is not in "For Approval" status',
+                ]);
+            }
+
+            $batchTracking->update([
+                'batch_status' => 'Draft',
+                'set_to_draft_date' => Carbon::now()
+            ]);
         });        
 
         $link = route('apps.base', [
@@ -223,31 +259,37 @@ class BatchTrackingController extends Controller
         $detailId = (int) $validator->validated()['detailId'];
 
         DB::transaction(function () use ($detailId) {
-            $batchTracking = BatchTracking::query()->select(['id'])->findOrFail($detailId);
+            $batchTracking = BatchTracking::query()
+            ->select(['id', 'batch_status'])
+            ->findOrFail($detailId);
 
-            $batchTracking->update(['batch_status' => 'Approved', 'approval_date' => Carbon::now()]);
-        });
+            if ($batchTracking->batch_status !== 'For Approval') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'The batch tracking is not "For Approval" status',
+                ]);
+            }
 
-        $batchTracking = DB::table('batch_tracking')
-            ->where('id', $detailId)
-            ->first();
+            $batchTracking->update([
+                'batch_status' => 'Approved',
+                'approval_date' => Carbon::now()
+            ]);
 
-        if ($batchTracking) {
             $reorderLevel = DB::table('product')
-            ->where('id', $batchTracking->product_id)
-            ->value('reorder_level');
+                ->where('id', $batchTracking->product_id)
+                ->value('reorder_level');
 
             $quantity = $batchTracking->quantity;
 
             if ($quantity == 0) {
                 $stockStatus = 'Out of Stock';
-            } elseif ($quantity > 0 && $quantity <= $reorderLevel) {
+            } elseif ($quantity <= $reorderLevel) {
                 $stockStatus = 'Low Stock';
             } else {
                 $stockStatus = 'In Stock';
             }
-            
-            StockLevel::create([
+
+            $stockLevel = StockLevel::create([
                 'product_id' => $batchTracking->product_id,
                 'product_name' => $batchTracking->product_name,
                 'warehouse_id' => $batchTracking->warehouse_id,
@@ -260,7 +302,17 @@ class BatchTrackingController extends Controller
                 'cost_per_unit' => $batchTracking->cost_per_unit,
                 'last_log_by' => auth()->id(),
             ]);
-        }
+
+            DB::table('stock_movement')->insert([
+                'stock_level_id' => $stockLevel->id,
+                'movement_type' => 'In',
+                'quantity' => $quantity,
+                'reference_type' => 'Batch Tracking',
+                'reference_id' => $batchTracking->id,
+                'remarks' => 'Initial stock from batch approval',
+                'last_log_by' => auth()->id(),
+            ]);
+        });
 
         $link = route('apps.base', [
             'appId' => $pageAppId,
@@ -271,6 +323,72 @@ class BatchTrackingController extends Controller
             'success' => true,
             'message' => 'The batch tracking has been approved successfully',
             'redirect_link' => $link,
+        ]);
+    }
+
+    public function approveMultiple(Request $request)
+    {
+        $validated = $request->validate([
+            'selected_id'   => ['required', 'array', 'min:1'],
+            'selected_id.*' => ['integer', 'distinct', Rule::exists('batch_tracking', 'id')],
+        ]);
+
+        $ids = $validated['selected_id'];
+
+        DB::transaction(function () use ($ids) {
+            $batchTrackings = BatchTracking::query()
+                ->whereIn('id', $ids)
+                ->where('batch_status', 'For Approval')
+                ->get();
+
+            BatchTracking::query()
+                ->whereIn('id', $batchTrackings->pluck('id'))
+                ->update([
+                    'batch_status' => 'Approved',
+                    'approved_date' => Carbon::now()
+                ]);
+
+            foreach ($batchTrackings as $batchTracking) {
+                $reorderLevel = DB::table('product')
+                    ->where('id', $batchTracking->product_id)
+                    ->value('reorder_level');
+
+                $quantity = $batchTracking->quantity;
+
+                $stockStatus = match (true) {
+                    $quantity == 0 => 'Out of Stock',
+                    $quantity <= $reorderLevel => 'Low Stock',
+                    default => 'In Stock',
+                };
+
+                $stockLevel = StockLevel::create([
+                    'product_id' => $batchTracking->product_id,
+                    'product_name' => $batchTracking->product_name,
+                    'warehouse_id' => $batchTracking->warehouse_id,
+                    'warehouse_name' => $batchTracking->warehouse_name,
+                    'stock_status' => $stockStatus,
+                    'quantity' => $quantity,
+                    'batch_tracking_id' => $batchTracking->id,
+                    'expiration_date' => $batchTracking->expiration_date,
+                    'received_date' => $batchTracking->received_date,
+                    'cost_per_unit' => $batchTracking->cost_per_unit,
+                    'last_log_by' => auth()->id(),
+                ]);
+
+                DB::table('stock_movement')->insert([
+                    'stock_level_id' => $stockLevel->id,
+                    'movement_type' => 'In',
+                    'quantity' => $quantity,
+                    'reference_type' => 'Batch Tracking',
+                    'reference_id' => $batchTracking->batch_number,
+                    'remarks' => 'Initial stock from batch approval',
+                    'last_log_by' => auth()->id(),
+                ]);
+            }
+        });
+        return response()->json([
+            'success' => true,
+            'message' => 'The selected batch trackings have been approved successfully',
         ]);
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BatchTracking;
 use App\Models\Product;
 use App\Models\StockLevel;
 use App\Models\Warehouse;
@@ -20,12 +21,10 @@ class StockLevelController extends Controller
             'stock_level_id' => ['nullable', 'integer'],
             'product_id' => ['required', 'integer'],
             'warehouse_id' => ['required', 'integer'],
-            'batch_number' => ['required', 'string', 'max:255'],
-            'quantity' => ['required', 'numeric', 'min:0.01'],
+            'quantity' => ['required', 'numeric'],
             'cost_per_unit' => ['required', 'numeric', 'min:0.01'],
             'expiration_date' => ['nullable', 'date'],
             'received_date' => ['nullable', 'date'],
-            'remarks' => ['nullable', 'string'],
         ]);
 
         if ($validator->fails()) {
@@ -51,224 +50,54 @@ class StockLevelController extends Controller
             ? Carbon::parse($validated['received_date'])->format('Y-m-d')
             : null;
 
-        $productName = (string) Product::query()
+        $product = Product::query()
             ->whereKey($productId)
-            ->value('product_name');
+            ->first(['product_name', 'reorder_level']);
+
+        $productName = (string) $product->product_name;
+        $reorderLevel = $product->reorder_level;
 
         $warehouseName = (string) Warehouse::query()
             ->whereKey($warehouseId)
             ->value('warehouse_name');
+
+        $stockStatus = match (true) {
+            $validated['quantity'] == 0 => 'Out of Stock',
+            $validated['quantity'] <= $reorderLevel => 'Low Stock',
+            default => 'In Stock',
+        };
 
         $payload = [
             'product_id' => $productId,
             'product_name' => $productName,
             'warehouse_id' => $warehouseId,
             'warehouse_name' => $warehouseName,
+            'stock_status' => $stockStatus,
             'quantity' => $validated['quantity'],
-            'batch_number' => $validated['batch_number'],
             'cost_per_unit' => $validated['cost_per_unit'],
-            'remarks' => $validated['remarks'],
             'expiration_date' => $validated['expiration_date'],
             'received_date' => $validated['received_date'],
             'last_log_by' => Auth::id(),
         ];
 
-        $batchTrackingId = $validated['stock_level_id'] ?? null;
+        $stockLevelId = $validated['stock_level_id'] ?? null;
 
-        if ($batchTrackingId && BatchTracking::query()->whereKey($batchTrackingId)->exists()) {
-            $batchTracking = BatchTracking::query()->findOrFail($batchTrackingId);
-            $batchTracking->update($payload);
+        if ($stockLevelId && StockLevel::query()->whereKey($stockLevelId)->exists()) {
+            $stockLevel = StockLevel::query()->findOrFail($stockLevelId);
+            $stockLevel->update($payload);
         } else {
-            $batchTracking = BatchTracking::query()->create($payload);
+            $stockLevel = StockLevel::query()->create($payload);
         }
 
         $link = route('apps.details', [
             'appId' => $pageAppId,
             'navigationMenuId' => $pageNavigationMenuId,
-            'details_id' => $batchTracking->id,
+            'details_id' => $stockLevel->id,
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'The stock level has been saved successfully',
-            'redirect_link' => $link,
-        ]);
-    }
-
-    public function forApproval(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'detailId' => ['required', 'integer', 'min:1', Rule::exists('stock_level', 'id')],
-        ]);
-
-        $pageAppId = (int) $request->input('appId');
-        $pageNavigationMenuId = (int) $request->input('navigationMenuId');
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => $validator->errors()->first('detailId') ?? 'Validation failed',
-            ]);
-        }
-
-        $detailId = (int) $validator->validated()['detailId'];
-
-        DB::transaction(function () use ($detailId) {
-            $batchTracking = BatchTracking::query()->select(['id'])->findOrFail($detailId);
-
-            $batchTracking->update(['batch_status' => 'For Approval', 'for_approval_date' => Carbon::now()]);
-        });        
-
-        $link = route('apps.base', [
-            'appId' => $pageAppId,
-            'navigationMenuId' => $pageNavigationMenuId,
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'The stock level has been submitted for approval successfully',
-            'redirect_link' => $link,
-        ]);
-    }
-
-    public function cancel(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'detailId' => ['required', 'integer', 'min:1', Rule::exists('stock_level', 'id')],
-        ]);
-
-        $pageAppId = (int) $request->input('appId');
-        $pageNavigationMenuId = (int) $request->input('navigationMenuId');
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => $validator->errors()->first('detailId') ?? 'Validation failed',
-            ]);
-        }
-
-        $detailId = (int) $validator->validated()['detailId'];
-
-        DB::transaction(function () use ($detailId) {
-            $batchTracking = BatchTracking::query()->select(['id'])->findOrFail($detailId);
-
-            $batchTracking->update(['batch_status' => 'Cancelled', 'cancellation_date' => Carbon::now()]);
-        });        
-
-        $link = route('apps.base', [
-            'appId' => $pageAppId,
-            'navigationMenuId' => $pageNavigationMenuId,
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'The stock level has been cancelled successfully',
-            'redirect_link' => $link,
-        ]);
-    }
-
-    public function setToDraft(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'detailId' => ['required', 'integer', 'min:1', Rule::exists('stock_level', 'id')],
-        ]);
-
-        $pageAppId = (int) $request->input('appId');
-        $pageNavigationMenuId = (int) $request->input('navigationMenuId');
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => $validator->errors()->first('detailId') ?? 'Validation failed',
-            ]);
-        }
-
-        $detailId = (int) $validator->validated()['detailId'];
-
-        DB::transaction(function () use ($detailId) {
-            $batchTracking = BatchTracking::query()->select(['id'])->findOrFail($detailId);
-
-            $batchTracking->update(['batch_status' => 'Draft', 'set_to_draft_date' => Carbon::now()]);
-        });        
-
-        $link = route('apps.base', [
-            'appId' => $pageAppId,
-            'navigationMenuId' => $pageNavigationMenuId,
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'The stock level has been set to draft successfully',
-            'redirect_link' => $link,
-        ]);
-    }
-
-    public function approve(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'detailId' => ['required', 'integer', 'min:1', Rule::exists('stock_level', 'id')],
-        ]);
-
-        $pageAppId = (int) $request->input('appId');
-        $pageNavigationMenuId = (int) $request->input('navigationMenuId');
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => $validator->errors()->first('detailId') ?? 'Validation failed',
-            ]);
-        }
-
-        $detailId = (int) $validator->validated()['detailId'];
-
-        DB::transaction(function () use ($detailId) {
-            $batchTracking = BatchTracking::query()->select(['id'])->findOrFail($detailId);
-
-            $batchTracking->update(['batch_status' => 'Approved', 'approval_date' => Carbon::now()]);
-        });
-
-        $batchTracking = DB::table('stock_level')
-            ->where('id', $detailId)
-            ->first();
-
-        if ($batchTracking) {
-            $reorderLevel = DB::table('product')
-            ->where('id', $batchTracking->product_id)
-            ->value('reorder_level');
-
-            $quantity = $batchTracking->quantity;
-
-            if ($quantity == 0) {
-                $stockStatus = 'Out of Stock';
-            } elseif ($quantity > 0 && $quantity <= $reorderLevel) {
-                $stockStatus = 'Low Stock';
-            } else {
-                $stockStatus = 'In Stock';
-            }
-            
-            StockLevel::create([
-                'product_id' => $batchTracking->product_id,
-                'product_name' => $batchTracking->product_name,
-                'warehouse_id' => $batchTracking->warehouse_id,
-                'warehouse_name' => $batchTracking->warehouse_name,
-                'stock_status' => $stockStatus,
-                'quantity' => $quantity,
-                'stock_level_id' => $batchTracking->id,
-                'expiration_date' => $batchTracking->expiration_date,
-                'received_date' => $batchTracking->received_date,
-                'cost_per_unit' => $batchTracking->cost_per_unit,
-                'last_log_by' => auth()->id(),
-            ]);
-        }
-
-        $link = route('apps.base', [
-            'appId' => $pageAppId,
-            'navigationMenuId' => $pageNavigationMenuId,
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'The stock level has been approved successfully',
             'redirect_link' => $link,
         ]);
     }
@@ -292,9 +121,9 @@ class StockLevelController extends Controller
         $detailId = (int) $validator->validated()['detailId'];
 
         DB::transaction(function () use ($detailId) {
-            $batchTracking = BatchTracking::query()->select(['id'])->findOrFail($detailId);
+            $stockLevel = StockLevel::query()->select(['id'])->findOrFail($detailId);
 
-            $batchTracking->delete();
+            $stockLevel->delete();
         });        
 
         $link = route('apps.base', [
@@ -319,7 +148,7 @@ class StockLevelController extends Controller
         $ids = $validated['selected_id'];
 
         DB::transaction(function () use ($ids) {
-            BatchTracking::query()->whereIn('id', $ids)->delete();
+            StockLevel::query()->whereIn('id', $ids)->delete();
         });
 
         return response()->json([
@@ -347,11 +176,11 @@ class StockLevelController extends Controller
 
         $validated = $validator->validated();
 
-        $batchTracking = DB::table('stock_level')
+        $stockLevel = DB::table('stock_level')
             ->where('id', $validated['detailId'])
             ->first();
 
-        if (!$batchTracking) {
+        if (!$stockLevel) {
             $link = route('apps.base', [
                 'appId' => $pageAppId,
                 'navigationMenuId' => $pageNavigationMenuId,
@@ -368,17 +197,15 @@ class StockLevelController extends Controller
         return response()->json([
             'success' => true,
             'notExist' => false,
-            'productId' => $batchTracking->product_id ?? null,
-            'warehouseId' => $batchTracking->warehouse_id ?? null,
-            'quantity' => $batchTracking->quantity ?? 0.01,
-            'batchNumber' => $batchTracking->batch_number ?? null,
-            'costPerUnit' => $batchTracking->cost_per_unit ?? 0.01,
-            'remarks' => $batchTracking->remarks ?? null,
-            'expirationDate' => $batchTracking->expiration_date
-            ? date('M d, Y', strtotime($batchTracking->expiration_date))
+            'productId' => $stockLevel->product_id ?? null,
+            'warehouseId' => $stockLevel->warehouse_id ?? null,
+            'quantity' => $stockLevel->quantity ?? 0.01,
+            'costPerUnit' => $stockLevel->cost_per_unit ?? 0.01,
+            'expirationDate' => $stockLevel->expiration_date
+            ? date('M d, Y', strtotime($stockLevel->expiration_date))
             : '',
-            'receivedDate' => $batchTracking->received_date
-            ? date('M d, Y', strtotime($batchTracking->received_date))
+            'receivedDate' => $stockLevel->received_date
+            ? date('M d, Y', strtotime($stockLevel->received_date))
             : '',
         ]);
     }
@@ -410,7 +237,7 @@ class StockLevelController extends Controller
         $expirationRange = $parseRange($filterByExpirationDate);
         $receivedRange = $parseRange($filterByReceivedDate);
 
-        $batchTrackings = DB::table('stock_level')
+        $stockLevels = DB::table('stock_level')
             ->when(!empty($filterByProduct), fn($q) =>
                 $q->whereIn('product_id', (array) $filterByProduct)
             )
@@ -424,18 +251,18 @@ class StockLevelController extends Controller
                 $q->whereBetween('received_date', $receivedRange)
             )
             ->when(!empty($filterByStatus), fn($q) =>
-                $q->whereIn('batch_status', (array) $filterByStatus)
+                $q->whereIn('stock_status', (array) $filterByStatus)
             )
             ->orderBy('product_name')
             ->get();
 
-        $response = $batchTrackings->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
-            $batchTrackingId = $row->id;
+        $response = $stockLevels->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
+            $stockLevelId = $row->id;
             $productName = $row->product_name;
             $warehouseName = $row->warehouse_name;
-            $batchStatus = $row->batch_status;
+            $stockStatus = $row->stock_status;
             $quantity = $row->quantity;
-            $batchNumber = $row->batch_number;
+            $batchTrackingId = $row->batch_tracking_id;
             $costPerUnit = $row->cost_per_unit;
             $expiration_date = $row->expiration_date
             ? date('M d, Y', strtotime($row->expiration_date))
@@ -444,15 +271,18 @@ class StockLevelController extends Controller
             ? date('M d, Y', strtotime($row->received_date))
             : 'No received date';
 
-            $statusClass = match ($batchStatus) {
-                'Draft' => 'badge badge-secondary',
-                'For Approval' => 'badge badge-warning',
-                'Approved' => 'badge badge-success',
-                'Cancelled' => 'badge badge-danger',
+            $batchNumber = (string) BatchTracking::query()
+            ->whereKey($batchTrackingId)
+            ->value('batch_number');
+
+            $statusClass = match ($stockStatus) {
+                'Out of Stock' => 'badge badge-danger',
+                'Low Stock' => 'badge badge-warning',
+                'In Stock' => 'badge badge-success',
                 default => 'badge badge-light',
             };
 
-            $statusBadge = '<span class="'.$statusClass.'">'.$batchStatus.'</span>';
+            $statusBadge = '<span class="'.$statusClass.'">'.$stockStatus.'</span>';
 
            if ($row->expiration_date) {
                 $expDate = Carbon::parse($row->expiration_date);
@@ -485,13 +315,13 @@ class StockLevelController extends Controller
             $link = route('apps.details', [
                 'appId' => $pageAppId,
                 'navigationMenuId' => $pageNavigationMenuId,
-                'details_id' => $batchTrackingId,
+                'details_id' => $stockLevelId,
             ]);
 
             return [
                 'CHECK_BOX' => '
                     <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                        <input class="form-check-input datatable-checkbox-children" type="checkbox" value="'.$batchTrackingId.'">
+                        <input class="form-check-input datatable-checkbox-children" type="checkbox" value="'.$stockLevelId.'">
                     </div>
                 ',
                 'PRODUCT' => $productName,
@@ -499,6 +329,7 @@ class StockLevelController extends Controller
                 'BATCH_NUMBER' => $batchNumber,
                 'QUANTITY' => number_format($quantity, 2),
                 'COST_PER_UNIT' => number_format($costPerUnit, 2),
+                'STOCK_VALUE' => number_format(($quantity * $costPerUnit), 2),
                 'STATUS' => $statusBadge,
                 'EXPIRATION_DATE' => $expiration_date,
                 'RECEIVED_DATE' => $received_date,
@@ -522,15 +353,21 @@ class StockLevelController extends Controller
             ]);
         }
 
-        $batchTrackings = DB::table('stock_level')
-            ->select(['id', 'stock_level_name', 'stock_level'])
-            ->orderBy('stock_level_name')
+        $stockLevels = DB::table('stock_level')
+            ->select(['id', 'product_name', 'warehouse_name', 'quantity'])
+            ->orderBy('product_name')
             ->get();
 
         $response = $response->concat(
-            $batchTrackings->map(fn ($row) => [
+            $stockLevels->map(fn ($row) => [
                 'id'   => $row->id,
-                'text' => $row->stock_level_name . ' (.' . $row->stock_level . ')',
+                'text' => "
+                            <div>
+                                <strong>{$row->product_name}</strong><br/>
+                                <small>Warehouse: {$row->warehouse_name} </small><br/>
+                                <small>Quantity: " . number_format($row->quantity, 2) . "</small>
+                            </div>
+                        ",
             ])
         )->values();
 

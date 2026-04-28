@@ -9,10 +9,8 @@ class StockMovement extends Model
     protected $table = 'stock_movement';
 
     protected $fillable = [
-        'product_id',
-        'product_name',
-        'warehouse_id',
-        'warehouse_name',
+        'stock_level_id',
+        'movement_type',
         'quantity',
         'reference_type',
         'reference_id',

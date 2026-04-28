@@ -32,20 +32,11 @@
                 </div>
 
                 <div class="row mb-6">
-                    <label class="col-lg-2 col-form-label required fw-semibold fs-6" for="batch_number">
-                        Batch / Lot Number
-                    </label>
-                    <div class="col-lg-10">
-                        <input type="text" class="form-control" id="batch_number" name="batch_number" maxlength="100" autocomplete="off">
-                    </div>
-                </div>
-
-                <div class="row mb-6">
                     <label class="col-lg-2 col-form-label required fw-semibold fs-6" for="quantity">
                         Quantity
                     </label>
                     <div class="col-lg-10">
-                        <input type="number" class="form-control" id="quantity" name="quantity" min="0.01" step="0.01">
+                        <input type="number" class="form-control" id="quantity" name="quantity" step="0.01">
                     </div>
                 </div>
                 
@@ -73,15 +64,6 @@
                     </label>
                     <div class="col-lg-10">
                         <input type="text" class="form-control" id="received_date" name="received_date" autocomplete="off">
-                    </div>
-                </div>
-
-                <div class="row">
-                    <label class="col-lg-2 col-form-label fw-semibold fs-6" for="remarks">
-                        Remarks
-                    </label>
-                    <div class="col-lg-10">
-                        <textarea class="form-control" id="remarks" name="remarks" maxlength="200" rows="3"></textarea>
                     </div>
                 </div>
             </form>

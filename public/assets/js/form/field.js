@@ -66,7 +66,16 @@ export const generateDropdownOptions = async ({
     $dropdown.select2({
       data: result,
       dropdownParent,
-      width: '100%'
+      width: '100%',
+      escapeMarkup: function (markup) {
+        return markup;
+      },
+      templateResult: function (data) {
+        return data.text;
+      },
+      templateSelection: function (data) {
+        return data.text;
+      }
     })
     .on('select2:open', function () {
       focusSelect2Search();

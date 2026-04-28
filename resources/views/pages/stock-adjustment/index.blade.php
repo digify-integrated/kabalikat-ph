@@ -6,6 +6,11 @@
 @endpush
 
 @section('content')
+    @php
+        $approveStockAdjustment = app(\App\Http\Controllers\SystemActionController::class)
+            ->userHasRoleAccessForAction(7, Auth::id());
+    @endphp
+
     <div class="card">
         <div class="card-header border-0 pt-6">
             <div class="card-title">
@@ -15,7 +20,7 @@
             <div class="card-toolbar">
                 <div class="d-flex justify-content-end" data-kt-customer-table-toolbar="base">
 
-                    @if(($deletePermission ?? 0) > 0 || ($exportPermission ?? 0) > 0)
+                    @if(($deletePermission ?? 0) > 0 || ($exportPermission ?? 0) > 0 || ($approveStockAdjustment ?? false) === true)
                         <a href="#"
                         class="btn btn-light-primary btn-flex btn-center btn-active-light-primary show menu-dropdown action-dropdown me-3 d-none"
                         data-kt-menu-trigger="click"
@@ -26,6 +31,16 @@
 
                         <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-125px py-4"
                             data-kt-menu="true">
+
+                            @if(($approveStockAdjustment ?? false) === true)
+                                <div class="menu-item px-3">
+                                    <a href="javascript:void(0);"
+                                    class="menu-link px-3"
+                                    id="approve-data">
+                                        Approve
+                                    </a>
+                                </div>
+                            @endif
 
                             @if(($exportPermission ?? 0) > 0)
                                 <div class="menu-item px-3">
@@ -61,27 +76,24 @@
                         <div class="separator border-gray-200"></div>
                         <div class="px-7 py-5">
                             <div class="mb-5">
-                                <label class="form-label fs-6 fw-semibold" for="filter_by_expiration_date">Filter By Expiration Date:</label>
-                                 <input type="text" class="form-control" id="filter_by_expiration_date" autocomplete="off">
+                                <label class="form-label fs-6 fw-semibold" for="filter_by_stock_level">Filter By Stock Level:</label>
+                                <select id="filter_by_stock_level" name="filter_by_stock_level" multiple="multiple" class="form-select" data-control="select2" data-allow-clear="false"></select>
                             </div>
                             <div class="mb-5">
-                                <label class="form-label fs-6 fw-semibold" for="filter_by_received_date">Filter By Received Date:</label>
-                                <input type="text" class="form-control" id="filter_by_received_date" autocomplete="off">
-                            </div>
-                            <div class="mb-5">
-                                <label class="form-label fs-6 fw-semibold" for="filter_by_product">Filter By Product:</label>
-                                <select id="filter_by_product" name="filter_by_product" multiple="multiple" class="form-select" data-control="select2" data-allow-clear="false"></select>
-                            </div>
-                            <div class="mb-5">
-                                <label class="form-label fs-6 fw-semibold" for="filter_by_warehouse">Filter By Warehouse:</label>
-                                <select id="filter_by_warehouse" name="filter_by_warehouse" multiple="multiple" class="form-select" data-control="select2" data-allow-clear="false"></select>
+                                <label class="form-label fs-6 fw-semibold" for="filter_by_adjustment_type">Filter By Adjustment Type:</label>
+                                <select id="filter_by_adjustment_type" multiple="multiple" class="form-select" data-control="select2" data-allow-clear="false">
+                                    <option value="Add Stock">Add Stock</option>
+                                    <option value="Remove Stock">Remove Stock</option>
+                                    <option value="Set Exact Stock">Set Exact Stock</option>
+                                </select>
                             </div>
                             <div class="mb-5">
                                 <label class="form-label fs-6 fw-semibold" for="filter_by_status">Filter By Status:</label>
                                 <select id="filter_by_status" multiple="multiple" class="form-select" data-control="select2" data-allow-clear="false">
-                                    <option value="In Stock" selected>In Stock</option>
-                                    <option value="Low Stock" selected>Low Stock</option>
-                                    <option value="Out of Stock">Out of Stock</option>
+                                    <option value="Draft" selected>Draft</option>
+                                    <option value="For Approval" selected>For Approval</option>
+                                    <option value="Approved">Approved</option>
+                                    <option value="Cancelled">Cancelled</option>
                                 </select>
                             </div>
                             <div class="d-flex justify-content-end">
@@ -96,7 +108,7 @@
 
         <div class="card-body pt-9">
             <div class="table-responsive">
-                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5" id="stock-level-table">
+                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5" id="stock-adjustment-table">
                     <thead>
                         <tr class="text-start text-gray-800 fw-bold fs-7 text-uppercase gs-0">
                             <th>
@@ -104,15 +116,13 @@
                                     <input class="form-check-input" id="datatable-checkbox" type="checkbox">
                                 </div>
                             </th>
-                            <th>Product</th>
-                            <th>Warehouse</th>
-                            <th>Batch / Lot No.</th>
+                            <th>Stock</th>
+                            <th>Adjustment Type</th>
+                            <th>Stock Qty</th>
                             <th>Qty</th>
-                            <th>Cost/Unit</th>
-                            <th>Value</th>
-                            <th>Received</th>
                             <th>Status</th>
-                            <th>Expiry</th>
+                            <th>Adjustment Reason</th>
+                            <th>Remarks</th>
                         </tr>
                     </thead>
                     <tbody class="fw-semibold text-gray-800"></tbody>

@@ -1,31 +1,28 @@
 import { initializeDatatable } from '../../util/datatable.js';
 import { multipleActionButton } from '../../form/button.js';
 import { checkNotification } from '../../util/notifications.js';
-import { generateDropdownOptions, initializeDateRangePicker } from '../../form/field.js';
+import { generateDropdownOptions } from '../../form/field.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const config = {
         table: {
-            url: '/batch-tracking/generate-table',
-            selector: '#batch-tracking-table',
+            url: '/stock-adjustment/generate-table',
+            selector: '#stock-adjustment-table',
             serverSide: false,
             ajaxData: () => ({
-                filter_by_product: $('#filter_by_product').val(),
-                filter_by_warehouse: $('#filter_by_warehouse').val(),
-                filter_by_expiration_date: $('#filter_by_expiration_date').val(),
-                filter_by_received_date: $('#filter_by_received_date').val(),
+                filter_by_stock_level: $('#filter_by_stock_level').val(),
+                filter_by_adjustment_type: $('#filter_by_adjustment_type').val(),
                 filter_by_status: $('#filter_by_status').val(),
             }),
             columns: [
                 { data: 'CHECK_BOX' },
-                { data: 'PRODUCT' },
-                { data: 'WAREHOUSE' },
-                { data: 'BATCH_NUMBER' },
+                { data: 'STOCK_LEVEL' },
+                { data: 'ADJUSTMENT_TYPE' },
+                { data: 'CURRENT_QUANTITY' },
                 { data: 'QUANTITY' },
-                { data: 'COST_PER_UNIT' },
-                { data: 'RECEIVED_DATE' },
                 { data: 'STATUS' },
-                { data: 'EXPIRATION_DATE' },
+                { data: 'ADJUSTMENT_REASON' },
+                { data: 'REMARKS' },
             ],
             columnDefs: [
                 { width: '5%', bSortable: false, targets: 0, responsivePriority: 1 },
@@ -34,46 +31,39 @@ document.addEventListener('DOMContentLoaded', () => {
                 { width: 'auto', targets: 3, responsivePriority: 4 },
                 { width: 'auto', targets: 4, responsivePriority: 5 },
                 { width: 'auto', targets: 5, responsivePriority: 6 },
-                { width: 'auto', targets: 6, type: 'date', responsivePriority: 7 },
-                { width: 'auto', targets: 7, responsivePriority: 8 },
-                { width: 'auto', targets: 8, responsivePriority: 9 },
+                { width: 'auto', targets: 6, responsivePriority: 7 },
             ],
             onRowClick: (rowData) => {
                 if (rowData?.LINK) window.open(rowData.LINK, '_blank');
             },
             addons: {
                 controls: true,
-                export: 'batch_tracking',
+                export: 'stock_adjustment',
             }
         },
         action: [
             {
                 trigger : '#delete-data',
-                url : '/batch-tracking/delete-multiple',
-                swalTitle : 'Confirm Multiple Batch Tracking Deletion',
-                swalText : 'Are you sure you want to delete these batch tracking?',
+                url : '/stock-adjustment/delete-multiple',
+                swalTitle : 'Confirm Multiple Stock Adjustment Deletion',
+                swalText : 'Are you sure you want to delete these stock adjustment?',
                 confirmButtonText : 'Delete',
-                validationMessage : 'Please select the batch tracking you want to delete',
-                table : '#batch-tracking-table'
+                validationMessage : 'Please select the stock adjustment you want to delete',
+                table : '#stock-adjustment-table'
             },
             {
                 trigger : '#approve-data',
-                url : '/batch-tracking/approve-multiple',
-                swalTitle : 'Confirm Multiple Batch Tracking Approval',
-                swalText : 'Are you sure you want to approve these batch tracking?',
+                url : '/stock-adjustment/approve-multiple',
+                swalTitle : 'Confirm Multiple Stock Adjustment Approval',
+                swalText : 'Are you sure you want to approve these stock adjustment?',
                 confirmButtonText : 'Approve',
-                validationMessage : 'Please select the batch tracking you want to approve',
-                table : '#batch-tracking-table'
+                validationMessage : 'Please select the stock adjustment you want to approve',
+                table : '#stock-adjustment-table'
             },
         ],
         dropdown: [
-            { url: '/products/generate-product-batch-tracking-options', dropdownSelector: '#filter_by_product', data: { multiple : true } },
-            { url: '/warehouse/generate-options', dropdownSelector: '#filter_by_warehouse', data: { multiple : true } },
+            { url: '/stock-level/generate-options', dropdownSelector: '#filter_by_stock_level', data: { multiple : true } },
         ],
-        datepickers: [
-            { selector: '#filter_by_received_date' },
-            { selector: '#filter_by_expiration_date' },
-        ]
     }
     
     checkNotification();
@@ -81,7 +71,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeDatatable(config.table);
 
     config.dropdown.map((cfg) => generateDropdownOptions(cfg));
-    config.datepickers.map(({ selector }) => initializeDateRangePicker(selector));
     config.action.forEach((cfg) => multipleActionButton(cfg));
 
     document.addEventListener('click', async (event) => {

@@ -1157,7 +1157,7 @@ return new class extends Migration
             $table->double('quantity')
             ->default(0);
 
-            $table->enum('reference_type', ['Purchase Order', 'POS Sale', 'Transfer Ticket', 'Inventory Audit', 'Borrow Agreement']);
+            $table->enum('reference_type', ['Purchase Order', 'Batch Tracking', 'POS Sale', 'Transfer Ticket', 'Inventory Audit', 'Borrow Agreement']);
             $table->string('reference_id');
 
             $table->string('remarks');
