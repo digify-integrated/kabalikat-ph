@@ -260,7 +260,6 @@ class BatchTrackingController extends Controller
 
         DB::transaction(function () use ($detailId) {
             $batchTracking = BatchTracking::query()
-            ->select(['id', 'batch_status'])
             ->findOrFail($detailId);
 
             if ($batchTracking->batch_status !== 'For Approval') {
@@ -272,7 +271,7 @@ class BatchTrackingController extends Controller
 
             $batchTracking->update([
                 'batch_status' => 'Approved',
-                'approval_date' => Carbon::now()
+                'approved_date' => Carbon::now()
             ]);
 
             $reorderLevel = DB::table('product')

@@ -9,19 +9,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const config = {
         forms: [
             {
-                selector: '#stock_adjustment_form',
+                selector: '#stock_transfer_form',
                 rules: {
                     rules: {
                         stock_level_id: { required: true},
-                        adjustment_type: { required: true},
+                        transfer_type: { required: true},
                         quantity: { required: true},
-                        stock_adjustment_reason_id: { required: true},
+                        stock_transfer_reason_id: { required: true},
                     },
                     messages: {
                         stock_level_id: { required: 'Choose the stock' },
-                        adjustment_type: { required: 'Choose the adjustment type' },
+                        transfer_type: { required: 'Choose the transfer type' },
                         quantity: { required: 'Enter the quantity' },
-                        stock_adjustment_reason_id: { required: 'Choose the adjustment reason' },
+                        stock_transfer_reason_id: { required: 'Choose the transfer reason' },
                     },
                     submitHandler: async (form) => {
                         const ctx = getPageContext();
@@ -32,13 +32,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         disableButton('submit-data');
 
                         try {
-                            const response = await fetch('/stock-adjustment/save', {
+                            const response = await fetch('/stock-transfer/save', {
                                 method: 'POST',
                                 body: formData
                             });
 
                             if (!response.ok) {
-                                throw new Error(`Save stock adjustment failed with status: ${response.status}`);
+                                throw new Error(`Save stock transfer failed with status: ${response.status}`);
                             }
 
                             const data = await response.json();
@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ],
         dropdown: [
             { url: '/stock-level/generate-options', dropdownSelector: '#stock_level_id' },
-            { url: '/stock-adjustment-reason/generate-options', dropdownSelector: '#stock_adjustment_reason_id' },
+            { url: '/stock-transfer-reason/generate-options', dropdownSelector: '#stock_transfer_reason_id' },
         ],
     }
 

@@ -12,37 +12,37 @@ document.addEventListener('DOMContentLoaded', () => {
     const config = {
         forms: [
             {
-                selector: '#stock_adjustment_form',
+                selector: '#stock_transfer_form',
                 rules: {
                     rules: {
                         stock_level_id: { required: true},
-                        adjustment_type: { required: true},
+                        transfer_type: { required: true},
                         quantity: { required: true},
-                        stock_adjustment_reason_id: { required: true},
+                        stock_transfer_reason_id: { required: true},
                     },
                     messages: {
                         stock_level_id: { required: 'Choose the stock' },
-                        adjustment_type: { required: 'Choose the adjustment type' },
+                        transfer_type: { required: 'Choose the transfer type' },
                         quantity: { required: 'Enter the quantity' },
-                        stock_adjustment_reason_id: { required: 'Choose the adjustment reason' },
+                        stock_transfer_reason_id: { required: 'Choose the transfer reason' },
                     },
                     submitHandler: async (form) => {
                         const ctx = getPageContext();
                         const formData = new URLSearchParams(new FormData(form));
-                        formData.append('stock_adjustment_id', ctx.detailId ?? '');
+                        formData.append('stock_transfer_id', ctx.detailId ?? '');
                         formData.append('appId', ctx.appId ?? '');
                         formData.append('navigationMenuId', ctx .navigationMenuId ?? '');
 
                         disableButton('submit-data');
 
                         try {
-                            const response = await fetch('/stock-adjustment/save', {
+                            const response = await fetch('/stock-transfer/save', {
                                 method: 'POST',
                                 body: formData,
                             });
 
                             if (!response.ok) {
-                                throw new Error(`Save stock adjustment failed with status: ${response.status}`);
+                                throw new Error(`Save stock transfer failed with status: ${response.status}`);
                             }
 
                             const data = await response.json();
@@ -63,8 +63,8 @@ document.addEventListener('DOMContentLoaded', () => {
         ],
         details: [
             {
-                url: '/stock-adjustment/fetch-details',
-                formSelector: '#stock_adjustment_form',
+                url: '/stock-transfer/fetch-details',
+                formSelector: '#stock_transfer_form',
                 busyHideTargets: ['#submit-data'],
                 onSuccess: async (data) => {
                     document.getElementById('quantity').value = data.quantity || '0';
@@ -73,52 +73,52 @@ document.addEventListener('DOMContentLoaded', () => {
                     await optionsPromise;
 
                     $('#stock_level_id').val(data.stockLevelId).trigger('change');
-                    $('#adjustment_type').val(data.adjustmentType).trigger('change');
-                    $('#stock_adjustment_reason_id').val(data.stockAdjustmentReasonId).trigger('change');
+                    $('#transfer_type').val(data.transferType).trigger('change');
+                    $('#stock_transfer_reason_id').val(data.stockTransferReasonId).trigger('change');
                 },
             }
         ],
         delete: {
-            trigger: '#delete-stock-adjustment',
-            url: '/stock-adjustment/delete',
-            swalTitle: 'Confirm Stock Adjustment Deletion',
-            swalText: 'Are you sure you want to delete this stock adjustment?',
+            trigger: '#delete-stock-transfer',
+            url: '/stock-transfer/delete',
+            swalTitle: 'Confirm Stock Transfer Deletion',
+            swalText: 'Are you sure you want to delete this stock transfer?',
             confirmButtonText: 'Delete',
         },
         action: [
             {
-                trigger: '#for-approval-stock-adjustment',
-                url: '/stock-adjustment/for-approval',
-                swalTitle: 'Confirm Stock Adjustment Submission',
+                trigger: '#for-approval-stock-transfer',
+                url: '/stock-transfer/for-approval',
+                swalTitle: 'Confirm Stock Transfer Submission',
                 confirmButtonClass : 'success',
-                swalText: 'Are you sure you want to submit this stock adjustment for approval?',
+                swalText: 'Are you sure you want to submit this stock transfer for approval?',
                 confirmButtonText: 'Submit for Approval',
             },
             {
-                trigger: '#set-to-draft-stock-adjustment',
-                url: '/stock-adjustment/set-to-draft',
-                swalTitle: 'Confirm Stock Adjustment Set To Draft',
-                swalText: 'Are you sure you want to set this stock adjustment to draft?',
+                trigger: '#set-to-draft-stock-transfer',
+                url: '/stock-transfer/set-to-draft',
+                swalTitle: 'Confirm Stock Transfer Set To Draft',
+                swalText: 'Are you sure you want to set this stock transfer to draft?',
                 confirmButtonText: 'Set to Draft',
             },
             {
-                trigger: '#cancel-stock-adjustment',
-                url: '/stock-adjustment/cancel',
-                swalTitle: 'Confirm Stock Adjustment Cancellation',
-                swalText: 'Are you sure you want to cancel this stock adjustment?',
+                trigger: '#cancel-stock-transfer',
+                url: '/stock-transfer/cancel',
+                swalTitle: 'Confirm Stock Transfer Cancellation',
+                swalText: 'Are you sure you want to cancel this stock transfer?',
                 confirmButtonText: 'Cancel',
             },
             {
-                trigger: '#approve-stock-adjustment',
-                url: '/stock-adjustment/approve',
-                swalTitle: 'Confirm Stock Adjustment Approval',
-                swalText: 'Are you sure you want to approve this stock adjustment?',
+                trigger: '#approve-stock-transfer',
+                url: '/stock-transfer/approve',
+                swalTitle: 'Confirm Stock Transfer Approval',
+                swalText: 'Are you sure you want to approve this stock transfer?',
                 confirmButtonText: 'Approve',
             },
         ],
         dropdown: [
             { url: '/stock-level/generate-options', dropdownSelector: '#stock_level_id' },
-            { url: '/stock-adjustment-reason/generate-options', dropdownSelector: '#stock_adjustment_reason_id' },
+            { url: '/stock-transfer-reason/generate-options', dropdownSelector: '#stock_transfer_reason_id' },
         ],
     };
 
