@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const config = {
         forms: [
             {
-                selector: '#batch_tracking_form',
+                selector: '#stock_batch_form',
                 rules: {
                     rules: {
                         product_id: { required: true},
@@ -36,13 +36,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         disableButton('submit-data');
 
                         try {
-                            const response = await fetch('/batch-tracking/save', {
+                            const response = await fetch('/stock-batch/save', {
                                 method: 'POST',
                                 body: formData
                             });
 
                             if (!response.ok) {
-                                throw new Error(`Save batch tracking failed with status: ${response.status}`);
+                                throw new Error(`Save stock batch failed with status: ${response.status}`);
                             }
 
                             const data = await response.json();
@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         ],
         dropdown: [
-            { url: '/products/generate-product-batch-tracking-options', dropdownSelector: '#product_id' },
+            { url: '/products/generate-product-stock-batch-options', dropdownSelector: '#product_id' },
             { url: '/warehouse/generate-options', dropdownSelector: '#warehouse_id' },
         ],
         datepickers: [

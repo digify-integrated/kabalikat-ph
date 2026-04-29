@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\BatchTracking;
+use App\Models\StockBatch;
 use App\Models\Product;
 use App\Models\StockLevel;
 use App\Models\Warehouse;
@@ -271,7 +271,7 @@ class StockLevelController extends Controller
             ? date('M d, Y', strtotime($row->received_date))
             : 'No received date';
 
-            $batchNumber = (string) BatchTracking::query()
+            $batchNumber = (string) StockBatch::query()
             ->whereKey($batchTrackingId)
             ->value('batch_number');
 

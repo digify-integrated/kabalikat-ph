@@ -905,10 +905,10 @@ return new class extends Migration
         });
 
         /* =============================================================================================
-            TABLE: Batch Tracking
+            TABLE: Stock Batch
         ============================================================================================= */
 
-        Schema::create('batch_tracking', function (Blueprint $table) {
+        Schema::create('stock_batch', function (Blueprint $table) {
             $table->id();
 
             $table->foreignId('product_id')
@@ -960,15 +960,15 @@ return new class extends Migration
             $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
             $table->timestamps();
 
-            $table->index(['product_id'], 'batch_tracking_product_id_idx');
-            $table->index(['warehouse_id'], 'batch_tracking_warehouse_id_idx');
-            $table->index(['expiration_date'], 'batch_tracking_expiration_date_idx');
-            $table->index(['received_date'], 'batch_tracking_received_date_idx');
-            $table->index(['for_approval_date'], 'batch_tracking_for_approval_date_idx');
-            $table->index(['approved_date'], 'batch_tracking_approved_date_idx');
-            $table->index(['cancellation_date'], 'batch_tracking_cancellation_date_idx');
-            $table->index(['set_to_draft_date'], 'batch_tracking_set_to_draft_date_idx');
-            $table->index(['batch_number'], 'batch_tracking_batch_number_idx');
+            $table->index(['product_id'], 'stock_batch_product_id_idx');
+            $table->index(['warehouse_id'], 'stock_batch_warehouse_id_idx');
+            $table->index(['expiration_date'], 'stock_batch_expiration_date_idx');
+            $table->index(['received_date'], 'stock_batch_received_date_idx');
+            $table->index(['for_approval_date'], 'stock_batch_for_approval_date_idx');
+            $table->index(['approved_date'], 'stock_batch_approved_date_idx');
+            $table->index(['cancellation_date'], 'stock_batch_cancellation_date_idx');
+            $table->index(['set_to_draft_date'], 'stock_batch_set_to_draft_date_idx');
+            $table->index(['batch_number'], 'stock_batch_batch_number_idx');
         });
 
         /* =============================================================================================
@@ -998,9 +998,9 @@ return new class extends Migration
             $table->double('quantity')
             ->default(0);
 
-            $table->foreignId('batch_tracking_id')
+            $table->foreignId('stock_batch_id')
             ->nullable()
-            ->constrained('batch_tracking')
+            ->constrained('stock_batch')
             ->nullOnDelete();
 
             $table->date('expiration_date')
@@ -1020,7 +1020,7 @@ return new class extends Migration
             $table->index(['stock_status'], 'stock_level_stock_status_idx');
             $table->index(['expiration_date'], 'stock_level_expiration_date_idx');
             $table->index(['received_date'], 'stock_level_received_date_idx');
-            $table->index(['batch_tracking_id'], 'stock_level_batch_tracking_id_idx');
+            $table->index(['stock_batch_id'], 'stock_level_stock_batch_id_idx');
         });
 
         /* =============================================================================================
@@ -1084,12 +1084,6 @@ return new class extends Migration
 
         Schema::create('stock_transfer', function (Blueprint $table) {
             $table->id();
-
-            $table->foreignId('product_id')
-            ->constrained('product')
-            ->cascadeOnDelete();
-            
-            $table->string('product_name');
 
             $table->foreignId('stock_level_from_id')
             ->constrained('stock_level')
@@ -1218,7 +1212,7 @@ return new class extends Migration
         Schema::dropIfExists('stock_adjustment_reason');
         Schema::dropIfExists('stock_transfer_reason');
         Schema::dropIfExists('stock_level');
-        Schema::dropIfExists('batch_tracking');
+        Schema::dropIfExists('stock_batch');
         Schema::dropIfExists('stock_adjustment');
         Schema::dropIfExists('stock_transfer');
         Schema::dropIfExists('stock_movement');

@@ -4,9 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class BatchTracking extends Model
+class StockBatch extends Model
 {
-    protected $table = 'batch_tracking';
+    protected $table = 'stock_batch';
 
     protected $fillable = [
         'product_id',

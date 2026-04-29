@@ -10,18 +10,15 @@ document.addEventListener('DOMContentLoaded', () => {
             selector: '#stock-transfer-table',
             serverSide: false,
             ajaxData: () => ({
-                filter_by_stock_level: $('#filter_by_stock_level').val(),
-                filter_by_transfer_type: $('#filter_by_transfer_type').val(),
                 filter_by_status: $('#filter_by_status').val(),
             }),
             columns: [
                 { data: 'CHECK_BOX' },
-                { data: 'STOCK_LEVEL' },
-                { data: 'ADJUSTMENT_TYPE' },
-                { data: 'CURRENT_QUANTITY' },
+                { data: 'STOCK_LEVEL_FROM' },
+                { data: 'STOCK_LEVEL_TO' },
                 { data: 'QUANTITY' },
                 { data: 'STATUS' },
-                { data: 'ADJUSTMENT_REASON' },
+                { data: 'TRANSFER_REASON' },
                 { data: 'REMARKS' },
             ],
             columnDefs: [
@@ -79,10 +76,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (event.target.closest('#reset-filter')) {
-            $('#filter_by_product').val(null).trigger('change');
-            $('#filter_by_warehouse').val(null).trigger('change');
-            $('#filter_by_expiration_date').val(null);
-            $('#filter_by_received_date').val(null);
             $('#filter_by_status').val(['Draft', 'For Approval']).trigger('change');
 
             initializeDatatable(config.table);

@@ -275,15 +275,15 @@ class NavigationMenuSeeder extends Seeder
                 'order_sequence'                => 2
             ],
 
-            // Inventory -> Batch Tracking ID: 23
+            // Inventory -> Stock Batch ID: 23
             [
-                'navigation_menu_name'          => 'Batch Tracking',
+                'navigation_menu_name'          => 'Stock Batch',
                 'navigation_menu_icon'          => null,
                 'app_id'                        => 4,
                 'app_name'                      => 'Inventory',
                 'parent_navigation_menu_id'     => 20,
                 'parent_navigation_menu_name'   => 'Inventory',
-                'database_table'                => 'batch_tracking',
+                'database_table'                => 'stock_batch',
                 'order_sequence'                => 3
             ],
 

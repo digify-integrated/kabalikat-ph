@@ -15,14 +15,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 selector: '#stock_transfer_form',
                 rules: {
                     rules: {
-                        stock_level_id: { required: true},
-                        transfer_type: { required: true},
+                        stock_level_from_id: { required: true},
+                        stock_level_to_id: { required: true},
                         quantity: { required: true},
                         stock_transfer_reason_id: { required: true},
                     },
                     messages: {
-                        stock_level_id: { required: 'Choose the stock' },
-                        transfer_type: { required: 'Choose the transfer type' },
+                        stock_level_from_id: { required: 'Choose the stock' },
+                        stock_level_to_id: { required: 'Choose the stock' },
                         quantity: { required: 'Enter the quantity' },
                         stock_transfer_reason_id: { required: 'Choose the transfer reason' },
                     },
@@ -72,8 +72,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     await optionsPromise;
 
-                    $('#stock_level_id').val(data.stockLevelId).trigger('change');
-                    $('#transfer_type').val(data.transferType).trigger('change');
+                    $('#stock_level_from_id').val(data.stockLevelFromId).trigger('change');
+                    $('#stock_level_to_id').val(data.stockLevelToId).trigger('change');
                     $('#stock_transfer_reason_id').val(data.stockTransferReasonId).trigger('change');
                 },
             }
@@ -117,7 +117,8 @@ document.addEventListener('DOMContentLoaded', () => {
             },
         ],
         dropdown: [
-            { url: '/stock-level/generate-options', dropdownSelector: '#stock_level_id' },
+            { url: '/stock-level/generate-options', dropdownSelector: '#stock_level_from_id' },
+            { url: '/stock-level/generate-options', dropdownSelector: '#stock_level_to_id' },
             { url: '/stock-transfer-reason/generate-options', dropdownSelector: '#stock_transfer_reason_id' },
         ],
     };

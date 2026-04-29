@@ -10,26 +10,23 @@
                 @csrf
 
                 <div class="row mb-6">
-                    <label class="col-lg-2 col-form-label required fw-semibold fs-6" for="stock_level_id">
-                        Stock
+                    <label class="col-lg-2 col-form-label required fw-semibold fs-6" for="stock_level_from_id">
+                        Stock From
                     </label>
                     <div class="col-lg-10">
-                        <select id="stock_level_id" name="stock_level_id" class="form-select" data-control="select2" data-allow-clear="false">
+                        <select id="stock_level_from_id" name="stock_level_from_id" class="form-select" data-control="select2" data-allow-clear="false">
                             <option>--</option>
                         </select>
                     </div>
                 </div>
 
                 <div class="row mb-6">
-                    <label class="col-lg-2 col-form-label required fw-semibold fs-6" for="transfer_type">
-                        Transfer Type
+                    <label class="col-lg-2 col-form-label required fw-semibold fs-6" for="stock_level_to_id">
+                        Stock To
                     </label>
                     <div class="col-lg-10">
-                        <select id="transfer_type" name="transfer_type" class="form-select" data-control="select2" data-allow-clear="false">
-                            <option value="">--</option>
-                            <option value="Add Stock">Add Stock</option>
-                            <option value="Remove Stock">Remove Stock</option>
-                            <option value="Set Exact Stock">Set Exact Stock</option>
+                        <select id="stock_level_to_id" name="stock_level_to_id" class="form-select" data-control="select2" data-allow-clear="false">
+                            <option>--</option>
                         </select>
                     </div>
                 </div>

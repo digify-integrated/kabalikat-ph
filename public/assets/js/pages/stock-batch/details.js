@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const config = {
         forms: [
             {
-                selector: '#batch_tracking_form',
+                selector: '#stock_batch_form',
                 rules: {
                     rules: {
                         product_id: { required: true},
@@ -33,20 +33,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     submitHandler: async (form) => {
                         const ctx = getPageContext();
                         const formData = new URLSearchParams(new FormData(form));
-                        formData.append('batch_tracking_id', ctx.detailId ?? '');
+                        formData.append('stock_batch_id', ctx.detailId ?? '');
                         formData.append('appId', ctx.appId ?? '');
                         formData.append('navigationMenuId', ctx .navigationMenuId ?? '');
 
                         disableButton('submit-data');
 
                         try {
-                            const response = await fetch('/batch-tracking/save', {
+                            const response = await fetch('/stock-batch/save', {
                                 method: 'POST',
                                 body: formData,
                             });
 
                             if (!response.ok) {
-                                throw new Error(`Save batch tracking failed with status: ${response.status}`);
+                                throw new Error(`Save stock batch failed with status: ${response.status}`);
                             }
 
                             const data = await response.json();
@@ -67,8 +67,8 @@ document.addEventListener('DOMContentLoaded', () => {
         ],
         details: [
             {
-                url: '/batch-tracking/fetch-details',
-                formSelector: '#batch_tracking_form',
+                url: '/stock-batch/fetch-details',
+                formSelector: '#stock_batch_form',
                 busyHideTargets: ['#submit-data'],
                 onSuccess: async (data) => {
                     document.getElementById('quantity').value = data.quantity || '';
@@ -86,45 +86,45 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         ],
         delete: {
-            trigger: '#delete-batch-tracking',
-            url: '/batch-tracking/delete',
-            swalTitle: 'Confirm Batch Tracking Deletion',
-            swalText: 'Are you sure you want to delete this batch tracking?',
+            trigger: '#delete-stock-batch',
+            url: '/stock-batch/delete',
+            swalTitle: 'Confirm Stock Batch Deletion',
+            swalText: 'Are you sure you want to delete this stock batch?',
             confirmButtonText: 'Delete',
         },
         action: [
             {
-                trigger: '#for-approval-batch-tracking',
-                url: '/batch-tracking/for-approval',
-                swalTitle: 'Confirm Batch Tracking Submission',
+                trigger: '#for-approval-stock-batch',
+                url: '/stock-batch/for-approval',
+                swalTitle: 'Confirm Stock Batch Submission',
                 confirmButtonClass : 'success',
-                swalText: 'Are you sure you want to submit this batch tracking for approval?',
+                swalText: 'Are you sure you want to submit this stock batch for approval?',
                 confirmButtonText: 'Submit for Approval',
             },
             {
-                trigger: '#set-to-draft-batch-tracking',
-                url: '/batch-tracking/set-to-draft',
-                swalTitle: 'Confirm Batch Tracking Set To Draft',
-                swalText: 'Are you sure you want to set this batch tracking to draft?',
+                trigger: '#set-to-draft-stock-batch',
+                url: '/stock-batch/set-to-draft',
+                swalTitle: 'Confirm Stock Batch Set To Draft',
+                swalText: 'Are you sure you want to set this stock batch to draft?',
                 confirmButtonText: 'Set to Draft',
             },
             {
-                trigger: '#cancel-batch-tracking',
-                url: '/batch-tracking/cancel',
-                swalTitle: 'Confirm Batch Tracking Cancellation',
-                swalText: 'Are you sure you want to cancel this batch tracking?',
+                trigger: '#cancel-stock-batch',
+                url: '/stock-batch/cancel',
+                swalTitle: 'Confirm Stock Batch Cancellation',
+                swalText: 'Are you sure you want to cancel this stock batch?',
                 confirmButtonText: 'Cancel',
             },
             {
-                trigger: '#approve-batch-tracking',
-                url: '/batch-tracking/approve',
-                swalTitle: 'Confirm Batch Tracking Approval',
-                swalText: 'Are you sure you want to approve this batch tracking?',
+                trigger: '#approve-stock-batch',
+                url: '/stock-batch/approve',
+                swalTitle: 'Confirm Stock Batch Approval',
+                swalText: 'Are you sure you want to approve this stock batch?',
                 confirmButtonText: 'Approve',
             },
         ],
         dropdown: [
-            { url: '/products/generate-product-batch-tracking-options', dropdownSelector: '#product_id' },
+            { url: '/products/generate-product-stock-batch-options', dropdownSelector: '#product_id' },
             { url: '/warehouse/generate-options', dropdownSelector: '#warehouse_id' },
         ],
         datepickers: [

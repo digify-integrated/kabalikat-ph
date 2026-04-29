@@ -7,7 +7,7 @@
 
 @section('content')
     @php
-        $approveBatchTracking = app(\App\Http\Controllers\SystemActionController::class)
+        $approveStockBatch = app(\App\Http\Controllers\SystemActionController::class)
             ->userHasRoleAccessForAction(6, Auth::id());
     @endphp
 
@@ -20,7 +20,7 @@
             <div class="card-toolbar">
                 <div class="d-flex justify-content-end" data-kt-customer-table-toolbar="base">
 
-                    @if(($deletePermission ?? 0) > 0 || ($exportPermission ?? 0) > 0 || ($approveBatchTracking ?? false) === true)
+                    @if(($deletePermission ?? 0) > 0 || ($exportPermission ?? 0) > 0 || ($approveStockBatch ?? false) === true)
                         <a href="#"
                         class="btn btn-light-primary btn-flex btn-center btn-active-light-primary show menu-dropdown action-dropdown me-3 d-none"
                         data-kt-menu-trigger="click"
@@ -32,7 +32,7 @@
                         <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-125px py-4"
                             data-kt-menu="true">
 
-                            @if(($approveBatchTracking ?? false) === true)
+                            @if(($approveStockBatch ?? false) === true)
                                 <div class="menu-item px-3">
                                     <a href="javascript:void(0);"
                                     class="menu-link px-3"
@@ -63,7 +63,6 @@
                                     </a>
                                 </div>
                             @endif
-
                         </div>
                     @endif
                 </div>
@@ -112,7 +111,7 @@
 
         <div class="card-body pt-9">
             <div class="table-responsive">
-                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5" id="batch-tracking-table">
+                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5" id="stock-batch-table">
                     <thead>
                         <tr class="text-start text-gray-800 fw-bold fs-7 text-uppercase gs-0">
                             <th>

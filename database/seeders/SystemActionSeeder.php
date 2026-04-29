@@ -41,12 +41,16 @@ class SystemActionSeeder extends Seeder
                 'system_action_description' => 'Access to update the role system action access.',
             ],
             [
-                'system_action_name' => 'Approve Batch Tracking',
-                'system_action_description' => 'Access to approve batch tracking requests.',
+                'system_action_name' => 'Approve Stock Batch',
+                'system_action_description' => 'Access to approve stock batch requests.',
             ],
             [
                 'system_action_name' => 'Approve Stock Adjustment',
                 'system_action_description' => 'Access to approve stock adjustment requests.',
+            ],
+            [
+                'system_action_name' => 'Approve Stock Transfer',
+                'system_action_description' => 'Access to approve stock transfer requests.',
             ],
         ];
 

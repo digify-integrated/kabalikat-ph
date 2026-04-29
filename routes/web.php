@@ -553,10 +553,10 @@ Route::middleware('auth')->group(function () {
             Route::post('/generate-table', 'generateTable')->name('generate.table');
         });
 
-    // Batch Tracking
-    Route::prefix('batch-tracking')
-        ->name('batch.tracking.')
-        ->controller(BatchTrackingController::class)
+    // 
+    Route::prefix('stock-batch')
+        ->name('stock.batch.')
+        ->controller(StockBatchController::class)
         ->group(function () {
             Route::post('/save', 'save')->name('save');
             Route::post('/for-approval', 'forApproval')->name('for.approval');

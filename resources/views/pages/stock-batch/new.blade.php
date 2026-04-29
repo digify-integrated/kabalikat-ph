@@ -3,10 +3,10 @@
 @section('content')
     <div class="card">
         <div class="card-header d-flex align-items-center">
-            <h5 class="card-title mb-0">Batch Tracking Details</h5>
+            <h5 class="card-title mb-0">Stock Batch Details</h5>
         </div>
         <div class="card-body">
-            <form id="batch_tracking_form" method="post" action="#" novalidate>
+            <form id="stock_batch_form" method="post" action="#" novalidate>
                 @csrf
 
                 <div class="row mb-6">
@@ -88,7 +88,7 @@
         </div>
         <div class="card-footer d-flex justify-content-end py-6 px-9">
             <button type="button" id="discard-create" class="btn btn-light btn-active-light-primary me-2">Discard</button>
-            <button type="submit" form="batch_tracking_form" class="btn btn-primary" id="submit-data">Save</button>
+            <button type="submit" form="stock_batch_form" class="btn btn-primary" id="submit-data">Save</button>
         </div>
     </div>
 @endsection

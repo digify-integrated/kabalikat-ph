@@ -451,24 +451,24 @@ class NavigationMenuRouteSeeder extends Seeder
                 'js_file'               => 'import/import',
             ],
 
-            // Batch Tracking
+            // Stock Batch
             [
                 'navigation_menu_id'    => 23,
                 'route_type'            => 'index',
-                'view_file'             => 'pages.batch-tracking.index',
-                'js_file'               => 'batch-tracking/index',
+                'view_file'             => 'pages.stock-batch.index',
+                'js_file'               => 'stock-batch/index',
             ],
             [
                 'navigation_menu_id'    => 23,
                 'route_type'            => 'new',
-                'view_file'             => 'pages.batch-tracking.new',
-                'js_file'               => 'batch-tracking/new',
+                'view_file'             => 'pages.stock-batch.new',
+                'js_file'               => 'stock-batch/new',
             ],
             [
                 'navigation_menu_id'    => 23,
                 'route_type'            => 'details',
-                'view_file'             => 'pages.batch-tracking.details',
-                'js_file'               => 'batch-tracking/details',
+                'view_file'             => 'pages.stock-batch.details',
+                'js_file'               => 'stock-batch/details',
             ],
             [
                 'navigation_menu_id'    => 23,

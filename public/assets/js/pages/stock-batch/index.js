@@ -6,8 +6,8 @@ import { generateDropdownOptions, initializeDateRangePicker } from '../../form/f
 document.addEventListener('DOMContentLoaded', () => {
     const config = {
         table: {
-            url: '/batch-tracking/generate-table',
-            selector: '#batch-tracking-table',
+            url: '/stock-batch/generate-table',
+            selector: '#stock-batch-table',
             serverSide: false,
             ajaxData: () => ({
                 filter_by_product: $('#filter_by_product').val(),
@@ -43,31 +43,31 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             addons: {
                 controls: true,
-                export: 'batch_tracking',
+                export: 'stock_batch',
             }
         },
         action: [
             {
                 trigger : '#delete-data',
-                url : '/batch-tracking/delete-multiple',
-                swalTitle : 'Confirm Multiple Batch Tracking Deletion',
-                swalText : 'Are you sure you want to delete these batch tracking?',
+                url : '/stock-batch/delete-multiple',
+                swalTitle : 'Confirm Multiple Stock Batch Deletion',
+                swalText : 'Are you sure you want to delete these stock batch?',
                 confirmButtonText : 'Delete',
-                validationMessage : 'Please select the batch tracking you want to delete',
-                table : '#batch-tracking-table'
+                validationMessage : 'Please select the stock batch you want to delete',
+                table : '#stock-batch-table'
             },
             {
                 trigger : '#approve-data',
-                url : '/batch-tracking/approve-multiple',
-                swalTitle : 'Confirm Multiple Batch Tracking Approval',
-                swalText : 'Are you sure you want to approve these batch tracking?',
+                url : '/stock-batch/approve-multiple',
+                swalTitle : 'Confirm Multiple Stock Batch Approval',
+                swalText : 'Are you sure you want to approve these stock batch?',
                 confirmButtonText : 'Approve',
-                validationMessage : 'Please select the batch tracking you want to approve',
-                table : '#batch-tracking-table'
+                validationMessage : 'Please select the stock batch you want to approve',
+                table : '#stock-batch-table'
             },
         ],
         dropdown: [
-            { url: '/products/generate-product-batch-tracking-options', dropdownSelector: '#filter_by_product', data: { multiple : true } },
+            { url: '/products/generate-product-stock-batch-options', dropdownSelector: '#filter_by_product', data: { multiple : true } },
             { url: '/warehouse/generate-options', dropdownSelector: '#filter_by_warehouse', data: { multiple : true } },
         ],
         datepickers: [

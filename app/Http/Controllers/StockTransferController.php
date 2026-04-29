@@ -18,10 +18,10 @@ class StockTransferController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'stock_transfer_id' => ['nullable', 'integer'],
-            'stock_level_id' => ['required', 'integer'],
-            'transfer_type' => ['required', 'string'],
+            'stock_level_from_id' => ['required', 'integer', Rule::exists('stock_level', 'id')],
+            'stock_level_to_id' => ['required', 'integer', Rule::exists('stock_level', 'id')],
             'quantity' => ['required', 'numeric'],
-            'stock_transfer_reason_id' => ['required', 'integer'],
+            'stock_transfer_reason_id' => ['required', 'integer', Rule::exists('stock_transfer_reason', 'id')],
             'remarks' => ['nullable', 'string'],
         ]);
 
@@ -38,15 +38,49 @@ class StockTransferController extends Controller
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
 
         $stockTransferReasonId = (int) $validated['stock_transfer_reason_id'];
+        $stockLevelFromId = (int) $validated['stock_level_from_id'];
+        $stockLevelToId = (int) $validated['stock_level_to_id'];
+        $transferQuantity = (float) $validated['quantity'];
+
+        if ($stockLevelFromId === $stockLevelToId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The "From" and "To" stock levels cannot be the same',
+            ]);
+        }
+
+        $stockFrom = StockLevel::find($stockLevelFromId);
+        $stockTo = StockLevel::find($stockLevelToId);
+
+        if (!$stockFrom || !$stockTo) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid stock level selected.',
+            ]);
+        }
+
+        if ($stockFrom->product_id !== $stockTo->product_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Stock From and Stock To must have the same product.',
+            ]);
+        }
+
+        if ($transferQuantity > $stockFrom->quantity) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Transfer quantity cannot exceed available stock.',
+            ]);
+        }
 
         $stockTransferReasonName = (string) StockTransferReason::query()
             ->whereKey($stockTransferReasonId)
             ->value('stock_transfer_reason_name');
 
         $payload = [
-            'stock_level_id' => $validated['stock_level_id'],
-            'transfer_type' => $validated['transfer_type'],
-            'quantity' => $validated['quantity'],
+            'stock_level_from_id' => $stockLevelFromId,
+            'stock_level_to_id' => $stockLevelToId,
+            'quantity' => $transferQuantity,
             'stock_transfer_reason_id' => $stockTransferReasonId,
             'stock_transfer_reason_name' => $stockTransferReasonName,
             'remarks' => $validated['remarks'],
@@ -533,34 +567,30 @@ class StockTransferController extends Controller
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
 
-        $filterByStockLevel = $request->input('filter_by_stock_level');
-        $filterByTransferType = $request->input('filter_by_transfer_type');
         $filterByStatus = $request->input('filter_by_status');
 
         $stockTransfers = DB::table('stock_transfer')
-            ->when(!empty($filterByStockLevel), fn($q) =>
-                $q->whereIn('stock_level_id', (array) $filterByStockLevel)
-            )
-            ->when(!empty($filterByTransferType), fn($q) =>
-                $q->whereIn('transfer_type', (array) $filterByTransferType)
-            )
             ->when(!empty($filterByStatus), fn($q) =>
                 $q->whereIn('stock_transfer_status', (array) $filterByStatus)
             )
-            ->orderBy('stock_level_id')
+            ->orderBy('stock_level_from_id')
             ->get();
 
         $response = $stockTransfers->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
             $stockTransferId = $row->id;
-            $stockLevelId = $row->stock_level_id;
-            $transferType = $row->transfer_type;
+            $stockLevelFromId = $row->stock_level_from_id;
+            $stockLevelToId = $row->stock_level_to_id;
             $stockTransferStatus = $row->stock_transfer_status;
             $quantity = $row->quantity;
             $stockTransferReasonName = $row->stock_transfer_reason_name;
             $remarks = $row->remarks;
 
-            $stockLevelDetails = StockLevel::query()
-                ->where('id', $stockLevelId)
+            $stockLevelFromDetails = StockLevel::query()
+                ->where('id', $stockLevelFromId)
+                ->first();
+
+            $stockLevelToDetails = StockLevel::query()
+                ->where('id', $stockLevelToId)
                 ->first();
 
             $statusClass = match ($stockTransferStatus) {
@@ -585,19 +615,27 @@ class StockTransferController extends Controller
                         <input class="form-check-input datatable-checkbox-children" type="checkbox" value="'.$stockTransferId.'">
                     </div>
                 ',
-                'STOCK_LEVEL' => '<div class="d-flex align-items-center">
+                'STOCK_LEVEL_FROM' => '<div class="d-flex align-items-center">
                         <div class="ms-3">
                             <div class="user-meta-info">
-                                <h6 class="mb-0">'.$stockLevelDetails->product_name.'</h6>
-                                <small class="text-wrap fs-7 text-gray-500">'.$stockLevelDetails->warehouse_name.'</small>
+                                <h6 class="mb-0">'.$stockLevelFromDetails->product_name.'</h6>
+                                <small class="text-wrap fs-7 text-gray-500">'.$stockLevelFromDetails->warehouse_name.'</small><br/>
+                                <small class="text-wrap fs-7 text-gray-500">'.number_format($stockLevelFromDetails->quantity ?? 0, 2).'</small><br/>
                             </div>
                         </div>
                     </div>',
-                'ADJUSTMENT_TYPE' => $transferType,
-                'CURRENT_QUANTITY' => number_format($stockLevelDetails->quantity ?? 0, 2),
+                'STOCK_LEVEL_TO' => '<div class="d-flex align-items-center">
+                        <div class="ms-3">
+                            <div class="user-meta-info">
+                                <h6 class="mb-0">'.$stockLevelToDetails->product_name.'</h6>
+                                <small class="text-wrap fs-7 text-gray-500">'.$stockLevelToDetails->warehouse_name.'</small><br/>
+                                <small class="text-wrap fs-7 text-gray-500">'.number_format($stockLevelToDetails->quantity ?? 0, 2).'</small><br/>
+                            </div>
+                        </div>
+                    </div>',
                 'QUANTITY' => number_format($quantity, 2),
                 'STATUS' => $statusBadge,
-                'ADJUSTMENT_REASON' => $stockTransferReasonName,
+                'TRANSFER_REASON' => $stockTransferReasonName,
                 'REMARKS' => $remarks,
                 'LINK' => $link,
             ];

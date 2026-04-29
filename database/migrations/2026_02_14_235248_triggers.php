@@ -1422,8 +1422,8 @@ return new class extends Migration
                     SET audit_log = CONCAT(audit_log, "Is Add On: ", OLD.is_addon, " -> ", NEW.is_addon, "<br/>");
                 END IF;
 
-                IF NEW.batch_tracking <> OLD.batch_tracking THEN
-                    SET audit_log = CONCAT(audit_log, "Batch Tracking: ", OLD.batch_tracking, " -> ", NEW.batch_tracking, "<br/>");
+                IF NEW.stock_batch <> OLD.stock_batch THEN
+                    SET audit_log = CONCAT(audit_log, "Batch Tracking: ", OLD.stock_batch, " -> ", NEW.stock_batch, "<br/>");
                 END IF;
 
                 IF NEW.expiration_tracking <> OLD.expiration_tracking THEN
@@ -1531,18 +1531,18 @@ return new class extends Migration
         SQL);
 
         /* =============================================================================================
-            TABLE: BATCH TRACKING
+            TABLE: STOCK BATCH
         ============================================================================================= */
 
-        DB::unprepared('DROP TRIGGER IF EXISTS trg_batch_tracking_update');
-        DB::unprepared('DROP TRIGGER IF EXISTS trg_batch_tracking_insert');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_batch_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_batch_insert');
 
         DB::unprepared(<<<SQL
-            CREATE TRIGGER trg_batch_tracking_update
-            AFTER UPDATE ON batch_tracking
+            CREATE TRIGGER trg_stock_batch_update
+            AFTER UPDATE ON stock_batch
             FOR EACH ROW
             BEGIN
-                DECLARE audit_log TEXT DEFAULT 'Batch tracking changed.<br/><br/>';
+                DECLARE audit_log TEXT DEFAULT 'Stock batch changed.<br/><br/>';
 
                 IF NEW.product_name <> OLD.product_name THEN
                     SET audit_log = CONCAT(audit_log, "Product: ", OLD.product_name, " -> ", NEW.product_name, "<br/>");
@@ -1596,22 +1596,22 @@ return new class extends Migration
                     SET audit_log = CONCAT(audit_log, "Set to Draft Date: ", OLD.set_to_draft_date, " -> ", NEW.set_to_draft_date, "<br/>");
                 END IF;
                 
-                IF audit_log <> 'Batch tracking changed.<br/><br/>' THEN
+                IF audit_log <> 'Stock batch changed.<br/><br/>' THEN
                     INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
-                    VALUES ('batch_tracking', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                    VALUES ('stock_batch', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
                 END IF;
             END
         SQL);
 
         DB::unprepared(<<<SQL
-            CREATE TRIGGER trg_batch_tracking_insert
-            AFTER INSERT ON batch_tracking
+            CREATE TRIGGER trg_stock_batch_insert
+            AFTER INSERT ON stock_batch
             FOR EACH ROW
             BEGIN
-                DECLARE audit_log TEXT DEFAULT 'Batch tracking created.';
+                DECLARE audit_log TEXT DEFAULT 'Stock batch created.';
 
                 INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
-                VALUES ('batch_tracking', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                VALUES ('stock_batch', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
             END
         SQL);
 
@@ -2157,8 +2157,8 @@ return new class extends Migration
             TABLE: BATCH TRACKING
         ============================================================================================= */
 
-        DB::unprepared('DROP TRIGGER IF EXISTS trg_batch_tracking_update');
-        DB::unprepared('DROP TRIGGER IF EXISTS trg_batch_tracking_insert');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_batch_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_batch_insert');
 
         /* =============================================================================================
             TABLE: STOCK ADJUSTMENT
