@@ -911,12 +911,6 @@ return new class extends Migration
         Schema::create('stock_batch', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('product_id')
-            ->constrained('product')
-            ->cascadeOnDelete();
-
-            $table->string('product_name');
-
             $table->foreignId('warehouse_id')
             ->nullable()
             ->constrained('warehouse')
@@ -928,13 +922,7 @@ return new class extends Migration
             $table->enum('batch_status', ['Draft', 'For Approval', 'Approved', 'Cancelled'])
             ->default('Draft');
 
-            $table->double('quantity')
-            ->default(0);
-
             $table->string('batch_number');
-
-            $table->double('cost_per_unit')
-            ->default(0);
 
             $table->string('remarks')
             ->nullable();
@@ -998,10 +986,10 @@ return new class extends Migration
             $table->double('quantity')
             ->default(0);
 
-            $table->foreignId('stock_batch_id')
-            ->nullable()
-            ->constrained('stock_batch')
-            ->nullOnDelete();
+            $table->enum('reference_type', ['Stock Batch', 'Purchase Order'])
+            ->nullable();
+
+            $table->string('reference_number');
 
             $table->date('expiration_date')
             ->nullable();

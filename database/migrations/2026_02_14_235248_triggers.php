@@ -1498,7 +1498,15 @@ return new class extends Migration
                 IF NEW.quantity <> OLD.quantity THEN
                     SET audit_log = CONCAT(audit_log, "Quantity: ", OLD.quantity, " -> ", NEW.quantity, "<br/>");
                 END IF;
-                
+
+                IF NEW.reference_type <> OLD.reference_type THEN
+                    SET audit_log = CONCAT(audit_log, "Reference Type: ", OLD.reference_type, " -> ", NEW.reference_type, "<br/>");
+                END IF;
+
+                IF NEW.reference_number <> OLD.reference_number THEN
+                    SET audit_log = CONCAT(audit_log, "Reference Number: ", OLD.reference_number, " -> ", NEW.reference_number, "<br/>");
+                END IF;
+
                 IF NEW.expiration_date <> OLD.expiration_date THEN
                     SET audit_log = CONCAT(audit_log, "Expiration Date: ", OLD.expiration_date, " -> ", NEW.expiration_date, "<br/>");
                 END IF;
