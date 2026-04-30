@@ -27,7 +27,7 @@ return new class extends Migration
 
             $table->timestamps();
 
-            $table->index(['reference_id', 'table_name'], 'audit_log_idx');
+            $table->index(['reference_id', 'table_name']);
         });
         
         /* =============================================================================================
@@ -871,8 +871,8 @@ return new class extends Migration
             $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
             $table->timestamps();
 
-            $table->index(['product_id'], 'product_bom_product_id_idx');
-            $table->index(['bom_product_id'], 'product_bom_bom_product_id_idx');
+            $table->index(['product_id']);
+            $table->index(['bom_product_id']);
         });
 
         /* =============================================================================================
@@ -900,63 +900,43 @@ return new class extends Migration
             $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
             $table->timestamps();
 
-            $table->index(['product_id'], 'product_addon_product_id_idx');
-            $table->index(['addon_product_id'], 'product_addon_addon_product_id_idx');
+            $table->index(['product_id']);
+            $table->index(['addon_product_id']);
         });
 
         /* =============================================================================================
-            TABLE: Stock Batch
+            TABLE: Stock Level
         ============================================================================================= */
 
-        Schema::create('stock_batch', function (Blueprint $table) {
+        Schema::create('inventory_lot', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('warehouse_id')
-            ->nullable()
-            ->constrained('warehouse')
-            ->nullOnDelete();
+            $table->foreignId('product_id')
+                ->constrained('product')
+                ->cascadeOnDelete();
+                        
+            $table->string('product_name');
 
-            $table->string('warehouse_name')
-            ->nullable();
+            $table->string('batch_number')
+                ->nullable();
 
-            $table->enum('batch_status', ['Draft', 'For Approval', 'Approved', 'Cancelled'])
-            ->default('Draft');
-
-            $table->string('batch_number');
-
-            $table->string('remarks')
-            ->nullable();
+            $table->decimal('cost_per_unit', 10, 2)
+                ->default(0);
 
             $table->date('expiration_date')
-            ->nullable();
+                ->nullable();
 
-            $table->date('received_date')
-            ->nullable();
+            $table->date('received_date');
 
-            $table->date('for_approval_date')
-            ->nullable();
-
-            $table->date('approved_date')
-            ->nullable();
-
-            $table->date('cancellation_date')
-            ->nullable();
-
-            $table->date('set_to_draft_date')
-            ->nullable();
-            
             $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
             $table->timestamps();
 
-            $table->index(['product_id'], 'stock_batch_product_id_idx');
-            $table->index(['warehouse_id'], 'stock_batch_warehouse_id_idx');
-            $table->index(['expiration_date'], 'stock_batch_expiration_date_idx');
-            $table->index(['received_date'], 'stock_batch_received_date_idx');
-            $table->index(['for_approval_date'], 'stock_batch_for_approval_date_idx');
-            $table->index(['approved_date'], 'stock_batch_approved_date_idx');
-            $table->index(['cancellation_date'], 'stock_batch_cancellation_date_idx');
-            $table->index(['set_to_draft_date'], 'stock_batch_set_to_draft_date_idx');
-            $table->index(['batch_number'], 'stock_batch_batch_number_idx');
+            $table->unique([
+                'product_id',
+                'batch_number',
+                'cost_per_unit',
+                'expiration_date'
+            ], 'inventory_lot_unique');
         });
 
         /* =============================================================================================
@@ -967,79 +947,68 @@ return new class extends Migration
             $table->id();
 
             $table->foreignId('product_id')
-            ->constrained('product')
-            ->cascadeOnDelete();
+                ->constrained('product')
+                ->cascadeOnDelete();
 
             $table->string('product_name');
 
             $table->foreignId('warehouse_id')
-            ->nullable()
-            ->constrained('warehouse')
-            ->nullOnDelete();
+                ->nullable()
+                ->constrained('warehouse')
+                ->nullOnDelete();
 
             $table->string('warehouse_name')
             ->nullable();
 
+            $table->foreignId('inventory_lot_id')
+            ->constrained('inventory_lot')
+            ->cascadeOnDelete();
+
             $table->enum('stock_status', ['In Stock', 'Low Stock', 'Out of Stock'])
             ->default('In Stock');
 
-            $table->double('quantity')
-            ->default(0);
-
-            $table->enum('reference_type', ['Stock Batch', 'Purchase Order'])
-            ->nullable();
-
-            $table->string('reference_number');
-
-            $table->date('expiration_date')
-            ->nullable();
-
-            $table->date('received_date')
-            ->nullable();
-
-            $table->double('cost_per_unit')
+            $table->decimal('quantity', 10, 2)
             ->default(0);
 
             $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
             $table->timestamps();
 
+            $table->unique([
+                'warehouse_id',
+                'inventory_lot_id'
+            ], 'stock_level_unique');
+
             $table->index(['product_id'], 'stock_level_product_id_idx');
             $table->index(['warehouse_id'], 'stock_level_warehouse_id_idx');
             $table->index(['stock_status'], 'stock_level_stock_status_idx');
-            $table->index(['expiration_date'], 'stock_level_expiration_date_idx');
-            $table->index(['received_date'], 'stock_level_received_date_idx');
-            $table->index(['stock_batch_id'], 'stock_level_stock_batch_id_idx');
+            $table->index(['inventory_lot_id'], 'stock_level_inventory_lot_id_idx');
         });
 
         /* =============================================================================================
-            TABLE: Stock Adjustment
+            TABLE: Stock Batch
         ============================================================================================= */
 
-        Schema::create('stock_adjustment', function (Blueprint $table) {
+        Schema::create('stock_batch', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('stock_level_id')
-            ->constrained('stock_level')
-            ->cascadeOnDelete();
+            $table->string('reference_number')
+                ->unique(); 
 
-            $table->enum('adjustment_type', ['Add Stock', 'Remove Stock', 'Set Exact Stock']);
+            $table->foreignId('warehouse_id')
+                ->constrained('warehouse')
+                ->cascadeOnDelete();
 
-            $table->enum('stock_adjustment_status', ['Draft', 'For Approval', 'Approved', 'Cancelled'])
-            ->default('Draft');
+            $table->string('warehouse_name')
+                ->nullable();
 
-            $table->double('quantity')
-            ->default(0);
+            $table->enum('stock_batch_status', [
+                'Draft',
+                'For Approval',
+                'Approved',
+                'Cancelled'
+            ])->default('Draft');
 
-            $table->foreignId('stock_adjustment_reason_id')
-            ->nullable()
-            ->constrained('stock_adjustment_reason')
-            ->nullOnDelete();
-            
-            $table->string('stock_adjustment_reason_name')
-            ->nullable();
-
-            $table->string('remarks')
-            ->nullable();
+            $table->text('remarks')->nullable();
 
             $table->date('for_approval_date')
             ->nullable();
@@ -1056,14 +1025,145 @@ return new class extends Migration
             $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
             $table->timestamps();
 
-            $table->index(['stock_level_id'], 'stock_adjustment_stock_level_id_idx');
+            $table->index(['reference_number']);
+            $table->index(['warehouse_id']);
+            $table->index(['stock_batch_status']);
+            $table->index(['for_approval_date']);
+            $table->index(['approved_date']);
+            $table->index(['cancellation_date']);
+            $table->index(['set_to_draft_date']);
+        });
+        /* =============================================================================================
+            TABLE: Stock Batch Items
+        ============================================================================================= */
+
+        Schema::create('stock_batch_items', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('stock_batch_id')
+                ->constrained('stock_batch')
+                ->cascadeOnDelete();
+
+            $table->foreignId('product_id')
+                ->constrained('product')
+                ->cascadeOnDelete();
+
+            $table->string('product_name');
+
+            $table->string('batch_number')->nullable();
+
+            $table->decimal('cost_per_unit', 10, 2)->default(0);
+
+            $table->date('expiration_date')
+            ->nullable();
+
+            $table->date('received_date');
+
+            $table->decimal('quantity', 10, 2);
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+
+            $table->index(['stock_batch_id']);
+            $table->index(['product_id']);
+            $table->index(['batch_number']);
+            $table->index(['expiration_date']);
+            $table->index(['received_date']);
+        });
+
+        /* =============================================================================================
+            TABLE: Stock Adjustment
+        ============================================================================================= */
+
+        Schema::create('stock_adjustment', function (Blueprint $table) {
+            $table->id();
+
+            $table->string('reference_number')
+            ->unique();
+
+            $table->enum('stock_adjustment_status', [
+                'Draft',
+                'For Approval',
+                'Approved',
+                'Cancelled'
+            ])->default('Draft');
+
+            $table->foreignId('stock_adjustment_reason_id')
+                ->nullable()
+                ->constrained('stock_adjustment_reason')
+                ->nullOnDelete();
+
+            $table->string('stock_adjustment_reason_name')->nullable();
+
+            $table->text('remarks')->nullable();
+
+            $table->date('for_approval_date')
+            ->nullable();
+
+            $table->date('approved_date')
+            ->nullable();
+
+            $table->date('cancellation_date')
+            ->nullable();
+
+            $table->date('set_to_draft_date')
+            ->nullable();
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+
             $table->index(['stock_adjustment_status'], 'stock_adjustment_stock_adjustment_status_idx');
-            $table->index(['adjustment_type'], 'stock_adjustment_adjustment_type_idx');
             $table->index(['stock_adjustment_reason_id'], 'stock_adjustment_stock_adjustment_reason_id_idx');
             $table->index(['for_approval_date'], 'stock_adjustment_for_approval_date_idx');
             $table->index(['approved_date'], 'stock_adjustment_approved_date_idx');
             $table->index(['cancellation_date'], 'stock_adjustment_cancellation_date_idx');
             $table->index(['set_to_draft_date'], 'stock_adjustment_set_to_draft_date_idx');
+        });
+
+        /* =============================================================================================
+            TABLE: Stock Adjustment
+        ============================================================================================= */
+
+        Schema::create('stock_adjustment_items', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('stock_adjustment_id')
+                ->constrained('stock_adjustment')
+                ->cascadeOnDelete();
+
+            $table->foreignId('product_id')
+                ->constrained('product')
+                ->cascadeOnDelete();
+
+            $table->string('product_name');
+
+            $table->foreignId('warehouse_id')
+                ->constrained('warehouse')
+                ->cascadeOnDelete();
+
+            $table->string('warehouse_name');
+
+            $table->foreignId('inventory_lot_id')
+                ->nullable()
+                ->constrained('inventory_lot')
+                ->nullOnDelete();
+
+            $table->enum('adjustment_type', [
+                'Add Stock',
+                'Remove Stock',
+                'Set Exact Stock'
+            ]);
+
+            $table->decimal('current_quantity', 10, 2)->nullable();
+            $table->decimal('new_quantity', 10, 2)->nullable();
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+
+            $table->index(['stock_adjustment_id']);
+            $table->index(['product_id', 'warehouse_id']);
+            $table->index(['inventory_lot_id']);
+            $table->index(['adjustment_type']);
         });
 
         /* =============================================================================================
@@ -1073,19 +1173,22 @@ return new class extends Migration
         Schema::create('stock_transfer', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('stock_level_from_id')
-            ->constrained('stock_level')
-            ->cascadeOnDelete();
+            $table->string('reference_number')->unique();
 
-            $table->foreignId('stock_level_to_id')
-            ->constrained('stock_level')
-            ->cascadeOnDelete();
+            $table->foreignId('from_warehouse_id')
+                ->constrained('warehouse')
+                ->cascadeOnDelete();
+
+            $table->string('from_warehouse_name');
+
+            $table->foreignId('to_warehouse_id')
+                ->constrained('warehouse')
+                ->cascadeOnDelete();
+
+            $table->string('to_warehouse_name');
 
             $table->enum('stock_transfer_status', ['Draft', 'For Approval', 'Approved', 'Cancelled'])
             ->default('Draft');
-
-            $table->double('quantity')
-            ->default(0);
 
             $table->foreignId('stock_transfer_reason_id')
             ->nullable()
@@ -1113,8 +1216,6 @@ return new class extends Migration
             $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
             $table->timestamps();
 
-            $table->index(['stock_level_from_id'], 'stock_transfer_stock_level_from_id_idx');
-            $table->index(['stock_level_to_id'], 'stock_transfer_stock_level_to_id_idx');
             $table->index(['stock_transfer_status'], 'stock_transfer_stock_transfer_status_idx');
             $table->index(['stock_transfer_reason_id'], 'stock_transfer_stock_transfer_reason_id_idx');
             $table->index(['for_approval_date'], 'stock_transfer_for_approval_date_idx');
@@ -1124,33 +1225,85 @@ return new class extends Migration
         });
 
         /* =============================================================================================
+            TABLE: Stock Transfer Items
+        ============================================================================================= */
+
+        Schema::create('stock_transfer_items', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('stock_transfer_id')
+                ->constrained('stock_transfer')
+                ->cascadeOnDelete();
+
+            $table->foreignId('product_id')
+                ->constrained('product')
+                ->cascadeOnDelete();
+
+            $table->string('product_name');
+
+            $table->foreignId('inventory_lot_id')
+                ->constrained('inventory_lot')
+                ->cascadeOnDelete();
+
+            $table->decimal('quantity', 10, 2);
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+
+            $table->index(['stock_transfer_id']);
+            $table->index(['product_id']);
+            $table->index(['inventory_lot_id']);
+        });
+
+        /* =============================================================================================
             TABLE: Stock Movement
         ============================================================================================= */
 
         Schema::create('stock_movement', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('stock_level_id')
-            ->constrained('stock_level')
-            ->cascadeOnDelete();
+            $table->foreignId('product_id')
+                ->constrained('product')
+                ->cascadeOnDelete();
 
-            $table->enum('movement_type', ['In', 'Out', 'Transfer In', 'Transfer Out', 'Adjustment', 'Return', 'Loan Issue', 'Loan Return']);
+            $table->string('product_name');
 
-            $table->double('quantity')
-            ->default(0);
+            $table->foreignId('warehouse_id')
+                ->constrained('warehouse')
+                ->cascadeOnDelete();
+                
+            $table->string('warehouse_name');
 
-            $table->enum('reference_type', ['Purchase Order', 'Batch Tracking', 'Stock Adjustment', 'POS Sale', 'Transfer Ticket', 'Inventory Audit', 'Borrow Agreement']);
-            $table->string('reference_id');
+            $table->foreignId('inventory_lot_id')
+                ->nullable()
+                ->constrained('inventory_lot')
+                ->nullOnDelete();
 
-            $table->string('remarks');
+            $table->enum('movement_type', [
+                'IN',
+                'OUT',
+                'TRANSFER_IN',
+                'TRANSFER_OUT',
+                'ADJUSTMENT',
+                'SALE',
+                'RETURN'
+            ]);
+
+            $table->decimal('quantity', 10, 2);
+
+            $table->string('reference_type');
+            $table->string('reference_number');
+
+            $table->text('remarks')->nullable();
 
             $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+
             $table->timestamps();
 
-            $table->index(['stock_level_id'], 'stock_movement_stock_level_id_idx');
-            $table->index(['movement_type'], 'stock_movement_movement_type_idx');
-            $table->index(['reference_type'], 'stock_movement_reference_type_idx');
-            $table->index(['reference_id'], 'stock_movement_reference_id_idx');
+            $table->index(['product_id', 'warehouse_id']);
+            $table->index(['inventory_lot_id']);
+            $table->index(['movement_type']);
+            $table->index(['reference_type', 'reference_number']);
         });
 
         /* =============================================================================================
@@ -1199,10 +1352,14 @@ return new class extends Migration
         Schema::dropIfExists('product_category');
         Schema::dropIfExists('stock_adjustment_reason');
         Schema::dropIfExists('stock_transfer_reason');
+        Schema::dropIfExists('inventory_lot');
         Schema::dropIfExists('stock_level');
         Schema::dropIfExists('stock_batch');
+        Schema::dropIfExists('stock_batch_items');
         Schema::dropIfExists('stock_adjustment');
+        Schema::dropIfExists('stock_adjustment_items');
         Schema::dropIfExists('stock_transfer');
+        Schema::dropIfExists('stock_transfer_items');
         Schema::dropIfExists('stock_movement');
         Schema::dropIfExists('nationality');
         Schema::dropIfExists('currency');

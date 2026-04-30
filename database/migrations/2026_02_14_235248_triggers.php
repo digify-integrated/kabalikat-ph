@@ -1422,8 +1422,8 @@ return new class extends Migration
                     SET audit_log = CONCAT(audit_log, "Is Add On: ", OLD.is_addon, " -> ", NEW.is_addon, "<br/>");
                 END IF;
 
-                IF NEW.stock_batch <> OLD.stock_batch THEN
-                    SET audit_log = CONCAT(audit_log, "Batch Tracking: ", OLD.stock_batch, " -> ", NEW.stock_batch, "<br/>");
+                IF NEW.batch_tracking <> OLD.batch_tracking THEN
+                    SET audit_log = CONCAT(audit_log, "Batch Tracking: ", OLD.batch_tracking, " -> ", NEW.batch_tracking, "<br/>");
                 END IF;
 
                 IF NEW.expiration_tracking <> OLD.expiration_tracking THEN
@@ -1466,306 +1466,6 @@ return new class extends Migration
 
                 INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
                 VALUES ('product', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
-            END
-        SQL);
-
-        /* =============================================================================================
-            TABLE: STOCK LEVEL
-        ============================================================================================= */
-
-        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_level_update');
-        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_level_insert');
-
-        DB::unprepared(<<<SQL
-            CREATE TRIGGER trg_stock_level_update
-            AFTER UPDATE ON stock_level
-            FOR EACH ROW
-            BEGIN
-                DECLARE audit_log TEXT DEFAULT 'Stock level changed.<br/><br/>';
-
-                IF NEW.product_name <> OLD.product_name THEN
-                    SET audit_log = CONCAT(audit_log, "Product: ", OLD.product_name, " -> ", NEW.product_name, "<br/>");
-                END IF;
-
-                IF NEW.warehouse_name <> OLD.warehouse_name THEN
-                    SET audit_log = CONCAT(audit_log, "Warehouse: ", OLD.warehouse_name, " -> ", NEW.warehouse_name, "<br/>");
-                END IF;
-
-                IF NEW.stock_status <> OLD.stock_status THEN
-                    SET audit_log = CONCAT(audit_log, "Stock Status: ", OLD.stock_status, " -> ", NEW.stock_status, "<br/>");
-                END IF;
-
-                IF NEW.quantity <> OLD.quantity THEN
-                    SET audit_log = CONCAT(audit_log, "Quantity: ", OLD.quantity, " -> ", NEW.quantity, "<br/>");
-                END IF;
-
-                IF NEW.reference_type <> OLD.reference_type THEN
-                    SET audit_log = CONCAT(audit_log, "Reference Type: ", OLD.reference_type, " -> ", NEW.reference_type, "<br/>");
-                END IF;
-
-                IF NEW.reference_number <> OLD.reference_number THEN
-                    SET audit_log = CONCAT(audit_log, "Reference Number: ", OLD.reference_number, " -> ", NEW.reference_number, "<br/>");
-                END IF;
-
-                IF NEW.expiration_date <> OLD.expiration_date THEN
-                    SET audit_log = CONCAT(audit_log, "Expiration Date: ", OLD.expiration_date, " -> ", NEW.expiration_date, "<br/>");
-                END IF;
-                
-                IF NEW.received_date <> OLD.received_date THEN
-                    SET audit_log = CONCAT(audit_log, "Received Date: ", OLD.received_date, " -> ", NEW.received_date, "<br/>");
-                END IF;
-                
-                IF NEW.cost_per_unit <> OLD.cost_per_unit THEN
-                    SET audit_log = CONCAT(audit_log, "Cost Per Unit: ", OLD.cost_per_unit, " -> ", NEW.cost_per_unit, "<br/>");
-                END IF;
-                
-                IF audit_log <> 'Stock level changed.<br/><br/>' THEN
-                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
-                    VALUES ('stock_level', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
-                END IF;
-            END
-        SQL);
-
-        DB::unprepared(<<<SQL
-            CREATE TRIGGER trg_stock_level_insert
-            AFTER INSERT ON stock_level
-            FOR EACH ROW
-            BEGIN
-                DECLARE audit_log TEXT DEFAULT 'Stock level created.';
-
-                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
-                VALUES ('stock_level', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
-            END
-        SQL);
-
-        /* =============================================================================================
-            TABLE: STOCK BATCH
-        ============================================================================================= */
-
-        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_batch_update');
-        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_batch_insert');
-
-        DB::unprepared(<<<SQL
-            CREATE TRIGGER trg_stock_batch_update
-            AFTER UPDATE ON stock_batch
-            FOR EACH ROW
-            BEGIN
-                DECLARE audit_log TEXT DEFAULT 'Stock batch changed.<br/><br/>';
-
-                IF NEW.product_name <> OLD.product_name THEN
-                    SET audit_log = CONCAT(audit_log, "Product: ", OLD.product_name, " -> ", NEW.product_name, "<br/>");
-                END IF;
-
-                IF NEW.warehouse_name <> OLD.warehouse_name THEN
-                    SET audit_log = CONCAT(audit_log, "Warehouse: ", OLD.warehouse_name, " -> ", NEW.warehouse_name, "<br/>");
-                END IF;
-
-                IF NEW.batch_status <> OLD.batch_status THEN
-                    SET audit_log = CONCAT(audit_log, "Batch Status: ", OLD.batch_status, " -> ", NEW.batch_status, "<br/>");
-                END IF;
-
-                IF NEW.quantity <> OLD.quantity THEN
-                    SET audit_log = CONCAT(audit_log, "Quantity: ", OLD.quantity, " -> ", NEW.quantity, "<br/>");
-                END IF;
-
-                IF NEW.batch_number <> OLD.batch_number THEN
-                    SET audit_log = CONCAT(audit_log, "Batch Number: ", OLD.batch_number, " -> ", NEW.batch_number, "<br/>");
-                END IF;
-
-                IF NEW.cost_per_unit <> OLD.cost_per_unit THEN
-                    SET audit_log = CONCAT(audit_log, "Cost Per Unit: ", OLD.cost_per_unit, " -> ", NEW.cost_per_unit, "<br/>");
-                END IF;
-                
-                IF NEW.remarks <> OLD.remarks THEN
-                    SET audit_log = CONCAT(audit_log, "Remarks: ", OLD.remarks, " -> ", NEW.remarks, "<br/>");
-                END IF;
-                
-                IF NEW.expiration_date <> OLD.expiration_date THEN
-                    SET audit_log = CONCAT(audit_log, "Expiration Date: ", OLD.expiration_date, " -> ", NEW.expiration_date, "<br/>");
-                END IF;
-                
-                IF NEW.received_date <> OLD.received_date THEN
-                    SET audit_log = CONCAT(audit_log, "Received Date: ", OLD.received_date, " -> ", NEW.received_date, "<br/>");
-                END IF;
-                
-                IF NEW.for_approval_date <> OLD.for_approval_date THEN
-                    SET audit_log = CONCAT(audit_log, "For Approval Date: ", OLD.for_approval_date, " -> ", NEW.for_approval_date, "<br/>");
-                END IF;
-                
-                IF NEW.approved_date <> OLD.approved_date THEN
-                    SET audit_log = CONCAT(audit_log, "Approved Date: ", OLD.approved_date, " -> ", NEW.approved_date, "<br/>");
-                END IF;
-
-                IF NEW.cancellation_date <> OLD.cancellation_date THEN
-                    SET audit_log = CONCAT(audit_log, "Cancellation Date: ", OLD.cancellation_date, " -> ", NEW.cancellation_date, "<br/>");
-                END IF;
-
-                IF NEW.set_to_draft_date <> OLD.set_to_draft_date THEN
-                    SET audit_log = CONCAT(audit_log, "Set to Draft Date: ", OLD.set_to_draft_date, " -> ", NEW.set_to_draft_date, "<br/>");
-                END IF;
-                
-                IF audit_log <> 'Stock batch changed.<br/><br/>' THEN
-                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
-                    VALUES ('stock_batch', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
-                END IF;
-            END
-        SQL);
-
-        DB::unprepared(<<<SQL
-            CREATE TRIGGER trg_stock_batch_insert
-            AFTER INSERT ON stock_batch
-            FOR EACH ROW
-            BEGIN
-                DECLARE audit_log TEXT DEFAULT 'Stock batch created.';
-
-                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
-                VALUES ('stock_batch', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
-            END
-        SQL);
-
-        /* =============================================================================================
-            TABLE: STOCK ADJUSTMENT
-        ============================================================================================= */
-
-        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_adjustment_update');
-        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_adjustment_insert');
-
-        DB::unprepared(<<<SQL
-            CREATE TRIGGER trg_stock_adjustment_update
-            AFTER UPDATE ON stock_adjustment
-            FOR EACH ROW
-            BEGIN
-                DECLARE audit_log TEXT DEFAULT 'Stock adjustment changed.<br/><br/>';
-
-                IF NEW.adjustment_type <> OLD.adjustment_type THEN
-                    SET audit_log = CONCAT(audit_log, "Adjustment Type: ", OLD.adjustment_type, " -> ", NEW.adjustment_type, "<br/>");
-                END IF;
-
-                IF NEW.stock_adjustment_status <> OLD.stock_adjustment_status THEN
-                    SET audit_log = CONCAT(audit_log, "Stock Adjustment Status: ", OLD.stock_adjustment_status, " -> ", NEW.stock_adjustment_status, "<br/>");
-                END IF;
-
-                IF NEW.quantity <> OLD.quantity THEN
-                    SET audit_log = CONCAT(audit_log, "Quantity: ", OLD.quantity, " -> ", NEW.quantity, "<br/>");
-                END IF;
-
-                IF NEW.stock_adjustment_reason_name <> OLD.stock_adjustment_reason_name THEN
-                    SET audit_log = CONCAT(audit_log, "Stock Adjustment Reason: ", OLD.stock_adjustment_reason_name, " -> ", NEW.stock_adjustment_reason_name, "<br/>");
-                END IF;
-
-                IF NEW.remarks <> OLD.remarks THEN
-                    SET audit_log = CONCAT(audit_log, "Remarks: ", OLD.remarks, " -> ", NEW.remarks, "<br/>");
-                END IF;
-
-                IF NEW.for_approval_date <> OLD.for_approval_date THEN
-                    SET audit_log = CONCAT(audit_log, "For Approval Date: ", OLD.for_approval_date, " -> ", NEW.for_approval_date, "<br/>");
-                END IF;
-
-                IF NEW.approved_date <> OLD.approved_date THEN
-                    SET audit_log = CONCAT(audit_log, "Approved Date: ", OLD.approved_date, " -> ", NEW.approved_date, "<br/>");
-                END IF;
-
-                IF NEW.cancellation_date <> OLD.cancellation_date THEN
-                    SET audit_log = CONCAT(audit_log, "Cancellation Date: ", OLD.cancellation_date, " -> ", NEW.cancellation_date, "<br/>");
-                END IF;
-
-                IF NEW.set_to_draft_date <> OLD.set_to_draft_date THEN
-                    SET audit_log = CONCAT(audit_log, "Set to Draft Date: ", OLD.set_to_draft_date, " -> ", NEW.set_to_draft_date, "<br/>");
-                END IF;
-                
-                IF audit_log <> 'Stock adjustment changed.<br/><br/>' THEN
-                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
-                    VALUES ('stock_adjustment', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
-                END IF;
-            END
-        SQL);
-
-        DB::unprepared(<<<SQL
-            CREATE TRIGGER trg_stock_adjustment_insert
-            AFTER INSERT ON stock_adjustment
-            FOR EACH ROW
-            BEGIN
-                DECLARE audit_log TEXT DEFAULT 'Stock adjustment created.';
-
-                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
-                VALUES ('stock_adjustment', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
-            END
-        SQL);
-
-        /* =============================================================================================
-            TABLE: STOCK TRANSFER
-        ============================================================================================= */
-
-        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_transfer_update');
-        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_transfer_insert');
-
-        DB::unprepared(<<<SQL
-            CREATE TRIGGER trg_stock_transfer_update
-            AFTER UPDATE ON stock_transfer
-            FOR EACH ROW
-            BEGIN
-                DECLARE audit_log TEXT DEFAULT 'Stock transfer changed.<br/><br/>';
-
-                IF NEW.product_name <> OLD.product_name THEN
-                    SET audit_log = CONCAT(audit_log, "Product: ", OLD.product_name, " -> ", NEW.product_name, "<br/>");
-                END IF;
-
-                IF NEW.stock_level_from_id <> OLD.stock_level_from_id THEN
-                    SET audit_log = CONCAT(audit_log, "Stock Level (From): ", OLD.stock_level_from_id, " -> ", NEW.stock_level_from_id, "<br/>");
-                END IF;
-
-                IF NEW.stock_level_to_id <> OLD.stock_level_to_id THEN
-                    SET audit_log = CONCAT(audit_log, "Stock Level (To): ", OLD.stock_level_to_id, " -> ", NEW.stock_level_to_id, "<br/>");
-                END IF;
-
-                IF NEW.stock_transfer_status <> OLD.stock_transfer_status THEN
-                    SET audit_log = CONCAT(audit_log, "Stock Transfer Status: ", OLD.stock_transfer_status, " -> ", NEW.stock_transfer_status, "<br/>");
-                END IF;
-
-                IF NEW.quantity <> OLD.quantity THEN
-                    SET audit_log = CONCAT(audit_log, "Quantity: ", OLD.quantity, " -> ", NEW.quantity, "<br/>");
-                END IF;
-
-                IF NEW.stock_transfer_reason_name <> OLD.stock_transfer_reason_name THEN
-                    SET audit_log = CONCAT(audit_log, "Stock Transfer Reason: ", OLD.stock_transfer_reason_name, " -> ", NEW.stock_transfer_reason_name, "<br/>");
-                END IF;
-
-                IF NEW.remarks <> OLD.remarks THEN
-                    SET audit_log = CONCAT(audit_log, "Remarks: ", OLD.remarks, " -> ", NEW.remarks, "<br/>");
-                END IF;
-
-                IF NEW.for_approval_date <> OLD.for_approval_date THEN
-                    SET audit_log = CONCAT(audit_log, "For Approval Date: ", OLD.for_approval_date, " -> ", NEW.for_approval_date, "<br/>");
-                END IF;
-
-                IF NEW.approved_date <> OLD.approved_date THEN
-                    SET audit_log = CONCAT(audit_log, "Approved Date: ", OLD.approved_date, " -> ", NEW.approved_date, "<br/>");
-                END IF;
-
-                IF NEW.cancellation_date <> OLD.cancellation_date THEN
-                    SET audit_log = CONCAT(audit_log, "Cancellation Date: ", OLD.cancellation_date, " -> ", NEW.cancellation_date, "<br/>");
-                END IF;
-
-                IF NEW.set_to_draft_date <> OLD.set_to_draft_date THEN
-                    SET audit_log = CONCAT(audit_log, "Set to Draft Date: ", OLD.set_to_draft_date, " -> ", NEW.set_to_draft_date, "<br/>");
-                END IF;
-                
-                IF audit_log <> 'Stock transfer changed.<br/><br/>' THEN
-                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
-                    VALUES ('stock_transfer', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
-                END IF;
-            END
-        SQL);
-
-        DB::unprepared(<<<SQL
-            CREATE TRIGGER trg_stock_transfer_insert
-            AFTER INSERT ON stock_transfer
-            FOR EACH ROW
-            BEGIN
-                DECLARE audit_log TEXT DEFAULT 'Stock transfer created.';
-
-                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
-                VALUES ('stock_transfer', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
             END
         SQL);
 
@@ -1942,6 +1642,474 @@ return new class extends Migration
 
                 INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
                 VALUES ('product_addon', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
+
+        /* =============================================================================================
+            TABLE: INVENTORY LOT
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_inventory_lot_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_inventory_lot_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_inventory_lot_update
+            AFTER UPDATE ON inventory_lot
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Inventory lot changed.<br/><br/>';
+
+                IF NEW.product_name <> OLD.product_name THEN
+                    SET audit_log = CONCAT(audit_log, "Product: ", OLD.product_name, " -> ", NEW.product_name, "<br/>");
+                END IF;
+
+                IF NEW.batch_number <> OLD.batch_number THEN
+                    SET audit_log = CONCAT(audit_log, "Batch Number: ", OLD.batch_number, " -> ", NEW.batch_number, "<br/>");
+                END IF;
+
+                IF NEW.cost_per_unit <> OLD.cost_per_unit THEN
+                    SET audit_log = CONCAT(audit_log, "Cost Per Unit: ", OLD.cost_per_unit, " -> ", NEW.cost_per_unit, "<br/>");
+                END IF;
+
+                IF NEW.expiration_date <> OLD.expiration_date THEN
+                    SET audit_log = CONCAT(audit_log, "Expiration Date: ", OLD.expiration_date, " -> ", NEW.expiration_date, "<br/>");
+                END IF;
+
+                IF NEW.received_date <> OLD.received_date THEN
+                    SET audit_log = CONCAT(audit_log, "Received Date: ", OLD.received_date, " -> ", NEW.received_date, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Inventory lot changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('inventory_lot', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_inventory_lot_insert
+            AFTER INSERT ON inventory_lot
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Inventory lot created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('inventory_lot', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
+
+        /* =============================================================================================
+            TABLE: STOCK LEVEL
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_level_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_level_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_stock_level_update
+            AFTER UPDATE ON stock_level
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Stock level changed.<br/><br/>';
+
+                IF NEW.product_name <> OLD.product_name THEN
+                    SET audit_log = CONCAT(audit_log, "Product: ", OLD.product_name, " -> ", NEW.product_name, "<br/>");
+                END IF;
+
+                IF NEW.warehouse_name <> OLD.warehouse_name THEN
+                    SET audit_log = CONCAT(audit_log, "Warehouse: ", OLD.warehouse_name, " -> ", NEW.warehouse_name, "<br/>");
+                END IF;
+
+                IF NEW.inventory_lot_id <> OLD.inventory_lot_id THEN
+                    SET audit_log = CONCAT(audit_log, "Inventory Lot ID: ", OLD.inventory_lot_id, " -> ", NEW.inventory_lot_id, "<br/>");
+                END IF;
+
+                IF NEW.stock_status <> OLD.stock_status THEN
+                    SET audit_log = CONCAT(audit_log, "Stock Status: ", OLD.stock_status, " -> ", NEW.stock_status, "<br/>");
+                END IF;
+
+                IF NEW.quantity <> OLD.quantity THEN
+                    SET audit_log = CONCAT(audit_log, "Quantity: ", OLD.quantity, " -> ", NEW.quantity, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Stock level changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('stock_level', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_stock_level_insert
+            AFTER INSERT ON stock_level
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Stock level created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('stock_level', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
+
+        /* =============================================================================================
+            TABLE: STOCK BATCH
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_batch_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_batch_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_stock_batch_update
+            AFTER UPDATE ON stock_batch
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Stock batch changed.<br/><br/>';
+
+                IF NEW.reference_number <> OLD.reference_number THEN
+                    SET audit_log = CONCAT(audit_log, "Reference Number: ", OLD.reference_number, " -> ", NEW.reference_number, "<br/>");
+                END IF;
+
+                IF NEW.warehouse_name <> OLD.warehouse_name THEN
+                    SET audit_log = CONCAT(audit_log, "Warehouse: ", OLD.warehouse_name, " -> ", NEW.warehouse_name, "<br/>");
+                END IF;
+
+                IF NEW.stock_batch_status <> OLD.stock_batch_status THEN
+                    SET audit_log = CONCAT(audit_log, "Stock Batch Status: ", OLD.stock_batch_status, " -> ", NEW.stock_batch_status, "<br/>");
+                END IF;
+                
+                IF NEW.remarks <> OLD.remarks THEN
+                    SET audit_log = CONCAT(audit_log, "Remarks: ", OLD.remarks, " -> ", NEW.remarks, "<br/>");
+                END IF;
+                
+                IF NEW.for_approval_date <> OLD.for_approval_date THEN
+                    SET audit_log = CONCAT(audit_log, "For Approval Date: ", OLD.for_approval_date, " -> ", NEW.for_approval_date, "<br/>");
+                END IF;
+                
+                IF NEW.approved_date <> OLD.approved_date THEN
+                    SET audit_log = CONCAT(audit_log, "Approved Date: ", OLD.approved_date, " -> ", NEW.approved_date, "<br/>");
+                END IF;
+
+                IF NEW.cancellation_date <> OLD.cancellation_date THEN
+                    SET audit_log = CONCAT(audit_log, "Cancellation Date: ", OLD.cancellation_date, " -> ", NEW.cancellation_date, "<br/>");
+                END IF;
+
+                IF NEW.set_to_draft_date <> OLD.set_to_draft_date THEN
+                    SET audit_log = CONCAT(audit_log, "Set to Draft Date: ", OLD.set_to_draft_date, " -> ", NEW.set_to_draft_date, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Stock batch changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('stock_batch', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_stock_batch_insert
+            AFTER INSERT ON stock_batch
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Stock batch created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('stock_batch', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
+
+        /* =============================================================================================
+            TABLE: STOCK BATCH ITEM
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_batch_items_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_batch_items_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_stock_batch_items_update
+            AFTER UPDATE ON stock_batch_items
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Stock batch item changed.<br/><br/>';
+
+                IF NEW.product_name <> OLD.product_name THEN
+                    SET audit_log = CONCAT(audit_log, "Product: ", OLD.product_name, " -> ", NEW.product_name, "<br/>");
+                END IF;
+
+                IF NEW.batch_number <> OLD.batch_number THEN
+                    SET audit_log = CONCAT(audit_log, "Batch Number: ", OLD.batch_number, " -> ", NEW.batch_number, "<br/>");
+                END IF;
+
+                IF NEW.cost_per_unit <> OLD.cost_per_unit THEN
+                    SET audit_log = CONCAT(audit_log, "Cost per Unit: ", OLD.cost_per_unit, " -> ", NEW.cost_per_unit, "<br/>");
+                END IF;
+                
+                IF NEW.expiration_date <> OLD.expiration_date THEN
+                    SET audit_log = CONCAT(audit_log, "Expiration Date: ", OLD.expiration_date, " -> ", NEW.expiration_date, "<br/>");
+                END IF;
+                
+                IF NEW.received_date <> OLD.received_date THEN
+                    SET audit_log = CONCAT(audit_log, "Received Date: ", OLD.received_date, " -> ", NEW.received_date, "<br/>");
+                END IF;
+                
+                IF NEW.quantity <> OLD.quantity THEN
+                    SET audit_log = CONCAT(audit_log, "Quantity: ", OLD.quantity, " -> ", NEW.quantity, "<br/>");
+                END IF;
+
+                IF audit_log <> 'Stock batch item changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('stock_batch_items', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_stock_batch_items_insert
+            AFTER INSERT ON stock_batch_items
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Stock batch item created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('stock_batch_items', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
+
+        /* =============================================================================================
+            TABLE: STOCK ADJUSTMENT
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_adjustment_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_adjustment_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_stock_adjustment_update
+            AFTER UPDATE ON stock_adjustment
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Stock adjustment changed.<br/><br/>';
+
+                IF NEW.reference_number <> OLD.reference_number THEN
+                    SET audit_log = CONCAT(audit_log, "Reference Number: ", OLD.reference_number, " -> ", NEW.reference_number, "<br/>");
+                END IF;
+
+                IF NEW.stock_adjustment_status <> OLD.stock_adjustment_status THEN
+                    SET audit_log = CONCAT(audit_log, "Stock Adjustment Status: ", OLD.stock_adjustment_status, " -> ", NEW.stock_adjustment_status, "<br/>");
+                END IF;
+                
+                IF NEW.stock_adjustment_reason_name <> OLD.stock_adjustment_reason_name THEN
+                    SET audit_log = CONCAT(audit_log, "Stock Adjustment Reason: ", OLD.stock_adjustment_reason_name, " -> ", NEW.stock_adjustment_reason_name, "<br/>");
+                END IF;
+
+                IF NEW.remarks <> OLD.remarks THEN
+                    SET audit_log = CONCAT(audit_log, "Remarks: ", OLD.remarks, " -> ", NEW.remarks, "<br/>");
+                END IF;
+
+                IF NEW.for_approval_date <> OLD.for_approval_date THEN
+                    SET audit_log = CONCAT(audit_log, "For Approval Date: ", OLD.for_approval_date, " -> ", NEW.for_approval_date, "<br/>");
+                END IF;
+
+                IF NEW.approved_date <> OLD.approved_date THEN
+                    SET audit_log = CONCAT(audit_log, "Approved Date: ", OLD.approved_date, " -> ", NEW.approved_date, "<br/>");
+                END IF;
+
+                IF NEW.cancellation_date <> OLD.cancellation_date THEN
+                    SET audit_log = CONCAT(audit_log, "Cancellation Date: ", OLD.cancellation_date, " -> ", NEW.cancellation_date, "<br/>");
+                END IF;
+
+                IF NEW.set_to_draft_date <> OLD.set_to_draft_date THEN
+                    SET audit_log = CONCAT(audit_log, "Set to Draft Date: ", OLD.set_to_draft_date, " -> ", NEW.set_to_draft_date, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Stock adjustment changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('stock_adjustment', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_stock_adjustment_insert
+            AFTER INSERT ON stock_adjustment
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Stock adjustment created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('stock_adjustment', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
+
+        /* =============================================================================================
+            TABLE: STOCK ADJUSTMENT
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_adjustment_items_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_adjustment_items_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_stock_adjustment_items_update
+            AFTER UPDATE ON stock_adjustment_items
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Stock adjustment items changed.<br/><br/>';
+
+                IF NEW.product_name <> OLD.product_name THEN
+                    SET audit_log = CONCAT(audit_log, "Product: ", OLD.product_name, " -> ", NEW.product_name, "<br/>");
+                END IF;
+
+                IF NEW.warehouse_name <> OLD.warehouse_name THEN
+                    SET audit_log = CONCAT(audit_log, "Warehouse: ", OLD.warehouse_name, " -> ", NEW.warehouse_name, "<br/>");
+                END IF;
+
+                IF NEW.inventory_lot_id <> OLD.inventory_lot_id THEN
+                    SET audit_log = CONCAT(audit_log, "Inventory Lot ID: ", OLD.inventory_lot_id, " -> ", NEW.inventory_lot_id, "<br/>");
+                END IF;
+
+                IF NEW.adjustment_type <> OLD.adjustment_type THEN
+                    SET audit_log = CONCAT(audit_log, "Adjustment Type: ", OLD.adjustment_type, " -> ", NEW.adjustment_type, "<br/>");
+                END IF;
+
+                IF NEW.current_quantity <> OLD.current_quantity THEN
+                    SET audit_log = CONCAT(audit_log, "Current Quantity: ", OLD.current_quantity, " -> ", NEW.current_quantity, "<br/>");
+                END IF;
+
+                IF NEW.new_quantity <> OLD.new_quantity THEN
+                    SET audit_log = CONCAT(audit_log, "New Quantity: ", OLD.new_quantity, " -> ", NEW.new_quantity, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Stock adjustment items changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('stock_adjustment_items', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_stock_adjustment_items_insert
+            AFTER INSERT ON stock_adjustment_items
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Stock adjustment items created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('stock_adjustment_items', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
+
+        /* =============================================================================================
+            TABLE: STOCK TRANSFER
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_transfer_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_transfer_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_stock_transfer_update
+            AFTER UPDATE ON stock_transfer
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Stock transfer changed.<br/><br/>';
+
+                IF NEW.reference_number <> OLD.reference_number THEN
+                    SET audit_log = CONCAT(audit_log, "Reference Number: ", OLD.reference_number, " -> ", NEW.reference_number, "<br/>");
+                END IF;
+
+                IF NEW.from_warehouse_name <> OLD.from_warehouse_name THEN
+                    SET audit_log = CONCAT(audit_log, "From Warehouse: ", OLD.from_warehouse_name, " -> ", NEW.from_warehouse_name, "<br/>");
+                END IF;
+
+                IF NEW.to_warehouse_name <> OLD.to_warehouse_name THEN
+                    SET audit_log = CONCAT(audit_log, "To Warehouse: ", OLD.to_warehouse_name, " -> ", NEW.to_warehouse_name, "<br/>");
+                END IF;
+
+                IF NEW.stock_transfer_status <> OLD.stock_transfer_status THEN
+                    SET audit_log = CONCAT(audit_log, "Stock Transfer Status: ", OLD.stock_transfer_status, " -> ", NEW.stock_transfer_status, "<br/>");
+                END IF;
+
+                IF NEW.stock_transfer_reason_name <> OLD.stock_transfer_reason_name THEN
+                    SET audit_log = CONCAT(audit_log, "Stock Transfer Reason: ", OLD.stock_transfer_reason_name, " -> ", NEW.stock_transfer_reason_name, "<br/>");
+                END IF;
+
+                IF NEW.remarks <> OLD.remarks THEN
+                    SET audit_log = CONCAT(audit_log, "Remarks: ", OLD.remarks, " -> ", NEW.remarks, "<br/>");
+                END IF;
+
+                IF NEW.for_approval_date <> OLD.for_approval_date THEN
+                    SET audit_log = CONCAT(audit_log, "For Approval Date: ", OLD.for_approval_date, " -> ", NEW.for_approval_date, "<br/>");
+                END IF;
+
+                IF NEW.approved_date <> OLD.approved_date THEN
+                    SET audit_log = CONCAT(audit_log, "Approved Date: ", OLD.approved_date, " -> ", NEW.approved_date, "<br/>");
+                END IF;
+
+                IF NEW.cancellation_date <> OLD.cancellation_date THEN
+                    SET audit_log = CONCAT(audit_log, "Cancellation Date: ", OLD.cancellation_date, " -> ", NEW.cancellation_date, "<br/>");
+                END IF;
+
+                IF NEW.set_to_draft_date <> OLD.set_to_draft_date THEN
+                    SET audit_log = CONCAT(audit_log, "Set to Draft Date: ", OLD.set_to_draft_date, " -> ", NEW.set_to_draft_date, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Stock transfer changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('stock_transfer', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_stock_transfer_insert
+            AFTER INSERT ON stock_transfer
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Stock transfer created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('stock_transfer', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
+
+        /* =============================================================================================
+            TABLE: STOCK TRANSFER ITEMS
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_transfer_items_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_transfer_items_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_stock_transfer_items_update
+            AFTER UPDATE ON stock_transfer_items
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Stock transfer items changed.<br/><br/>';
+
+                IF NEW.product_name <> OLD.product_name THEN
+                    SET audit_log = CONCAT(audit_log, "Product: ", OLD.product_name, " -> ", NEW.product_name, "<br/>");
+                END IF;
+
+                IF NEW.inventory_lot_id <> OLD.inventory_lot_id THEN
+                    SET audit_log = CONCAT(audit_log, "Inventory Lot ID: ", OLD.inventory_lot_id, " -> ", NEW.inventory_lot_id, "<br/>");
+                END IF;
+
+                IF NEW.quantity <> OLD.quantity THEN
+                    SET audit_log = CONCAT(audit_log, "Quantity: ", OLD.quantity, " -> ", NEW.quantity, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Stock transfer items changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('stock_transfer_items', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_stock_transfer_items_insert
+            AFTER INSERT ON stock_transfer_items
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Stock transfer items created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('stock_transfer_items', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
             END
         SQL);
     }
@@ -2155,27 +2323,6 @@ return new class extends Migration
         DB::unprepared('DROP TRIGGER IF EXISTS trg_product_insert');
 
         /* =============================================================================================
-            TABLE: STOCK LEVEL
-        ============================================================================================= */
-
-        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_level_update');
-        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_level_insert');
-
-        /* =============================================================================================
-            TABLE: BATCH TRACKING
-        ============================================================================================= */
-
-        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_batch_update');
-        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_batch_insert');
-
-        /* =============================================================================================
-            TABLE: STOCK ADJUSTMENT
-        ============================================================================================= */
-
-        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_adjustment_update');
-        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_adjustment_insert');
-
-        /* =============================================================================================
             TABLE: STOCK TRANSFER
         ============================================================================================= */
 
@@ -2209,5 +2356,61 @@ return new class extends Migration
 
         DB::unprepared('DROP TRIGGER IF EXISTS trg_product_category_map_update');
         DB::unprepared('DROP TRIGGER IF EXISTS trg_product_category_map_insert');
+
+         /* =============================================================================================
+            TABLE: INVENTORY LOT
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_inventory_lot_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_inventory_lot_insert');
+
+        /* =============================================================================================
+            TABLE: STOCK LEVEL
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_level_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_level_insert');
+
+        /* =============================================================================================
+            TABLE: STOCK BATCH
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_batch_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_batch_insert');
+        
+        /* =============================================================================================
+            TABLE: STOCK BATCH ITEM
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_batch_items_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_batch_items_insert');
+
+        /* =============================================================================================
+            TABLE: STOCK ADJUSTMENT
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_adjustment_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_adjustment_insert');
+
+        /* =============================================================================================
+            TABLE: STOCK ADJUSTMENT ITEMS
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_adjustment_items_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_adjustment_items_insert');
+
+        /* =============================================================================================
+            TABLE: STOCK TRANSFER
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_transfer_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_transfer_insert');
+
+        /* =============================================================================================
+            TABLE: STOCK TRANSFER ITEMS
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_transfer_items_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_transfer_items_insert');
     }
 };
