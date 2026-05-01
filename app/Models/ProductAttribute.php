@@ -21,4 +21,30 @@ class ProductAttribute extends Model
     {
         return $this->belongsTo(Product::class, 'product_id', 'id');
     }
+
+    public function attribute(): BelongsTo
+    {
+        return $this->belongsTo(Attribute::class, 'attribute_id', 'id');
+    }
+
+    public function isVariantAttribute(): bool
+    {
+        return $this->attribute?->selection_type === Attribute::TYPE_MULTIPLE
+            || $this->attribute?->selection_type === Attribute::TYPE_SINGLE;
+    }
+
+    public function getAttributeDisplayName(): string
+    {
+        return $this->attribute_name;
+    }
+
+    public function scopeForProduct($query, int $productId)
+    {
+        return $query->where('product_id', $productId);
+    }
+
+    public function scopeForAttribute($query, int $attributeId)
+    {
+        return $query->where('attribute_id', $attributeId);
+    }
 }

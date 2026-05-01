@@ -14,11 +14,28 @@ class FileType extends Model
         'last_log_by'
     ];
 
-    /**
-     * A file type has many file extensions.
-     */
     public function fileExtensions(): HasMany
     {
         return $this->hasMany(FileExtension::class, 'file_type_id', 'id');
+    }
+
+    public function hasExtensions(): bool
+    {
+        return $this->fileExtensions()->exists();
+    }
+
+    public function getExtensionCountAttribute(): int
+    {
+        return $this->fileExtensions()->count();
+    }
+
+    public function getDisplayNameAttribute(): string
+    {
+        return $this->file_type_name;
+    }
+
+    public function scopeOrdered($query)
+    {
+        return $query->orderBy('file_type_name');
     }
 }

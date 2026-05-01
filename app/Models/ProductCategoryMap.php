@@ -26,4 +26,14 @@ class ProductCategoryMap extends Model
     {
         return $this->belongsTo(ProductCategory::class, 'product_category_id', 'id');
     }
+
+    public function scopeForProduct($query, int $productId)
+    {
+        return $query->where('product_id', $productId);
+    }
+
+    public function scopeForCategory($query, int $categoryId)
+    {
+        return $query->where('product_category_id', $categoryId);
+    }
 }

@@ -22,4 +22,29 @@ class ProductAddon extends Model
     {
         return $this->belongsTo(Product::class, 'product_id', 'id');
     }
+
+    public function addonProduct(): BelongsTo
+    {
+        return $this->belongsTo(Product::class, 'addon_product_id', 'id');
+    }
+
+    public function isUnlimited(): bool
+    {
+        return (float) $this->max_quantity <= 0;
+    }
+
+    public function allowsQuantity(int $quantity): bool
+    {
+        return $this->isUnlimited() || $quantity <= $this->max_quantity;
+    }
+
+    public function scopeForProduct($query, int $productId)
+    {
+        return $query->where('product_id', $productId);
+    }
+
+    public function scopeForAddonProduct($query, int $addonProductId)
+    {
+        return $query->where('addon_product_id', $addonProductId);
+    }
 }

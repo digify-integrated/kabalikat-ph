@@ -32,6 +32,42 @@ class NavigationMenu extends Model
 
     public function children()
     {
-        return $this->hasMany(NavigationMenu::class, 'parent_navigation_menu_id');
+        return $this->hasMany(NavigationMenu::class, 'parent_navigation_menu_id')
+            ->orderBy('order_sequence');
+    }
+
+    public function childrenRecursive()
+    {
+        return $this->children()->with('childrenRecursive');
+    }
+
+    public function menuPermissions()
+    {
+        return $this->hasMany(RolePermission::class, 'navigation_menu_id');
+    }
+
+    public function routes()
+    {
+        return $this->hasMany(NavigationMenuRoute::class, 'navigation_menu_id');
+    }
+    
+    public function scopeRoot($query)
+    {
+        return $query->whereNull('parent_navigation_menu_id');
+    }
+
+    public function scopeOrdered($query)
+    {
+        return $query->orderBy('order_sequence');
+    }
+
+    public function isRoot(): bool
+    {
+        return is_null($this->parent_navigation_menu_id);
+    }
+
+    public function isChild(): bool
+    {
+        return !is_null($this->parent_navigation_menu_id);
     }
 }

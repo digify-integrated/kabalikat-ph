@@ -18,19 +18,23 @@ class UploadSettingFileExtension extends Model
         'last_log_by'
     ];
 
-    /**
-     * Pivot row belongs to an upload setting.
-     */
     public function uploadSetting(): BelongsTo
     {
-        return $this->belongsTo(UploadSetting::class, 'upload_setting_id', 'id');
+        return $this->belongsTo(UploadSetting::class, 'upload_setting_id');
     }
 
-    /**
-     * Pivot row belongs to a file extension.
-     */
     public function fileExtension(): BelongsTo
     {
-        return $this->belongsTo(FileExtension::class, 'file_extension_id', 'id');
+        return $this->belongsTo(FileExtension::class, 'file_extension_id');
+    }
+
+    public function getExtensionAttribute(): string
+    {
+        return $this->file_extension;
+    }
+
+    public function getSettingNameAttribute(): string
+    {
+        return $this->upload_setting_name;
     }
 }

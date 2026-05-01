@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\InventoryLot;
 use App\Models\StockBatch;
 use App\Models\Product;
 use App\Models\StockLevel;
+use App\Models\StockMovement;
 use App\Models\Warehouse;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -19,13 +21,8 @@ class StockBatchController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'stock_batch_id' => ['nullable', 'integer'],
-            'product_id' => ['required', 'integer'],
-            'warehouse_id' => ['required', 'integer'],
-            'batch_number' => ['required', 'string', 'max:255'],
-            'quantity' => ['required', 'numeric', 'min:0.01'],
-            'cost_per_unit' => ['required', 'numeric', 'min:0.01'],
-            'expiration_date' => ['nullable', 'date'],
-            'received_date' => ['nullable', 'date'],
+            'reference_number' => ['required', 'string'],
+            'warehouse_id' => ['required', 'integer', Rule::exists('warehouse', 'id')],
             'remarks' => ['nullable', 'string'],
         ]);
 
@@ -41,36 +38,17 @@ class StockBatchController extends Controller
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
 
-        $productId = (int) $validated['product_id'];
         $warehouseId = (int) $validated['warehouse_id'];
-
-        $validated['expiration_date'] = !empty($validated['expiration_date'])
-            ? Carbon::parse($validated['expiration_date'])->format('Y-m-d')
-            : null;
-
-        $validated['received_date'] = !empty($validated['received_date'])
-            ? Carbon::parse($validated['received_date'])->format('Y-m-d')
-            : null;
-
-        $productName = (string) Product::query()
-            ->whereKey($productId)
-            ->value('product_name');
 
         $warehouseName = (string) Warehouse::query()
             ->whereKey($warehouseId)
             ->value('warehouse_name');
 
         $payload = [
-            'product_id' => $productId,
-            'product_name' => $productName,
+            'reference_number' => $validated['reference_number'],
             'warehouse_id' => $warehouseId,
             'warehouse_name' => $warehouseName,
-            'quantity' => $validated['quantity'],
-            'batch_number' => $validated['batch_number'],
-            'cost_per_unit' => $validated['cost_per_unit'],
             'remarks' => $validated['remarks'],
-            'expiration_date' => $validated['expiration_date'],
-            'received_date' => $validated['received_date'],
             'last_log_by' => Auth::id(),
         ];
 
@@ -116,10 +94,10 @@ class StockBatchController extends Controller
 
         DB::transaction(function () use ($detailId) {
             $stockBatch = StockBatch::query()
-            ->select(['id', 'batch_status'])
+            ->select(['id', 'stock_batch_status'])
             ->findOrFail($detailId);
 
-            if ($stockBatch->batch_status !== 'Draft') {
+            if ($stockBatch->stock_batch_status !== 'Draft') {
                  return response()->json([
                     'success' => false,
                     'message' => 'The stock batch is not "Draft" status',
@@ -127,7 +105,7 @@ class StockBatchController extends Controller
             }
 
             $stockBatch->update([
-                'batch_status' => 'For Approval',
+                'stock_batch_status' => 'For Approval',
                 'for_approval_date' => Carbon::now()
             ]);
         });        
@@ -164,10 +142,10 @@ class StockBatchController extends Controller
 
         DB::transaction(function () use ($detailId) {
             $stockBatch = StockBatch::query()
-                ->select(['id', 'batch_status'])
+                ->select(['id', 'stock_batch_status'])
                 ->findOrFail($detailId);
 
-            if ($stockBatch->batch_status !== 'For Approval' && $stockBatch->batch_status !== 'Draft') {
+            if ($stockBatch->stock_batch_status !== 'For Approval' && $stockBatch->stock_batch_status !== 'Draft') {
                 return response()->json([
                     'success' => false,
                     'message' => 'The stock batch is not "For Approval" or "Draft" status',
@@ -175,7 +153,7 @@ class StockBatchController extends Controller
             }
 
             $stockBatch->update([
-                'batch_status' => 'Cancelled',
+                'stock_batch_status' => 'Cancelled',
                 'cancellation_date' => Carbon::now()
             ]);
         });        
@@ -212,10 +190,10 @@ class StockBatchController extends Controller
 
         DB::transaction(function () use ($detailId) {
             $stockBatch = StockBatch::query()
-                ->select(['id', 'batch_status'])
+                ->select(['id', 'stock_batch_status'])
                 ->findOrFail($detailId);
 
-            if ($stockBatch->batch_status !== 'For Approval') {
+            if ($stockBatch->stock_batch_status !== 'For Approval') {
                  return response()->json([
                     'success' => false,
                     'message' => 'The stock batch is not in "For Approval" status',
@@ -223,7 +201,7 @@ class StockBatchController extends Controller
             }
 
             $stockBatch->update([
-                'batch_status' => 'Draft',
+                'stock_batch_status' => 'Draft',
                 'set_to_draft_date' => Carbon::now()
             ]);
         });        
@@ -243,85 +221,92 @@ class StockBatchController extends Controller
     public function approve(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'detailId' => ['required', 'integer', 'min:1', Rule::exists('stock_batch', 'id')],
+            'detailId' => ['required', 'integer', Rule::exists('stock_batch', 'id')],
         ]);
-
-        $pageAppId = (int) $request->input('appId');
-        $pageNavigationMenuId = (int) $request->input('navigationMenuId');
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => $validator->errors()->first('detailId') ?? 'Validation failed',
+                'message' => $validator->errors()->first(),
             ]);
         }
 
         $detailId = (int) $validator->validated()['detailId'];
 
-        DB::transaction(function () use ($detailId) {
-            $stockBatch = StockBatch::query()
+        // ✅ Fetch FIRST (outside transaction)
+        $batch = StockBatch::with(['items.product', 'warehouse'])
             ->findOrFail($detailId);
 
-            if ($stockBatch->batch_status !== 'For Approval') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'The stock batch is not "For Approval" status',
+        if ($batch->stock_batch_status !== 'For Approval') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Stock batch is not in For Approval status'
+            ]);
+        }
+
+        DB::transaction(function () use ($batch) {
+
+            // ✅ Correct column
+            $batch->update([
+                'stock_batch_status' => 'Approved',
+                'approved_date' => now(),
+            ]);
+
+            $warehouseId   = $batch->warehouse_id;
+            $warehouseName = $batch->warehouse->warehouse_name ?? null;
+
+            foreach ($batch->items as $item) {
+
+                $productId   = $item->product_id;
+                $productName = $item->product->product_name ?? $item->product_name;
+
+                // ✅ FIX: include received_date (required)
+                $lot = InventoryLot::firstOrCreate(
+                    [
+                        'product_id'      => $productId,
+                        'batch_number'    => $item->batch_number,
+                        'cost_per_unit'   => $item->cost_per_unit,
+                        'expiration_date' => $item->expiration_date,
+                    ],
+                    [
+                        'product_name'  => $productName,
+                        'received_date' => $item->received_date,
+                        'last_log_by'   => auth()->id(),
+                    ]
+                );
+
+                $stock = StockLevel::firstOrNew([
+                    'product_id'       => $productId,
+                    'warehouse_id'     => $warehouseId,
+                    'inventory_lot_id' => $lot->id,
+                ]);
+
+                $stock->product_name   = $productName;
+                $stock->warehouse_name = $warehouseName;
+                $stock->quantity = ($stock->quantity ?? 0) + $item->quantity;
+                $stock->last_log_by = auth()->id();
+
+                $stock->save();
+
+                StockMovement::create([
+                    'product_id'        => $productId,
+                    'product_name'      => $productName,
+                    'warehouse_id'      => $warehouseId,
+                    'warehouse_name'    => $warehouseName,
+                    'inventory_lot_id'  => $lot->id,
+                    'movement_type'     => 'IN',
+                    'quantity'          => $item->quantity,
+                    'reference_type'    => 'Stock Batch',
+                    'reference_number'  => $batch->reference_number,
+                    'remarks'           => 'Stock received via batch approval',
+                    'last_log_by'       => auth()->id(),
                 ]);
             }
-
-            $stockBatch->update([
-                'batch_status' => 'Approved',
-                'approved_date' => Carbon::now()
-            ]);
-
-            $reorderLevel = DB::table('product')
-                ->where('id', $stockBatch->product_id)
-                ->value('reorder_level');
-
-            $quantity = $stockBatch->quantity;
-
-            if ($quantity == 0) {
-                $stockStatus = 'Out of Stock';
-            } elseif ($quantity <= $reorderLevel) {
-                $stockStatus = 'Low Stock';
-            } else {
-                $stockStatus = 'In Stock';
-            }
-
-            $stockLevel = StockLevel::create([
-                'product_id' => $stockBatch->product_id,
-                'product_name' => $stockBatch->product_name,
-                'warehouse_id' => $stockBatch->warehouse_id,
-                'warehouse_name' => $stockBatch->warehouse_name,
-                'stock_status' => $stockStatus,
-                'quantity' => $quantity,
-                'stock_batch_id' => $stockBatch->id,
-                'expiration_date' => $stockBatch->expiration_date,
-                'received_date' => $stockBatch->received_date,
-                'cost_per_unit' => $stockBatch->cost_per_unit,
-                'last_log_by' => auth()->id(),
-            ]);
-
-            DB::table('stock_movement')->insert([
-                'stock_level_id' => $stockLevel->id,
-                'movement_type' => 'In',
-                'quantity' => $quantity,
-                'reference_type' => 'Stock Batch',
-                'reference_id' => $stockBatch->id,
-                'remarks' => 'Initial stock from batch approval',
-                'last_log_by' => auth()->id(),
-            ]);
         });
-
-        $link = route('apps.base', [
-            'appId' => $pageAppId,
-            'navigationMenuId' => $pageNavigationMenuId,
-        ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'The stock batch has been approved successfully',
-            'redirect_link' => $link,
+            'message' => 'Stock batch approved successfully',
         ]);
     }
 
@@ -332,62 +317,75 @@ class StockBatchController extends Controller
             'selected_id.*' => ['integer', 'distinct', Rule::exists('stock_batch', 'id')],
         ]);
 
-        $ids = $validated['selected_id'];
-
-        DB::transaction(function () use ($ids) {
-            $stockBatchs = StockBatch::query()
-                ->whereIn('id', $ids)
-                ->where('batch_status', 'For Approval')
+        DB::transaction(function () use ($validated) {
+            $batches = StockBatch::query()
+                ->with(['items.product', 'warehouse'])
+                ->whereIn('id', $validated['selected_id'])
+                ->where('stock_batch_status', 'For Approval') // ✅ FIXED
+                ->lockForUpdate()
                 ->get();
 
-            StockBatch::query()
-                ->whereIn('id', $stockBatchs->pluck('id'))
-                ->update([
-                    'batch_status' => 'Approved',
-                    'approved_date' => Carbon::now()
+            foreach ($batches as $batch) {
+                $batch->update([
+                    'stock_batch_status' => 'Approved',
+                    'approved_date' => now(),
                 ]);
 
-            foreach ($stockBatchs as $stockBatch) {
-                $reorderLevel = DB::table('product')
-                    ->where('id', $stockBatch->product_id)
-                    ->value('reorder_level');
+                $warehouseId   = $batch->warehouse_id;
+                $warehouseName = $batch->warehouse->warehouse_name ?? null;
 
-                $quantity = $stockBatch->quantity;
+                foreach ($batch->items as $item) {
 
-                $stockStatus = match (true) {
-                    $quantity == 0 => 'Out of Stock',
-                    $quantity <= $reorderLevel => 'Low Stock',
-                    default => 'In Stock',
-                };
+                    $productId   = $item->product_id;
+                    $productName = $item->product->product_name ?? $item->product_name;
 
-                $stockLevel = StockLevel::create([
-                    'product_id' => $stockBatch->product_id,
-                    'product_name' => $stockBatch->product_name,
-                    'warehouse_id' => $stockBatch->warehouse_id,
-                    'warehouse_name' => $stockBatch->warehouse_name,
-                    'stock_status' => $stockStatus,
-                    'quantity' => $quantity,
-                    'stock_batch_id' => $stockBatch->id,
-                    'expiration_date' => $stockBatch->expiration_date,
-                    'received_date' => $stockBatch->received_date,
-                    'cost_per_unit' => $stockBatch->cost_per_unit,
-                    'last_log_by' => auth()->id(),
-                ]);
+                    $lot = InventoryLot::firstOrCreate(
+                        [
+                            'product_id'      => $productId,
+                            'batch_number'    => $item->batch_number,
+                            'cost_per_unit'   => $item->cost_per_unit,
+                            'expiration_date' => $item->expiration_date,
+                        ],
+                        [
+                            'product_name'  => $productName,
+                            'received_date' => $item->received_date,
+                            'last_log_by'   => auth()->id(),
+                        ]
+                    );
 
-                DB::table('stock_movement')->insert([
-                    'stock_level_id' => $stockLevel->id,
-                    'movement_type' => 'In',
-                    'quantity' => $quantity,
-                    'reference_type' => 'Stock Batch',
-                    'reference_id' => $stockBatch->batch_number,
-                    'remarks' => 'Initial stock from batch approval',
-                    'last_log_by' => auth()->id(),
-                ]);
+                    $stock = StockLevel::firstOrNew([
+                        'product_id'       => $productId,
+                        'warehouse_id'     => $warehouseId,
+                        'inventory_lot_id' => $lot->id,
+                    ]);
+
+                    $stock->product_name   = $productName;
+                    $stock->warehouse_name = $warehouseName;
+                    $stock->quantity = ($stock->quantity ?? 0) + $item->quantity;
+                    $stock->last_log_by = auth()->id();
+
+                    $stock->save();
+
+                    StockMovement::create([
+                        'product_id'        => $productId,
+                        'product_name'      => $productName,
+                        'warehouse_id'      => $warehouseId,
+                        'warehouse_name'    => $warehouseName,
+                        'inventory_lot_id'  => $lot->id,
+                        'movement_type'     => 'IN',
+                        'quantity'          => $item->quantity,
+                        'reference_type'    => 'Stock Batch',
+                        'reference_number'  => $batch->reference_number,
+                        'remarks'           => 'Stock received via batch approval',
+                        'last_log_by'       => auth()->id(),
+                    ]);
+                }
             }
         });
+
         return response()->json([
             'success' => true,
-            'message' => 'The selected stock batchs have been approved successfully',
+            'message' => 'Selected stock batches have been approved successfully',
         ]);
     }
 
@@ -486,18 +484,9 @@ class StockBatchController extends Controller
         return response()->json([
             'success' => true,
             'notExist' => false,
-            'productId' => $stockBatch->product_id ?? null,
+            'referenceNumber' => $stockBatch->reference_number ?? null,
             'warehouseId' => $stockBatch->warehouse_id ?? null,
-            'quantity' => $stockBatch->quantity ?? 0.01,
-            'batchNumber' => $stockBatch->batch_number ?? null,
-            'costPerUnit' => $stockBatch->cost_per_unit ?? 0.01,
             'remarks' => $stockBatch->remarks ?? null,
-            'expirationDate' => $stockBatch->expiration_date
-            ? date('M d, Y', strtotime($stockBatch->expiration_date))
-            : '',
-            'receivedDate' => $stockBatch->received_date
-            ? date('M d, Y', strtotime($stockBatch->received_date))
-            : '',
         ]);
     }
 
@@ -506,61 +495,20 @@ class StockBatchController extends Controller
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
 
-        $filterByProduct = $request->input('filter_by_product');
-        $filterByWarehouse = $request->input('filter_by_warehouse');
-        $filterByExpirationDate = $request->input('filter_by_expiration_date');
-        $filterByReceivedDate = $request->input('filter_by_received_date');
         $filterByStatus = $request->input('filter_by_status');
 
-        $parseRange = function ($range) {
-            if (!$range) return null;
-
-            $dates = explode(' - ', $range);
-
-            if (count($dates) !== 2) return null;
-
-            return [
-                Carbon::createFromFormat('m/d/Y', trim($dates[0]))->startOfDay(),
-                Carbon::createFromFormat('m/d/Y', trim($dates[1]))->endOfDay(),
-            ];
-        };
-
-        $expirationRange = $parseRange($filterByExpirationDate);
-        $receivedRange = $parseRange($filterByReceivedDate);
-
         $stockBatchs = DB::table('stock_batch')
-            ->when(!empty($filterByProduct), fn($q) =>
-                $q->whereIn('product_id', (array) $filterByProduct)
-            )
-            ->when(!empty($filterByWarehouse), fn($q) =>
-                $q->whereIn('warehouse_id', (array) $filterByWarehouse)
-            )
-            ->when($expirationRange, fn($q) =>
-                $q->whereBetween('expiration_date', $expirationRange)
-            )
-            ->when($receivedRange, fn($q) =>
-                $q->whereBetween('received_date', $receivedRange)
-            )
             ->when(!empty($filterByStatus), fn($q) =>
-                $q->whereIn('batch_status', (array) $filterByStatus)
+                $q->whereIn('stock_batch_status', (array) $filterByStatus)
             )
-            ->orderBy('product_name')
+            ->orderBy('reference_number')
             ->get();
 
         $response = $stockBatchs->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
             $stockBatchId = $row->id;
-            $productName = $row->product_name;
+            $referenceNumber = $row->reference_number;
             $warehouseName = $row->warehouse_name;
-            $batchStatus = $row->batch_status;
-            $quantity = $row->quantity;
-            $batchNumber = $row->batch_number;
-            $costPerUnit = $row->cost_per_unit;
-            $expiration_date = $row->expiration_date
-            ? date('M d, Y', strtotime($row->expiration_date))
-            : 'No expiry';
-            $received_date = $row->received_date
-            ? date('M d, Y', strtotime($row->received_date))
-            : 'No received date';
+            $batchStatus = $row->stock_batch_status;
 
             $statusClass = match ($batchStatus) {
                 'Draft' => 'badge badge-secondary',
@@ -571,34 +519,6 @@ class StockBatchController extends Controller
             };
 
             $statusBadge = '<span class="'.$statusClass.'">'.$batchStatus.'</span>';
-
-           if ($row->expiration_date) {
-                $expDate = Carbon::parse($row->expiration_date);
-                $today = Carbon::today();
-
-                $formattedDate = $expDate->format('M d, Y');
-
-                if ($expDate->isPast()) {
-                    $daysExpired = $expDate->diffInDays($today);
-                    $expiration_date = '
-                        '.$formattedDate.'<br>
-                        <small class="text-danger">(Expired '.$daysExpired.' day'.($daysExpired > 1 ? 's' : '').' ago)</small>
-                    ';
-                } elseif ($expDate->isFuture()) {
-                    $daysRemaining = $today->diffInDays($expDate);
-                    $expiration_date = '
-                        '.$formattedDate.'<br>
-                        <small class="text-warning">(Expiring in '.$daysRemaining.' day'.($daysRemaining > 1 ? 's' : '').')</small>
-                    ';
-                } else {
-                    $expiration_date = '
-                        '.$formattedDate.'<br>
-                        <small class="text-warning">(Expires today)</small>
-                    ';
-                }
-            } else {
-                $expiration_date = 'No expiry';
-            }
 
             $link = route('apps.details', [
                 'appId' => $pageAppId,
@@ -612,14 +532,9 @@ class StockBatchController extends Controller
                         <input class="form-check-input datatable-checkbox-children" type="checkbox" value="'.$stockBatchId.'">
                     </div>
                 ',
-                'PRODUCT' => $productName,
+                'REFERENCE_NUMBER' => $referenceNumber,
                 'WAREHOUSE' => $warehouseName,
-                'BATCH_NUMBER' => $batchNumber,
-                'QUANTITY' => number_format($quantity, 2),
-                'COST_PER_UNIT' => number_format($costPerUnit, 2),
                 'STATUS' => $statusBadge,
-                'EXPIRATION_DATE' => $expiration_date,
-                'RECEIVED_DATE' => $received_date,
                 'LINK' => $link,
             ];
         })->values();

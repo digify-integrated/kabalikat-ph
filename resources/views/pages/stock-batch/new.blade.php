@@ -10,13 +10,11 @@
                 @csrf
 
                 <div class="row mb-6">
-                    <label class="col-lg-2 col-form-label required fw-semibold fs-6" for="product_id">
-                        Product
+                    <label class="col-lg-2 col-form-label required fw-semibold fs-6" for="reference_number">
+                        Reference Number
                     </label>
                     <div class="col-lg-10">
-                        <select id="product_id" name="product_id" class="form-select" data-control="select2" data-allow-clear="false">
-                            <option>--</option>
-                        </select>
+                        <input type="text" class="form-control" id="reference_number" name="reference_number" maxlength="100" autocomplete="off">
                     </div>
                 </div>
 
@@ -28,51 +26,6 @@
                         <select id="warehouse_id" name="warehouse_id" class="form-select" data-control="select2" data-allow-clear="false">
                             <option>--</option>
                         </select>
-                    </div>
-                </div>
-
-                <div class="row mb-6">
-                    <label class="col-lg-2 col-form-label required fw-semibold fs-6" for="batch_number">
-                        Batch / Lot Number
-                    </label>
-                    <div class="col-lg-10">
-                        <input type="text" class="form-control" id="batch_number" name="batch_number" maxlength="100" autocomplete="off">
-                    </div>
-                </div>
-
-                <div class="row mb-6">
-                    <label class="col-lg-2 col-form-label required fw-semibold fs-6" for="quantity">
-                        Quantity
-                    </label>
-                    <div class="col-lg-10">
-                        <input type="number" class="form-control" id="quantity" name="quantity" min="0.01" step="0.01">
-                    </div>
-                </div>
-                
-                <div class="row mb-6">
-                    <label class="col-lg-2 col-form-label required fw-semibold fs-6" for="cost_per_unit">
-                        Cost per Unit
-                    </label>
-                    <div class="col-lg-10">
-                        <input type="number" class="form-control" id="cost_per_unit" name="cost_per_unit" min="0.01" step="0.01">
-                    </div>
-                </div>
-                
-                <div class="row mb-6">
-                    <label class="col-lg-2 col-form-label fw-semibold fs-6" for="expiration_date">
-                        Expiration Date
-                    </label>
-                    <div class="col-lg-10">
-                        <input type="text" class="form-control" id="expiration_date" name="expiration_date" autocomplete="off">
-                    </div>
-                </div>
-                
-                <div class="row mb-6">
-                    <label class="col-lg-2 col-form-label required fw-semibold fs-6" for="received_date">
-                        Received Date
-                    </label>
-                    <div class="col-lg-10">
-                        <input type="text" class="form-control" id="received_date" name="received_date" autocomplete="off">
                     </div>
                 </div>
 

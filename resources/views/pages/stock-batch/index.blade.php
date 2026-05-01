@@ -75,22 +75,6 @@
                         <div class="separator border-gray-200"></div>
                         <div class="px-7 py-5">
                             <div class="mb-5">
-                                <label class="form-label fs-6 fw-semibold" for="filter_by_expiration_date">Filter By Expiration Date:</label>
-                                 <input type="text" class="form-control" id="filter_by_expiration_date" autocomplete="off">
-                            </div>
-                            <div class="mb-5">
-                                <label class="form-label fs-6 fw-semibold" for="filter_by_received_date">Filter By Received Date:</label>
-                                <input type="text" class="form-control" id="filter_by_received_date" autocomplete="off">
-                            </div>
-                            <div class="mb-5">
-                                <label class="form-label fs-6 fw-semibold" for="filter_by_product">Filter By Product:</label>
-                                <select id="filter_by_product" name="filter_by_product" multiple="multiple" class="form-select" data-control="select2" data-allow-clear="false"></select>
-                            </div>
-                            <div class="mb-5">
-                                <label class="form-label fs-6 fw-semibold" for="filter_by_warehouse">Filter By Warehouse:</label>
-                                <select id="filter_by_warehouse" name="filter_by_warehouse" multiple="multiple" class="form-select" data-control="select2" data-allow-clear="false"></select>
-                            </div>
-                            <div class="mb-5">
                                 <label class="form-label fs-6 fw-semibold" for="filter_by_status">Filter By Status:</label>
                                 <select id="filter_by_status" multiple="multiple" class="form-select" data-control="select2" data-allow-clear="false">
                                     <option value="Draft" selected>Draft</option>
@@ -119,14 +103,9 @@
                                     <input class="form-check-input" id="datatable-checkbox" type="checkbox">
                                 </div>
                             </th>
-                            <th>Product</th>
+                            <th>Reference</th>
                             <th>Warehouse</th>
-                            <th>Batch / Lot No.</th>
-                            <th>Qty</th>
-                            <th>Cost/Unit</th>
-                            <th>Received</th>
                             <th>Status</th>
-                            <th>Expiry</th>
                         </tr>
                     </thead>
                     <tbody class="fw-semibold text-gray-800"></tbody>

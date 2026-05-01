@@ -1033,6 +1033,7 @@ return new class extends Migration
             $table->index(['cancellation_date']);
             $table->index(['set_to_draft_date']);
         });
+        
         /* =============================================================================================
             TABLE: Stock Batch Items
         ============================================================================================= */
@@ -1294,7 +1295,8 @@ return new class extends Migration
             $table->string('reference_type');
             $table->string('reference_number');
 
-            $table->text('remarks')->nullable();
+            $table->text('remarks')
+            ->nullable();
 
             $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
 

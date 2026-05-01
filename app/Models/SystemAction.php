@@ -13,4 +13,14 @@ class SystemAction extends Model
         'system_action_description',
         'last_log_by'
     ];
+
+    public function getLabelAttribute(): string
+    {
+        return $this->system_action_name;
+    }
+
+    public function scopeOrdered($query)
+    {
+        return $query->orderBy('system_action_name');
+    }
 }

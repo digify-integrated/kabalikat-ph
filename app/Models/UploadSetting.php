@@ -17,9 +17,6 @@ class UploadSetting extends Model
         'last_log_by'
     ];
 
-    /**
-     * An upload setting can allow many file extensions via the pivot table.
-     */
     public function fileExtensions(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -30,11 +27,24 @@ class UploadSetting extends Model
         )->withTimestamps();
     }
 
-    /**
-     * If you want direct access to pivot rows as a model.
-     */
     public function uploadSettingFileExtensions(): HasMany
     {
-        return $this->hasMany(UploadSettingFileExtension::class, 'upload_setting_id', 'id');
+        return $this->hasMany(
+            UploadSettingFileExtension::class,
+            'upload_setting_id',
+            'id'
+        );
+    }
+
+    public function allowsExtension(string $extension): bool
+    {
+        return $this->fileExtensions()
+            ->where('file_extension', $extension)
+            ->exists();
+    }
+
+    public function exceedsMaxSize(float $size): bool
+    {
+        return $size > $this->max_file_size;
     }
 }

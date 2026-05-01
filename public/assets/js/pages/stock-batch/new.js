@@ -12,20 +12,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 selector: '#stock_batch_form',
                 rules: {
                     rules: {
-                        product_id: { required: true},
+                        reference_number: { required: true},
                         warehouse_id: { required: true},
-                        batch_number: { required: true},
-                        quantity: { required: true},
-                        cost_per_unit: { required: true},
-                        received_date: { required: true},
                     },
                     messages: {
-                        product_id: { required: 'Choose the product' },
+                        reference_number: { required: 'Enter the reference number' },
                         warehouse_id: { required: 'Choose the warehouse' },
-                        batch_number: { required: 'Enter the batch number' },
-                        quantity: { required: 'Enter the quantity' },
-                        cost_per_unit: { required: 'Enter the cost per unit' },
-                        received_date: { required: 'Enter the received date' },
                     },
                     submitHandler: async (form) => {
                         const ctx = getPageContext();
@@ -65,19 +57,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         ],
         dropdown: [
-            { url: '/products/generate-product-stock-batch-options', dropdownSelector: '#product_id' },
             { url: '/warehouse/generate-options', dropdownSelector: '#warehouse_id' },
         ],
-        datepickers: [
-            { selector: '#expiration_date' },
-            { selector: '#received_date' },
-        ]
     }
 
     discardCreate();
 
     config.dropdown.map((cfg) => generateDropdownOptions(cfg));
-    config.datepickers.map((cfg) => initializeDatePicker(cfg));
 
     config.forms.map((cfg) => initValidation(cfg.selector, cfg.rules));
 });

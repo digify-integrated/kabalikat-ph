@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\StockBatch;
+use App\Models\InventoryLot;
 use App\Models\Product;
 use App\Models\StockLevel;
 use App\Models\Warehouse;
@@ -238,22 +238,23 @@ class StockLevelController extends Controller
         $receivedRange = $parseRange($filterByReceivedDate);
 
         $stockLevels = DB::table('stock_level')
+            ->join('inventory_lot', 'stock_level.inventory_lot_id', '=', 'inventory_lot.id')
             ->when(!empty($filterByProduct), fn($q) =>
-                $q->whereIn('product_id', (array) $filterByProduct)
+                $q->whereIn('stock_level.product_id', (array) $filterByProduct)
             )
             ->when(!empty($filterByWarehouse), fn($q) =>
-                $q->whereIn('warehouse_id', (array) $filterByWarehouse)
+                $q->whereIn('stock_level.warehouse_id', (array) $filterByWarehouse)
             )
             ->when($expirationRange, fn($q) =>
-                $q->whereBetween('expiration_date', $expirationRange)
+                $q->whereBetween('inventory_lot.expiration_date', $expirationRange)
             )
             ->when($receivedRange, fn($q) =>
-                $q->whereBetween('received_date', $receivedRange)
+                $q->whereBetween('inventory_lot.received_date', $receivedRange)
             )
             ->when(!empty($filterByStatus), fn($q) =>
-                $q->whereIn('stock_status', (array) $filterByStatus)
+                $q->whereIn('stock_level.stock_status', (array) $filterByStatus)
             )
-            ->orderBy('product_name')
+            ->orderBy('stock_level.product_name')
             ->get();
 
         $response = $stockLevels->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
@@ -262,18 +263,20 @@ class StockLevelController extends Controller
             $warehouseName = $row->warehouse_name;
             $stockStatus = $row->stock_status;
             $quantity = $row->quantity;
-            $batchTrackingId = $row->batch_tracking_id;
-            $costPerUnit = $row->cost_per_unit;
-            $expiration_date = $row->expiration_date
-            ? date('M d, Y', strtotime($row->expiration_date))
-            : 'No expiry';
-            $received_date = $row->received_date
-            ? date('M d, Y', strtotime($row->received_date))
-            : 'No received date';
+            $inventoryLotId = $row->inventory_lot_id;
 
-            $batchNumber = (string) StockBatch::query()
-            ->whereKey($batchTrackingId)
-            ->value('batch_number');
+            $inventoryLot = InventoryLot::whereKey($inventoryLotId)
+            ->select(['batch_number', 'expiration_date', 'received_date'])
+            ->first();
+
+            $batchNumber = $inventoryLot->batch_number;
+            $costPerUnit = $inventoryLot->cost_per_unit;
+            $expirationDate = $inventoryLot->expiration_date
+                ? date('M d, Y', strtotime($inventoryLot->expiration_date))
+                : null;
+            $receivedDate = $inventoryLot->received_date
+                ? date('M d, Y', strtotime($inventoryLot->received_date))
+                : 'No received date';
 
             $statusClass = match ($stockStatus) {
                 'Out of Stock' => 'badge badge-danger',
@@ -284,32 +287,32 @@ class StockLevelController extends Controller
 
             $statusBadge = '<span class="'.$statusClass.'">'.$stockStatus.'</span>';
 
-           if ($row->expiration_date) {
-                $expDate = Carbon::parse($row->expiration_date);
+           if (!empty($expirationDate)) {
+                $expDate = Carbon::parse($expirationDate);
                 $today = Carbon::today();
 
                 $formattedDate = $expDate->format('M d, Y');
 
                 if ($expDate->isPast()) {
                     $daysExpired = $expDate->diffInDays($today);
-                    $expiration_date = '
+                    $expirationDate = '
                         '.$formattedDate.'<br>
                         <small class="text-danger">(Expired '.$daysExpired.' day'.($daysExpired > 1 ? 's' : '').' ago)</small>
                     ';
                 } elseif ($expDate->isFuture()) {
                     $daysRemaining = $today->diffInDays($expDate);
-                    $expiration_date = '
+                    $expirationDate = '
                         '.$formattedDate.'<br>
                         <small class="text-warning">(Expiring in '.$daysRemaining.' day'.($daysRemaining > 1 ? 's' : '').')</small>
                     ';
                 } else {
-                    $expiration_date = '
+                    $expirationDate = '
                         '.$formattedDate.'<br>
                         <small class="text-warning">(Expires today)</small>
                     ';
                 }
             } else {
-                $expiration_date = 'No expiry';
+                $expirationDate = 'No expiry';
             }
 
             $link = route('apps.details', [
@@ -331,8 +334,8 @@ class StockLevelController extends Controller
                 'COST_PER_UNIT' => number_format($costPerUnit, 2),
                 'STOCK_VALUE' => number_format(($quantity * $costPerUnit), 2),
                 'STATUS' => $statusBadge,
-                'EXPIRATION_DATE' => $expiration_date,
-                'RECEIVED_DATE' => $received_date,
+                'EXPIRATION_DATE' => $expirationDate,
+                'RECEIVED_DATE' => $receivedDate,
                 'LINK' => $link,
             ];
         })->values();

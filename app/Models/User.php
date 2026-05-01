@@ -32,6 +32,16 @@ class User extends Authenticatable
         ];
     }
 
+    public function roles()
+    {
+        return $this->belongsToMany(
+            Role::class,
+            'role_user_account',
+            'user_account_id',
+            'role_id'
+        )->withTimestamps();
+    }
+
     public function menuPermissions(int $navigationMenuId): array
     {
         $row = DB::table('role_permission as rp')
@@ -62,9 +72,17 @@ class User extends Authenticatable
 
     public function hasMenuAccess(int $navigationMenuId, string $ability): bool
     {
-        $perms = $this->menuPermissions($navigationMenuId);
-
-        return (bool)($perms[$ability] ?? false);
+        return $this->menuPermissions($navigationMenuId)[$ability] ?? false;
     }
 
+    protected array $permissionCache = [];
+
+    public function cachedMenuPermissions(int $navigationMenuId): array
+    {
+        if (!isset($this->permissionCache[$navigationMenuId])) {
+            $this->permissionCache[$navigationMenuId] = $this->menuPermissions($navigationMenuId);
+        }
+
+        return $this->permissionCache[$navigationMenuId];
+    }
 }

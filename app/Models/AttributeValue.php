@@ -16,11 +16,23 @@ class AttributeValue extends Model
         'last_log_by'
     ];
 
-    /**
-     * Pivot row belongs to an attribute.
-     */
     public function attribute(): BelongsTo
     {
         return $this->belongsTo(Attribute::class, 'attribute_id', 'id');
+    }
+
+    public function belongsToAttribute(string $name): bool
+    {
+        return $this->attribute_name === $name;
+    }
+
+    public function scopeForAttribute($query, int $attributeId)
+    {
+        return $query->where('attribute_id', $attributeId);
+    }
+
+    public function scopeByValue($query, string $value)
+    {
+        return $query->where('attribute_value', $value);
     }
 }

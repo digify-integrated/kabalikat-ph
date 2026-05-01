@@ -17,6 +17,10 @@ class RoleSystemActionPermission extends Model
         'last_log_by'
     ];
 
+    protected $casts = [
+        'system_action_access' => 'boolean',
+    ];
+
     public function role()
     {
         return $this->belongsTo(Role::class, 'role_id');
@@ -25,5 +29,20 @@ class RoleSystemActionPermission extends Model
     public function systemAction()
     {
         return $this->belongsTo(SystemAction::class, 'system_action_id');
+    }
+
+    public function hasAccess(): bool
+    {
+        return $this->system_action_access;
+    }
+
+    public function scopeForRole($query, int $roleId)
+    {
+        return $query->where('role_id', $roleId);
+    }
+
+    public function scopeForSystemAction($query, int $systemActionId)
+    {
+        return $query->where('system_action_id', $systemActionId);
     }
 }

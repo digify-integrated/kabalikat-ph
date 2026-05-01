@@ -19,17 +19,11 @@ class FileExtension extends Model
         'last_log_by'
     ];
 
-    /**
-     * A file extension belongs to a file type.
-     */
     public function fileType(): BelongsTo
     {
         return $this->belongsTo(FileType::class, 'file_type_id', 'id');
     }
 
-    /**
-     * A file extension can be linked to many upload settings via the pivot table.
-     */
     public function uploadSettings(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -40,11 +34,36 @@ class FileExtension extends Model
         )->withTimestamps();
     }
 
-    /**
-     * If you want direct access to pivot rows as a model.
-     */
-    public function uploadSettingFileExtensions(): HasMany
+    public function uploadSettingLinks(): HasMany
     {
-        return $this->hasMany(UploadSettingFileExtension::class, 'file_extension_id', 'id');
+        return $this->hasMany(
+            UploadSettingFileExtension::class,
+            'file_extension_id',
+            'id'
+        );
+    }
+
+    public function getFormattedExtensionAttribute(): string
+    {
+        return '.' . ltrim($this->file_extension, '.');
+    }
+
+    public function isImage(): bool
+    {
+        return in_array(strtolower($this->file_extension), [
+            'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'
+        ]);
+    }
+
+    public function isDocument(): bool
+    {
+        return in_array(strtolower($this->file_extension), [
+            'pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt'
+        ]);
+    }
+
+    public function scopeByType($query, int $fileTypeId)
+    {
+        return $query->where('file_type_id', $fileTypeId);
     }
 }

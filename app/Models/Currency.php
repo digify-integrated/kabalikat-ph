@@ -14,4 +14,24 @@ class Currency extends Model
         'shorthand',
         'last_log_by'
     ];
+
+    public function companies()
+    {
+        return $this->hasMany(Company::class, 'currency_id');
+    }
+
+    public function getDisplayNameAttribute(): string
+    {
+        return "{$this->currency_name} ({$this->shorthand})";
+    }
+
+    public function formatAmount(float $amount): string
+    {
+        return "{$this->symbol}{$amount}";
+    }
+
+    public function scopeOrdered($query)
+    {
+        return $query->orderBy('currency_name');
+    }
 }

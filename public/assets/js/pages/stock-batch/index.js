@@ -10,33 +10,19 @@ document.addEventListener('DOMContentLoaded', () => {
             selector: '#stock-batch-table',
             serverSide: false,
             ajaxData: () => ({
-                filter_by_product: $('#filter_by_product').val(),
-                filter_by_warehouse: $('#filter_by_warehouse').val(),
-                filter_by_expiration_date: $('#filter_by_expiration_date').val(),
-                filter_by_received_date: $('#filter_by_received_date').val(),
                 filter_by_status: $('#filter_by_status').val(),
             }),
             columns: [
                 { data: 'CHECK_BOX' },
-                { data: 'PRODUCT' },
+                { data: 'REFERENCE_NUMBER' },
                 { data: 'WAREHOUSE' },
-                { data: 'BATCH_NUMBER' },
-                { data: 'QUANTITY' },
-                { data: 'COST_PER_UNIT' },
-                { data: 'RECEIVED_DATE' },
                 { data: 'STATUS' },
-                { data: 'EXPIRATION_DATE' },
             ],
             columnDefs: [
                 { width: '5%', bSortable: false, targets: 0, responsivePriority: 1 },
                 { width: 'auto', targets: 1, responsivePriority: 2 },
                 { width: 'auto', targets: 2, responsivePriority: 3 },
                 { width: 'auto', targets: 3, responsivePriority: 4 },
-                { width: 'auto', targets: 4, responsivePriority: 5 },
-                { width: 'auto', targets: 5, responsivePriority: 6 },
-                { width: 'auto', targets: 6, type: 'date', responsivePriority: 7 },
-                { width: 'auto', targets: 7, responsivePriority: 8 },
-                { width: 'auto', targets: 8, responsivePriority: 9 },
             ],
             onRowClick: (rowData) => {
                 if (rowData?.LINK) window.open(rowData.LINK, '_blank');
@@ -65,14 +51,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 validationMessage : 'Please select the stock batch you want to approve',
                 table : '#stock-batch-table'
             },
-        ],
-        dropdown: [
-            { url: '/products/generate-product-stock-batch-options', dropdownSelector: '#filter_by_product', data: { multiple : true } },
-            { url: '/warehouse/generate-options', dropdownSelector: '#filter_by_warehouse', data: { multiple : true } },
-        ],
-        datepickers: [
-            { selector: '#filter_by_received_date' },
-            { selector: '#filter_by_expiration_date' },
         ]
     }
     
@@ -80,8 +58,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initializeDatatable(config.table);
 
-    config.dropdown.map((cfg) => generateDropdownOptions(cfg));
-    config.datepickers.map(({ selector }) => initializeDateRangePicker(selector));
     config.action.forEach((cfg) => multipleActionButton(cfg));
 
     document.addEventListener('click', async (event) => {
@@ -90,10 +66,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (event.target.closest('#reset-filter')) {
-            $('#filter_by_product').val(null).trigger('change');
-            $('#filter_by_warehouse').val(null).trigger('change');
-            $('#filter_by_expiration_date').val(null);
-            $('#filter_by_received_date').val(null);
             $('#filter_by_status').val(['Draft', 'For Approval']).trigger('change');
 
             initializeDatatable(config.table);

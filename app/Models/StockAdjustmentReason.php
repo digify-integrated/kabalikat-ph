@@ -12,4 +12,14 @@ class StockAdjustmentReason extends Model
         'stock_adjustment_reason_name',
         'last_log_by'
     ];
+
+    public function getLabelAttribute(): string
+    {
+        return $this->stock_adjustment_reason_name;
+    }
+
+    public function scopeOrdered($query)
+    {
+        return $query->orderBy('stock_adjustment_reason_name');
+    }
 }

@@ -29,6 +29,7 @@ use App\Http\Controllers\StateController;
 use App\Http\Controllers\StockAdjustmentController;
 use App\Http\Controllers\StockAdjustmentReasonController;
 use App\Http\Controllers\StockBatchController;
+use App\Http\Controllers\StockBatchItemsController;
 use App\Http\Controllers\StockLevelController;
 use App\Http\Controllers\StockMovementController;
 use App\Http\Controllers\StockTransferController;
@@ -519,7 +520,6 @@ Route::middleware('auth')->group(function () {
         ->group(function () {
             Route::post('/save', 'save')->name('save');
             Route::post('/delete', 'delete')->name('delete');
-            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
             Route::post('/generate-table', 'generateTable')->name('generate.table');
         });
 
@@ -538,7 +538,6 @@ Route::middleware('auth')->group(function () {
         ->group(function () {
             Route::post('/save', 'save')->name('save');
             Route::post('/delete', 'delete')->name('delete');
-            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
             Route::post('/generate-table', 'generateTable')->name('generate.table');
         });
 
@@ -549,11 +548,10 @@ Route::middleware('auth')->group(function () {
         ->group(function () {
             Route::post('/save', 'save')->name('save');
             Route::post('/delete', 'delete')->name('delete');
-            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
             Route::post('/generate-table', 'generateTable')->name('generate.table');
         });
 
-    // 
+    // Stock Batch
     Route::prefix('stock-batch')
         ->name('stock.batch.')
         ->controller(StockBatchController::class)
@@ -569,6 +567,16 @@ Route::middleware('auth')->group(function () {
             Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
             Route::post('/generate-table', 'generateTable')->name('generate.table');
             Route::post('/generate-options', 'generateOptions')->name('generate.options');
+        });
+
+    // Stock Batch Items
+    Route::prefix('stock-batch-items')
+        ->name('stock.batch.items.')
+        ->controller(StockBatchItemsController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
+            Route::post('/delete', 'delete')->name('delete');
+            Route::post('/generate-table', 'generateTable')->name('generate.table');
         });
 
     // Stock Level
