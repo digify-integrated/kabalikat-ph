@@ -1132,22 +1132,9 @@ return new class extends Migration
                 ->constrained('stock_adjustment')
                 ->cascadeOnDelete();
 
-            $table->foreignId('product_id')
-                ->constrained('product')
+            $table->foreignId('stock_level_id')
+                ->constrained('stock_level')
                 ->cascadeOnDelete();
-
-            $table->string('product_name');
-
-            $table->foreignId('warehouse_id')
-                ->constrained('warehouse')
-                ->cascadeOnDelete();
-
-            $table->string('warehouse_name');
-
-            $table->foreignId('inventory_lot_id')
-                ->nullable()
-                ->constrained('inventory_lot')
-                ->nullOnDelete();
 
             $table->enum('adjustment_type', [
                 'Add Stock',
@@ -1155,6 +1142,7 @@ return new class extends Migration
                 'Set Exact Stock'
             ]);
 
+            $table->decimal('adjustment_quantity', 10, 2)->nullable();
             $table->decimal('current_quantity', 10, 2)->nullable();
             $table->decimal('new_quantity', 10, 2)->nullable();
 
@@ -1162,8 +1150,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index(['stock_adjustment_id']);
-            $table->index(['product_id', 'warehouse_id']);
-            $table->index(['inventory_lot_id']);
+            $table->index(['stock_level_id']);
             $table->index(['adjustment_type']);
         });
 

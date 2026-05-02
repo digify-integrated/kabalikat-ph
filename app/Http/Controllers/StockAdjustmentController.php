@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\StockAdjustment;
 use App\Models\StockAdjustmentReason;
 use App\Models\StockLevel;
+use App\Models\StockMovement;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,10 +19,8 @@ class StockAdjustmentController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'stock_adjustment_id' => ['nullable', 'integer'],
-            'stock_level_id' => ['required', 'integer'],
-            'adjustment_type' => ['required', 'string'],
-            'quantity' => ['required', 'numeric'],
-            'stock_adjustment_reason_id' => ['required', 'integer'],
+            'reference_number' => ['required', 'string'],
+            'stock_adjustment_reason_id' => ['required', 'integer', Rule::exists('stock_adjustment_reason', 'id')],
             'remarks' => ['nullable', 'string'],
         ]);
 
@@ -44,9 +43,7 @@ class StockAdjustmentController extends Controller
             ->value('stock_adjustment_reason_name');
 
         $payload = [
-            'stock_level_id' => $validated['stock_level_id'],
-            'adjustment_type' => $validated['adjustment_type'],
-            'quantity' => $validated['quantity'],
+            'reference_number' => $validated['reference_number'],
             'stock_adjustment_reason_id' => $stockAdjustmentReasonId,
             'stock_adjustment_reason_name' => $stockAdjustmentReasonName,
             'remarks' => $validated['remarks'],
@@ -99,7 +96,7 @@ class StockAdjustmentController extends Controller
             ->findOrFail($detailId);
 
             if ($stockAdjustment->stock_adjustment_status !== 'Draft') {
-                return response()->json([
+                 return response()->json([
                     'success' => false,
                     'message' => 'The stock adjustment is not "Draft" status',
                 ]);
@@ -143,8 +140,8 @@ class StockAdjustmentController extends Controller
 
         DB::transaction(function () use ($detailId) {
             $stockAdjustment = StockAdjustment::query()
-            ->select(['id', 'stock_adjustment_status'])
-            ->findOrFail($detailId);
+                ->select(['id', 'stock_adjustment_status'])
+                ->findOrFail($detailId);
 
             if ($stockAdjustment->stock_adjustment_status !== 'For Approval' && $stockAdjustment->stock_adjustment_status !== 'Draft') {
                 return response()->json([
@@ -191,8 +188,8 @@ class StockAdjustmentController extends Controller
 
         DB::transaction(function () use ($detailId) {
             $stockAdjustment = StockAdjustment::query()
-            ->select(['id', 'stock_adjustment_status'])
-            ->findOrFail($detailId);
+                ->select(['id', 'stock_adjustment_status'])
+                ->findOrFail($detailId);
 
             if ($stockAdjustment->stock_adjustment_status !== 'For Approval') {
                  return response()->json([
@@ -222,105 +219,71 @@ class StockAdjustmentController extends Controller
     public function approve(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'detailId' => ['required', 'integer', 'min:1', Rule::exists('stock_adjustment', 'id')],
+            'detailId' => ['required', 'integer', Rule::exists('stock_adjustment', 'id')],
         ]);
-
-        $pageAppId = (int) $request->input('appId');
-        $pageNavigationMenuId = (int) $request->input('navigationMenuId');
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => $validator->errors()->first('detailId') ?? 'Validation failed',
+                'message' => $validator->errors()->first(),
             ]);
         }
 
-        $detailId = (int) $validator->validated()['detailId'];
+        $adjustment = StockAdjustment::with(['items.stockLevel'])
+            ->findOrFail($request->detailId);
 
-        DB::transaction(function () use ($detailId) {
-            $stockAdjustment = StockAdjustment::query()
-                ->select(['id', 'stock_level_id', 'stock_adjustment_status', 'quantity', 'adjustment_type', 'stock_adjustment_reason_name'])
-                ->findOrFail($detailId);
+        if ($adjustment->stock_adjustment_status !== 'For Approval') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Stock adjustment is not in For Approval status'
+            ]);
+        }
 
-            if ($stockAdjustment->stock_adjustment_status !== 'For Approval') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'The stock adjustment is not "For Approval" status',
-                ]);
-            }
-
-            $stockAdjustment->update([
+        DB::transaction(function () use ($adjustment) {
+            $adjustment->update([
                 'stock_adjustment_status' => 'Approved',
-                'approved_date' => Carbon::now()
+                'approved_date' => now(),
             ]);
-            
-            $stockLevel = DB::table('stock_level')
-                    ->where('id', $stockAdjustment->stock_level_id)
-                    ->first();
 
-            $currentQty = DB::table('stock_level')
-                ->where('id', $stockAdjustment->stock_level_id)
-                ->value('quantity');
+            foreach ($adjustment->items as $item) {
+                $stock = $item->stockLevel;
 
-            $adjustQty  = $stockAdjustment->quantity;
+                $oldQty = $stock->quantity;
+                $newQty = $item->new_quantity;
+                $diff   = $newQty - $oldQty;
 
-            switch ($stockAdjustment->adjustment_type) {
-                case 'Add Stock':
-                    $newQty = $currentQty + $adjustQty;
-                    break;
+                // ✅ APPLY CHANGE
+                $stock->quantity = $newQty;
+                $stock->last_log_by = auth()->id();
+                $stock->save();
 
-                case 'Remove Stock':
-                    $newQty = $currentQty - $adjustQty;
-                    break;
+                // ✅ DETERMINE MOVEMENT TYPE
+                $movementType = match (true) {
+                    $diff > 0  => 'IN',
+                    $diff < 0  => 'OUT',
+                    default    => 'ADJUSTMENT',
+                };
 
-                case 'Set Exact Stock':
-                    $newQty = $adjustQty;
-                    break;
-
-                default:
-                    $newQty = $currentQty;
-            }
-            
-            $reorderLevel = DB::table('product')
-                ->where('id', $stockLevel->product_id)
-                ->value('reorder_level');
-
-            if ($newQty == 0) {
-                $stockStatus = 'Out of Stock';
-            } elseif ($newQty <= $reorderLevel) {
-                $stockStatus = 'Low Stock';
-            } else {
-                $stockStatus = 'In Stock';
-            }
-
-            DB::table('stock_level')
-                ->where('id', $stockAdjustment->stock_level_id)
-                ->update([
-                    'quantity' => $newQty,
-                    'stock_status' => $stockStatus,
-                    'last_log_by' => auth()->id(),
+                // ✅ LOG MOVEMENT (difference only)
+                StockMovement::create([
+                    'product_id'        => $stock->product_id,
+                    'product_name'      => $stock->product_name,
+                    'warehouse_id'      => $stock->warehouse_id,
+                    'warehouse_name'    => $stock->warehouse_name,
+                    'inventory_lot_id'  => $stock->inventory_lot_id,
+                    'movement_type'     => $movementType,
+                    'quantity'          => abs($diff),
+                    'reference_type'    => 'Stock Adjustment',
+                    'reference_number'  => $adjustment->reference_number,
+                    'remarks'           => 'Stock adjusted',
+                    'last_log_by'       => auth()->id(),
                 ]);
-
-            DB::table('stock_movement')->insert([
-                'stock_level_id' => $stockAdjustment->stock_level_id,
-                'movement_type' => 'Adjustment',
-                'quantity' => $adjustQty,
-                'reference_type' => 'Stock Adjustment',
-                'reference_id' => $stockAdjustment->id,
-                'remarks' => $stockAdjustment->stock_adjustment_reason_name ?? 'Stock adjustment applied',
-                'last_log_by' => auth()->id(),
-            ]);
+            }
         });
-
-        $link = route('apps.base', [
-            'appId' => $pageAppId,
-            'navigationMenuId' => $pageNavigationMenuId,
-        ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'The stock adjustment has been approved successfully',
-            'redirect_link' => $link,
+            'message' => 'Stock adjustment approved successfully',
         ]);
     }
 
@@ -331,97 +294,64 @@ class StockAdjustmentController extends Controller
             'selected_id.*' => ['integer', 'distinct', Rule::exists('stock_adjustment', 'id')],
         ]);
 
-        $ids = $validated['selected_id'];
+        DB::transaction(function () use ($validated) {
 
-        DB::transaction(function () use ($ids) {
-
-            $stockAdjustments = StockAdjustment::query()
-                ->select([
-                    'id',
-                    'stock_level_id',
-                    'stock_adjustment_status',
-                    'quantity',
-                    'adjustment_type',
-                    'stock_adjustment_reason_name'
-                ])
-                ->whereIn('id', $ids)
+            $adjustments = StockAdjustment::query()
+                ->with(['items.stockLevel'])
+                ->whereIn('id', $validated['selected_id'])
                 ->where('stock_adjustment_status', 'For Approval')
+                ->lockForUpdate()
                 ->get();
 
-            foreach ($stockAdjustments as $stockAdjustment) {
-                DB::table('stock_adjustment')
-                    ->where('id', $stockAdjustment->id)
-                    ->update([
-                        'stock_adjustment_status' => 'Approved',
-                        'approved_date' => Carbon::now()
-                    ]);
+            foreach ($adjustments as $adjustment) {
 
-                $stockLevel = DB::table('stock_level')
-                    ->where('id', $stockAdjustment->stock_level_id)
-                    ->first();
-
-                if (!$stockLevel) {
-                    throw new \Exception("Stock level not found for adjustment ID {$stockAdjustment->id}");
-                }
-
-                $currentQty = $stockLevel->quantity;
-                $adjustQty  = $stockAdjustment->quantity;
-
-                switch ($stockAdjustment->adjustment_type) {
-                    case 'Add Stock':
-                        $newQty = $currentQty + $adjustQty;
-                        break;
-
-                    case 'Remove Stock':
-                        $newQty = $currentQty - $adjustQty;
-                        break;
-
-                    case 'Set Exact Stock':
-                        $newQty = $adjustQty;
-                        break;
-
-                    default:
-                        $newQty = $currentQty;
-                }
-
-                $reorderLevel = DB::table('product')
-                    ->where('id', $stockLevel->product_id)
-                    ->value('reorder_level') ?? 0;
-
-                if ($newQty <= 0) {
-                    $stockStatus = 'Out of Stock';
-                } elseif ($newQty <= $reorderLevel) {
-                    $stockStatus = 'Low Stock';
-                } else {
-                    $stockStatus = 'In Stock';
-                }
-
-                DB::table('stock_level')
-                    ->where('id', $stockLevel->id)
-                    ->update([
-                        'quantity' => $newQty,
-                        'stock_status' => $stockStatus,
-                        'last_log_by' => auth()->id(),
-                        'updated_at' => now(),
-                    ]);
-
-                DB::table('stock_movement')->insert([
-                    'stock_level_id' => $stockLevel->id,
-                    'movement_type' => 'Adjustment',
-                    'quantity' => $adjustQty,
-                    'reference_type' => 'Stock Adjustment',
-                    'reference_id' => $stockAdjustment->id,
-                    'remarks' => $stockAdjustment->stock_adjustment_reason_name ?? 'Stock adjustment applied',
-                    'last_log_by' => auth()->id(),
-                    'created_at' => now(),
-                    'updated_at' => now(),
+                $adjustment->update([
+                    'stock_adjustment_status' => 'Approved',
+                    'approved_date' => now(),
                 ]);
+
+                foreach ($adjustment->items as $item) {
+
+                    $stock = $item->stockLevel;
+
+                    if (!$stock) {
+                        throw new \Exception('Stock level not found');
+                    }
+
+                    $oldQty = $stock->quantity;
+                    $newQty = $item->new_quantity;
+                    $diff   = $newQty - $oldQty;
+
+                    $stock->quantity = $newQty;
+                    $stock->last_log_by = auth()->id();
+                    $stock->save();
+
+                    $movementType = match (true) {
+                        $diff > 0  => 'IN',
+                        $diff < 0  => 'OUT',
+                        default    => 'ADJUSTMENT',
+                    };
+
+                    StockMovement::create([
+                        'product_id'        => $stock->product_id,
+                        'product_name'      => $stock->product_name,
+                        'warehouse_id'      => $stock->warehouse_id,
+                        'warehouse_name'    => $stock->warehouse_name,
+                        'inventory_lot_id'  => $stock->inventory_lot_id,
+                        'movement_type'     => $movementType,
+                        'quantity'          => abs($diff),
+                        'reference_type'    => 'Stock Adjustment',
+                        'reference_number'  => $adjustment->reference_number,
+                        'remarks'           => 'Stock adjusted',
+                        'last_log_by'       => auth()->id(),
+                    ]);
+                }
             }
         });
 
         return response()->json([
             'success' => true,
-            'message' => 'The selected stock adjustments have been approved successfully',
+            'message' => 'Selected stock adjustments approved successfully',
         ]);
     }
 
@@ -520,11 +450,9 @@ class StockAdjustmentController extends Controller
         return response()->json([
             'success' => true,
             'notExist' => false,
-            'stockLevelId' => $stockAdjustment->stock_level_id ?? null,
-            'adjustmentType' => $stockAdjustment->adjustment_type ?? null,
-            'quantity' => $stockAdjustment->quantity ?? 0,
+            'referenceNumber' => $stockAdjustment->reference_number ?? null,
             'stockAdjustmentReasonId' => $stockAdjustment->stock_adjustment_reason_id ?? null,
-            'remarks' => $stockAdjustment->remarks ?? null
+            'remarks' => $stockAdjustment->remarks ?? null,
         ]);
     }
 
@@ -533,37 +461,22 @@ class StockAdjustmentController extends Controller
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
 
-        $filterByStockLevel = $request->input('filter_by_stock_level');
-        $filterByAdjustmentType = $request->input('filter_by_adjustment_type');
         $filterByStatus = $request->input('filter_by_status');
 
         $stockAdjustments = DB::table('stock_adjustment')
-            ->when(!empty($filterByStockLevel), fn($q) =>
-                $q->whereIn('stock_level_id', (array) $filterByStockLevel)
-            )
-            ->when(!empty($filterByAdjustmentType), fn($q) =>
-                $q->whereIn('adjustment_type', (array) $filterByAdjustmentType)
-            )
             ->when(!empty($filterByStatus), fn($q) =>
                 $q->whereIn('stock_adjustment_status', (array) $filterByStatus)
             )
-            ->orderBy('stock_level_id')
+            ->orderBy('reference_number')
             ->get();
 
         $response = $stockAdjustments->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
             $stockAdjustmentId = $row->id;
-            $stockLevelId = $row->stock_level_id;
-            $adjustmentType = $row->adjustment_type;
-            $stockAdjustmentStatus = $row->stock_adjustment_status;
-            $quantity = $row->quantity;
+            $referenceNumber = $row->reference_number;
             $stockAdjustmentReasonName = $row->stock_adjustment_reason_name;
-            $remarks = $row->remarks;
+            $adjustmentStatus = $row->stock_adjustment_status;
 
-            $stockLevelDetails = StockLevel::query()
-                ->where('id', $stockLevelId)
-                ->first();
-
-            $statusClass = match ($stockAdjustmentStatus) {
+            $statusClass = match ($adjustmentStatus) {
                 'Draft' => 'badge badge-secondary',
                 'For Approval' => 'badge badge-warning',
                 'Approved' => 'badge badge-success',
@@ -571,7 +484,7 @@ class StockAdjustmentController extends Controller
                 default => 'badge badge-light',
             };
 
-            $statusBadge = '<span class="'.$statusClass.'">'.$stockAdjustmentStatus.'</span>';
+            $statusBadge = '<span class="'.$statusClass.'">'.$adjustmentStatus.'</span>';
 
             $link = route('apps.details', [
                 'appId' => $pageAppId,
@@ -585,20 +498,9 @@ class StockAdjustmentController extends Controller
                         <input class="form-check-input datatable-checkbox-children" type="checkbox" value="'.$stockAdjustmentId.'">
                     </div>
                 ',
-                'STOCK_LEVEL' => '<div class="d-flex align-items-center">
-                        <div class="ms-3">
-                            <div class="user-meta-info">
-                                <h6 class="mb-0">'.$stockLevelDetails->product_name.'</h6>
-                                <small class="text-wrap fs-7 text-gray-500">'.$stockLevelDetails->warehouse_name.'</small>
-                            </div>
-                        </div>
-                    </div>',
-                'ADJUSTMENT_TYPE' => $adjustmentType,
-                'CURRENT_QUANTITY' => number_format($stockLevelDetails->quantity ?? 0, 2),
-                'QUANTITY' => number_format($quantity, 2),
+                'REFERENCE_NUMBER' => $referenceNumber,
+                'STOCK_ADJUSTMENT_REASON' => $stockAdjustmentReasonName,
                 'STATUS' => $statusBadge,
-                'ADJUSTMENT_REASON' => $stockAdjustmentReasonName,
-                'REMARKS' => $remarks,
                 'LINK' => $link,
             ];
         })->values();

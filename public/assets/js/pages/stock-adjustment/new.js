@@ -12,16 +12,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 selector: '#stock_adjustment_form',
                 rules: {
                     rules: {
-                        stock_level_id: { required: true},
-                        adjustment_type: { required: true},
-                        quantity: { required: true},
+                        reference_number: { required: true},
                         stock_adjustment_reason_id: { required: true},
                     },
                     messages: {
-                        stock_level_id: { required: 'Choose the stock' },
-                        adjustment_type: { required: 'Choose the adjustment type' },
-                        quantity: { required: 'Enter the quantity' },
-                        stock_adjustment_reason_id: { required: 'Choose the adjustment reason' },
+                        reference_number: { required: 'Enter the reference number' },
+                        stock_adjustment_reason_id: { required: 'Choose the stock adjustment reason' },
                     },
                     submitHandler: async (form) => {
                         const ctx = getPageContext();
@@ -61,7 +57,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         ],
         dropdown: [
-            { url: '/stock-level/generate-options', dropdownSelector: '#stock_level_id' },
             { url: '/stock-adjustment-reason/generate-options', dropdownSelector: '#stock_adjustment_reason_id' },
         ],
     }

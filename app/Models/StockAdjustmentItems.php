@@ -11,12 +11,9 @@ class StockAdjustmentItems extends Model
 
     protected $fillable = [
         'stock_adjustment_id',
-        'product_id',
-        'product_name',
-        'warehouse_id',
-        'warehouse_name',
-        'inventory_lot_id',
+        'stock_level_id',
         'adjustment_type',
+        'adjustment_quantity',
         'current_quantity',
         'new_quantity',
         'last_log_by'
@@ -25,21 +22,6 @@ class StockAdjustmentItems extends Model
     public function stockAdjustment(): BelongsTo
     {
         return $this->belongsTo(StockAdjustment::class, 'stock_adjustment_id');
-    }
-
-    public function product(): BelongsTo
-    {
-        return $this->belongsTo(Product::class, 'product_id');
-    }
-
-    public function warehouse(): BelongsTo
-    {
-        return $this->belongsTo(Warehouse::class, 'warehouse_id');
-    }
-
-    public function inventoryLot(): BelongsTo
-    {
-        return $this->belongsTo(InventoryLot::class, 'inventory_lot_id');
     }
 
     public function isIncrease(): bool

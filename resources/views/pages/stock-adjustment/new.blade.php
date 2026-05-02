@@ -10,42 +10,17 @@
                 @csrf
 
                 <div class="row mb-6">
-                    <label class="col-lg-2 col-form-label required fw-semibold fs-6" for="stock_level_id">
-                        Stock
+                    <label class="col-lg-2 col-form-label required fw-semibold fs-6" for="reference_number">
+                        Reference Number
                     </label>
                     <div class="col-lg-10">
-                        <select id="stock_level_id" name="stock_level_id" class="form-select" data-control="select2" data-allow-clear="false">
-                            <option>--</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="row mb-6">
-                    <label class="col-lg-2 col-form-label required fw-semibold fs-6" for="adjustment_type">
-                        Adjustment Type
-                    </label>
-                    <div class="col-lg-10">
-                        <select id="adjustment_type" name="adjustment_type" class="form-select" data-control="select2" data-allow-clear="false">
-                            <option value="">--</option>
-                            <option value="Add Stock">Add Stock</option>
-                            <option value="Remove Stock">Remove Stock</option>
-                            <option value="Set Exact Stock">Set Exact Stock</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="row mb-6">
-                    <label class="col-lg-2 col-form-label required fw-semibold fs-6" for="quantity">
-                        Quantity
-                    </label>
-                    <div class="col-lg-10">
-                        <input type="number" class="form-control" id="quantity" name="quantity" step="0.01">
+                        <input type="text" class="form-control" id="reference_number" name="reference_number" maxlength="100" autocomplete="off">
                     </div>
                 </div>
 
                 <div class="row mb-6">
                     <label class="col-lg-2 col-form-label required fw-semibold fs-6" for="stock_adjustment_reason_id">
-                        Adjustment Reason
+                        Stock Adjustment Reason
                     </label>
                     <div class="col-lg-10">
                         <select id="stock_adjustment_reason_id" name="stock_adjustment_reason_id" class="form-select" data-control="select2" data-allow-clear="false">

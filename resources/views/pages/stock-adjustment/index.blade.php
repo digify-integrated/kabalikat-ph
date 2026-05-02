@@ -8,7 +8,7 @@
 @section('content')
     @php
         $approveStockAdjustment = app(\App\Http\Controllers\SystemActionController::class)
-            ->userHasRoleAccessForAction(7, Auth::id());
+            ->userHasRoleAccessForAction(6, Auth::id());
     @endphp
 
     <div class="card">
@@ -63,7 +63,6 @@
                                     </a>
                                 </div>
                             @endif
-
                         </div>
                     @endif
                 </div>
@@ -75,18 +74,6 @@
                         </div>
                         <div class="separator border-gray-200"></div>
                         <div class="px-7 py-5">
-                            <div class="mb-5">
-                                <label class="form-label fs-6 fw-semibold" for="filter_by_stock_level">Filter By Stock Level:</label>
-                                <select id="filter_by_stock_level" name="filter_by_stock_level" multiple="multiple" class="form-select" data-control="select2" data-allow-clear="false"></select>
-                            </div>
-                            <div class="mb-5">
-                                <label class="form-label fs-6 fw-semibold" for="filter_by_adjustment_type">Filter By Adjustment Type:</label>
-                                <select id="filter_by_adjustment_type" multiple="multiple" class="form-select" data-control="select2" data-allow-clear="false">
-                                    <option value="Add Stock">Add Stock</option>
-                                    <option value="Remove Stock">Remove Stock</option>
-                                    <option value="Set Exact Stock">Set Exact Stock</option>
-                                </select>
-                            </div>
                             <div class="mb-5">
                                 <label class="form-label fs-6 fw-semibold" for="filter_by_status">Filter By Status:</label>
                                 <select id="filter_by_status" multiple="multiple" class="form-select" data-control="select2" data-allow-clear="false">
@@ -116,13 +103,9 @@
                                     <input class="form-check-input" id="datatable-checkbox" type="checkbox">
                                 </div>
                             </th>
-                            <th>Stock</th>
-                            <th>Adjustment Type</th>
-                            <th>Stock Qty</th>
-                            <th>Qty</th>
-                            <th>Status</th>
+                            <th>Reference</th>
                             <th>Adjustment Reason</th>
-                            <th>Remarks</th>
+                            <th>Status</th>
                         </tr>
                     </thead>
                     <tbody class="fw-semibold text-gray-800"></tbody>
