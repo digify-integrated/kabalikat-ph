@@ -6,7 +6,6 @@ use App\Models\StockAdjustment;
 use App\Models\StockAdjustmentItems;
 use App\Models\StockLevel;
 use Illuminate\Http\Request;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;

@@ -258,4 +258,13 @@ document.addEventListener('DOMContentLoaded', () => {
     config.lognotes.map((cfg) => attachLogNotesClassHandler(cfg.trigger, cfg.table));
 
     detailsDeleteButton(config.delete);
+
+    document.addEventListener('click', async (event) => {
+        const target = event.target;
+    
+        const addAddon = target.closest('#add-stock-batch-items');
+        if (addAddon) {
+            resetForm('stock_batch_items_form');
+        }
+    });
 });

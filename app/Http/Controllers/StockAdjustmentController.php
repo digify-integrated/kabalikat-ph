@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\StockAdjustment;
 use App\Models\StockAdjustmentReason;
-use App\Models\StockLevel;
 use App\Models\StockMovement;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -229,7 +228,7 @@ class StockAdjustmentController extends Controller
             ]);
         }
 
-        $adjustment = StockAdjustment::with(['items.stockLevel'])
+        $adjustment = StockAdjustment::with(['items.stockLevel.product'])
             ->findOrFail($request->detailId);
 
         if ($adjustment->stock_adjustment_status !== 'For Approval') {
@@ -240,31 +239,39 @@ class StockAdjustmentController extends Controller
         }
 
         DB::transaction(function () use ($adjustment) {
+
             $adjustment->update([
                 'stock_adjustment_status' => 'Approved',
                 'approved_date' => now(),
             ]);
 
             foreach ($adjustment->items as $item) {
+
                 $stock = $item->stockLevel;
 
                 $oldQty = $stock->quantity;
                 $newQty = $item->new_quantity;
                 $diff   = $newQty - $oldQty;
 
-                // ✅ APPLY CHANGE
                 $stock->quantity = $newQty;
                 $stock->last_log_by = auth()->id();
+
+                $reorderLevel = $stock->product->reorder_level ?? 0;
+
+                $stock->stock_status = match (true) {
+                    $stock->quantity == 0 => 'Out of Stock',
+                    $stock->quantity <= $reorderLevel => 'Low Stock',
+                    default => 'In Stock',
+                };
+
                 $stock->save();
 
-                // ✅ DETERMINE MOVEMENT TYPE
                 $movementType = match (true) {
                     $diff > 0  => 'IN',
                     $diff < 0  => 'OUT',
                     default    => 'ADJUSTMENT',
                 };
 
-                // ✅ LOG MOVEMENT (difference only)
                 StockMovement::create([
                     'product_id'        => $stock->product_id,
                     'product_name'      => $stock->product_name,
@@ -297,11 +304,15 @@ class StockAdjustmentController extends Controller
         DB::transaction(function () use ($validated) {
 
             $adjustments = StockAdjustment::query()
-                ->with(['items.stockLevel'])
+                ->with(['items.stockLevel.product'])
                 ->whereIn('id', $validated['selected_id'])
                 ->where('stock_adjustment_status', 'For Approval')
                 ->lockForUpdate()
                 ->get();
+
+            if ($adjustments->isEmpty()) {
+                throw new \Exception('No adjustments available for approval');
+            }
 
             foreach ($adjustments as $adjustment) {
 
@@ -313,17 +324,22 @@ class StockAdjustmentController extends Controller
                 foreach ($adjustment->items as $item) {
 
                     $stock = $item->stockLevel;
-
-                    if (!$stock) {
-                        throw new \Exception('Stock level not found');
-                    }
-
+                    
                     $oldQty = $stock->quantity;
                     $newQty = $item->new_quantity;
                     $diff   = $newQty - $oldQty;
 
                     $stock->quantity = $newQty;
                     $stock->last_log_by = auth()->id();
+
+                    $reorderLevel = $stock->product->reorder_level ?? 0;
+
+                    $stock->stock_status = match (true) {
+                        $stock->quantity == 0 => 'Out of Stock',
+                        $stock->quantity <= $reorderLevel => 'Low Stock',
+                        default => 'In Stock',
+                    };
+
                     $stock->save();
 
                     $movementType = match (true) {

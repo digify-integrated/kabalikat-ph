@@ -233,7 +233,6 @@ class StockBatchController extends Controller
 
         $detailId = (int) $validator->validated()['detailId'];
 
-        // ✅ Fetch FIRST (outside transaction)
         $batch = StockBatch::with(['items.product', 'warehouse'])
             ->findOrFail($detailId);
 
@@ -246,7 +245,6 @@ class StockBatchController extends Controller
 
         DB::transaction(function () use ($batch) {
 
-            // ✅ Correct column
             $batch->update([
                 'stock_batch_status' => 'Approved',
                 'approved_date' => now(),
@@ -259,8 +257,8 @@ class StockBatchController extends Controller
 
                 $productId   = $item->product_id;
                 $productName = $item->product->product_name ?? $item->product_name;
+                $reorderLevel = $item->product->reorder_level ?? 0;
 
-                // ✅ FIX: include received_date (required)
                 $lot = InventoryLot::firstOrCreate(
                     [
                         'product_id'      => $productId,
@@ -285,6 +283,12 @@ class StockBatchController extends Controller
                 $stock->warehouse_name = $warehouseName;
                 $stock->quantity = ($stock->quantity ?? 0) + $item->quantity;
                 $stock->last_log_by = auth()->id();
+
+                $stock->stock_status = match (true) {
+                    $stock->quantity == 0 => 'Out of Stock',
+                    $stock->quantity <= $reorderLevel => 'Low Stock',
+                    default => 'In Stock',
+                };
 
                 $stock->save();
 
@@ -318,10 +322,11 @@ class StockBatchController extends Controller
         ]);
 
         DB::transaction(function () use ($validated) {
+
             $batches = StockBatch::query()
                 ->with(['items.product', 'warehouse'])
                 ->whereIn('id', $validated['selected_id'])
-                ->where('stock_batch_status', 'For Approval') // ✅ FIXED
+                ->where('stock_batch_status', 'For Approval')
                 ->lockForUpdate()
                 ->get();
 
@@ -338,6 +343,7 @@ class StockBatchController extends Controller
 
                     $productId   = $item->product_id;
                     $productName = $item->product->product_name ?? $item->product_name;
+                    $reorderLevel = $item->product->reorder_level ?? 0;
 
                     $lot = InventoryLot::firstOrCreate(
                         [
@@ -363,6 +369,12 @@ class StockBatchController extends Controller
                     $stock->warehouse_name = $warehouseName;
                     $stock->quantity = ($stock->quantity ?? 0) + $item->quantity;
                     $stock->last_log_by = auth()->id();
+
+                    $stock->stock_status = match (true) {
+                        $stock->quantity == 0 => 'Out of Stock',
+                        $stock->quantity <= $reorderLevel => 'Low Stock',
+                        default => 'In Stock',
+                    };
 
                     $stock->save();
 

@@ -210,7 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ],
         dropdown: [
             { url: '/stock-adjustment-reason/generate-options', dropdownSelector: '#stock_adjustment_reason_id' },
-            { url: '/stock_level/generate-options', dropdownSelector: '#stock_level' },
+            { url: '/stock-level/generate-options', dropdownSelector: '#stock_level_id' },
         ],
     };
 
@@ -241,4 +241,13 @@ document.addEventListener('DOMContentLoaded', () => {
     config.lognotes.map((cfg) => attachLogNotesClassHandler(cfg.trigger, cfg.table));
 
     detailsDeleteButton(config.delete);
+
+    document.addEventListener('click', async (event) => {
+        const target = event.target;
+    
+        const addAddon = target.closest('#add-stock-adjustment-items');
+        if (addAddon) {
+            resetForm('stock_adjustment_items_form');
+        }
+    });
 });

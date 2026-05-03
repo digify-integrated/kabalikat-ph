@@ -8,7 +8,7 @@
 @section('content')
     @php
         $approveStockTransfer = app(\App\Http\Controllers\SystemActionController::class)
-            ->userHasRoleAccessForAction(7, Auth::id());
+            ->userHasRoleAccessForAction(6, Auth::id());
     @endphp
 
     <div class="card">
@@ -103,12 +103,10 @@
                                     <input class="form-check-input" id="datatable-checkbox" type="checkbox">
                                 </div>
                             </th>
-                            <th>Stock From</th>
-                            <th>Stock To</th>
-                            <th>Qty</th>
-                            <th>Status</th>
+                            <th>Reference</th>
+                            <th>Transfer</th>
                             <th>Transfer Reason</th>
-                            <th>Remarks</th>
+                            <th>Status</th>
                         </tr>
                     </thead>
                     <tbody class="fw-semibold text-gray-800"></tbody>

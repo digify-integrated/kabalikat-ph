@@ -491,7 +491,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 url: config.addonDropdown.url,
                 dropdownSelector: config.addonDropdown.dropdownSelector,
                 data: config.addonDropdown.data
-            });            
+            });
         }
     
         const generateVariant = target.closest('#generate-variant');

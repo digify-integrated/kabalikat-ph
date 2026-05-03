@@ -12,9 +12,7 @@ class StockTransferItems extends Model
 
     protected $fillable = [
         'stock_transfer_id',
-        'product_id',
-        'product_name',
-        'inventory_lot_id',
+        'stock_level_id',
         'quantity',
         'last_log_by'
     ];
@@ -22,15 +20,10 @@ class StockTransferItems extends Model
     public function stockTransfer(): BelongsTo
     {
         return $this->belongsTo(StockTransfer::class, 'stock_transfer_id');
-    }
+    }    
 
-    public function product(): BelongsTo
+    public function stockLevel(): BelongsTo
     {
-        return $this->belongsTo(Product::class, 'product_id');
-    }
-
-    public function inventoryLot(): BelongsTo
-    {
-        return $this->belongsTo(InventoryLot::class, 'inventory_lot_id');
+        return $this->belongsTo(StockLevel::class, 'stock_level_id');
     }
 }

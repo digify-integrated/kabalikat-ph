@@ -10,39 +10,39 @@
                 @csrf
 
                 <div class="row mb-6">
-                    <label class="col-lg-2 col-form-label required fw-semibold fs-6" for="stock_level_from_id">
-                        Stock From
+                    <label class="col-lg-2 col-form-label required fw-semibold fs-6" for="reference_number">
+                        Reference Number
                     </label>
                     <div class="col-lg-10">
-                        <select id="stock_level_from_id" name="stock_level_from_id" class="form-select" data-control="select2" data-allow-clear="false">
+                        <input type="text" class="form-control" id="reference_number" name="reference_number" maxlength="100" autocomplete="off">
+                    </div>
+                </div>
+
+                <div class="row mb-6">
+                    <label class="col-lg-2 col-form-label required fw-semibold fs-6" for="from_warehouse_id">
+                        From
+                    </label>
+                    <div class="col-lg-10">
+                        <select id="from_warehouse_id" name="from_warehouse_id" class="form-select" data-control="select2" data-allow-clear="false">
                             <option>--</option>
                         </select>
                     </div>
                 </div>
 
                 <div class="row mb-6">
-                    <label class="col-lg-2 col-form-label required fw-semibold fs-6" for="stock_level_to_id">
-                        Stock To
+                    <label class="col-lg-2 col-form-label required fw-semibold fs-6" for="to_warehouse_id">
+                        To 
                     </label>
                     <div class="col-lg-10">
-                        <select id="stock_level_to_id" name="stock_level_to_id" class="form-select" data-control="select2" data-allow-clear="false">
+                        <select id="to_warehouse_id" name="to_warehouse_id" class="form-select" data-control="select2" data-allow-clear="false">
                             <option>--</option>
                         </select>
-                    </div>
-                </div>
-
-                <div class="row mb-6">
-                    <label class="col-lg-2 col-form-label required fw-semibold fs-6" for="quantity">
-                        Quantity
-                    </label>
-                    <div class="col-lg-10">
-                        <input type="number" class="form-control" id="quantity" name="quantity" step="0.01">
                     </div>
                 </div>
 
                 <div class="row mb-6">
                     <label class="col-lg-2 col-form-label required fw-semibold fs-6" for="stock_transfer_reason_id">
-                        Transfer Reason
+                        Stock Transfer Reason
                     </label>
                     <div class="col-lg-10">
                         <select id="stock_transfer_reason_id" name="stock_transfer_reason_id" class="form-select" data-control="select2" data-allow-clear="false">

@@ -12,16 +12,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 selector: '#stock_transfer_form',
                 rules: {
                     rules: {
-                        stock_level_from_id: { required: true},
-                        stock_level_to_id: { required: true},
-                        quantity: { required: true},
+                        reference_number: { required: true},
+                        from_warehouse_id: { required: true},
+                        to_warehouse_id: { required: true},
                         stock_transfer_reason_id: { required: true},
                     },
                     messages: {
-                        stock_level_from_id: { required: 'Choose the stock' },
-                        stock_level_to_id: { required: 'Choose the stock' },
-                        quantity: { required: 'Enter the quantity' },
-                        stock_transfer_reason_id: { required: 'Choose the transfer reason' },
+                        reference_number: { required: 'Enter the reference number' },
+                        from_warehouse_id: { required: 'Choose the from' },
+                        to_warehouse_id: { required: 'Choose the to' },
+                        stock_transfer_reason_id: { required: 'Choose the stock transfer reason' },
                     },
                     submitHandler: async (form) => {
                         const ctx = getPageContext();
@@ -55,13 +55,14 @@ document.addEventListener('DOMContentLoaded', () => {
                             enableButton('submit-data');
                             handleSystemError(error, 'fetch_failed', `Fetch request failed: ${error.message}`);
                         }
+
                     },
                 }
             }
         ],
         dropdown: [
-            { url: '/stock-level/generate-options', dropdownSelector: '#stock_level_from_id' },
-            { url: '/stock-level/generate-options', dropdownSelector: '#stock_level_to_id' },
+            { url: '/warehouse/generate-options', dropdownSelector: '#from_warehouse_id' },
+            { url: '/warehouse/generate-options', dropdownSelector: '#to_warehouse_id' },
             { url: '/stock-transfer-reason/generate-options', dropdownSelector: '#stock_transfer_reason_id' },
         ],
     }

@@ -2078,12 +2078,8 @@ return new class extends Migration
             BEGIN
                 DECLARE audit_log TEXT DEFAULT 'Stock transfer items changed.<br/><br/>';
 
-                IF NEW.product_name <> OLD.product_name THEN
-                    SET audit_log = CONCAT(audit_log, "Product: ", OLD.product_name, " -> ", NEW.product_name, "<br/>");
-                END IF;
-
-                IF NEW.inventory_lot_id <> OLD.inventory_lot_id THEN
-                    SET audit_log = CONCAT(audit_log, "Inventory Lot ID: ", OLD.inventory_lot_id, " -> ", NEW.inventory_lot_id, "<br/>");
+                IF NEW.stock_level_id <> OLD.stock_level_id THEN
+                    SET audit_log = CONCAT(audit_log, "Stock Level ID: ", OLD.stock_level_id, " -> ", NEW.stock_level_id, "<br/>");
                 END IF;
 
                 IF NEW.quantity <> OLD.quantity THEN

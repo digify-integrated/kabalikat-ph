@@ -24,6 +24,11 @@ class StockAdjustmentItems extends Model
         return $this->belongsTo(StockAdjustment::class, 'stock_adjustment_id');
     }
 
+    public function stockLevel(): BelongsTo
+    {
+        return $this->belongsTo(StockLevel::class, 'stock_level_id');
+    }
+
     public function isIncrease(): bool
     {
         return $this->adjustment_type === 'Add Stock';

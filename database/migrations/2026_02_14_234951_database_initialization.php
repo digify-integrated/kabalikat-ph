@@ -1222,15 +1222,9 @@ return new class extends Migration
             $table->foreignId('stock_transfer_id')
                 ->constrained('stock_transfer')
                 ->cascadeOnDelete();
-
-            $table->foreignId('product_id')
-                ->constrained('product')
-                ->cascadeOnDelete();
-
-            $table->string('product_name');
-
-            $table->foreignId('inventory_lot_id')
-                ->constrained('inventory_lot')
+                
+            $table->foreignId('stock_level_id')
+                ->constrained('stock_level')
                 ->cascadeOnDelete();
 
             $table->decimal('quantity', 10, 2);

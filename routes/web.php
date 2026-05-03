@@ -27,6 +27,7 @@ use App\Http\Controllers\RoleSystemActionPermissionController;
 use App\Http\Controllers\RoleUserAccountController;
 use App\Http\Controllers\StateController;
 use App\Http\Controllers\StockAdjustmentController;
+use App\Http\Controllers\StockAdjustmentItemsController;
 use App\Http\Controllers\StockAdjustmentReasonController;
 use App\Http\Controllers\StockBatchController;
 use App\Http\Controllers\StockBatchItemsController;
@@ -606,6 +607,17 @@ Route::middleware('auth')->group(function () {
             Route::post('/delete', 'delete')->name('delete');
             Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
             Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
+            Route::post('/generate-table', 'generateTable')->name('generate.table');
+        });
+
+    
+    // Stock Adjustment Items
+    Route::prefix('stock-adjustment-items')
+        ->name('stock.adjustment.items.')
+        ->controller(StockAdjustmentItemsController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
+            Route::post('/delete', 'delete')->name('delete');
             Route::post('/generate-table', 'generateTable')->name('generate.table');
         });
 

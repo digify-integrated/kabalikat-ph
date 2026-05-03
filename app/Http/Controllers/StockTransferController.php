@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\StockLevel;
 use App\Models\StockTransfer;
 use App\Models\StockTransferReason;
-use App\Models\StockLevel;
+use App\Models\StockMovement;
+use App\Models\Warehouse;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,10 +20,23 @@ class StockTransferController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'stock_transfer_id' => ['nullable', 'integer'],
-            'stock_level_from_id' => ['required', 'integer', Rule::exists('stock_level', 'id')],
-            'stock_level_to_id' => ['required', 'integer', Rule::exists('stock_level', 'id')],
-            'quantity' => ['required', 'numeric'],
-            'stock_transfer_reason_id' => ['required', 'integer', Rule::exists('stock_transfer_reason', 'id')],
+            'reference_number' => ['required', 'string'],
+            'from_warehouse_id' => [
+                'required',
+                'integer',
+                Rule::exists('warehouse', 'id'),
+                'different:to_warehouse_id'
+            ],
+            'to_warehouse_id' => [
+                'required',
+                'integer',
+                Rule::exists('warehouse', 'id'),
+            ],
+            'stock_transfer_reason_id' => [
+                'required',
+                'integer',
+                Rule::exists('stock_transfer_reason', 'id')
+            ],
             'remarks' => ['nullable', 'string'],
         ]);
 
@@ -37,50 +52,28 @@ class StockTransferController extends Controller
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
 
+        $fromWarehouseId = (int) $validated['from_warehouse_id'];
+        $toWarehouseId = (int) $validated['to_warehouse_id'];
         $stockTransferReasonId = (int) $validated['stock_transfer_reason_id'];
-        $stockLevelFromId = (int) $validated['stock_level_from_id'];
-        $stockLevelToId = (int) $validated['stock_level_to_id'];
-        $transferQuantity = (float) $validated['quantity'];
 
-        if ($stockLevelFromId === $stockLevelToId) {
-            return response()->json([
-                'success' => false,
-                'message' => 'The "From" and "To" stock levels cannot be the same',
-            ]);
-        }
+        $fromwWarehouseName = (string) Warehouse::query()
+            ->whereKey($fromWarehouseId)
+            ->value('warehouse_name');
 
-        $stockFrom = StockLevel::find($stockLevelFromId);
-        $stockTo = StockLevel::find($stockLevelToId);
-
-        if (!$stockFrom || !$stockTo) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid stock level selected.',
-            ]);
-        }
-
-        if ($stockFrom->product_id !== $stockTo->product_id) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Stock From and Stock To must have the same product.',
-            ]);
-        }
-
-        if ($transferQuantity > $stockFrom->quantity) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Transfer quantity cannot exceed available stock.',
-            ]);
-        }
+        $towWarehouseName = (string) Warehouse::query()
+            ->whereKey($toWarehouseId)
+            ->value('warehouse_name');
 
         $stockTransferReasonName = (string) StockTransferReason::query()
             ->whereKey($stockTransferReasonId)
             ->value('stock_transfer_reason_name');
 
         $payload = [
-            'stock_level_from_id' => $stockLevelFromId,
-            'stock_level_to_id' => $stockLevelToId,
-            'quantity' => $transferQuantity,
+            'reference_number' => $validated['reference_number'],
+            'from_warehouse_id' => $fromWarehouseId,
+            'from_warehouse_name' => $fromwWarehouseName,
+            'to_warehouse_id' => $toWarehouseId,
+            'to_warehouse_name' => $towWarehouseName,
             'stock_transfer_reason_id' => $stockTransferReasonId,
             'stock_transfer_reason_name' => $stockTransferReasonName,
             'remarks' => $validated['remarks'],
@@ -133,7 +126,7 @@ class StockTransferController extends Controller
             ->findOrFail($detailId);
 
             if ($stockTransfer->stock_transfer_status !== 'Draft') {
-                return response()->json([
+                 return response()->json([
                     'success' => false,
                     'message' => 'The stock transfer is not "Draft" status',
                 ]);
@@ -177,8 +170,8 @@ class StockTransferController extends Controller
 
         DB::transaction(function () use ($detailId) {
             $stockTransfer = StockTransfer::query()
-            ->select(['id', 'stock_transfer_status'])
-            ->findOrFail($detailId);
+                ->select(['id', 'stock_transfer_status'])
+                ->findOrFail($detailId);
 
             if ($stockTransfer->stock_transfer_status !== 'For Approval' && $stockTransfer->stock_transfer_status !== 'Draft') {
                 return response()->json([
@@ -225,8 +218,8 @@ class StockTransferController extends Controller
 
         DB::transaction(function () use ($detailId) {
             $stockTransfer = StockTransfer::query()
-            ->select(['id', 'stock_transfer_status'])
-            ->findOrFail($detailId);
+                ->select(['id', 'stock_transfer_status'])
+                ->findOrFail($detailId);
 
             if ($stockTransfer->stock_transfer_status !== 'For Approval') {
                  return response()->json([
@@ -256,105 +249,141 @@ class StockTransferController extends Controller
     public function approve(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'detailId' => ['required', 'integer', 'min:1', Rule::exists('stock_transfer', 'id')],
+            'detailId' => ['required', 'integer', Rule::exists('stock_transfer', 'id')],
         ]);
-
-        $pageAppId = (int) $request->input('appId');
-        $pageNavigationMenuId = (int) $request->input('navigationMenuId');
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => $validator->errors()->first('detailId') ?? 'Validation failed',
+                'message' => $validator->errors()->first(),
             ]);
         }
 
-        $detailId = (int) $validator->validated()['detailId'];
+        $transfer = StockTransfer::with([
+            'items.stockLevel.product'
+        ])->findOrFail($request->detailId);
 
-        DB::transaction(function () use ($detailId) {
-            $stockTransfer = StockTransfer::query()
-                ->select(['id', 'stock_level_id', 'stock_transfer_status', 'quantity', 'transfer_type', 'stock_transfer_reason_name'])
-                ->findOrFail($detailId);
+        if ($transfer->stock_transfer_status !== 'For Approval') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Stock transfer is not in For Approval status'
+            ]);
+        }
 
-            if ($stockTransfer->stock_transfer_status !== 'For Approval') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'The stock transfer is not "For Approval" status',
-                ]);
-            }
+        DB::transaction(function () use ($transfer) {
 
-            $stockTransfer->update([
+            $transfer->update([
                 'stock_transfer_status' => 'Approved',
-                'approved_date' => Carbon::now()
+                'approved_date' => now(),
             ]);
-            
-            $stockLevel = DB::table('stock_level')
-                    ->where('id', $stockTransfer->stock_level_id)
-                    ->first();
 
-            $currentQty = DB::table('stock_level')
-                ->where('id', $stockTransfer->stock_level_id)
-                ->value('quantity');
+            foreach ($transfer->items as $item) {
 
-            $adjustQty  = $stockTransfer->quantity;
+                $sourceStock = $item->stockLevel;
 
-            switch ($stockTransfer->transfer_type) {
-                case 'Add Stock':
-                    $newQty = $currentQty + $adjustQty;
-                    break;
+                if (!$sourceStock) {
+                    throw new \Exception('Source stock not found');
+                }
 
-                case 'Remove Stock':
-                    $newQty = $currentQty - $adjustQty;
-                    break;
+                $qty = $item->quantity;
 
-                case 'Set Exact Stock':
-                    $newQty = $adjustQty;
-                    break;
+                // ❗ Prevent negative stock
+                if ($sourceStock->quantity < $qty) {
+                    throw new \Exception('Insufficient stock for transfer');
+                }
 
-                default:
-                    $newQty = $currentQty;
-            }
-            
-            $reorderLevel = DB::table('product')
-                ->where('id', $stockLevel->product_id)
-                ->value('reorder_level');
+                /*
+                |--------------------------------------------------------------------------
+                | 1. TRANSFER OUT (SOURCE)
+                |--------------------------------------------------------------------------
+                */
+                $sourceStock->quantity -= $qty;
 
-            if ($newQty == 0) {
-                $stockStatus = 'Out of Stock';
-            } elseif ($newQty <= $reorderLevel) {
-                $stockStatus = 'Low Stock';
-            } else {
-                $stockStatus = 'In Stock';
-            }
+                $reorderLevel = $sourceStock->product->reorder_level ?? 0;
 
-            DB::table('stock_level')
-                ->where('id', $stockTransfer->stock_level_id)
-                ->update([
-                    'quantity' => $newQty,
-                    'stock_status' => $stockStatus,
-                    'last_log_by' => auth()->id(),
+                $sourceStock->stock_status = match (true) {
+                    $sourceStock->quantity == 0 => 'Out of Stock',
+                    $sourceStock->quantity <= $reorderLevel => 'Low Stock',
+                    default => 'In Stock',
+                };
+
+                $sourceStock->last_log_by = auth()->id();
+                $sourceStock->save();
+
+                /*
+                |--------------------------------------------------------------------------
+                | 2. TRANSFER IN (DESTINATION)
+                |--------------------------------------------------------------------------
+                */
+                $destStock = StockLevel::firstOrCreate(
+                    [
+                        'product_id'       => $sourceStock->product_id,
+                        'warehouse_id'     => $transfer->to_warehouse_id,
+                        'inventory_lot_id' => $sourceStock->inventory_lot_id,
+                    ],
+                    [
+                        'product_name'     => $sourceStock->product_name,
+                        'warehouse_name'   => $transfer->to_warehouse_name,
+                        'quantity'         => 0,
+                        'stock_status'     => 'Out of Stock',
+                        'last_log_by'      => auth()->id(),
+                    ]
+                );
+
+                $destStock->quantity += $qty;
+
+                $reorderLevelDest = $sourceStock->product->reorder_level ?? 0;
+
+                $destStock->stock_status = match (true) {
+                    $destStock->quantity == 0 => 'Out of Stock',
+                    $destStock->quantity <= $reorderLevelDest => 'Low Stock',
+                    default => 'In Stock',
+                };
+
+                $destStock->last_log_by = auth()->id();
+                $destStock->save();
+
+                /*
+                |--------------------------------------------------------------------------
+                | 3. STOCK MOVEMENTS
+                |--------------------------------------------------------------------------
+                */
+
+                // TRANSFER OUT
+                StockMovement::create([
+                    'product_id'        => $sourceStock->product_id,
+                    'product_name'      => $sourceStock->product_name,
+                    'warehouse_id'      => $transfer->from_warehouse_id,
+                    'warehouse_name'    => $transfer->from_warehouse_name,
+                    'inventory_lot_id'  => $sourceStock->inventory_lot_id,
+                    'movement_type'     => 'TRANSFER_OUT',
+                    'quantity'          => $qty,
+                    'reference_type'    => 'Stock Transfer',
+                    'reference_number'  => $transfer->reference_number,
+                    'remarks'           => 'Stock transferred out',
+                    'last_log_by'       => auth()->id(),
                 ]);
 
-            DB::table('stock_movement')->insert([
-                'stock_level_id' => $stockTransfer->stock_level_id,
-                'movement_type' => 'Transfer',
-                'quantity' => $adjustQty,
-                'reference_type' => 'Stock Transfer',
-                'reference_id' => $stockTransfer->id,
-                'remarks' => $stockTransfer->stock_transfer_reason_name ?? 'Stock transfer applied',
-                'last_log_by' => auth()->id(),
-            ]);
+                // TRANSFER IN
+                StockMovement::create([
+                    'product_id'        => $sourceStock->product_id,
+                    'product_name'      => $sourceStock->product_name,
+                    'warehouse_id'      => $transfer->to_warehouse_id,
+                    'warehouse_name'    => $transfer->to_warehouse_name,
+                    'inventory_lot_id'  => $sourceStock->inventory_lot_id,
+                    'movement_type'     => 'TRANSFER_IN',
+                    'quantity'          => $qty,
+                    'reference_type'    => 'Stock Transfer',
+                    'reference_number'  => $transfer->reference_number,
+                    'remarks'           => 'Stock transferred in',
+                    'last_log_by'       => auth()->id(),
+                ]);
+            }
         });
-
-        $link = route('apps.base', [
-            'appId' => $pageAppId,
-            'navigationMenuId' => $pageNavigationMenuId,
-        ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'The stock transfer has been approved successfully',
-            'redirect_link' => $link,
+            'message' => 'Stock transfer approved successfully',
         ]);
     }
 
@@ -365,97 +394,116 @@ class StockTransferController extends Controller
             'selected_id.*' => ['integer', 'distinct', Rule::exists('stock_transfer', 'id')],
         ]);
 
-        $ids = $validated['selected_id'];
+        DB::transaction(function () use ($validated) {
 
-        DB::transaction(function () use ($ids) {
-
-            $stockTransfers = StockTransfer::query()
-                ->select([
-                    'id',
-                    'stock_level_id',
-                    'stock_transfer_status',
-                    'quantity',
-                    'transfer_type',
-                    'stock_transfer_reason_name'
-                ])
-                ->whereIn('id', $ids)
+            $transfers = StockTransfer::query()
+                ->with(['items.stockLevel.product'])
+                ->whereIn('id', $validated['selected_id'])
                 ->where('stock_transfer_status', 'For Approval')
+                ->lockForUpdate()
                 ->get();
 
-            foreach ($stockTransfers as $stockTransfer) {
-                DB::table('stock_transfer')
-                    ->where('id', $stockTransfer->id)
-                    ->update([
-                        'stock_transfer_status' => 'Approved',
-                        'approved_date' => Carbon::now()
-                    ]);
+            if ($transfers->isEmpty()) {
+                throw new \Exception('No transfers available for approval');
+            }
 
-                $stockLevel = DB::table('stock_level')
-                    ->where('id', $stockTransfer->stock_level_id)
-                    ->first();
+            foreach ($transfers as $transfer) {
 
-                if (!$stockLevel) {
-                    throw new \Exception("Stock level not found for transfer ID {$stockTransfer->id}");
-                }
-
-                $currentQty = $stockLevel->quantity;
-                $adjustQty  = $stockTransfer->quantity;
-
-                switch ($stockTransfer->transfer_type) {
-                    case 'Add Stock':
-                        $newQty = $currentQty + $adjustQty;
-                        break;
-
-                    case 'Remove Stock':
-                        $newQty = $currentQty - $adjustQty;
-                        break;
-
-                    case 'Set Exact Stock':
-                        $newQty = $adjustQty;
-                        break;
-
-                    default:
-                        $newQty = $currentQty;
-                }
-
-                $reorderLevel = DB::table('product')
-                    ->where('id', $stockLevel->product_id)
-                    ->value('reorder_level') ?? 0;
-
-                if ($newQty <= 0) {
-                    $stockStatus = 'Out of Stock';
-                } elseif ($newQty <= $reorderLevel) {
-                    $stockStatus = 'Low Stock';
-                } else {
-                    $stockStatus = 'In Stock';
-                }
-
-                DB::table('stock_level')
-                    ->where('id', $stockLevel->id)
-                    ->update([
-                        'quantity' => $newQty,
-                        'stock_status' => $stockStatus,
-                        'last_log_by' => auth()->id(),
-                        'updated_at' => now(),
-                    ]);
-
-                DB::table('stock_movement')->insert([
-                    'stock_level_id' => $stockLevel->id,
-                    'movement_type' => 'Transfer',
-                    'quantity' => $adjustQty,
-                    'reference_type' => 'Stock Transfer',
-                    'reference_id' => $stockTransfer->id,
-                    'remarks' => $stockTransfer->stock_transfer_reason_name ?? 'Stock transfer applied',
-                    'last_log_by' => auth()->id(),
-                    'created_at' => now(),
-                    'updated_at' => now(),
+                $transfer->update([
+                    'stock_transfer_status' => 'Approved',
+                    'approved_date' => now(),
                 ]);
+
+                foreach ($transfer->items as $item) {
+
+                    $sourceStock = $item->stockLevel;
+
+                    if (!$sourceStock) {
+                        throw new \Exception('Source stock not found');
+                    }
+
+                    $qty = $item->quantity;
+
+                    if ($sourceStock->quantity < $qty) {
+                        throw new \Exception('Insufficient stock for transfer');
+                    }
+
+                    // TRANSFER OUT
+                    $sourceStock->quantity -= $qty;
+
+                    $reorderLevel = $sourceStock->product->reorder_level ?? 0;
+
+                    $sourceStock->stock_status = match (true) {
+                        $sourceStock->quantity == 0 => 'Out of Stock',
+                        $sourceStock->quantity <= $reorderLevel => 'Low Stock',
+                        default => 'In Stock',
+                    };
+
+                    $sourceStock->last_log_by = auth()->id();
+                    $sourceStock->save();
+
+                    // TRANSFER IN
+                    $destStock = StockLevel::firstOrCreate(
+                        [
+                            'product_id'       => $sourceStock->product_id,
+                            'warehouse_id'     => $transfer->to_warehouse_id,
+                            'inventory_lot_id' => $sourceStock->inventory_lot_id,
+                        ],
+                        [
+                            'product_name'     => $sourceStock->product_name,
+                            'warehouse_name'   => $transfer->to_warehouse_name,
+                            'quantity'         => 0,
+                            'stock_status'     => 'Out of Stock',
+                            'last_log_by'      => auth()->id(),
+                        ]
+                    );
+
+                    $destStock->quantity += $qty;
+
+                    $destStock->stock_status = match (true) {
+                        $destStock->quantity == 0 => 'Out of Stock',
+                        $destStock->quantity <= $reorderLevel => 'Low Stock',
+                        default => 'In Stock',
+                    };
+
+                    $destStock->last_log_by = auth()->id();
+                    $destStock->save();
+
+                    // MOVEMENTS
+                    StockMovement::create([
+                        'product_id'        => $sourceStock->product_id,
+                        'product_name'      => $sourceStock->product_name,
+                        'warehouse_id'      => $transfer->from_warehouse_id,
+                        'warehouse_name'    => $transfer->from_warehouse_name,
+                        'inventory_lot_id'  => $sourceStock->inventory_lot_id,
+                        'movement_type'     => 'TRANSFER_OUT',
+                        'quantity'          => $qty,
+                        'reference_type'    => 'Stock Transfer',
+                        'reference_number'  => $transfer->reference_number,
+                        'remarks'           => 'Stock transferred out',
+                        'last_log_by'       => auth()->id(),
+                    ]);
+
+                    StockMovement::create([
+                        'product_id'        => $sourceStock->product_id,
+                        'product_name'      => $sourceStock->product_name,
+                        'warehouse_id'      => $transfer->to_warehouse_id,
+                        'warehouse_name'    => $transfer->to_warehouse_name,
+                        'inventory_lot_id'  => $sourceStock->inventory_lot_id,
+                        'movement_type'     => 'TRANSFER_IN',
+                        'quantity'          => $qty,
+                        'reference_type'    => 'Stock Transfer',
+                        'reference_number'  => $transfer->reference_number,
+                        'remarks'           => 'Stock transferred in',
+                        'last_log_by'       => auth()->id(),
+                    ]);
+                }
             }
         });
 
         return response()->json([
             'success' => true,
-            'message' => 'The selected stock transfers have been approved successfully',
+            'message' => 'Selected stock transfers approved successfully',
         ]);
     }
 
@@ -554,11 +602,11 @@ class StockTransferController extends Controller
         return response()->json([
             'success' => true,
             'notExist' => false,
-            'stockLevelId' => $stockTransfer->stock_level_id ?? null,
-            'transferType' => $stockTransfer->transfer_type ?? null,
-            'quantity' => $stockTransfer->quantity ?? 0,
+            'referenceNumber' => $stockTransfer->reference_number ?? null,
+            'fromWarehouseId' => $stockTransfer->from_warehouse_id ?? null,
+            'toWarehouseId' => $stockTransfer->to_warehouse_id ?? null,
             'stockTransferReasonId' => $stockTransfer->stock_transfer_reason_id ?? null,
-            'remarks' => $stockTransfer->remarks ?? null
+            'remarks' => $stockTransfer->remarks ?? null,
         ]);
     }
 
@@ -573,27 +621,18 @@ class StockTransferController extends Controller
             ->when(!empty($filterByStatus), fn($q) =>
                 $q->whereIn('stock_transfer_status', (array) $filterByStatus)
             )
-            ->orderBy('stock_level_from_id')
+            ->orderBy('reference_number')
             ->get();
 
         $response = $stockTransfers->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
             $stockTransferId = $row->id;
-            $stockLevelFromId = $row->stock_level_from_id;
-            $stockLevelToId = $row->stock_level_to_id;
-            $stockTransferStatus = $row->stock_transfer_status;
-            $quantity = $row->quantity;
+            $referenceNumber = $row->reference_number;
+            $fromWarehouseName = $row->from_warehouse_name;
+            $toWarehouseName = $row->to_warehouse_name;
             $stockTransferReasonName = $row->stock_transfer_reason_name;
-            $remarks = $row->remarks;
+            $transferStatus = $row->stock_transfer_status;
 
-            $stockLevelFromDetails = StockLevel::query()
-                ->where('id', $stockLevelFromId)
-                ->first();
-
-            $stockLevelToDetails = StockLevel::query()
-                ->where('id', $stockLevelToId)
-                ->first();
-
-            $statusClass = match ($stockTransferStatus) {
+            $statusClass = match ($transferStatus) {
                 'Draft' => 'badge badge-secondary',
                 'For Approval' => 'badge badge-warning',
                 'Approved' => 'badge badge-success',
@@ -601,7 +640,7 @@ class StockTransferController extends Controller
                 default => 'badge badge-light',
             };
 
-            $statusBadge = '<span class="'.$statusClass.'">'.$stockTransferStatus.'</span>';
+            $statusBadge = '<span class="'.$statusClass.'">'.$transferStatus.'</span>';
 
             $link = route('apps.details', [
                 'appId' => $pageAppId,
@@ -615,28 +654,10 @@ class StockTransferController extends Controller
                         <input class="form-check-input datatable-checkbox-children" type="checkbox" value="'.$stockTransferId.'">
                     </div>
                 ',
-                'STOCK_LEVEL_FROM' => '<div class="d-flex align-items-center">
-                        <div class="ms-3">
-                            <div class="user-meta-info">
-                                <h6 class="mb-0">'.$stockLevelFromDetails->product_name.'</h6>
-                                <small class="text-wrap fs-7 text-gray-500">'.$stockLevelFromDetails->warehouse_name.'</small><br/>
-                                <small class="text-wrap fs-7 text-gray-500">'.number_format($stockLevelFromDetails->quantity ?? 0, 2).'</small><br/>
-                            </div>
-                        </div>
-                    </div>',
-                'STOCK_LEVEL_TO' => '<div class="d-flex align-items-center">
-                        <div class="ms-3">
-                            <div class="user-meta-info">
-                                <h6 class="mb-0">'.$stockLevelToDetails->product_name.'</h6>
-                                <small class="text-wrap fs-7 text-gray-500">'.$stockLevelToDetails->warehouse_name.'</small><br/>
-                                <small class="text-wrap fs-7 text-gray-500">'.number_format($stockLevelToDetails->quantity ?? 0, 2).'</small><br/>
-                            </div>
-                        </div>
-                    </div>',
-                'QUANTITY' => number_format($quantity, 2),
+                'REFERENCE_NUMBER' => $referenceNumber,
+                'TRANSFER' => $fromWarehouseName . ' -> ' . $toWarehouseName,
+                'STOCK_ADJUSTMENT_REASON' => $stockTransferReasonName,
                 'STATUS' => $statusBadge,
-                'TRANSFER_REASON' => $stockTransferReasonName,
-                'REMARKS' => $remarks,
                 'LINK' => $link,
             ];
         })->values();
