@@ -266,7 +266,7 @@ class StockLevelController extends Controller
             $inventoryLotId = $row->inventory_lot_id;
 
             $inventoryLot = InventoryLot::whereKey($inventoryLotId)
-            ->select(['batch_number', 'expiration_date', 'received_date'])
+            ->select(['batch_number', 'expiration_date', 'received_date', 'cost_per_unit'])
             ->first();
 
             $batchNumber = $inventoryLot->batch_number;
@@ -358,6 +358,43 @@ class StockLevelController extends Controller
 
         $stockLevels = DB::table('stock_level')
             ->select(['id', 'product_name', 'warehouse_name', 'quantity'])
+            ->orderBy('product_name')
+            ->get();
+
+        $response = $response->concat(
+            $stockLevels->map(fn ($row) => [
+                'id'   => $row->id,
+                'text' => "
+                            <div>
+                                <strong>{$row->product_name}</strong><br/>
+                                <small>Warehouse: {$row->warehouse_name} </small><br/>
+                                <small>Quantity: " . number_format($row->quantity, 2) . "</small>
+                            </div>
+                        ",
+            ])
+        )->values();
+
+        return response()->json($response);
+    }
+
+    public function generateWarehouseOptions(Request $request)
+    {
+        $warehouseID = $request->input('warehouse_id', false);
+        $multiple = filter_var($request->input('multiple', false), FILTER_VALIDATE_BOOLEAN);
+
+        $response = collect();
+
+        if (!$multiple) {
+            $response->push([
+                'id'   => '',
+                'text' => '--',
+            ]);
+        }
+
+        $stockLevels = DB::table('stock_level')
+            ->select(['id', 'product_name', 'warehouse_name', 'quantity'])
+            ->where('warehouse_id', $warehouseID)
+            ->where('quantity', '>', 0)
             ->orderBy('product_name')
             ->get();
 

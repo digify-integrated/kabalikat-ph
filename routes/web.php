@@ -34,6 +34,7 @@ use App\Http\Controllers\StockBatchItemsController;
 use App\Http\Controllers\StockLevelController;
 use App\Http\Controllers\StockMovementController;
 use App\Http\Controllers\StockTransferController;
+use App\Http\Controllers\StockTransferItemsController;
 use App\Http\Controllers\StockTransferReasonController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SystemActionController;
@@ -591,6 +592,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
             Route::post('/generate-table', 'generateTable')->name('generate.table');
             Route::post('/generate-options', 'generateOptions')->name('generate.options');
+            Route::post('/generate-warehouse-options', 'generateWarehouseOptions')->name('generate.warehouse.options');
         });
 
     // Stock Adjustment
@@ -635,6 +637,16 @@ Route::middleware('auth')->group(function () {
             Route::post('/delete', 'delete')->name('delete');
             Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
             Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
+            Route::post('/generate-table', 'generateTable')->name('generate.table');
+        });
+
+    // Stock Transfer Items
+    Route::prefix('stock-transfer-items')
+        ->name('stock.transfer.items.')
+        ->controller(StockTransferItemsController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
+            Route::post('/delete', 'delete')->name('delete');
             Route::post('/generate-table', 'generateTable')->name('generate.table');
         });
 

@@ -51,6 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                             if (data.success) {
                                 showNotification(data.message, 'success');
+                                reloadDatatable('#stock-transfer-items-table');
                             } else {
                                 showNotification(data.message);
                             }
@@ -210,10 +211,13 @@ document.addEventListener('DOMContentLoaded', () => {
         ],
         dropdown: [
             { url: '/stock-transfer-reason/generate-options', dropdownSelector: '#stock_transfer_reason_id' },
-            { url: '/stock-level/generate-options', dropdownSelector: '#stock_level_id' },
             { url: '/warehouse/generate-options', dropdownSelector: '#from_warehouse_id' },
             { url: '/warehouse/generate-options', dropdownSelector: '#to_warehouse_id' },
         ],
+        stockDropdown: {
+            url: '/stock-level/generate-warehouse-options',
+            dropdownSelector: '#stock_level_id',
+        },
     };
 
     (async () => {
@@ -250,6 +254,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const addAddon = target.closest('#add-stock-transfer-items');
         if (addAddon) {
             resetForm('stock_transfer_items_form');
+
+            generateDropdownOptions({
+                url: config.stockDropdown.url,
+                dropdownSelector: config.stockDropdown.dropdownSelector,
+                data : {
+                    warehouse_id : $('#from_warehouse_id').val(),
+                }
+            });
         }
     });
 });

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\StockLevel;
 use App\Models\StockTransfer;
+use App\Models\StockTransferItems;
 use App\Models\StockTransferReason;
 use App\Models\StockMovement;
 use App\Models\Warehouse;
@@ -56,11 +57,11 @@ class StockTransferController extends Controller
         $toWarehouseId = (int) $validated['to_warehouse_id'];
         $stockTransferReasonId = (int) $validated['stock_transfer_reason_id'];
 
-        $fromwWarehouseName = (string) Warehouse::query()
+        $fromWarehouseName = (string) Warehouse::query()
             ->whereKey($fromWarehouseId)
             ->value('warehouse_name');
 
-        $towWarehouseName = (string) Warehouse::query()
+        $toWarehouseName = (string) Warehouse::query()
             ->whereKey($toWarehouseId)
             ->value('warehouse_name');
 
@@ -71,23 +72,38 @@ class StockTransferController extends Controller
         $payload = [
             'reference_number' => $validated['reference_number'],
             'from_warehouse_id' => $fromWarehouseId,
-            'from_warehouse_name' => $fromwWarehouseName,
+            'from_warehouse_name' => $fromWarehouseName,
             'to_warehouse_id' => $toWarehouseId,
-            'to_warehouse_name' => $towWarehouseName,
+            'to_warehouse_name' => $toWarehouseName,
             'stock_transfer_reason_id' => $stockTransferReasonId,
             'stock_transfer_reason_name' => $stockTransferReasonName,
             'remarks' => $validated['remarks'],
             'last_log_by' => Auth::id(),
         ];
 
-        $stockTransferId = $validated['stock_transfer_id'] ?? null;
+        DB::transaction(function () use (&$stockTransfer, $validated, $payload, $fromWarehouseId) {
 
-        if ($stockTransferId && StockTransfer::query()->whereKey($stockTransferId)->exists()) {
-            $stockTransfer = StockTransfer::query()->findOrFail($stockTransferId);
-            $stockTransfer->update($payload);
-        } else {
-            $stockTransfer = StockTransfer::query()->create($payload);
-        }
+            $stockTransferId = $validated['stock_transfer_id'] ?? null;
+
+            if ($stockTransferId && StockTransfer::query()->whereKey($stockTransferId)->exists()) {
+
+                $stockTransfer = StockTransfer::query()->lockForUpdate()->findOrFail($stockTransferId);
+
+                $oldFromWarehouseId = $stockTransfer->from_warehouse_id;
+
+                $stockTransfer->update($payload);
+
+                if ($oldFromWarehouseId !== $fromWarehouseId) {
+                    StockTransferItems::query()
+                        ->where('stock_transfer_id', $stockTransfer->id)
+                        ->delete();
+                }
+
+            } else {
+
+                $stockTransfer = StockTransfer::query()->create($payload);
+            }
+        });
 
         $link = route('apps.details', [
             'appId' => $pageAppId,

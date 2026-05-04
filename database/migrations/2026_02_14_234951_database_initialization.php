@@ -905,7 +905,7 @@ return new class extends Migration
         });
 
         /* =============================================================================================
-            TABLE: Stock Level
+            TABLE: Inventory Lot
         ============================================================================================= */
 
         Schema::create('inventory_lot', function (Blueprint $table) {
@@ -1233,8 +1233,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index(['stock_transfer_id']);
-            $table->index(['product_id']);
-            $table->index(['inventory_lot_id']);
+            $table->index(['stock_level_id']);
         });
 
         /* =============================================================================================

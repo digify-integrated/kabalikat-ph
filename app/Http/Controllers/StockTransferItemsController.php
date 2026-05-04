@@ -98,9 +98,7 @@ class StockTransferItemsController extends Controller
             $stockTransferItemsId = $row->id;
             $stockTransferId = $row->stock_transfer_id;
             $stockLevelId = $row->stock_level_id;
-            $transferType = $row->transfer_type;
-            $currentQuantity = $row->current_quantity;
-            $newQuantity = $row->new_quantity;
+            $quantity = $row->quantity;
 
             $stockTransfer = StockTransfer::query()
             ->whereKey($stockTransferId)
@@ -127,7 +125,7 @@ class StockTransferItemsController extends Controller
 
             return [
                 'PRODUCT' => $stockLevel->product_name,
-                'QUANTITY' => number_format($currentQuantity, 2) . ' -> ' . number_format($newQuantity, 2),
+                'QUANTITY' => number_format($quantity, 2),
                 'ACTION' => '<div class="d-flex justify-content-end gap-3">
                                 '. $logNotes .'
                                 '. $deleteButton .'

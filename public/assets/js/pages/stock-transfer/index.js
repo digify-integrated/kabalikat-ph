@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
             columns: [
                 { data: 'CHECK_BOX' },
                 { data: 'REFERENCE_NUMBER' },
-                { data: 'TANSFER' },
+                { data: 'TRANSFER' },
                 { data: 'STOCK_ADJUSTMENT_REASON' },
                 { data: 'STATUS' },
             ],
