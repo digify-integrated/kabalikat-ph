@@ -10,7 +10,7 @@
         $canDelete = ($deletePermission ?? 0) > 0;
         
         $approveStockTransfer = app(\App\Http\Controllers\SystemActionController::class)
-            ->userHasRoleAccessForAction(6, Auth::id());
+            ->userHasRoleAccessForAction(8, Auth::id());
 
         $stockTransfer = DB::table('stock_transfer')
             ->where('id', $detailsId)

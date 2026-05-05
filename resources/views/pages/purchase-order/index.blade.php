@@ -7,8 +7,8 @@
 
 @section('content')
     @php
-        $approveStockTransfer = app(\App\Http\Controllers\SystemActionController::class)
-            ->userHasRoleAccessForAction(8, Auth::id());
+        $approvePurchaseOrder = app(\App\Http\Controllers\SystemActionController::class)
+            ->userHasRoleAccessForAction(6, Auth::id());
     @endphp
 
     <div class="card">
@@ -20,7 +20,7 @@
             <div class="card-toolbar">
                 <div class="d-flex justify-content-end" data-kt-customer-table-toolbar="base">
 
-                    @if(($deletePermission ?? 0) > 0 || ($exportPermission ?? 0) > 0 || ($approveStockTransfer ?? false) === true)
+                    @if(($deletePermission ?? 0) > 0 || ($exportPermission ?? 0) > 0 || ($approvePurchaseOrder ?? false) === true)
                         <a href="#"
                         class="btn btn-light-primary btn-flex btn-center btn-active-light-primary show menu-dropdown action-dropdown me-3 d-none"
                         data-kt-menu-trigger="click"
@@ -32,7 +32,7 @@
                         <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-125px py-4"
                             data-kt-menu="true">
 
-                            @if(($approveStockTransfer ?? false) === true)
+                            @if(($approvePurchaseOrder ?? false) === true)
                                 <div class="menu-item px-3">
                                     <a href="javascript:void(0);"
                                     class="menu-link px-3"
@@ -95,7 +95,7 @@
 
         <div class="card-body pt-9">
             <div class="table-responsive">
-                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5" id="stock-transfer-table">
+                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5" id="purchase-order-table">
                     <thead>
                         <tr class="text-start text-gray-800 fw-bold fs-7 text-uppercase gs-0">
                             <th>
@@ -104,8 +104,7 @@
                                 </div>
                             </th>
                             <th>Reference</th>
-                            <th>Transfer</th>
-                            <th>Transfer Reason</th>
+                            <th>Warehouse</th>
                             <th>Status</th>
                         </tr>
                     </thead>

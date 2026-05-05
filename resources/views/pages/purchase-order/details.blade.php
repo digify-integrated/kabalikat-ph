@@ -9,10 +9,10 @@
         $canWrite  = ($writePermission ?? 0) > 0;
         $canDelete = ($deletePermission ?? 0) > 0;
         
-        $approveStockAdjustment = app(\App\Http\Controllers\SystemActionController::class)
-            ->userHasRoleAccessForAction(7, Auth::id());
+        $approvePurchaseOrder = app(\App\Http\Controllers\SystemActionController::class)
+            ->userHasRoleAccessForAction(6, Auth::id());
 
-        $stockAdjustment = DB::table('stock_adjustment')
+        $purchaseOrder = DB::table('purchase_order')
             ->where('id', $detailsId)
             ->first();            
     @endphp
@@ -22,9 +22,9 @@
             <div class="card mb-10">
                 <div class="card-header border-0">
                     <div class="card-title m-0">
-                        <h3 class="fw-bold m-0">Stock Adjustment Details</h3>
+                        <h3 class="fw-bold m-0">Purchase Order Details</h3>
                     </div>
-                    @if($canDelete || (($approveStockAdjustment ?? false) === true  && $stockAdjustment->stock_adjustment_status === 'For Approval') || $stockAdjustment->stock_adjustment_status === 'Draft')
+                    @if($canDelete || (($approvePurchaseOrder ?? false) === true  && $purchaseOrder->purchase_order_status === 'For Approval') || $purchaseOrder->purchase_order_status === 'Draft')
                         <a href="#" class="btn btn-light-primary btn-flex btn-center btn-active-light-primary show menu-dropdown align-self-center" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
                             Actions
                             <i class="ki-outline ki-down fs-5 ms-1"></i>
@@ -32,36 +32,36 @@
                         <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-125px py-4" data-kt-menu="true" style="z-index: 107; position: fixed; inset: 0px 0px auto auto; margin: 0px; transform: translate(-60px, 539px);" data-popper-placement="bottom-end">
                             @if($canDelete)
                                 <div class="menu-item px-3">
-                                    <a href="javascript:void(0);" class="menu-link px-3" id="delete-stock-adjustment">
+                                    <a href="javascript:void(0);" class="menu-link px-3" id="delete-purchase-order">
                                         Delete
                                     </a>
                                 </div>
                             @endif
 
-                            @if($stockAdjustment->stock_adjustment_status === 'Draft')
+                            @if($purchaseOrder->purchase_order_status === 'Draft')
                                 <div class="menu-item px-3">
-                                    <a href="javascript:void(0);" class="menu-link px-3" id="for-approval-stock-adjustment">
+                                    <a href="javascript:void(0);" class="menu-link px-3" id="for-approval-purchase-order">
                                         For Approval
                                     </a>
                                 </div>
                             @endif
 
-                            @if($stockAdjustment->stock_adjustment_status === 'Draft' || $stockAdjustment->stock_adjustment_status === 'For Approval')
+                            @if($purchaseOrder->purchase_order_status === 'Draft' || $purchaseOrder->purchase_order_status === 'For Approval')
                                 <div class="menu-item px-3">
-                                    <a href="javascript:void(0);" class="menu-link px-3" id="cancel-stock-adjustment">
+                                    <a href="javascript:void(0);" class="menu-link px-3" id="cancel-purchase-order">
                                         Cancel
                                     </a>
                                 </div>
                             @endif
 
-                            @if(($approveStockAdjustment ?? false) === true && $stockAdjustment->stock_adjustment_status === 'For Approval')
+                            @if(($approvePurchaseOrder ?? false) === true && $purchaseOrder->purchase_order_status === 'For Approval')
                                 <div class="menu-item px-3">
-                                    <a href="javascript:void(0);" class="menu-link px-3" id="approve-stock-adjustment">
+                                    <a href="javascript:void(0);" class="menu-link px-3" id="approve-purchase-order">
                                         Approve
                                     </a>
                                 </div>
                                 <div class="menu-item px-3">
-                                    <a href="javascript:void(0);" class="menu-link px-3" id="set-to-draft-stock-adjustment">
+                                    <a href="javascript:void(0);" class="menu-link px-3" id="set-to-draft-purchase-order">
                                         Set to Draft
                                     </a>
                                 </div>
@@ -70,7 +70,7 @@
                     @endif
                 </div>
                 <div class="card-body border-top p-9">
-                    <form id="stock_adjustment_form" method="post" action="#" novalidate>
+                    <form id="purchase_order_form" method="post" action="#" novalidate>
                         @csrf
 
                         <div class="row mb-6">
@@ -78,16 +78,16 @@
                                 Reference Number
                             </label>
                             <div class="col-lg-10">
-                                <input type="text" class="form-control" id="reference_number" name="reference_number" maxlength="100" autocomplete="off" @disabled(!$canWrite || $stockAdjustment->stock_adjustment_status !== 'Draft')>
+                                <input type="text" class="form-control" id="reference_number" name="reference_number" maxlength="100" autocomplete="off" @disabled(!$canWrite || $purchaseOrder->purchase_order_status !== 'Draft')>
                             </div>
                         </div>
 
                         <div class="row mb-6">
-                            <label class="col-lg-2 col-form-label required fw-semibold fs-6" for="stock_adjustment_reason_id">
-                                Stock Adjustment Reason
+                            <label class="col-lg-2 col-form-label required fw-semibold fs-6" for="warehouse_id">
+                                Warehouse
                             </label>
                             <div class="col-lg-10">
-                                <select id="stock_adjustment_reason_id" name="stock_adjustment_reason_id" class="form-select" data-control="select2" data-allow-clear="false" @disabled(!$canWrite || $stockAdjustment->stock_adjustment_status !== 'Draft')>
+                                <select id="warehouse_id" name="warehouse_id" class="form-select" data-control="select2" data-allow-clear="false" @disabled(!$canWrite || $purchaseOrder->purchase_order_status !== 'Draft')>
                                     <option>--</option>
                                 </select>
                             </div>
@@ -98,15 +98,15 @@
                                 Remarks
                             </label>
                             <div class="col-lg-10">
-                                <textarea class="form-control" id="remarks" name="remarks" maxlength="200" rows="3" @disabled(!$canWrite || $stockAdjustment->stock_adjustment_status !== 'Draft')></textarea>
+                                <textarea class="form-control" id="remarks" name="remarks" maxlength="200" rows="3" @disabled(!$canWrite || $purchaseOrder->purchase_order_status !== 'Draft')></textarea>
                             </div>
                         </div>
                     </form>
                 </div>
 
-                @if($canWrite && $stockAdjustment->stock_adjustment_status === 'Draft')
+                @if($canWrite && $purchaseOrder->purchase_order_status === 'Draft')
                     <div class="card-footer d-flex justify-content-end py-6 px-9">
-                        <button type="submit" class="btn btn-primary" form="stock_adjustment_form" id="submit-data">
+                        <button type="submit" class="btn btn-primary" form="purchase_order_form" id="submit-data">
                             Save Changes
                         </button>
                     </div>
@@ -121,9 +121,9 @@
                 <div class="card-header border-0 pt-6">
                     <div class="card-title">
                         <div class="d-flex align-items-center position-relative my-1 me-3">
-                            <i class="ki-outline ki-magnifier fs-3 position-absolute ms-5"></i> <input type="text" class="form-control w-250px ps-12" id="stock-adjustment-items-datatable-search" placeholder="Search..." autocomplete="off" />
+                            <i class="ki-outline ki-magnifier fs-3 position-absolute ms-5"></i> <input type="text" class="form-control w-250px ps-12" id="purchase-order-items-datatable-search" placeholder="Search..." autocomplete="off" />
                         </div>
-                        <select id="stock-adjustment-items-datatable-length" class="form-select w-auto">
+                        <select id="purchase-order-items-datatable-length" class="form-select w-auto">
                             <option value="-1">All</option>
                             <option value="5">5</option>
                             <option value="10" selected>10</option>
@@ -135,12 +135,12 @@
                     </div>
                     <div class="card-toolbar">
                         <div class="d-flex justify-content-end" data-kt-customer-table-toolbar="base">
-                            @if($canWrite && $stockAdjustment->stock_adjustment_status === 'Draft')
+                            @if($canWrite && $purchaseOrder->purchase_order_status === 'Draft')
                                 <button type="button"
                                     class="btn btn-light-primary me-3"
                                     data-bs-toggle="modal"
-                                    data-bs-target="#stock-adjustment-items-modal"
-                                    id="add-stock-adjustment-items">
+                                    data-bs-target="#purchase-order-items-modal"
+                                    id="add-purchase-order-items">
                                     <i class="ki-outline ki-plus fs-2"></i> Add
                                 </button>
                             @endif
@@ -148,13 +148,16 @@
                     </div>
                 </div>
                 <div class="card-body pt-9">
-                    <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5 gs-7" id="stock-adjustment-items-table">
+                    <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5 gs-7" id="purchase-order-items-table">
                         <thead>
                             <tr class="fw-semibold fs-6 text-gray-800">
                                 <th>Product</th>
-                                <th>Warehouse</th>
-                                <th>Adjustment Type</th>
+                                <th>Batch Number</th>
                                 <th>Qty</th>
+                                <th>Cost / Unit</th>
+                                <th>Batch Value</th>
+                                <th>Expiration Date</th>
+                                <th>Received Date</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -165,43 +168,38 @@
         </div>
     </div>
 
-    <div id="stock-adjustment-items-modal" class="modal fade" tabindex="-1" aria-labelledby="stock-adjustment-items" aria-hidden="true">
+    <div id="purchase-order-items-modal" class="modal fade" tabindex="-1" aria-labelledby="purchase-order-items" aria-hidden="true">
         <div class="modal-dialog modal-dialog-scrollable modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3 class="modal-title">Stock Adjustment Item</h3>
+                    <h3 class="modal-title">Purchase Order Item</h3>
                     <div class="btn btn-icon btn-sm btn-active-light-primary ms-2" data-bs-dismiss="modal" aria-label="Close">
                         <i class="ki-duotone ki-cross fs-1"><span class="path1"></span><span class="path2"></span></i>
                     </div>
                 </div>
 
                 <div class="modal-body">
-                    <form id="stock_adjustment_items_form" method="post" action="#">
+                    <form id="purchase_order_items_form" method="post" action="#">
                         @csrf
                         
                         <div class="row">
                             <div class="col">
                                 <div class="fv-row mb-4">
-                                    <label class="fs-6 fw-semibold required form-label mt-3" for="stock_level_id">
-                                        Stock
+                                    <label class="fs-6 fw-semibold required form-label mt-3" for="product_id">
+                                        Product
                                     </label>
 
-                                    <select id="stock_level_id" name="stock_level_id" class="form-select" data-control="select2" data-allow-clear="false"></select>
+                                    <select id="product_id" name="product_id" class="form-select" data-control="select2" data-allow-clear="false"></select>
                                 </div>
                             </div>
 
                             <div class="col">
                                 <div class="fv-row mb-4">
-                                    <label class="fs-6 fw-semibold required form-label mt-3" for="adjustment_type">
-                                        Stock
+                                    <label class="fs-6 fw-semibold required form-label mt-3" for="batch_number">
+                                        Batch Number
                                     </label>
 
-                                    <select id="adjustment_type" name="adjustment_type" class="form-select" data-control="select2" data-allow-clear="false">
-                                        <option value="">--</option>
-                                        <option value="Add Stock">Add Stock</option>
-                                        <option value="Remove Stock">Remove Stock</option>
-                                        <option value="Set Exact Stock">Set Exact Stock</option>
-                                    </select>
+                                    <input type="text" class="form-control" id="batch_number" name="batch_number" maxlength="100" autocomplete="off" >
                                 </div>
                             </div>
                         </div>
@@ -209,11 +207,43 @@
                         <div class="row">
                             <div class="col">
                                 <div class="fv-row mb-4">
-                                    <label class="fs-6 fw-semibold required form-label mt-3" for="adjustment_quantity">
-                                        Adjustment Quantity
+                                    <label class="fs-6 fw-semibold required form-label mt-3" for="quantity">
+                                        Quantity
                                     </label>
 
-                                    <input type="number" class="form-control" id="adjustment_quantity" name="adjustment_quantity" step="0.01">
+                                    <input type="number" class="form-control" id="quantity" name="quantity" min="0.01" step="0.01">
+                                </div>
+                            </div>
+
+                            <div class="col">
+                                <div class="fv-row mb-4">
+                                    <label class="fs-6 fw-semibold required form-label mt-3" for="cost_per_unit">
+                                        Cost / Unit
+                                    </label>
+
+                                    <input type="number" class="form-control" id="cost_per_unit" name="cost_per_unit" min="0" step="0.01">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col">
+                                <div class="fv-row mb-4">
+                                    <label class="fs-6 fw-semibold form-label mt-3" for="expiration_date">
+                                        Expiration Date
+                                    </label>
+
+                                    <input type="text" class="form-control" id="expiration_date" name="expiration_date" autocomplete="off">
+                                </div>
+                            </div>
+
+                            <div class="col">
+                                <div class="fv-row mb-4">
+                                    <label class="fs-6 fw-semibold required form-label mt-3" for="received_date">
+                                        Received Date
+                                    </label>
+
+                                    <input type="text" class="form-control" id="received_date" name="received_date" autocomplete="off">
                                 </div>
                             </div>
                         </div>
@@ -222,7 +252,7 @@
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" form="stock_adjustment_items_form" class="btn btn-primary" id="submit-stock-adjustment-items">Add</button>
+                    <button type="submit" form="purchase_order_items_form" class="btn btn-primary" id="submit-purchase-order-items">Add</button>
                 </div>
             </div>
         </div>

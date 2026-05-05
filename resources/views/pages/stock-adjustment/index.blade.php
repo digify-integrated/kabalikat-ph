@@ -8,7 +8,7 @@
 @section('content')
     @php
         $approveStockAdjustment = app(\App\Http\Controllers\SystemActionController::class)
-            ->userHasRoleAccessForAction(6, Auth::id());
+            ->userHasRoleAccessForAction(7, Auth::id());
     @endphp
 
     <div class="card">

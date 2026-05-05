@@ -141,7 +141,9 @@ class ProductController extends Controller
                         'attribute_count' => count($combo),
                         'is_variant' => 'Yes',
                         'product_status' => 'Active',
-
+                        'show_on_pos' => $product->show_on_pos,
+                        'is_purchasable' => $product->is_purchasable,
+                        'is_addon' => 'No',
                         'product_type' => $product->product_type,
                         'base_price' => $product->base_price,
                         'cost_price' => $product->cost_price,
@@ -151,7 +153,6 @@ class ProductController extends Controller
                         'base_unit_id' => $product->base_unit_id,
                         'base_unit_name' => $product->base_unit_name,
                         'base_unit_abbreviation' => $product->base_unit_abbreviation,
-
                         'created_at' => $now,
                         'updated_at' => $now,
                     ];
@@ -344,10 +345,10 @@ class ProductController extends Controller
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
 
         $settingMap = [
-            'track-inventory'     => 'track_inventory',
-            'is-addon'            => 'is_addon',
-            'batch-tracking'      => 'batch_tracking',
-            'expiration-tracking' => 'expiration_tracking',
+            'track-inventory'   => 'track_inventory',
+            'is-addon'          => 'is_addon',
+            'show-on-pos'       => 'show_on_pos',
+            'is-purchasable'    => 'is_purchasable',
         ];
 
         $settingKey = $validated['setting'];
@@ -638,10 +639,10 @@ class ProductController extends Controller
             'productDescription'    => $product->product_description ?? null,
             'trackInventory'        => $product->track_inventory ?? 'Yes',
             'isAddon'               => $product->is_addon ?? 'No',
-            'batchTracking'         => $product->batch_tracking ?? 'No',
-            'expirationTracking'    => $product->expiration_tracking ?? 'No',
+            'showOnPos'             => $product->show_on_pos ?? 'No',
+            'isPurchasable'         => $product->is_purchasable ?? 'Yes',
             'productImage'          => $productImageUrl,
-            'productCategoryId'    => $productCategoryIds,
+            'productCategoryId'     => $productCategoryIds,
         ]);
     }
 

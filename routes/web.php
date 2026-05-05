@@ -623,7 +623,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/generate-table', 'generateTable')->name('generate.table');
         });
 
-     // Stock Transfer
+    // Stock Transfer
     Route::prefix('stock-transfer')
         ->name('stock.transfer.')
         ->controller(StockTransferController::class)
@@ -655,12 +655,35 @@ Route::middleware('auth')->group(function () {
         ->name('stock.movement.')
         ->controller(StockMovementController::class)
         ->group(function () {
+            Route::post('/generate-table', 'generateTable')->name('generate.table');
+        });
+
+    // Purchase Order
+    Route::prefix('purchase-order')
+        ->name('purchase.order.')
+        ->controller(StockBatchController::class)
+        ->group(function () {
             Route::post('/save', 'save')->name('save');
+            Route::post('/for-approval', 'forApproval')->name('for.approval');
+            Route::post('/cancel', 'cancel')->name('cancel');
+            Route::post('/approve', 'approve')->name('approve');
+            Route::post('/approve-multiple', 'approveMultiple')->name('approve.multiple');
+            Route::post('/set-to-draft', 'setToDraft')->name('set.to.draft');
             Route::post('/delete', 'delete')->name('delete');
             Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
             Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
             Route::post('/generate-table', 'generateTable')->name('generate.table');
             Route::post('/generate-options', 'generateOptions')->name('generate.options');
+        });
+
+    // Purchase Order Items
+    Route::prefix('purchase-order-items')
+        ->name('purchase.order.items.')
+        ->controller(StockBatchItemsController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
+            Route::post('/delete', 'delete')->name('delete');
+            Route::post('/generate-table', 'generateTable')->name('generate.table');
         });
 
     // Import

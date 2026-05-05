@@ -344,8 +344,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     document.getElementById('track-inventory').checked = data.trackInventory === 'Yes';
                     document.getElementById('is-addon').checked = data.isAddon === 'Yes';
-                    document.getElementById('batch-tracking').checked = data.batchTracking === 'Yes';
-                    document.getElementById('expiration-tracking').checked = data.expirationTracking === 'Yes';
+                    document.getElementById('show-on-pos').checked = data.showOnPos === 'Yes';
+                    document.getElementById('is-purchasable').checked = data.isPurchasable === 'Yes';
                 },
             },
         ],

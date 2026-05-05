@@ -102,7 +102,7 @@
                         <div class="d-flex flex-stack">
                             <div class="d-flex">
                                 <div class="d-flex flex-column">
-                                    <div class="fs-5 text-gray-900 fw-bold">Batch Tracking</div>
+                                    <div class="fs-5 text-gray-900 fw-bold">Show on POS</div>
                                     <div class="fs-7 fw-semibold text-muted">
                                         Enable this to track items by batch or lot number for better inventory control.
                                     </div>
@@ -111,7 +111,7 @@
 
                             <div class="d-flex justify-content-end">
                                 <label class="form-check form-switch form-switch-sm form-check-custom form-check-solid">
-                                    <input class="form-check-input product-setting" data-setting="batch-tracking" type="checkbox" id="batch-tracking" @disabled(!$canWrite)>
+                                    <input class="form-check-input product-setting" data-setting="show-on-pos" type="checkbox" id="show-on-pos" @disabled(!$canWrite)>
                                     <span class="form-check-label"></span>
                                 </label>
                             </div>
@@ -122,7 +122,7 @@
                         <div class="d-flex flex-stack">
                             <div class="d-flex">
                                 <div class="d-flex flex-column">
-                                    <div class="fs-5 text-gray-900 fw-bold">Expiration Tracking</div>
+                                    <div class="fs-5 text-gray-900 fw-bold">Is Purchasable</div>
                                     <div class="fs-7 fw-semibold text-muted">
                                         Enable this to monitor expiration dates and avoid selling expired products.
                                     </div>
@@ -131,7 +131,7 @@
 
                             <div class="d-flex justify-content-end">
                                 <label class="form-check form-switch form-switch-sm form-check-custom form-check-solid">
-                                    <input class="form-check-input product-setting" data-setting="expiration-tracking" type="checkbox" id="expiration-tracking" @disabled(!$canWrite)>
+                                    <input class="form-check-input product-setting" data-setting="is-purchasable" type="checkbox" id="is-purchasable" @disabled(!$canWrite)>
                                     <span class="form-check-label"></span>
                                 </label>
                             </div>

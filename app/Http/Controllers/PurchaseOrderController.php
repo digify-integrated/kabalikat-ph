@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\InventoryLot;
-use App\Models\StockBatch;
+use App\Models\PurchaseOrder;
 use App\Models\StockLevel;
 use App\Models\StockMovement;
 use App\Models\Warehouse;
@@ -14,12 +14,12 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 
-class StockBatchController extends Controller
+class PurchaseOrderController extends Controller
 {
     public function save(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'stock_batch_id' => ['nullable', 'integer'],
+            'purchase_order_id' => ['nullable', 'integer'],
             'reference_number' => ['required', 'string'],
             'warehouse_id' => ['required', 'integer', Rule::exists('warehouse', 'id')],
             'remarks' => ['nullable', 'string'],
@@ -51,24 +51,24 @@ class StockBatchController extends Controller
             'last_log_by' => Auth::id(),
         ];
 
-        $stockBatchId = $validated['stock_batch_id'] ?? null;
+        $purchaseOrderId = $validated['purchase_order_id'] ?? null;
 
-        if ($stockBatchId && StockBatch::query()->whereKey($stockBatchId)->exists()) {
-            $stockBatch = StockBatch::query()->findOrFail($stockBatchId);
-            $stockBatch->update($payload);
+        if ($purchaseOrderId && PurchaseOrder::query()->whereKey($purchaseOrderId)->exists()) {
+            $purchaseOrder = PurchaseOrder::query()->findOrFail($purchaseOrderId);
+            $purchaseOrder->update($payload);
         } else {
-            $stockBatch = StockBatch::query()->create($payload);
+            $purchaseOrder = PurchaseOrder::query()->create($payload);
         }
 
         $link = route('apps.details', [
             'appId' => $pageAppId,
             'navigationMenuId' => $pageNavigationMenuId,
-            'details_id' => $stockBatch->id,
+            'details_id' => $purchaseOrder->id,
         ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'The stock batch has been saved successfully',
+            'message' => 'The purchase order has been saved successfully',
             'redirect_link' => $link,
         ]);
     }
@@ -76,7 +76,7 @@ class StockBatchController extends Controller
     public function forApproval(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'detailId' => ['required', 'integer', 'min:1', Rule::exists('stock_batch', 'id')],
+            'detailId' => ['required', 'integer', 'min:1', Rule::exists('purchase_order', 'id')],
         ]);
 
         $pageAppId = (int) $request->input('appId');
@@ -92,19 +92,19 @@ class StockBatchController extends Controller
         $detailId = (int) $validator->validated()['detailId'];
 
         DB::transaction(function () use ($detailId) {
-            $stockBatch = StockBatch::query()
-            ->select(['id', 'stock_batch_status'])
+            $purchaseOrder = PurchaseOrder::query()
+            ->select(['id', 'purchase_order_status'])
             ->findOrFail($detailId);
 
-            if ($stockBatch->stock_batch_status !== 'Draft') {
+            if ($purchaseOrder->purchase_order_status !== 'Draft') {
                  return response()->json([
                     'success' => false,
-                    'message' => 'The stock batch is not "Draft" status',
+                    'message' => 'The purchase order is not "Draft" status',
                 ]);
             }
 
-            $stockBatch->update([
-                'stock_batch_status' => 'For Approval',
+            $purchaseOrder->update([
+                'purchase_order_status' => 'For Approval',
                 'for_approval_date' => Carbon::now()
             ]);
         });        
@@ -116,7 +116,7 @@ class StockBatchController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'The stock batch has been submitted for approval successfully',
+            'message' => 'The purchase order has been submitted for approval successfully',
             'redirect_link' => $link,
         ]);
     }
@@ -124,7 +124,7 @@ class StockBatchController extends Controller
     public function cancel(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'detailId' => ['required', 'integer', 'min:1', Rule::exists('stock_batch', 'id')],
+            'detailId' => ['required', 'integer', 'min:1', Rule::exists('purchase_order', 'id')],
         ]);
 
         $pageAppId = (int) $request->input('appId');
@@ -140,19 +140,19 @@ class StockBatchController extends Controller
         $detailId = (int) $validator->validated()['detailId'];
 
         DB::transaction(function () use ($detailId) {
-            $stockBatch = StockBatch::query()
-                ->select(['id', 'stock_batch_status'])
+            $purchaseOrder = PurchaseOrder::query()
+                ->select(['id', 'purchase_order_status'])
                 ->findOrFail($detailId);
 
-            if ($stockBatch->stock_batch_status !== 'For Approval' && $stockBatch->stock_batch_status !== 'Draft') {
+            if ($purchaseOrder->purchase_order_status !== 'For Approval' && $purchaseOrder->purchase_order_status !== 'Draft') {
                 return response()->json([
                     'success' => false,
-                    'message' => 'The stock batch is not "For Approval" or "Draft" status',
+                    'message' => 'The purchase order is not "For Approval" or "Draft" status',
                 ]);
             }
 
-            $stockBatch->update([
-                'stock_batch_status' => 'Cancelled',
+            $purchaseOrder->update([
+                'purchase_order_status' => 'Cancelled',
                 'cancellation_date' => Carbon::now()
             ]);
         });        
@@ -164,7 +164,7 @@ class StockBatchController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'The stock batch has been cancelled successfully',
+            'message' => 'The purchase order has been cancelled successfully',
             'redirect_link' => $link,
         ]);
     }
@@ -172,7 +172,7 @@ class StockBatchController extends Controller
     public function setToDraft(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'detailId' => ['required', 'integer', 'min:1', Rule::exists('stock_batch', 'id')],
+            'detailId' => ['required', 'integer', 'min:1', Rule::exists('purchase_order', 'id')],
         ]);
 
         $pageAppId = (int) $request->input('appId');
@@ -188,19 +188,19 @@ class StockBatchController extends Controller
         $detailId = (int) $validator->validated()['detailId'];
 
         DB::transaction(function () use ($detailId) {
-            $stockBatch = StockBatch::query()
-                ->select(['id', 'stock_batch_status'])
+            $purchaseOrder = PurchaseOrder::query()
+                ->select(['id', 'purchase_order_status'])
                 ->findOrFail($detailId);
 
-            if ($stockBatch->stock_batch_status !== 'For Approval') {
+            if ($purchaseOrder->purchase_order_status !== 'For Approval') {
                  return response()->json([
                     'success' => false,
-                    'message' => 'The stock batch is not in "For Approval" status',
+                    'message' => 'The purchase order is not in "For Approval" status',
                 ]);
             }
 
-            $stockBatch->update([
-                'stock_batch_status' => 'Draft',
+            $purchaseOrder->update([
+                'purchase_order_status' => 'Draft',
                 'set_to_draft_date' => Carbon::now()
             ]);
         });        
@@ -212,7 +212,7 @@ class StockBatchController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'The stock batch has been set to draft successfully',
+            'message' => 'The purchase order has been set to draft successfully',
             'redirect_link' => $link,
         ]);
     }
@@ -220,7 +220,7 @@ class StockBatchController extends Controller
     public function approve(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'detailId' => ['required', 'integer', Rule::exists('stock_batch', 'id')],
+            'detailId' => ['required', 'integer', Rule::exists('purchase_order', 'id')],
         ]);
 
         if ($validator->fails()) {
@@ -232,20 +232,20 @@ class StockBatchController extends Controller
 
         $detailId = (int) $validator->validated()['detailId'];
 
-        $batch = StockBatch::with(['items.product', 'warehouse'])
+        $batch = PurchaseOrder::with(['items.product', 'warehouse'])
             ->findOrFail($detailId);
 
-        if ($batch->stock_batch_status !== 'For Approval') {
+        if ($batch->purchase_order_status !== 'For Approval') {
             return response()->json([
                 'success' => false,
-                'message' => 'Stock batch is not in For Approval status'
+                'message' => 'Purchase order is not in For Approval status'
             ]);
         }
 
         DB::transaction(function () use ($batch) {
 
             $batch->update([
-                'stock_batch_status' => 'Approved',
+                'purchase_order_status' => 'Approved',
                 'approved_date' => now(),
             ]);
 
@@ -299,7 +299,7 @@ class StockBatchController extends Controller
                     'inventory_lot_id'  => $lot->id,
                     'movement_type'     => 'IN',
                     'quantity'          => $item->quantity,
-                    'reference_type'    => 'Stock Batch',
+                    'reference_type'    => 'Purchase Order',
                     'reference_number'  => $batch->reference_number,
                     'remarks'           => 'Stock received via batch approval',
                     'last_log_by'       => auth()->id(),
@@ -309,7 +309,7 @@ class StockBatchController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Stock batch approved successfully',
+            'message' => 'Purchase order approved successfully',
         ]);
     }
 
@@ -317,21 +317,21 @@ class StockBatchController extends Controller
     {
         $validated = $request->validate([
             'selected_id'   => ['required', 'array', 'min:1'],
-            'selected_id.*' => ['integer', 'distinct', Rule::exists('stock_batch', 'id')],
+            'selected_id.*' => ['integer', 'distinct', Rule::exists('purchase_order', 'id')],
         ]);
 
         DB::transaction(function () use ($validated) {
 
-            $batches = StockBatch::query()
+            $batches = PurchaseOrder::query()
                 ->with(['items.product', 'warehouse'])
                 ->whereIn('id', $validated['selected_id'])
-                ->where('stock_batch_status', 'For Approval')
+                ->where('purchase_order_status', 'For Approval')
                 ->lockForUpdate()
                 ->get();
 
             foreach ($batches as $batch) {
                 $batch->update([
-                    'stock_batch_status' => 'Approved',
+                    'purchase_order_status' => 'Approved',
                     'approved_date' => now(),
                 ]);
 
@@ -385,7 +385,7 @@ class StockBatchController extends Controller
                         'inventory_lot_id'  => $lot->id,
                         'movement_type'     => 'IN',
                         'quantity'          => $item->quantity,
-                        'reference_type'    => 'Stock Batch',
+                        'reference_type'    => 'Purchase Order',
                         'reference_number'  => $batch->reference_number,
                         'remarks'           => 'Stock received via batch approval',
                         'last_log_by'       => auth()->id(),
@@ -396,14 +396,14 @@ class StockBatchController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Selected stock batches have been approved successfully',
+            'message' => 'Selected purchase orderes have been approved successfully',
         ]);
     }
 
     public function delete(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'detailId' => ['required', 'integer', 'min:1', Rule::exists('stock_batch', 'id')],
+            'detailId' => ['required', 'integer', 'min:1', Rule::exists('purchase_order', 'id')],
         ]);
 
         $pageAppId = (int) $request->input('appId');
@@ -419,9 +419,9 @@ class StockBatchController extends Controller
         $detailId = (int) $validator->validated()['detailId'];
 
         DB::transaction(function () use ($detailId) {
-            $stockBatch = StockBatch::query()->select(['id'])->findOrFail($detailId);
+            $purchaseOrder = PurchaseOrder::query()->select(['id'])->findOrFail($detailId);
 
-            $stockBatch->delete();
+            $purchaseOrder->delete();
         });        
 
         $link = route('apps.base', [
@@ -431,7 +431,7 @@ class StockBatchController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'The stock batch has been deleted successfully',
+            'message' => 'The purchase order has been deleted successfully',
             'redirect_link' => $link,
         ]);
     }
@@ -440,18 +440,18 @@ class StockBatchController extends Controller
     {
         $validated = $request->validate([
             'selected_id'   => ['required', 'array', 'min:1'],
-            'selected_id.*' => ['integer', 'distinct', Rule::exists('stock_batch', 'id')],
+            'selected_id.*' => ['integer', 'distinct', Rule::exists('purchase_order', 'id')],
         ]);
 
         $ids = $validated['selected_id'];
 
         DB::transaction(function () use ($ids) {
-            StockBatch::query()->whereIn('id', $ids)->delete();
+            PurchaseOrder::query()->whereIn('id', $ids)->delete();
         });
 
         return response()->json([
             'success' => true,
-            'message' => 'The selected stock batchs have been deleted successfully',
+            'message' => 'The selected purchase orders have been deleted successfully',
         ]);
     }
 
@@ -474,11 +474,11 @@ class StockBatchController extends Controller
 
         $validated = $validator->validated();
 
-        $stockBatch = DB::table('stock_batch')
+        $purchaseOrder = DB::table('purchase_order')
             ->where('id', $validated['detailId'])
             ->first();
 
-        if (!$stockBatch) {
+        if (!$purchaseOrder) {
             $link = route('apps.base', [
                 'appId' => $pageAppId,
                 'navigationMenuId' => $pageNavigationMenuId,
@@ -488,16 +488,16 @@ class StockBatchController extends Controller
                 'success'  => false,
                 'notExist' => true,
                 'redirect_link' => $link,
-                'message'  => 'Stock batch not found',
+                'message'  => 'Purchase order not found',
             ]);
         }
         
         return response()->json([
             'success' => true,
             'notExist' => false,
-            'referenceNumber' => $stockBatch->reference_number ?? null,
-            'warehouseId' => $stockBatch->warehouse_id ?? null,
-            'remarks' => $stockBatch->remarks ?? null,
+            'referenceNumber' => $purchaseOrder->reference_number ?? null,
+            'warehouseId' => $purchaseOrder->warehouse_id ?? null,
+            'remarks' => $purchaseOrder->remarks ?? null,
         ]);
     }
 
@@ -508,18 +508,18 @@ class StockBatchController extends Controller
 
         $filterByStatus = $request->input('filter_by_status');
 
-        $stockBatchs = DB::table('stock_batch')
+        $purchaseOrders = DB::table('purchase_order')
             ->when(!empty($filterByStatus), fn($q) =>
-                $q->whereIn('stock_batch_status', (array) $filterByStatus)
+                $q->whereIn('purchase_order_status', (array) $filterByStatus)
             )
             ->orderBy('reference_number')
             ->get();
 
-        $response = $stockBatchs->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
-            $stockBatchId = $row->id;
+        $response = $purchaseOrders->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
+            $purchaseOrderId = $row->id;
             $referenceNumber = $row->reference_number;
             $warehouseName = $row->warehouse_name;
-            $batchStatus = $row->stock_batch_status;
+            $batchStatus = $row->purchase_order_status;
 
             $statusClass = match ($batchStatus) {
                 'Draft' => 'badge badge-secondary',
@@ -534,13 +534,13 @@ class StockBatchController extends Controller
             $link = route('apps.details', [
                 'appId' => $pageAppId,
                 'navigationMenuId' => $pageNavigationMenuId,
-                'details_id' => $stockBatchId,
+                'details_id' => $purchaseOrderId,
             ]);
 
             return [
                 'CHECK_BOX' => '
                     <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                        <input class="form-check-input datatable-checkbox-children" type="checkbox" value="'.$stockBatchId.'">
+                        <input class="form-check-input datatable-checkbox-children" type="checkbox" value="'.$purchaseOrderId.'">
                     </div>
                 ',
                 'REFERENCE_NUMBER' => $referenceNumber,
@@ -566,15 +566,15 @@ class StockBatchController extends Controller
             ]);
         }
 
-        $stockBatchs = DB::table('stock_batch')
-            ->select(['id', 'stock_batch_name', 'stock_batch'])
-            ->orderBy('stock_batch_name')
+        $purchaseOrders = DB::table('purchase_order')
+            ->select(['id', 'purchase_order_name', 'purchase_order'])
+            ->orderBy('purchase_order_name')
             ->get();
 
         $response = $response->concat(
-            $stockBatchs->map(fn ($row) => [
+            $purchaseOrders->map(fn ($row) => [
                 'id'   => $row->id,
-                'text' => $row->stock_batch_name . ' (.' . $row->stock_batch . ')',
+                'text' => $row->purchase_order_name . ' (.' . $row->purchase_order . ')',
             ])
         )->values();
 

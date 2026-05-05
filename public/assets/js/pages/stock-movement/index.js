@@ -6,27 +6,23 @@ import { generateDropdownOptions, initializeDateRangePicker } from '../../form/f
 document.addEventListener('DOMContentLoaded', () => {
     const config = {
         table: {
-            url: '/stock-level/generate-table',
-            selector: '#stock-level-table',
+            url: '/stock-movement/generate-table',
+            selector: '#stock-movement-table',
             serverSide: false,
             ajaxData: () => ({
                 filter_by_product: $('#filter_by_product').val(),
                 filter_by_warehouse: $('#filter_by_warehouse').val(),
-                filter_by_expiration_date: $('#filter_by_expiration_date').val(),
-                filter_by_received_date: $('#filter_by_received_date').val(),
-                filter_by_status: $('#filter_by_status').val(),
+                filter_by_movement_date: $('#filter_by_movement_date').val(),
+                filter_by_movement_type: $('#filter_by_movement_type').val(),
             }),
             columns: [
                 { data: 'CHECK_BOX' },
                 { data: 'PRODUCT' },
-                { data: 'WAREHOUSE' },
-                { data: 'BATCH_NUMBER' },
+                { data: 'MOVEMENT_TYPE' },
                 { data: 'QUANTITY' },
-                { data: 'COST_PER_UNIT' },
-                { data: 'STOCK_VALUE' },
-                { data: 'RECEIVED_DATE' },
-                { data: 'STATUS' },
-                { data: 'EXPIRATION_DATE' },
+                { data: 'REFERENCE_NO' },
+                { data: 'MOVEMENT_DATE' },
+                { data: 'REMARKS' },
             ],
             columnDefs: [
                 { width: '5%', bSortable: false, targets: 0, responsivePriority: 1 },
@@ -36,34 +32,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 { width: 'auto', targets: 4, responsivePriority: 5 },
                 { width: 'auto', targets: 5, responsivePriority: 6 },
                 { width: 'auto', targets: 6, responsivePriority: 7 },
-                { width: 'auto', targets: 7, type: 'date', responsivePriority: 8 },
-                { width: 'auto', targets: 8, responsivePriority: 9 },
-                { width: 'auto', targets: 9, responsivePriority: 10 },
             ],
             onRowClick: (rowData) => {
                 //if (rowData?.LINK) window.open(rowData.LINK, '_blank');
             },
             addons: {
                 controls: true,
-                export: 'stock_level',
+                export: 'stock_movement',
             }
         },
         delete: {
             trigger : '#delete-data',
-            url : '/stock-level/delete-multiple',
-            swalTitle : 'Confirm Multiple Stock Level Deletion',
-            swalText : 'Are you sure you want to delete these stock level?',
+            url : '/stock-movement/delete-multiple',
+            swalTitle : 'Confirm Multiple Stock Movement Deletion',
+            swalText : 'Are you sure you want to delete these stock movement?',
             confirmButtonText : 'Delete',
-            validationMessage : 'Please select the stock level you want to delete',
-            table : '#stock-level-table'
+            validationMessage : 'Please select the stock movement you want to delete',
+            table : '#stock-movement-table'
         },
         dropdown: [
             { url: '/products/generate-active-product-options', dropdownSelector: '#filter_by_product', data: { multiple : true } },
             { url: '/warehouse/generate-options', dropdownSelector: '#filter_by_warehouse', data: { multiple : true } },
         ],
         datepickers: [
-            { selector: '#filter_by_received_date' },
-            { selector: '#filter_by_expiration_date' },
+            { selector: '#filter_by_movement_date' },
         ]
     }
     
@@ -84,9 +76,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (event.target.closest('#reset-filter')) {
             $('#filter_by_product').val(null).trigger('change');
             $('#filter_by_warehouse').val(null).trigger('change');
-            $('#filter_by_expiration_date').val(null);
-            $('#filter_by_received_date').val(null);
-            $('#filter_by_status').val(['In Stock', 'Low Stock']).trigger('change');
+            $('#filter_by_movement_date').val(null);
+            $('#filter_by_movement_type').val(null).trigger('change');
 
             initializeDatatable(config.table);
         }

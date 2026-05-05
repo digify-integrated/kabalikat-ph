@@ -1414,20 +1414,20 @@ return new class extends Migration
                     SET audit_log = CONCAT(audit_log, "Track Inventory: ", OLD.track_inventory, " -> ", NEW.track_inventory, "<br/>");
                 END IF;
 
+                IF NEW.show_on_pos <> OLD.show_on_pos THEN
+                    SET audit_log = CONCAT(audit_log, "Show on POS: ", OLD.show_on_pos, " -> ", NEW.show_on_pos, "<br/>");
+                END IF;
+
+                IF NEW.is_purchasable <> OLD.is_purchasable THEN
+                    SET audit_log = CONCAT(audit_log, "Is Purchasable: ", OLD.is_purchasable, " -> ", NEW.is_purchasable, "<br/>");
+                END IF;
+
                 IF NEW.is_variant <> OLD.is_variant THEN
                     SET audit_log = CONCAT(audit_log, "Is Variant: ", OLD.is_variant, " -> ", NEW.is_variant, "<br/>");
                 END IF;
 
                 IF NEW.is_addon <> OLD.is_addon THEN
                     SET audit_log = CONCAT(audit_log, "Is Add On: ", OLD.is_addon, " -> ", NEW.is_addon, "<br/>");
-                END IF;
-
-                IF NEW.batch_tracking <> OLD.batch_tracking THEN
-                    SET audit_log = CONCAT(audit_log, "Batch Tracking: ", OLD.batch_tracking, " -> ", NEW.batch_tracking, "<br/>");
-                END IF;
-
-                IF NEW.expiration_tracking <> OLD.expiration_tracking THEN
-                    SET audit_log = CONCAT(audit_log, "Expiration Tracking: ", OLD.expiration_tracking, " -> ", NEW.expiration_tracking, "<br/>");
                 END IF;
 
                 IF NEW.parent_product_name <> OLD.parent_product_name THEN
@@ -2104,6 +2104,250 @@ return new class extends Migration
                 VALUES ('stock_transfer_items', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
             END
         SQL);
+
+        /* =============================================================================================
+            TABLE: PURCHASE ORDER
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_purchase_order_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_purchase_order_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_purchase_order_update
+            AFTER UPDATE ON purchase_order
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Purchase order changed.<br/><br/>';
+
+                IF NEW.reference_number <> OLD.reference_number THEN
+                    SET audit_log = CONCAT(audit_log, "Reference Number: ", OLD.reference_number, " -> ", NEW.reference_number, "<br/>");
+                END IF;
+
+                IF NEW.supplier_name <> OLD.supplier_name THEN
+                    SET audit_log = CONCAT(audit_log, "Supplier: ", OLD.supplier_name, " -> ", NEW.supplier_name, "<br/>");
+                END IF;
+
+                IF NEW.warehouse_name <> OLD.warehouse_name THEN
+                    SET audit_log = CONCAT(audit_log, "Warehouse: ", OLD.warehouse_name, " -> ", NEW.warehouse_name, "<br/>");
+                END IF;
+
+                IF NEW.po_status <> OLD.po_status THEN
+                    SET audit_log = CONCAT(audit_log, "Status: ", OLD.po_status, " -> ", NEW.po_status, "<br/>");
+                END IF;
+
+                IF NEW.remarks <> OLD.remarks THEN
+                    SET audit_log = CONCAT(audit_log, "Remarks: ", OLD.remarks, " -> ", NEW.remarks, "<br/>");
+                END IF;
+
+                IF NEW.order_date <> OLD.order_date THEN
+                    SET audit_log = CONCAT(audit_log, "Order Date: ", OLD.order_date, " -> ", NEW.order_date, "<br/>");
+                END IF;
+
+                IF NEW.expected_delivery_date <> OLD.expected_delivery_date THEN
+                    SET audit_log = CONCAT(audit_log, "Expected Delivery Date: ", OLD.expected_delivery_date, " -> ", NEW.expected_delivery_date, "<br/>");
+                END IF;
+
+                IF NEW.for_approval_date <> OLD.for_approval_date THEN
+                    SET audit_log = CONCAT(audit_log, "For Approval Date: ", OLD.for_approval_date, " -> ", NEW.for_approval_date, "<br/>");
+                END IF;
+
+                IF NEW.approved_date <> OLD.approved_date THEN
+                    SET audit_log = CONCAT(audit_log, "Approved Date: ", OLD.approved_date, " -> ", NEW.approved_date, "<br/>");
+                END IF;
+
+                IF NEW.on_process_date <> OLD.on_process_date THEN
+                    SET audit_log = CONCAT(audit_log, "On Process Date: ", OLD.on_process_date, " -> ", NEW.on_process_date, "<br/>");
+                END IF;
+
+                IF NEW.completed_date <> OLD.completed_date THEN
+                    SET audit_log = CONCAT(audit_log, "Completed Date: ", OLD.completed_date, " -> ", NEW.completed_date, "<br/>");
+                END IF;
+
+                IF NEW.cancellation_date <> OLD.cancellation_date THEN
+                    SET audit_log = CONCAT(audit_log, "Cancellation Date: ", OLD.cancellation_date, " -> ", NEW.cancellation_date, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Purchase order changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('purchase_order', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_purchase_order_insert
+            AFTER INSERT ON purchase_order
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Purchase order created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('purchase_order', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
+
+        /* =============================================================================================
+            TABLE: PURCHASE ORDER ITEMS
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_purchase_order_items_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_purchase_order_items_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_purchase_order_items_update
+            AFTER UPDATE ON purchase_order_items
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Purchase order item changed.<br/><br/>';
+
+                IF NEW.product_name <> OLD.product_name THEN
+                    SET audit_log = CONCAT(audit_log, "Product: ", OLD.product_name, " -> ", NEW.product_name, "<br/>");
+                END IF;
+
+                IF NEW.ordered_quantity <> OLD.ordered_quantity THEN
+                    SET audit_log = CONCAT(audit_log, "Ordered Quantity: ", OLD.ordered_quantity, " -> ", NEW.ordered_quantity, "<br/>");
+                END IF;
+
+                IF NEW.received_quantity <> OLD.received_quantity THEN
+                    SET audit_log = CONCAT(audit_log, "Received Quantity: ", OLD.received_quantity, " -> ", NEW.received_quantity, "<br/>");
+                END IF;
+
+                IF NEW.cancelled_quantity <> OLD.cancelled_quantity THEN
+                    SET audit_log = CONCAT(audit_log, "Cancelled Quantity: ", OLD.cancelled_quantity, " -> ", NEW.cancelled_quantity, "<br/>");
+                END IF;
+
+                IF NEW.remaining_quantity <> OLD.remaining_quantity THEN
+                    SET audit_log = CONCAT(audit_log, "Remaining Quantity: ", OLD.remaining_quantity, " -> ", NEW.remaining_quantity, "<br/>");
+                END IF;
+
+                IF NEW.estimated_cost <> OLD.estimated_cost THEN
+                    SET audit_log = CONCAT(audit_log, "Estimated Cost: ", OLD.estimated_cost, " -> ", NEW.estimated_cost, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Purchase order item changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('purchase_order_items', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_purchase_order_items_insert
+            AFTER INSERT ON purchase_order_items
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Purchase order item created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('purchase_order_items', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
+
+        /* =============================================================================================
+            TABLE: PURCHASE ORDER ITEMS
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_purchase_order_receipt_items_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_purchase_order_receipt_items_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_purchase_order_receipt_items_update
+            AFTER UPDATE ON purchase_order_receipt_items
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Purchase order receipt item changed.<br/><br/>';
+
+                IF NEW.product_name <> OLD.product_name THEN
+                    SET audit_log = CONCAT(audit_log, "Product: ", OLD.product_name, " -> ", NEW.product_name, "<br/>");
+                END IF;
+
+                IF NEW.batch_number <> OLD.batch_number THEN
+                    SET audit_log = CONCAT(audit_log, "Batch Number: ", OLD.batch_number, " -> ", NEW.batch_number, "<br/>");
+                END IF;
+
+                IF NEW.cost_per_unit <> OLD.cost_per_unit THEN
+                    SET audit_log = CONCAT(audit_log, "Cost Per Unit: ", OLD.cost_per_unit, " -> ", NEW.cost_per_unit, "<br/>");
+                END IF;
+
+                IF NEW.expiration_date <> OLD.expiration_date THEN
+                    SET audit_log = CONCAT(audit_log, "Expiration Date: ", OLD.expiration_date, " -> ", NEW.expiration_date, "<br/>");
+                END IF;
+
+                IF NEW.received_date <> OLD.received_date THEN
+                    SET audit_log = CONCAT(audit_log, "Received Date: ", OLD.received_date, " -> ", NEW.received_date, "<br/>");
+                END IF;
+
+                IF NEW.received_quantity <> OLD.received_quantity THEN
+                    SET audit_log = CONCAT(audit_log, "Received Quantity: ", OLD.received_quantity, " -> ", NEW.received_quantity, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Purchase order receipt item changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('purchase_order_receipt_items', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_purchase_order_receipt_items_insert
+            AFTER INSERT ON purchase_order_receipt_items
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Purchase order receipt item created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('purchase_order_receipt_items', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
+
+        /* =============================================================================================
+            TABLE: PURCHASE ORDER ITEMS
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_purchase_order_cancellations_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_purchase_order_cancellations_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_purchase_order_cancellations_update
+            AFTER UPDATE ON purchase_order_cancellations
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Purchase order cancellation changed.<br/><br/>';
+
+                IF NEW.product_name <> OLD.product_name THEN
+                    SET audit_log = CONCAT(audit_log, "Product: ", OLD.product_name, " -> ", NEW.product_name, "<br/>");
+                END IF;
+
+                IF NEW.cancelled_quantity <> OLD.cancelled_quantity THEN
+                    SET audit_log = CONCAT(audit_log, "Cancelled Quantity: ", OLD.cancelled_quantity, " -> ", NEW.cancelled_quantity, "<br/>");
+                END IF;
+
+                IF NEW.reason <> OLD.reason THEN
+                    SET audit_log = CONCAT(audit_log, "Reason: ", OLD.reason, " -> ", NEW.reason, "<br/>");
+                END IF;
+
+                IF NEW.cancelled_date <> OLD.cancelled_date THEN
+                    SET audit_log = CONCAT(audit_log, "Cancelled Date: ", OLD.cancelled_date, " -> ", NEW.cancelled_date, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Purchase order cancellation changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('purchase_order_cancellations', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_purchase_order_cancellations_insert
+            AFTER INSERT ON purchase_order_cancellations
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Purchase order cancellation created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('purchase_order_cancellations', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
     }
 
     /**
@@ -2404,5 +2648,33 @@ return new class extends Migration
 
         DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_transfer_items_update');
         DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_transfer_items_insert');
+
+        /* =============================================================================================
+            TABLE: PURCHASE ORDER
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_purchase_order_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_purchase_order_insert');
+
+        /* =============================================================================================
+            TABLE: PURCHASE ORDER ITEMS
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_purchase_order_items_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_purchase_order_items_insert');
+
+        /* =============================================================================================
+            TABLE: PURCHASE ORDER RECEIPT ITEMS
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_purchase_order_receipt_items_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_purchase_order_receipt_items_insert');
+
+        /* =============================================================================================
+            TABLE: PURCHASE ORDER CANCELLATION
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_purchase_order_cancellations_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_purchase_order_cancellations_insert');
     }
 };

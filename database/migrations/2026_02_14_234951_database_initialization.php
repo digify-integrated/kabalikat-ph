@@ -742,16 +742,16 @@ return new class extends Migration
             $table->enum('track_inventory', ['Yes', 'No'])
             ->default('Yes');
 
+            $table->enum('show_on_pos', ['Yes', 'No'])
+            ->default('No');
+
+            $table->enum('is_purchasable', ['Yes', 'No'])
+            ->default('Yes');
+
             $table->enum('is_variant', ['Yes', 'No'])
             ->default('No');
 
             $table->enum('is_addon', ['Yes', 'No'])
-            ->default('No');
-
-            $table->enum('batch_tracking', ['Yes', 'No'])
-            ->default('No');
-
-            $table->enum('expiration_tracking', ['Yes', 'No'])
             ->default('No');
 
             $table->foreignId('parent_product_id')
@@ -1289,6 +1289,174 @@ return new class extends Migration
         });
 
         /* =============================================================================================
+            TABLE: Purchase Order
+        ============================================================================================= */
+
+        Schema::create('purchase_order', function (Blueprint $table) {
+            $table->id();
+
+            $table->string('reference_number')->unique();
+
+            $table->foreignId('supplier_id')
+                ->constrained('supplier')
+                ->cascadeOnDelete();
+
+            $table->string('supplier_name');
+
+            $table->foreignId('warehouse_id')
+                ->constrained('warehouse')
+                ->cascadeOnDelete();
+
+            $table->string('warehouse_name');
+
+            $table->enum('po_status', [
+                'Draft',
+                'For Approval',
+                'Approved',
+                'On-Process',
+                'Completed',
+                'Cancelled'
+            ])->default('Draft');
+
+            $table->text('remarks')->nullable();
+
+            $table->date('order_date')->nullable();
+            $table->date('expected_delivery_date')->nullable();
+
+            $table->date('for_approval_date')->nullable();
+            $table->date('approved_date')->nullable();
+
+            $table->date('on_process_date')->nullable();
+            $table->date('completed_date')->nullable();
+            $table->date('cancellation_date')->nullable();
+
+            $table->foreignId('last_log_by')->nullable()->default(1)
+                ->constrained('users')->nullOnDelete();
+
+            $table->timestamps();
+
+            $table->index(['po_status']);
+            $table->index(['supplier_id']);
+            $table->index(['warehouse_id']);
+            $table->index(['order_date']);
+            $table->index(['expected_delivery_date']);
+            $table->index(['for_approval_date']);
+            $table->index(['approved_date']);
+            $table->index(['on_process_date']);
+            $table->index(['completed_date']);
+            $table->index(['cancellation_date']);
+        });
+
+        /* =============================================================================================
+            TABLE: Purchase Order Items
+        ============================================================================================= */
+
+        Schema::create('purchase_order_items', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('purchase_order_id')
+                ->constrained('purchase_order')
+                ->cascadeOnDelete();
+
+            $table->foreignId('product_id')
+                ->constrained('product')
+                ->cascadeOnDelete();
+
+            $table->string('product_name');
+
+            $table->decimal('ordered_quantity', 10, 2);
+
+            $table->decimal('received_quantity', 10, 2)->default(0);
+            $table->decimal('cancelled_quantity', 10, 2)->default(0);
+
+            $table->decimal('remaining_quantity', 10, 2)->default(0);
+
+            $table->decimal('estimated_cost', 10, 2)->default(0);
+
+            $table->foreignId('last_log_by')->nullable()->default(1)
+                ->constrained('users')->nullOnDelete();
+
+            $table->timestamps();
+
+            $table->index(['purchase_order_id']);
+            $table->index(['product_id']);
+        });
+
+        /* =============================================================================================
+            TABLE: Purchase Order Receipt Items
+        ============================================================================================= */
+
+        Schema::create('purchase_order_receipt_items', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('purchase_order_id')
+                ->constrained('purchase_order')
+                ->cascadeOnDelete();
+
+            $table->foreignId('purchase_order_items_id')
+                ->constrained('purchase_order_items')
+                ->cascadeOnDelete();
+
+            $table->foreignId('product_id')
+                ->constrained('product')
+                ->cascadeOnDelete();
+
+            $table->string('product_name');
+
+            $table->string('batch_number')->nullable();
+            $table->decimal('cost_per_unit', 10, 2)->default(0);
+            $table->date('expiration_date')->nullable();
+            $table->date('received_date');
+
+            $table->decimal('received_quantity', 10, 2);
+
+            $table->foreignId('last_log_by')->nullable()->default(1)
+                ->constrained('users')->nullOnDelete();
+
+            $table->timestamps();
+
+            $table->index(['purchase_order_id']);
+            $table->index(['purchase_order_items_id']);
+            $table->index(['product_id']);
+        });
+
+        /* =============================================================================================
+            TABLE: Purchase Order Cancellations
+        ============================================================================================= */
+
+        Schema::create('purchase_order_cancellations', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('purchase_order_id')
+                ->constrained('purchase_order')
+                ->cascadeOnDelete();
+
+            $table->foreignId('purchase_order_items_id')
+                ->constrained('purchase_order_items')
+                ->cascadeOnDelete();
+
+            $table->foreignId('product_id')
+                ->constrained('product')
+                ->cascadeOnDelete();
+
+            $table->string('product_name');
+
+            $table->decimal('cancelled_quantity', 10, 2);
+
+            $table->string('reason')->nullable();
+
+            $table->date('cancelled_date');
+
+            $table->foreignId('last_log_by')->nullable()->default(1)
+                ->constrained('users')->nullOnDelete();
+
+            $table->timestamps();
+
+            $table->index(['purchase_order_id']);
+            $table->index(['purchase_order_items_id']);
+        });
+
+        /* =============================================================================================
             TABLE: 
         ============================================================================================= */
     }
@@ -1343,6 +1511,10 @@ return new class extends Migration
         Schema::dropIfExists('stock_transfer');
         Schema::dropIfExists('stock_transfer_items');
         Schema::dropIfExists('stock_movement');
+        Schema::dropIfExists('purchase_order_cancellations');
+        Schema::dropIfExists('purchase_order_receipt_items');
+        Schema::dropIfExists('purchase_order_items');
+        Schema::dropIfExists('purchase_order');
         Schema::dropIfExists('nationality');
         Schema::dropIfExists('currency');
         Schema::dropIfExists('country');

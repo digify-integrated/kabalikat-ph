@@ -61,12 +61,8 @@
                         <div class="separator border-gray-200"></div>
                         <div class="px-7 py-5">
                             <div class="mb-5">
-                                <label class="form-label fs-6 fw-semibold" for="filter_by_expiration_date">Filter By Expiration Date:</label>
-                                 <input type="text" class="form-control" id="filter_by_expiration_date" autocomplete="off">
-                            </div>
-                            <div class="mb-5">
-                                <label class="form-label fs-6 fw-semibold" for="filter_by_received_date">Filter By Received Date:</label>
-                                <input type="text" class="form-control" id="filter_by_received_date" autocomplete="off">
+                                <label class="form-label fs-6 fw-semibold" for="filter_by_movement_date">Filter By Movement Date:</label>
+                                 <input type="text" class="form-control" id="filter_by_movement_date" autocomplete="off">
                             </div>
                             <div class="mb-5">
                                 <label class="form-label fs-6 fw-semibold" for="filter_by_product">Filter By Product:</label>
@@ -77,11 +73,15 @@
                                 <select id="filter_by_warehouse" name="filter_by_warehouse" multiple="multiple" class="form-select" data-control="select2" data-allow-clear="false"></select>
                             </div>
                             <div class="mb-5">
-                                <label class="form-label fs-6 fw-semibold" for="filter_by_status">Filter By Status:</label>
-                                <select id="filter_by_status" multiple="multiple" class="form-select" data-control="select2" data-allow-clear="false">
-                                    <option value="In Stock" selected>In Stock</option>
-                                    <option value="Low Stock" selected>Low Stock</option>
-                                    <option value="Out of Stock">Out of Stock</option>
+                                <label class="form-label fs-6 fw-semibold" for="filter_by_movement_type">Filter By Movement Type:</label>
+                                <select id="filter_by_movement_type" multiple="multiple" class="form-select" data-control="select2" data-allow-clear="false">
+                                    <option value="IN">Stock In</option>
+                                    <option value="OUT">Stock Out</option>
+                                    <option value="TRANSFER_IN">Transfer In</option>
+                                    <option value="TRANSFER_OUT">Transfer Out</option>
+                                    <option value="ADJUSTMENT">Adjustment</option>
+                                    <option value="SALE">Sale</option>
+                                    <option value="RETURN">Return</option>
                                 </select>
                             </div>
                             <div class="d-flex justify-content-end">
@@ -96,7 +96,7 @@
 
         <div class="card-body pt-9">
             <div class="table-responsive">
-                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5" id="stock-level-table">
+                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5" id="stock-movement-table">
                     <thead>
                         <tr class="text-start text-gray-800 fw-bold fs-7 text-uppercase gs-0">
                             <th>
@@ -105,14 +105,11 @@
                                 </div>
                             </th>
                             <th>Product</th>
-                            <th>Warehouse</th>
-                            <th>Batch / Lot No.</th>
+                            <th>Movement Type</th>
                             <th>Qty</th>
-                            <th>Cost/Unit</th>
-                            <th>Value</th>
-                            <th>Received</th>
-                            <th>Status</th>
-                            <th>Expiry</th>
+                            <th>Reference No</th>
+                            <th>Movement Date</th>
+                            <th>Remarks</th>
                         </tr>
                     </thead>
                     <tbody class="fw-semibold text-gray-800"></tbody>

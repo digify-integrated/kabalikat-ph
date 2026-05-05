@@ -52,6 +52,10 @@ class SystemActionSeeder extends Seeder
                 'system_action_name' => 'Approve Stock Transfer',
                 'system_action_description' => 'Access to approve stock transfer requests.',
             ],
+            [
+                'system_action_name' => 'Approve Purchase Order',
+                'system_action_description' => 'Access to approve purchase order requests.',
+            ],
         ];
 
         DB::table('system_action')->insert(
