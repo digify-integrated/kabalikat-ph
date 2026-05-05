@@ -220,7 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
             },
         ],
         dropdown: [
-            { url: '/products/generate-product-batch-tracking-options', dropdownSelector: '#product_id' },
+            { url: '/products/generate-active-product-options', dropdownSelector: '#product_id' },
             { url: '/warehouse/generate-options', dropdownSelector: '#warehouse_id' },
         ],
         datepickers: [

@@ -75,11 +75,29 @@
                         <div class="separator border-gray-200"></div>
                         <div class="px-7 py-5">
                             <div class="mb-5">
+                                <label class="form-label fs-6 fw-semibold" for="filter_by_order_date">Filter By Order Date:</label>
+                                 <input type="text" class="form-control" id="filter_by_order_date" autocomplete="off">
+                            </div>
+                            <div class="mb-5">
+                                <label class="form-label fs-6 fw-semibold" for="filter_by_expected_delivery_date">Filter By Expected Delivery Date:</label>
+                                <input type="text" class="form-control" id="filter_by_expected_delivery_date" autocomplete="off">
+                            </div>
+                            <div class="mb-5">
+                                <label class="form-label fs-6 fw-semibold" for="filter_by_supplier">Filter By Supplier:</label>
+                                <select id="filter_by_supplier" name="filter_by_supplier" multiple="multiple" class="form-select" data-control="select2" data-allow-clear="false"></select>
+                            </div>
+                            <div class="mb-5">
+                                <label class="form-label fs-6 fw-semibold" for="filter_by_warehouse">Filter By Warehouse:</label>
+                                <select id="filter_by_warehouse" name="filter_by_warehouse" multiple="multiple" class="form-select" data-control="select2" data-allow-clear="false"></select>
+                            </div>
+                            <div class="mb-5">
                                 <label class="form-label fs-6 fw-semibold" for="filter_by_status">Filter By Status:</label>
                                 <select id="filter_by_status" multiple="multiple" class="form-select" data-control="select2" data-allow-clear="false">
                                     <option value="Draft" selected>Draft</option>
                                     <option value="For Approval" selected>For Approval</option>
-                                    <option value="Approved">Approved</option>
+                                    <option value="Approved" selected>Approved</option>
+                                    <option value="On-Process" selected>On-Process</option>
+                                    <option value="Completed">Completed</option>
                                     <option value="Cancelled">Cancelled</option>
                                 </select>
                             </div>
@@ -104,8 +122,11 @@
                                 </div>
                             </th>
                             <th>Reference</th>
+                            <th>Supplier</th>
                             <th>Warehouse</th>
                             <th>Status</th>
+                            <th>Order Date</th>
+                            <th>Expected Delivery Date</th>
                         </tr>
                     </thead>
                     <tbody class="fw-semibold text-gray-800"></tbody>

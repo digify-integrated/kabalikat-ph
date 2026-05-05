@@ -506,46 +506,91 @@ class PurchaseOrderController extends Controller
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
 
+        $filterBySupplier = $request->input('filter_by_supplier');
+        $filterByWarehouse = $request->input('filter_by_warehouse');
+        $filterByOrderDate = $request->input('filter_by_order_date');
+        $filterByExpectedDeliveryDate = $request->input('filter_by_expected_delivery_date');
         $filterByStatus = $request->input('filter_by_status');
 
-        $purchaseOrders = DB::table('purchase_order')
+        $parseRange = function ($range) {
+            if (!$range) return null;
+
+            $dates = explode(' - ', $range);
+
+            if (count($dates) !== 2) return null;
+
+            return [
+                Carbon::createFromFormat('m/d/Y', trim($dates[0]))->startOfDay(),
+                Carbon::createFromFormat('m/d/Y', trim($dates[1]))->endOfDay(),
+            ];
+        };
+
+        $orderRange = $parseRange($filterByOrderDate);
+        $deliveryRange = $parseRange($filterByExpectedDeliveryDate);
+
+        $stockLevels = DB::table('purchase_order')
+            ->when(!empty($filterByProduct), fn($q) =>
+                $q->whereIn('supplier_id', (array) $filterBySupplier)
+            )
+            ->when(!empty($filterByWarehouse), fn($q) =>
+                $q->whereIn('warehouse_id', (array) $filterByWarehouse)
+            )
+            ->when($orderRange, fn($q) =>
+                $q->whereBetween('order_date', $orderRange)
+            )
+            ->when($deliveryRange, fn($q) =>
+                $q->whereBetween('expected_delivery_date', $deliveryRange)
+            )
             ->when(!empty($filterByStatus), fn($q) =>
-                $q->whereIn('purchase_order_status', (array) $filterByStatus)
+                $q->whereIn('po_status', (array) $filterByStatus)
             )
             ->orderBy('reference_number')
             ->get();
 
-        $response = $purchaseOrders->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
-            $purchaseOrderId = $row->id;
+        $response = $stockLevels->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
+            $stockLevelId = $row->id;
             $referenceNumber = $row->reference_number;
+            $supplierName = $row->supplier_name;
             $warehouseName = $row->warehouse_name;
-            $batchStatus = $row->purchase_order_status;
+            $poStatus = $row->po_status;
 
-            $statusClass = match ($batchStatus) {
+            $orderDate = $row->order_date
+                ? date('M d, Y', strtotime($row->expiration_date))
+                : null;
+            $expectedDeliveryDate = $row->expected_delivery_date
+                ? date('M d, Y', strtotime($row->received_date))
+                : 'No received date';
+
+            $statusClass = match ($poStatus) {
                 'Draft' => 'badge badge-secondary',
                 'For Approval' => 'badge badge-warning',
                 'Approved' => 'badge badge-success',
+                'On-Process' => 'badge badge-warning',
+                'Complete' => 'badge badge-success',
                 'Cancelled' => 'badge badge-danger',
                 default => 'badge badge-light',
             };
 
-            $statusBadge = '<span class="'.$statusClass.'">'.$batchStatus.'</span>';
+            $statusBadge = '<span class="'.$statusClass.'">'.$poStatus.'</span>';
 
             $link = route('apps.details', [
                 'appId' => $pageAppId,
                 'navigationMenuId' => $pageNavigationMenuId,
-                'details_id' => $purchaseOrderId,
+                'details_id' => $stockLevelId,
             ]);
 
             return [
                 'CHECK_BOX' => '
                     <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                        <input class="form-check-input datatable-checkbox-children" type="checkbox" value="'.$purchaseOrderId.'">
+                        <input class="form-check-input datatable-checkbox-children" type="checkbox" value="'.$stockLevelId.'">
                     </div>
                 ',
                 'REFERENCE_NUMBER' => $referenceNumber,
+                'SUPPLIER' => $supplierName,
                 'WAREHOUSE' => $warehouseName,
                 'STATUS' => $statusBadge,
+                'ORDER_DATE' => $orderDate,
+                'EXPECTED_DELIVERY_DATE' => $expectedDeliveryDate,
                 'LINK' => $link,
             ];
         })->values();

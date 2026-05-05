@@ -104,7 +104,7 @@
                                 <div class="d-flex flex-column">
                                     <div class="fs-5 text-gray-900 fw-bold">Show on POS</div>
                                     <div class="fs-7 fw-semibold text-muted">
-                                        Enable this to track items by batch or lot number for better inventory control.
+                                        Enable this to make this product available for selection on the Point of Sale screen.
                                     </div>
                                 </div>
                             </div>
@@ -124,7 +124,7 @@
                                 <div class="d-flex flex-column">
                                     <div class="fs-5 text-gray-900 fw-bold">Is Purchasable</div>
                                     <div class="fs-7 fw-semibold text-muted">
-                                        Enable this to monitor expiration dates and avoid selling expired products.
+                                        Enable this to allow this item to be added to Purchase Orders and restock requests.
                                     </div>
                                 </div>
                             </div>

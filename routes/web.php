@@ -21,6 +21,8 @@ use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\ProductCategoryMapController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductAttributeController;
+use App\Http\Controllers\PurchaseOrderController;
+use App\Http\Controllers\PurchaseOrderItemsController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\RoleSystemActionPermissionController;
@@ -512,7 +514,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/generate-active-product-options', 'generateActiveProductOptions')->name('generate.active.product.options');
             Route::post('/generate-product-bom-options', 'generateBomOptions')->name('generate.bom.options');
             Route::post('/generate-product-addon-options', 'generateAddOnOptions')->name('generate.addon.options');
-            Route::post('/generate-product-batch-tracking-options', 'generateBatchTrackingOptions')->name('generate.batch.tracking.options');
+            Route::post('/generate-product-purchasable-options', 'generatePurchasableOptions')->name('generate.purchasable.options');
         });
 
     // Product Attribute
@@ -661,7 +663,7 @@ Route::middleware('auth')->group(function () {
     // Purchase Order
     Route::prefix('purchase-order')
         ->name('purchase.order.')
-        ->controller(StockBatchController::class)
+        ->controller(PurchaseOrderController::class)
         ->group(function () {
             Route::post('/save', 'save')->name('save');
             Route::post('/for-approval', 'forApproval')->name('for.approval');
@@ -679,7 +681,7 @@ Route::middleware('auth')->group(function () {
     // Purchase Order Items
     Route::prefix('purchase-order-items')
         ->name('purchase.order.items.')
-        ->controller(StockBatchItemsController::class)
+        ->controller(PurchaseOrderItemsController::class)
         ->group(function () {
             Route::post('/save', 'save')->name('save');
             Route::post('/delete', 'delete')->name('delete');

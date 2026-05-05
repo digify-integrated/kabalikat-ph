@@ -879,7 +879,7 @@ class ProductController extends Controller
         return response()->json($response);
     }
 
-    public function generateBatchTrackingOptions(Request $request)
+    public function generatePurchasableOptions(Request $request)
     {
         $multiple = filter_var($request->input('multiple', false), FILTER_VALIDATE_BOOLEAN);
 
@@ -894,7 +894,7 @@ class ProductController extends Controller
 
         $boms = DB::table('product')
             ->select(['id', 'product_name'])
-            ->where('batch_tracking', 'Yes')
+            ->where('is_purchasable', 'Yes')
             ->where('product_status', 'Active')
             ->orderBy('product_name')
             ->get();
