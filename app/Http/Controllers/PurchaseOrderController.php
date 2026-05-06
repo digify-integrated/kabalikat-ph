@@ -6,6 +6,7 @@ use App\Models\InventoryLot;
 use App\Models\PurchaseOrder;
 use App\Models\StockLevel;
 use App\Models\StockMovement;
+use App\Models\Supplier;
 use App\Models\Warehouse;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -21,7 +22,10 @@ class PurchaseOrderController extends Controller
         $validator = Validator::make($request->all(), [
             'purchase_order_id' => ['nullable', 'integer'],
             'reference_number' => ['required', 'string'],
+            'supplier_id' => ['required', 'integer', Rule::exists('supplier', 'id')],
             'warehouse_id' => ['required', 'integer', Rule::exists('warehouse', 'id')],
+            'order_date' => ['required', 'date'],
+            'expected_delivery_date' => ['required', 'date'],
             'remarks' => ['nullable', 'string'],
         ]);
 
@@ -34,10 +38,23 @@ class PurchaseOrderController extends Controller
 
         $validated = $validator->validated();
 
+        $validated['order_date'] = !empty($validated['order_date'])
+            ? Carbon::parse($validated['order_date'])->format('Y-m-d')
+            : null;
+
+        $validated['expected_delivery_date'] = !empty($validated['expected_delivery_date'])
+            ? Carbon::parse($validated['expected_delivery_date'])->format('Y-m-d')
+            : null;
+
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
 
+        $supplierId = (int) $validated['supplier_id'];
         $warehouseId = (int) $validated['warehouse_id'];
+
+        $supplierName = (string) Supplier::query()
+            ->whereKey($supplierId)
+            ->value('supplier_name');
 
         $warehouseName = (string) Warehouse::query()
             ->whereKey($warehouseId)
@@ -45,8 +62,12 @@ class PurchaseOrderController extends Controller
 
         $payload = [
             'reference_number' => $validated['reference_number'],
+            'supplier_id' => $supplierId,
+            'supplier_name' => $supplierName,
             'warehouse_id' => $warehouseId,
             'warehouse_name' => $warehouseName,
+            'order_date' => $validated['order_date'],
+            'expected_delivery_date' => $validated['expected_delivery_date'],
             'remarks' => $validated['remarks'],
             'last_log_by' => Auth::id(),
         ];
@@ -220,96 +241,48 @@ class PurchaseOrderController extends Controller
     public function approve(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'detailId' => ['required', 'integer', Rule::exists('purchase_order', 'id')],
+            'detailId' => ['required', 'integer', 'min:1', Rule::exists('purchase_order', 'id')],
         ]);
+
+        $pageAppId = (int) $request->input('appId');
+        $pageNavigationMenuId = (int) $request->input('navigationMenuId');
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => $validator->errors()->first(),
+                'message' => $validator->errors()->first('detailId') ?? 'Validation failed',
             ]);
         }
 
         $detailId = (int) $validator->validated()['detailId'];
 
-        $batch = PurchaseOrder::with(['items.product', 'warehouse'])
-            ->findOrFail($detailId);
+        DB::transaction(function () use ($detailId) {
+            $purchaseOrder = PurchaseOrder::query()
+                ->select(['id', 'purchase_order_status'])
+                ->findOrFail($detailId);
 
-        if ($batch->purchase_order_status !== 'For Approval') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Purchase order is not in For Approval status'
-            ]);
-        }
-
-        DB::transaction(function () use ($batch) {
-
-            $batch->update([
-                'purchase_order_status' => 'Approved',
-                'approved_date' => now(),
-            ]);
-
-            $warehouseId   = $batch->warehouse_id;
-            $warehouseName = $batch->warehouse->warehouse_name ?? null;
-
-            foreach ($batch->items as $item) {
-
-                $productId   = $item->product_id;
-                $productName = $item->product->product_name ?? $item->product_name;
-                $reorderLevel = $item->product->reorder_level ?? 0;
-
-                $lot = InventoryLot::firstOrCreate(
-                    [
-                        'product_id'      => $productId,
-                        'batch_number'    => $item->batch_number,
-                        'cost_per_unit'   => $item->cost_per_unit,
-                        'expiration_date' => $item->expiration_date,
-                    ],
-                    [
-                        'product_name'  => $productName,
-                        'received_date' => $item->received_date,
-                        'last_log_by'   => auth()->id(),
-                    ]
-                );
-
-                $stock = StockLevel::firstOrNew([
-                    'product_id'       => $productId,
-                    'warehouse_id'     => $warehouseId,
-                    'inventory_lot_id' => $lot->id,
-                ]);
-
-                $stock->product_name   = $productName;
-                $stock->warehouse_name = $warehouseName;
-                $stock->quantity = ($stock->quantity ?? 0) + $item->quantity;
-                $stock->last_log_by = auth()->id();
-
-                $stock->stock_status = match (true) {
-                    $stock->quantity == 0 => 'Out of Stock',
-                    $stock->quantity <= $reorderLevel => 'Low Stock',
-                    default => 'In Stock',
-                };
-
-                $stock->save();
-
-                StockMovement::create([
-                    'product_id'        => $productId,
-                    'product_name'      => $productName,
-                    'warehouse_id'      => $warehouseId,
-                    'warehouse_name'    => $warehouseName,
-                    'inventory_lot_id'  => $lot->id,
-                    'movement_type'     => 'IN',
-                    'quantity'          => $item->quantity,
-                    'reference_type'    => 'Purchase Order',
-                    'reference_number'  => $batch->reference_number,
-                    'remarks'           => 'Stock received via batch approval',
-                    'last_log_by'       => auth()->id(),
+            if ($purchaseOrder->purchase_order_status !== 'For Approval') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'The purchase order is not "For Approval" status',
                 ]);
             }
-        });
+
+            $purchaseOrder->update([
+                'purchase_order_status' => 'Approved',
+                'approved_date' => Carbon::now()
+            ]);
+        });        
+
+        $link = route('apps.base', [
+            'appId' => $pageAppId,
+            'navigationMenuId' => $pageNavigationMenuId,
+        ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'Purchase order approved successfully',
+            'message' => 'The purchase order has been approved successfully',
+            'redirect_link' => $link,
         ]);
     }
 
@@ -320,83 +293,24 @@ class PurchaseOrderController extends Controller
             'selected_id.*' => ['integer', 'distinct', Rule::exists('purchase_order', 'id')],
         ]);
 
-        DB::transaction(function () use ($validated) {
+        $ids = $validated['selected_id'];
 
-            $batches = PurchaseOrder::query()
-                ->with(['items.product', 'warehouse'])
-                ->whereIn('id', $validated['selected_id'])
-                ->where('purchase_order_status', 'For Approval')
-                ->lockForUpdate()
-                ->get();
+        DB::transaction(function () use ($ids) {
+            $purchaseOrder = PurchaseOrder::query()
+                ->select(['id', 'purchase_order_status'])
+                ->findOrFail($ids);
 
-            foreach ($batches as $batch) {
-                $batch->update([
+            if ($purchaseOrder->purchase_order_status === 'For Approval') {
+                $purchaseOrder->update([
                     'purchase_order_status' => 'Approved',
-                    'approved_date' => now(),
+                    'approved_date' => Carbon::now()
                 ]);
-
-                $warehouseId   = $batch->warehouse_id;
-                $warehouseName = $batch->warehouse->warehouse_name ?? null;
-
-                foreach ($batch->items as $item) {
-
-                    $productId   = $item->product_id;
-                    $productName = $item->product->product_name ?? $item->product_name;
-                    $reorderLevel = $item->product->reorder_level ?? 0;
-
-                    $lot = InventoryLot::firstOrCreate(
-                        [
-                            'product_id'      => $productId,
-                            'batch_number'    => $item->batch_number,
-                            'cost_per_unit'   => $item->cost_per_unit,
-                            'expiration_date' => $item->expiration_date,
-                        ],
-                        [
-                            'product_name'  => $productName,
-                            'received_date' => $item->received_date,
-                            'last_log_by'   => auth()->id(),
-                        ]
-                    );
-
-                    $stock = StockLevel::firstOrNew([
-                        'product_id'       => $productId,
-                        'warehouse_id'     => $warehouseId,
-                        'inventory_lot_id' => $lot->id,
-                    ]);
-
-                    $stock->product_name   = $productName;
-                    $stock->warehouse_name = $warehouseName;
-                    $stock->quantity = ($stock->quantity ?? 0) + $item->quantity;
-                    $stock->last_log_by = auth()->id();
-
-                    $stock->stock_status = match (true) {
-                        $stock->quantity == 0 => 'Out of Stock',
-                        $stock->quantity <= $reorderLevel => 'Low Stock',
-                        default => 'In Stock',
-                    };
-
-                    $stock->save();
-
-                    StockMovement::create([
-                        'product_id'        => $productId,
-                        'product_name'      => $productName,
-                        'warehouse_id'      => $warehouseId,
-                        'warehouse_name'    => $warehouseName,
-                        'inventory_lot_id'  => $lot->id,
-                        'movement_type'     => 'IN',
-                        'quantity'          => $item->quantity,
-                        'reference_type'    => 'Purchase Order',
-                        'reference_number'  => $batch->reference_number,
-                        'remarks'           => 'Stock received via batch approval',
-                        'last_log_by'       => auth()->id(),
-                    ]);
-                }
             }
         });
 
         return response()->json([
             'success' => true,
-            'message' => 'Selected purchase orderes have been approved successfully',
+            'message' => 'The selected purchase orders have been approved successfully',
         ]);
     }
 
@@ -496,7 +410,14 @@ class PurchaseOrderController extends Controller
             'success' => true,
             'notExist' => false,
             'referenceNumber' => $purchaseOrder->reference_number ?? null,
+            'supplierId' => $purchaseOrder->supplier_id ?? null,
             'warehouseId' => $purchaseOrder->warehouse_id ?? null,
+            'orderDate' => $purchaseOrder->order_date
+            ? date('M d, Y', strtotime($purchaseOrder->order_date))
+            : '',
+            'expectedDeliveryDate' => $purchaseOrder->expected_delivery_date
+            ? date('M d, Y', strtotime($purchaseOrder->expected_delivery_date))
+            : '',
             'remarks' => $purchaseOrder->remarks ?? null,
         ]);
     }

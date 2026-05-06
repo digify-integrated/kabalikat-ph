@@ -24,7 +24,7 @@
                     <div class="card-title m-0">
                         <h3 class="fw-bold m-0">Purchase Order Details</h3>
                     </div>
-                    @if($canDelete || (($approvePurchaseOrder ?? false) === true  && $purchaseOrder->purchase_order_status === 'For Approval') || $purchaseOrder->purchase_order_status === 'Draft')
+                    @if($canDelete || (($approvePurchaseOrder ?? false) === true  && $purchaseOrder->po_status === 'For Approval') || $purchaseOrder->po_status === 'Draft')
                         <a href="#" class="btn btn-light-primary btn-flex btn-center btn-active-light-primary show menu-dropdown align-self-center" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
                             Actions
                             <i class="ki-outline ki-down fs-5 ms-1"></i>
@@ -38,7 +38,7 @@
                                 </div>
                             @endif
 
-                            @if($purchaseOrder->purchase_order_status === 'Draft')
+                            @if($purchaseOrder->po_status === 'Draft')
                                 <div class="menu-item px-3">
                                     <a href="javascript:void(0);" class="menu-link px-3" id="for-approval-purchase-order">
                                         For Approval
@@ -46,7 +46,7 @@
                                 </div>
                             @endif
 
-                            @if($purchaseOrder->purchase_order_status === 'Draft' || $purchaseOrder->purchase_order_status === 'For Approval')
+                            @if($purchaseOrder->po_status === 'Draft' || $purchaseOrder->po_status === 'For Approval')
                                 <div class="menu-item px-3">
                                     <a href="javascript:void(0);" class="menu-link px-3" id="cancel-purchase-order">
                                         Cancel
@@ -54,7 +54,7 @@
                                 </div>
                             @endif
 
-                            @if(($approvePurchaseOrder ?? false) === true && $purchaseOrder->purchase_order_status === 'For Approval')
+                            @if(($approvePurchaseOrder ?? false) === true && $purchaseOrder->po_status === 'For Approval')
                                 <div class="menu-item px-3">
                                     <a href="javascript:void(0);" class="menu-link px-3" id="approve-purchase-order">
                                         Approve
@@ -78,7 +78,18 @@
                                 Reference Number
                             </label>
                             <div class="col-lg-10">
-                                <input type="text" class="form-control" id="reference_number" name="reference_number" maxlength="100" autocomplete="off" @disabled(!$canWrite || $purchaseOrder->purchase_order_status !== 'Draft')>
+                                <input type="text" class="form-control" id="reference_number" name="reference_number" maxlength="100" autocomplete="off" @disabled(!$canWrite || $purchaseOrder->po_status !== 'Draft')>
+                            </div>
+                        </div>
+
+                        <div class="row mb-6">
+                            <label class="col-lg-2 col-form-label required fw-semibold fs-6" for="supplier_id">
+                                Supplier
+                            </label>
+                            <div class="col-lg-10">
+                                <select id="supplier_id" name="supplier_id" class="form-select" data-control="select2" data-allow-clear="false" @disabled(!$canWrite || $purchaseOrder->po_status !== 'Draft')>
+                                    <option>--</option>
+                                </select>
                             </div>
                         </div>
 
@@ -87,9 +98,27 @@
                                 Warehouse
                             </label>
                             <div class="col-lg-10">
-                                <select id="warehouse_id" name="warehouse_id" class="form-select" data-control="select2" data-allow-clear="false" @disabled(!$canWrite || $purchaseOrder->purchase_order_status !== 'Draft')>
+                                <select id="warehouse_id" name="warehouse_id" class="form-select" data-control="select2" data-allow-clear="false" @disabled(!$canWrite || $purchaseOrder->po_status !== 'Draft')>
                                     <option>--</option>
                                 </select>
+                            </div>
+                        </div>
+
+                        <div class="row mb-6">
+                            <label class="col-lg-2 col-form-label required fw-semibold fs-6" for="order_date">
+                                Order Date
+                            </label>
+                            <div class="col-lg-10">
+                            <input type="text" class="form-control" id="order_date" name="order_date" autocomplete="off" @disabled(!$canWrite || $purchaseOrder->po_status !== 'Draft')>
+                            </div>
+                        </div>
+
+                        <div class="row mb-6">
+                            <label class="col-lg-2 col-form-label required fw-semibold fs-6" for="expected_delivery_date">
+                                Expected Delivery Date
+                            </label>
+                            <div class="col-lg-10">
+                            <input type="text" class="form-control" id="expected_delivery_date" name="expected_delivery_date" autocomplete="off" @disabled(!$canWrite || $purchaseOrder->po_status !== 'Draft')>
                             </div>
                         </div>
 
@@ -98,13 +127,13 @@
                                 Remarks
                             </label>
                             <div class="col-lg-10">
-                                <textarea class="form-control" id="remarks" name="remarks" maxlength="200" rows="3" @disabled(!$canWrite || $purchaseOrder->purchase_order_status !== 'Draft')></textarea>
+                                <textarea class="form-control" id="remarks" name="remarks" maxlength="200" rows="3" @disabled(!$canWrite || $purchaseOrder->po_status !== 'Draft')></textarea>
                             </div>
                         </div>
                     </form>
                 </div>
 
-                @if($canWrite && $purchaseOrder->purchase_order_status === 'Draft')
+                @if($canWrite && $purchaseOrder->po_status === 'Draft')
                     <div class="card-footer d-flex justify-content-end py-6 px-9">
                         <button type="submit" class="btn btn-primary" form="purchase_order_form" id="submit-data">
                             Save Changes
@@ -135,7 +164,7 @@
                     </div>
                     <div class="card-toolbar">
                         <div class="d-flex justify-content-end" data-kt-customer-table-toolbar="base">
-                            @if($canWrite && $purchaseOrder->purchase_order_status === 'Draft')
+                            @if($canWrite && $purchaseOrder->po_status === 'Draft')
                                 <button type="button"
                                     class="btn btn-light-primary me-3"
                                     data-bs-toggle="modal"
@@ -152,12 +181,11 @@
                         <thead>
                             <tr class="fw-semibold fs-6 text-gray-800">
                                 <th>Product</th>
-                                <th>Batch Number</th>
-                                <th>Qty</th>
-                                <th>Cost / Unit</th>
-                                <th>Batch Value</th>
-                                <th>Expiration Date</th>
-                                <th>Received Date</th>
+                                <th>Ordered Qty</th>
+                                <th>Received Qty</th>
+                                <th>Cancelled Qty</th>
+                                <th>Remaining Qty</th>
+                                <th>Est. Cost</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -192,58 +220,26 @@
                                     <select id="product_id" name="product_id" class="form-select" data-control="select2" data-allow-clear="false"></select>
                                 </div>
                             </div>
-
-                            <div class="col">
-                                <div class="fv-row mb-4">
-                                    <label class="fs-6 fw-semibold required form-label mt-3" for="batch_number">
-                                        Batch Number
-                                    </label>
-
-                                    <input type="text" class="form-control" id="batch_number" name="batch_number" maxlength="100" autocomplete="off" >
-                                </div>
-                            </div>
                         </div>
                         
                         <div class="row">
                             <div class="col">
                                 <div class="fv-row mb-4">
-                                    <label class="fs-6 fw-semibold required form-label mt-3" for="quantity">
+                                    <label class="fs-6 fw-semibold required form-label mt-3" for="ordered_quantity">
                                         Quantity
                                     </label>
 
-                                    <input type="number" class="form-control" id="quantity" name="quantity" min="0.01" step="0.01">
+                                    <input type="number" class="form-control" id="ordered_quantity" name="ordered_quantity" min="0.01" step="0.01">
                                 </div>
                             </div>
 
                             <div class="col">
                                 <div class="fv-row mb-4">
-                                    <label class="fs-6 fw-semibold required form-label mt-3" for="cost_per_unit">
-                                        Cost / Unit
+                                    <label class="fs-6 fw-semibold required form-label mt-3" for="estimated_cost">
+                                        Estimated Cost
                                     </label>
 
-                                    <input type="number" class="form-control" id="cost_per_unit" name="cost_per_unit" min="0" step="0.01">
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col">
-                                <div class="fv-row mb-4">
-                                    <label class="fs-6 fw-semibold form-label mt-3" for="expiration_date">
-                                        Expiration Date
-                                    </label>
-
-                                    <input type="text" class="form-control" id="expiration_date" name="expiration_date" autocomplete="off">
-                                </div>
-                            </div>
-
-                            <div class="col">
-                                <div class="fv-row mb-4">
-                                    <label class="fs-6 fw-semibold required form-label mt-3" for="received_date">
-                                        Received Date
-                                    </label>
-
-                                    <input type="text" class="form-control" id="received_date" name="received_date" autocomplete="off">
+                                    <input type="number" class="form-control" id="estimated_cost" name="estimated_cost" min="0" step="0.01">
                                 </div>
                             </div>
                         </div>

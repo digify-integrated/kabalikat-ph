@@ -140,7 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     { width: 'auto', targets: 5, responsivePriority: 6 },
                     { width: 'auto', targets: 6, responsivePriority: 7 },
                     { width: 'auto', targets: 7, responsivePriority: 8 },
-                    { width: 'auto', bSortable: false, targets: 7, responsivePriority: 9 },
+                    { width: 'auto', bSortable: false, targets: 8, responsivePriority: 9 },
                 ],
                 addons: {
                     subControls: {

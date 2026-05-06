@@ -83,11 +83,11 @@ class StockTransferItemsController extends Controller
 
     public function generateTable(Request $request)
     {
-        $stockTransferItemsId = (int) $request->input('stock_transfer_id');
+        $stockTransferId = (int) $request->input('stock_transfer_id');
         $pageNavigationNenuId = (int) $request->input('page_navigation_menu_id');
 
         $stockTransferItems = DB::table('stock_transfer_items')
-        ->where('stock_transfer_id', $stockTransferItemsId)
+        ->where('stock_transfer_id', $stockTransferId)
         ->orderBy('stock_level_id')
         ->get();
 

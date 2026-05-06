@@ -98,11 +98,11 @@ class StockBatchItemsController extends Controller
 
     public function generateTable(Request $request)
     {
-        $stockBatchItemsId = (int) $request->input('stock_batch_id');
+        $stockBatchId = (int) $request->input('stock_batch_id');
         $pageNavigationNenuId = (int) $request->input('page_navigation_menu_id');
 
         $stockBatchItems = DB::table('stock_batch_items')
-        ->where('stock_batch_id', $stockBatchItemsId)
+        ->where('stock_batch_id', $stockBatchId)
         ->orderBy('product_name')
         ->get();
 

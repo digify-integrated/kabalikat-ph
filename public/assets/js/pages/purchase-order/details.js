@@ -18,11 +18,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 rules: {
                     rules: {
                         reference_number: { required: true},
+                        supplier_id: { required: true},
                         warehouse_id: { required: true},
+                        order_date: { required: true},
+                        expected_delivery_date: { required: true},
                     },
                     messages: {
                         reference_number: { required: 'Enter the reference number' },
+                        supplier_id: { required: 'Choose the supplier' },
                         warehouse_id: { required: 'Choose the warehouse' },
+                        order_date: { required: 'Choose the order date' },
+                        expected_delivery_date: { required: 'Choose the expected delivery date' },
                     },
                     submitHandler: async (form) => {
                         const ctx = getPageContext();
@@ -123,12 +129,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                  columns: [
                     { data: 'PRODUCT' },
-                    { data: 'BATCH_NUMBER' },
-                    { data: 'QUANTITY' },
-                    { data: 'COST_PER_UNIT' },
-                    { data: 'BATCH_VALUE' },
-                    { data: 'EXPIRATION_DATE' },
-                    { data: 'RECEIVED_DATE' },
+                    { data: 'ORDERED_QUANTITY' },
+                    { data: 'RECEIVED_QUANTITY' },
+                    { data: 'CANCELLED_QUANTITY' },
+                    { data: 'REMAINING_QUANTITY' },
+                    { data: 'ESTIMATED_COST' },
                     { data: 'ACTION' },
                 ],
                 columnDefs: [
@@ -139,8 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     { width: 'auto', targets: 4, responsivePriority: 5 },
                     { width: 'auto', targets: 5, responsivePriority: 6 },
                     { width: 'auto', targets: 6, responsivePriority: 7 },
-                    { width: 'auto', targets: 7, responsivePriority: 8 },
-                    { width: 'auto', bSortable: false, targets: 7, responsivePriority: 9 },
+                    { width: 'auto', bSortable: false, targets: 7, responsivePriority: 8 },
                 ],
                 addons: {
                     subControls: {
@@ -157,10 +161,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 busyHideTargets: ['#submit-data'],
                 onSuccess: async (data) => {
                     document.getElementById('reference_number').value = data.referenceNumber || '';
+                    document.getElementById('order_date').value = data.orderDate || '';
+                    document.getElementById('expected_delivery_date').value = data.expectedDeliveryDate || '';
                     document.getElementById('remarks').value = data.remarks || '';
 
                     await optionsPromise;
 
+                    $('#supplier_id').val(data.supplierId).trigger('change');
                     $('#warehouse_id').val(data.warehouseId).trigger('change');
                 },
             }
@@ -220,12 +227,13 @@ document.addEventListener('DOMContentLoaded', () => {
             },
         ],
         dropdown: [
-            { url: '/products/generate-product-batch-tracking-options', dropdownSelector: '#product_id' },
+            { url: '/products/generate-active-product-options', dropdownSelector: '#product_id' },
+            { url: '/supplier/generate-options', dropdownSelector: '#supplier_id' },
             { url: '/warehouse/generate-options', dropdownSelector: '#warehouse_id' },
         ],
         datepickers: [
-            { selector: '#expiration_date' },
-            { selector: '#received_date' },
+            { selector: '#order_date' },
+            { selector: '#expected_delivery_date' },
         ]
     };
 

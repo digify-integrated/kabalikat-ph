@@ -96,11 +96,11 @@ class StockAdjustmentItemsController extends Controller
 
     public function generateTable(Request $request)
     {
-        $stockAdjustmentItemsId = (int) $request->input('stock_adjustment_id');
+        $stockAdjustmentId = (int) $request->input('stock_adjustment_id');
         $pageNavigationNenuId = (int) $request->input('page_navigation_menu_id');
 
         $stockAdjustmentItems = DB::table('stock_adjustment_items')
-        ->where('stock_adjustment_id', $stockAdjustmentItemsId)
+        ->where('stock_adjustment_id', $stockAdjustmentId)
         ->orderBy('stock_level_id')
         ->get();
 

@@ -19,6 +19,17 @@
                 </div>
 
                 <div class="row mb-6">
+                    <label class="col-lg-2 col-form-label required fw-semibold fs-6" for="supplier_id">
+                        Supplier
+                    </label>
+                    <div class="col-lg-10">
+                        <select id="supplier_id" name="supplier_id" class="form-select" data-control="select2" data-allow-clear="false">
+                            <option>--</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row mb-6">
                     <label class="col-lg-2 col-form-label required fw-semibold fs-6" for="warehouse_id">
                         Warehouse
                     </label>
@@ -26,6 +37,24 @@
                         <select id="warehouse_id" name="warehouse_id" class="form-select" data-control="select2" data-allow-clear="false">
                             <option>--</option>
                         </select>
+                    </div>
+                </div>
+
+                <div class="row mb-6">
+                    <label class="col-lg-2 col-form-label required fw-semibold fs-6" for="order_date">
+                        Order Date
+                    </label>
+                    <div class="col-lg-10">
+                       <input type="text" class="form-control" id="order_date" name="order_date" autocomplete="off">
+                    </div>
+                </div>
+
+                <div class="row mb-6">
+                    <label class="col-lg-2 col-form-label required fw-semibold fs-6" for="expected_delivery_date">
+                        Expected Delivery Date
+                    </label>
+                    <div class="col-lg-10">
+                       <input type="text" class="form-control" id="expected_delivery_date" name="expected_delivery_date" autocomplete="off">
                     </div>
                 </div>
 
