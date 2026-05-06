@@ -6,7 +6,6 @@ use App\Models\Product;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItems;
 use Illuminate\Http\Request;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -17,13 +16,11 @@ class PurchaseOrderItemsController extends Controller
    public function save(Request $request)
     {
         $validator = Validator::make($request->all(), [
+            'purchase_order_items_id' => ['nullable', 'integer'],
             'purchase_order_id' => ['required', 'integer', Rule::exists('purchase_order', 'id')],
             'product_id' => ['required', 'integer', Rule::exists('product', 'id')],
-            'batch_number' => ['required', 'string'],
-            'cost_per_unit' => ['required', 'numeric', 'min: 0'],
-            'quantity' => ['required', 'numeric', 'min: 0.01'],
-            'expiration_date' => ['nullable', 'date'],
-            'received_date' => ['required', 'date'],
+            'ordered_quantity' => ['required', 'string', 'min: 0.01'],
+            'estimated_cost' => ['required', 'numeric', 'min: 0.01'],
         ]);
 
         if ($validator->fails()) {
@@ -35,14 +32,6 @@ class PurchaseOrderItemsController extends Controller
 
         $validated = $validator->validated();
 
-        $validated['expiration_date'] = !empty($validated['expiration_date'])
-            ? Carbon::parse($validated['expiration_date'])->format('Y-m-d')
-            : null;
-
-        $validated['received_date'] = !empty($validated['received_date'])
-            ? Carbon::parse($validated['received_date'])->format('Y-m-d')
-            : null;
-
         $productId = $validated['product_id'] ?? null;
 
         $productName = (string) Product::query()
@@ -53,15 +42,20 @@ class PurchaseOrderItemsController extends Controller
             'purchase_order_id' => $validated['purchase_order_id'],
             'product_id' => $productId,
             'product_name' => $productName,
-            'batch_number' => $validated['batch_number'],
-            'cost_per_unit' => $validated['cost_per_unit'] ?? 0,
-            'expiration_date' => $validated['expiration_date'],
-            'received_date' => $validated['received_date'],
-            'quantity' => $validated['quantity'] ?? 0.01,
+            'ordered_quantity' => $validated['ordered_quantity'],
+            'remaining_quantity' => $validated['ordered_quantity'],
+            'estimated_cost' => $validated['estimated_cost'],
             'last_log_by' => Auth::id(),
         ];
 
-        PurchaseOrderItems::query()->create($payload);
+        $purchaseOrderItemsId = $validated['purchase_order_items_id'] ?? null;
+
+        if ($purchaseOrderItemsId && PurchaseOrderItems::query()->whereKey($purchaseOrderItemsId)->exists()) {
+            $purchaseOrderItems = PurchaseOrderItems::query()->findOrFail($purchaseOrderItemsId);
+            $purchaseOrderItems->update($payload);
+        } else {
+            $purchaseOrderItems = PurchaseOrderItems::query()->create($payload);
+        }
 
         return response()->json([
             'success' => true,
@@ -96,6 +90,52 @@ class PurchaseOrderItemsController extends Controller
         ]);
     }
 
+    public function fetchDetails(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'referenceId' => ['required', 'integer', 'min:1', Rule::exists('purchase_order_items', 'id')],
+        ]);
+
+        $pageAppId = (int) $request->input('appId');
+        $pageNavigationMenuId = (int) $request->input('navigationMenuId');
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'notExist' => false,
+                'message' => $validator->errors()->first('detailId') ?? 'Validation failed',
+            ]);
+        }
+
+        $validated = $validator->validated();
+
+        $purchaseOrder = DB::table('purchase_order_items')
+            ->where('id', $validated['referenceId'])
+            ->first();
+
+        if (!$purchaseOrder) {
+            $link = route('apps.base', [
+                'appId' => $pageAppId,
+                'navigationMenuId' => $pageNavigationMenuId,
+            ]);
+
+            return response()->json([
+                'success'  => false,
+                'notExist' => true,
+                'redirect_link' => $link,
+                'message'  => 'Purchase order not found',
+            ]);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'notExist' => false,
+            'productId' => $purchaseOrder->product_id ?? null,
+            'orderedQuantity' => $purchaseOrder->ordered_quantity ?? null,
+            'estimatedCost' => $purchaseOrder->estimated_cost ?? null,
+        ]);
+    }
+
     public function generateTable(Request $request)
     {
         $purchaseOrderId = (int) $request->input('purchase_order_id');
@@ -123,17 +163,32 @@ class PurchaseOrderItemsController extends Controller
             ->whereKey($purchaseOrderId)
             ->first();
 
+            $updateButton = '';
             $deleteButton = '';
+            $onProcessButton = '';
 
             if($writeAccess > 0 && $purchaseOrder->po_status === 'Draft'){
-                $deleteButton = '<button class="btn btn-icon btn-light btn-active-light-danger delete-stock-batch-items" data-reference-id="' . $purchaseOrderItemsId . '" title="Delete Item">
+                $updateButton = '<button class="btn btn-icon btn-light btn-active-light-primary update-purchase-order-items" data-bs-toggle="modal" data-bs-target="#purchase-order-items-modal" data-reference-id="' . $purchaseOrderItemsId . '" title="Update Item">
+                                    <i class="ki-outline ki-pencil fs-3 m-0 fs-5"></i>
+                                </button>';
+
+                $deleteButton = '<button class="btn btn-icon btn-light btn-active-light-danger delete-purchase-order-items" data-reference-id="' . $purchaseOrderItemsId . '" title="Delete Item">
                                     <i class="ki-outline ki-trash fs-3 m-0 fs-5"></i>
+                                </button>';
+            }
+
+            if($writeAccess > 0 && $purchaseOrder->po_status === 'On-Process' && $remainingQuantity > 0){
+                $onProcessButton = '<button class="btn btn-icon btn-light btn-active-light-success receive-purchase-order-items" data-bs-toggle="modal" data-bs-target="#receive-purchase-order-items-modal" data-reference-id="' . $purchaseOrderItemsId . '" title="Receive Item">
+                                    <i class="ki-outline ki-exit-down fs-3 m-0 fs-5"></i>
+                                </button>
+                                <button class="btn btn-icon btn-light btn-active-light-warning cancel-purchase-order-items" data-bs-toggle="modal" data-bs-target="#cancel-purchase-order-items-modal" data-reference-id="' . $purchaseOrderItemsId . '" title="Cancel Item">
+                                    <i class="ki-outline ki-cross fs-3 m-0 fs-5"></i>
                                 </button>';
             }
 
             $logNotes = '';
             if($logsAccess > 0){
-                $logNotes = '<button class="btn btn-icon btn-light btn-active-light-primary view-stock-batch-items-log-notes" data-reference-id="' . $purchaseOrderItemsId . '" data-bs-toggle="modal" data-bs-target="#log-notes-modal" title="View Log Notes">
+                $logNotes = '<button class="btn btn-icon btn-light btn-active-light-primary view-purchase-order-items-log-notes" data-reference-id="' . $purchaseOrderItemsId . '" data-bs-toggle="modal" data-bs-target="#log-notes-modal" title="View Log Notes">
                                 <i class="ki-outline ki-shield-search fs-3 m-0 fs-5"></i>
                             </button>';
             }
@@ -146,6 +201,8 @@ class PurchaseOrderItemsController extends Controller
                 'REMAINING_QUANTITY' => number_format($remainingQuantity, 2),
                 'ESTIMATED_COST' => number_format($estimatedCost, 2),
                 'ACTION' => '<div class="d-flex justify-content-end gap-3">
+                                '. $updateButton .'
+                                '. $onProcessButton .'
                                 '. $logNotes .'
                                 '. $deleteButton .'
                             </div>'

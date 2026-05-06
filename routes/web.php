@@ -670,6 +670,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/cancel', 'cancel')->name('cancel');
             Route::post('/approve', 'approve')->name('approve');
             Route::post('/approve-multiple', 'approveMultiple')->name('approve.multiple');
+            Route::post('/on-process', 'onProcess')->name('on.process');
             Route::post('/set-to-draft', 'setToDraft')->name('set.to.draft');
             Route::post('/delete', 'delete')->name('delete');
             Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
@@ -685,6 +686,7 @@ Route::middleware('auth')->group(function () {
         ->group(function () {
             Route::post('/save', 'save')->name('save');
             Route::post('/delete', 'delete')->name('delete');
+            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
             Route::post('/generate-table', 'generateTable')->name('generate.table');
         });
 

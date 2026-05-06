@@ -2,7 +2,7 @@ import { initValidation } from '../../util/validation.js';
 import { showNotification } from '../../util/notifications.js';
 import { attachLogNotesHandler, attachLogNotesClassHandler } from '../../util/log-notes.js';
 import { disableButton, enableButton, detailsDeleteButton, detailsActionButton, detailsTableActionButton } from '../../form/button.js';
-import { displayDetails, getPageContext, getCsrfToken, resetForm } from '../../form/form.js';
+import { displayDetails, handleActionFetch, getPageContext, getCsrfToken, resetForm } from '../../form/form.js';
 import { handleSystemError } from '../../util/system-errors.js';
 import { initializeDatatable, reloadDatatable } from '../../util/datatable.js';
 import { generateDropdownOptions, initializeDatePicker } from '../../form/field.js';
@@ -69,17 +69,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 rules: {
                     rules: {
                         product_id: { required: true},
-                        batch_number: { required: true},
-                        quantity: { required: true},
-                        cost_per_unit: { required: true},
-                        received_date: { required: true},
+                        ordered_quantity: { required: true},
+                        estimated_cost: { required: true},
                     },
                     messages: {
                         product_id: { required: 'Choose the product' },
-                        batch_number: { required: 'Enter the batch number' },
-                        quantity: { required: 'Enter the quantity' },
-                        cost_per_unit: { required: 'Enter the cost per unit' },
-                        received_date: { required: 'Choose the received date' },
+                        ordered_quantity: { required: 'Enter the order quantity' },
+                        estimated_cost: { required: 'Enter the estimated cost' },
                     },
                     submitHandler: async (form) => {
                         const formData = new URLSearchParams(new FormData(form));
@@ -143,8 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     { width: 'auto', targets: 3, responsivePriority: 4 },
                     { width: 'auto', targets: 4, responsivePriority: 5 },
                     { width: 'auto', targets: 5, responsivePriority: 6 },
-                    { width: 'auto', targets: 6, responsivePriority: 7 },
-                    { width: 'auto', bSortable: false, targets: 7, responsivePriority: 8 },
+                    { width: 'auto', bSortable: false, targets: 6, responsivePriority: 7 },
                 ],
                 addons: {
                     subControls: {
@@ -219,6 +214,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 swalText: 'Are you sure you want to approve this purchase order?',
                 confirmButtonText: 'Approve',
             },
+            {
+                trigger: '#on-process-purchase-order',
+                url: '/purchase-order/on-process',
+                swalTitle: 'Confirm Purchase Order On-Process',
+                swalText: 'Are you sure you want to tag this purchase order as on-process?',
+                confirmButtonText: 'On-Process',
+            },
         ],
         lognotes: [
             {
@@ -273,6 +275,27 @@ document.addEventListener('DOMContentLoaded', () => {
         const addAddon = target.closest('#add-purchase-order-items');
         if (addAddon) {
             resetForm('purchase_order_items_form');
+        }
+    
+        const updatePurchaseOrderItem = target.closest('.update-purchase-order-items');
+        if (updatePurchaseOrderItem) {
+            const referenceId = updatePurchaseOrderItem.dataset.referenceId;
+
+            await handleActionFetch({
+                triggerElement: updatePurchaseOrderItem,
+                url: '/purchase-order-items/fetch-details',
+                referenceKey: 'referenceId',
+
+                onSuccess: (data) => {
+                    const item = data.data;
+
+                    document.getElementById('purchase_order_items_id').value = referenceId;
+                    document.getElementById('ordered_quantity').value = data.orderedQuantity || '0.01';
+                    document.getElementById('estimated_cost').value = data.estimatedCost || '0.01';
+
+                    $('#product_id').val(data.productId).trigger('change');
+                }
+            });
         }
     });
 });

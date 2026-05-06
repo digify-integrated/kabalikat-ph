@@ -114,10 +114,10 @@ class PurchaseOrderController extends Controller
 
         DB::transaction(function () use ($detailId) {
             $purchaseOrder = PurchaseOrder::query()
-            ->select(['id', 'purchase_order_status'])
+            ->select(['id', 'po_status'])
             ->findOrFail($detailId);
 
-            if ($purchaseOrder->purchase_order_status !== 'Draft') {
+            if ($purchaseOrder->po_status !== 'Draft') {
                  return response()->json([
                     'success' => false,
                     'message' => 'The purchase order is not "Draft" status',
@@ -125,7 +125,7 @@ class PurchaseOrderController extends Controller
             }
 
             $purchaseOrder->update([
-                'purchase_order_status' => 'For Approval',
+                'po_status' => 'For Approval',
                 'for_approval_date' => Carbon::now()
             ]);
         });        
@@ -162,10 +162,10 @@ class PurchaseOrderController extends Controller
 
         DB::transaction(function () use ($detailId) {
             $purchaseOrder = PurchaseOrder::query()
-                ->select(['id', 'purchase_order_status'])
+                ->select(['id', 'po_status'])
                 ->findOrFail($detailId);
 
-            if ($purchaseOrder->purchase_order_status !== 'For Approval' && $purchaseOrder->purchase_order_status !== 'Draft') {
+            if ($purchaseOrder->po_status !== 'For Approval' && $purchaseOrder->po_status !== 'Draft') {
                 return response()->json([
                     'success' => false,
                     'message' => 'The purchase order is not "For Approval" or "Draft" status',
@@ -173,7 +173,7 @@ class PurchaseOrderController extends Controller
             }
 
             $purchaseOrder->update([
-                'purchase_order_status' => 'Cancelled',
+                'po_status' => 'Cancelled',
                 'cancellation_date' => Carbon::now()
             ]);
         });        
@@ -210,10 +210,10 @@ class PurchaseOrderController extends Controller
 
         DB::transaction(function () use ($detailId) {
             $purchaseOrder = PurchaseOrder::query()
-                ->select(['id', 'purchase_order_status'])
+                ->select(['id', 'po_status'])
                 ->findOrFail($detailId);
 
-            if ($purchaseOrder->purchase_order_status !== 'For Approval') {
+            if ($purchaseOrder->po_status !== 'For Approval') {
                  return response()->json([
                     'success' => false,
                     'message' => 'The purchase order is not in "For Approval" status',
@@ -221,7 +221,7 @@ class PurchaseOrderController extends Controller
             }
 
             $purchaseOrder->update([
-                'purchase_order_status' => 'Draft',
+                'po_status' => 'Draft',
                 'set_to_draft_date' => Carbon::now()
             ]);
         });        
@@ -258,10 +258,10 @@ class PurchaseOrderController extends Controller
 
         DB::transaction(function () use ($detailId) {
             $purchaseOrder = PurchaseOrder::query()
-                ->select(['id', 'purchase_order_status'])
+                ->select(['id', 'po_status'])
                 ->findOrFail($detailId);
 
-            if ($purchaseOrder->purchase_order_status !== 'For Approval') {
+            if ($purchaseOrder->po_status !== 'For Approval') {
                 return response()->json([
                     'success' => false,
                     'message' => 'The purchase order is not "For Approval" status',
@@ -269,7 +269,7 @@ class PurchaseOrderController extends Controller
             }
 
             $purchaseOrder->update([
-                'purchase_order_status' => 'Approved',
+                'po_status' => 'Approved',
                 'approved_date' => Carbon::now()
             ]);
         });        
@@ -297,12 +297,12 @@ class PurchaseOrderController extends Controller
 
         DB::transaction(function () use ($ids) {
             $purchaseOrder = PurchaseOrder::query()
-                ->select(['id', 'purchase_order_status'])
+                ->select(['id', 'po_status'])
                 ->findOrFail($ids);
 
-            if ($purchaseOrder->purchase_order_status === 'For Approval') {
+            if ($purchaseOrder->po_status === 'For Approval') {
                 $purchaseOrder->update([
-                    'purchase_order_status' => 'Approved',
+                    'po_status' => 'Approved',
                     'approved_date' => Carbon::now()
                 ]);
             }
@@ -311,6 +311,54 @@ class PurchaseOrderController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'The selected purchase orders have been approved successfully',
+        ]);
+    }
+
+    public function onProcess(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'detailId' => ['required', 'integer', 'min:1', Rule::exists('purchase_order', 'id')],
+        ]);
+
+        $pageAppId = (int) $request->input('appId');
+        $pageNavigationMenuId = (int) $request->input('navigationMenuId');
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first('detailId') ?? 'Validation failed',
+            ]);
+        }
+
+        $detailId = (int) $validator->validated()['detailId'];
+
+        DB::transaction(function () use ($detailId) {
+            $purchaseOrder = PurchaseOrder::query()
+                ->select(['id', 'po_status'])
+                ->findOrFail($detailId);
+
+            if ($purchaseOrder->po_status !== 'Approved') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'The purchase order is not "Approved" status',
+                ]);
+            }
+
+            $purchaseOrder->update([
+                'po_status' => 'On-Process',
+                'on_process_date' => Carbon::now()
+            ]);
+        });        
+
+        $link = route('apps.base', [
+            'appId' => $pageAppId,
+            'navigationMenuId' => $pageNavigationMenuId,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'The purchase order has been tagged as on-process successfully',
+            'redirect_link' => $link,
         ]);
     }
 
@@ -476,10 +524,10 @@ class PurchaseOrderController extends Controller
             $poStatus = $row->po_status;
 
             $orderDate = $row->order_date
-                ? date('M d, Y', strtotime($row->expiration_date))
+                ? date('M d, Y', strtotime($row->order_date))
                 : null;
             $expectedDeliveryDate = $row->expected_delivery_date
-                ? date('M d, Y', strtotime($row->received_date))
+                ? date('M d, Y', strtotime($row->expected_delivery_date))
                 : 'No received date';
 
             $statusClass = match ($poStatus) {

@@ -46,7 +46,15 @@
                                 </div>
                             @endif
 
-                            @if($purchaseOrder->po_status === 'Draft' || $purchaseOrder->po_status === 'For Approval')
+                            @if($purchaseOrder->po_status === 'Approved')
+                                <div class="menu-item px-3">
+                                    <a href="javascript:void(0);" class="menu-link px-3" id="on-process-purchase-order">
+                                        On-Process
+                                    </a>
+                                </div>
+                            @endif
+
+                            @if($purchaseOrder->po_status === 'Draft' || $purchaseOrder->po_status === 'For Approval' || $purchaseOrder->po_status === 'Approved')
                                 <div class="menu-item px-3">
                                     <a href="javascript:void(0);" class="menu-link px-3" id="cancel-purchase-order">
                                         Cancel
@@ -60,6 +68,9 @@
                                         Approve
                                     </a>
                                 </div>
+                            @endif
+
+                            @if($purchaseOrder->po_status === 'For Approval' || $purchaseOrder->po_status === 'Approved')
                                 <div class="menu-item px-3">
                                     <a href="javascript:void(0);" class="menu-link px-3" id="set-to-draft-purchase-order">
                                         Set to Draft
@@ -209,6 +220,8 @@
                 <div class="modal-body">
                     <form id="purchase_order_items_form" method="post" action="#">
                         @csrf
+
+                        <input type="hidden" id="purchase_order_items_id" name="purchase_order_items_id">
                         
                         <div class="row">
                             <div class="col">
@@ -249,6 +262,64 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
                     <button type="submit" form="purchase_order_items_form" class="btn btn-primary" id="submit-purchase-order-items">Add</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="recieve-purchase-order-items-modal" class="modal fade" tabindex="-1" aria-labelledby="recieve-purchase-order-items" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">Receive Purchase Order Item</h3>
+                    <div class="btn btn-icon btn-sm btn-active-light-primary ms-2" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ki-duotone ki-cross fs-1"><span class="path1"></span><span class="path2"></span></i>
+                    </div>
+                </div>
+
+                <div class="modal-body">
+                    <form id="recieve_purchase_order_items_form" method="post" action="#">
+                        @csrf
+                        
+                        <div class="row">
+                            <div class="col">
+                                <div class="fv-row mb-4">
+                                    <label class="fs-6 fw-semibold required form-label mt-3" for="product_id">
+                                        Product
+                                    </label>
+
+                                    <select id="product_id" name="product_id" class="form-select" data-control="select2" data-allow-clear="false"></select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col">
+                                <div class="fv-row mb-4">
+                                    <label class="fs-6 fw-semibold required form-label mt-3" for="ordered_quantity">
+                                        Quantity
+                                    </label>
+
+                                    <input type="number" class="form-control" id="ordered_quantity" name="ordered_quantity" min="0.01" step="0.01">
+                                </div>
+                            </div>
+
+                            <div class="col">
+                                <div class="fv-row mb-4">
+                                    <label class="fs-6 fw-semibold required form-label mt-3" for="estimated_cost">
+                                        Estimated Cost
+                                    </label>
+
+                                    <input type="number" class="form-control" id="estimated_cost" name="estimated_cost" min="0" step="0.01">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" form="recieve_purchase_order_items_form" class="btn btn-primary" id="submit-recieve-purchase-order-items">Add</button>
                 </div>
             </div>
         </div>

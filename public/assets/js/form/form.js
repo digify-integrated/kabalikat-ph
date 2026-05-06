@@ -171,3 +171,101 @@ export const displayDetails = async ({
     if (disableWhileFetching) setFormBusy(targetForm, false);
   }
 };
+
+export const handleActionFetch = async ({
+  triggerElement,        // REQUIRED: clicked button
+  url,
+
+  // Attribute config
+  referenceKey = 'referenceId',   // maps to backend key
+  attributeName = 'reference-id', // data-reference-id
+
+  // UI behavior
+  disableWhileFetching = true,
+  busyClass = 'loading',
+
+  // Optional extra data
+  otherData = {},
+
+  // Callbacks
+  onSuccess = () => {},
+  onFailureMessage,
+} = {}) => {
+
+  if (!triggerElement) {
+    console.error('Trigger element is required.');
+    return;
+  }
+
+  const getReferenceValue = () => {
+    return triggerElement.dataset[attributeName.replace(/-([a-z])/g, (_, c) => c.toUpperCase())];
+  };
+
+  const setBusyState = (isBusy) => {
+    if (!disableWhileFetching) return;
+
+    if (isBusy) {
+      triggerElement.dataset.prevDisabled = String(triggerElement.disabled);
+      triggerElement.disabled = true;
+      triggerElement.classList.add(busyClass);
+    } else {
+      const wasDisabled = triggerElement.dataset.prevDisabled === 'true';
+      triggerElement.disabled = wasDisabled;
+      triggerElement.classList.remove(busyClass);
+      delete triggerElement.dataset.prevDisabled;
+    }
+  };
+
+  const appendObject = (params, obj) => {
+    if (!obj || typeof obj !== 'object') return;
+    Object.entries(obj).forEach(([key, value]) => {
+      if (value === undefined || value === null || value === '') return;
+      params.append(key, typeof value === 'string' ? value : String(value));
+    });
+  };
+
+  try {
+    setBusyState(true);
+
+    const csrf = getCsrfToken();
+    const ctx = getPageContext();
+
+    const params = new URLSearchParams();
+    const referenceValue = getReferenceValue();
+
+    params.append(referenceKey, referenceValue ?? '');
+    params.append('appId', ctx.appId ?? '');
+    params.append('navigationMenuId', ctx.navigationMenuId ?? '');
+    appendObject(params, otherData);
+
+    const response = await fetch(url, {
+      method: 'POST',
+      body: params,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        Accept: 'application/json',
+        ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+      },
+    });
+
+    if (!response.ok) throw new Error(`Request failed with status: ${response.status}`);
+
+    const data = await response.json();
+
+    if (data?.success) {
+      await onSuccess(data, triggerElement);
+      return data;
+    }
+
+    if (typeof onFailureMessage === 'function') onFailureMessage(data);
+    else showNotification(data?.message ?? 'Request failed.');
+
+    return data;
+
+  } catch (error) {
+    handleSystemError(error, 'fetch_failed', `Fetch request failed: ${error.message}`);
+    throw error;
+  } finally {
+    setBusyState(false);
+  }
+};
