@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             });
             
                             if (!response.ok) {
-                                throw new Error(`Save role assignment failed with status: ${response.status}`);
+                                throw new Error(`Save purchase order item failed with status: ${response.status}`);
                             }
             
                             const data = await response.json();
@@ -111,7 +111,103 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     },
                 }
-            }
+            },
+            {
+                selector: '#recieve_purchase_order_items_form',
+                rules: {
+                    rules: {
+                        received_quantity: { required: true},
+                        cost_per_unit: { required: true},
+                        received_date: { required: true},
+                    },
+                    messages: {
+                        received_quantity: { required: 'Enter the received quantity' },
+                        cost_per_unit: { required: 'Enter the cost per unit' },
+                        received_date: { required: 'Choose the received date' },
+                    },
+                    submitHandler: async (form) => {
+                        const formData = new URLSearchParams(new FormData(form));
+                        formData.append('purchase_order_id', ctx.detailId ?? '');
+                        formData.append('appId', ctx.appId ?? '');
+                        formData.append('navigationMenuId', ctx.navigationMenuId ?? '');
+            
+                        disableButton('submit-recieve-purchase-order-items');
+            
+                        try {
+                            const response = await fetch('/purchase-order-items/receive', {
+                                method: 'POST',
+                                body: formData,
+                            });
+            
+                            if (!response.ok) {
+                                throw new Error(`Receive purchase order item failed with status: ${response.status}`);
+                            }
+            
+                            const data = await response.json();
+            
+                            if (data.success) {
+                                reloadDatatable('#purchase-order-items-table');
+                                $('#recieve-purchase-order-items-modal').modal('hide');
+                                resetForm('recieve_purchase_order_items_form');
+                                showNotification(data.message, 'success');
+                            } else {
+                                showNotification(data.message);
+                            }
+                        } catch (error) {
+                            handleSystemError(error, 'fetch_failed', `Fetch request failed: ${error.message}`);
+                        } finally {
+                            enableButton('submit-recieve-purchase-order-items');
+                        }
+                    },
+                }
+            },
+            {
+                selector: '#cancel_purchase_order_items_form',
+                rules: {
+                    rules: {
+                        cancelled_quantity: { required: true},
+                        reason: { required: true},
+                    },
+                    messages: {
+                        cancelled_quantity: { required: 'Enter the cancelled quantity' },
+                        reason: { required: 'Enter the reason' },
+                    },
+                    submitHandler: async (form) => {
+                        const formData = new URLSearchParams(new FormData(form));
+                        formData.append('purchase_order_id', ctx.detailId ?? '');
+                        formData.append('appId', ctx.appId ?? '');
+                        formData.append('navigationMenuId', ctx.navigationMenuId ?? '');
+            
+                        disableButton('submit-cancel-purchase-order-items');
+            
+                        try {
+                            const response = await fetch('/purchase-order-items/cancel-receive', {
+                                method: 'POST',
+                                body: formData,
+                            });
+            
+                            if (!response.ok) {
+                                throw new Error(`Cancel purchase order item failed with status: ${response.status}`);
+                            }
+            
+                            const data = await response.json();
+            
+                            if (data.success) {
+                                reloadDatatable('#purchase-order-items-table');
+                                $('#cancel-purchase-order-items-modal').modal('hide');
+                                resetForm('cancel_purchase_order_items_form');
+                                showNotification(data.message, 'success');
+                            } else {
+                                showNotification(data.message);
+                            }
+                        } catch (error) {
+                            handleSystemError(error, 'fetch_failed', `Fetch request failed: ${error.message}`);
+                        } finally {
+                            enableButton('submit-cancel-purchase-order-items');
+                        }
+                    },
+                }
+            },
         ],
         table: [
             {
@@ -236,6 +332,8 @@ document.addEventListener('DOMContentLoaded', () => {
         datepickers: [
             { selector: '#order_date' },
             { selector: '#expected_delivery_date' },
+            { selector: '#expiration_date' },
+            { selector: '#received_date' },
         ]
     };
 
@@ -296,6 +394,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     $('#product_id').val(data.productId).trigger('change');
                 }
             });
+        }
+    
+        const receivePurchaseOrderItem = target.closest('.receive-purchase-order-items');
+        if (receivePurchaseOrderItem) {
+            const referenceId = receivePurchaseOrderItem.dataset.referenceId;
+
+            document.getElementById('purchase_order_items_id_receive').value = referenceId;
+        }
+    
+        const cancelPurchaseOrderItem = target.closest('.cancel-purchase-order-items');
+        if (cancelPurchaseOrderItem) {
+            const referenceId = cancelPurchaseOrderItem.dataset.referenceId;
+
+            document.getElementById('purchase_order_items_id_cancel').value = referenceId;
         }
     });
 });

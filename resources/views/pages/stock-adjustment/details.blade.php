@@ -189,11 +189,13 @@
                                     <select id="stock_level_id" name="stock_level_id" class="form-select" data-control="select2" data-allow-clear="false"></select>
                                 </div>
                             </div>
-
+                        </div>
+                        
+                        <div class="row">
                             <div class="col">
                                 <div class="fv-row mb-4">
                                     <label class="fs-6 fw-semibold required form-label mt-3" for="adjustment_type">
-                                        Stock
+                                        Adjustment Type
                                     </label>
 
                                     <select id="adjustment_type" name="adjustment_type" class="form-select" data-control="select2" data-allow-clear="false">
@@ -204,9 +206,7 @@
                                     </select>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <div class="row">
+                            
                             <div class="col">
                                 <div class="fv-row mb-4">
                                     <label class="fs-6 fw-semibold required form-label mt-3" for="adjustment_quantity">

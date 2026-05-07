@@ -685,6 +685,8 @@ Route::middleware('auth')->group(function () {
         ->controller(PurchaseOrderItemsController::class)
         ->group(function () {
             Route::post('/save', 'save')->name('save');
+            Route::post('/receive', 'receive')->name('receive');
+            Route::post('/cancel-receive', 'cancelReceive')->name('cancel.receive');
             Route::post('/delete', 'delete')->name('delete');
             Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
             Route::post('/generate-table', 'generateTable')->name('generate.table');

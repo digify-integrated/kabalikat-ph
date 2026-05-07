@@ -19,9 +19,11 @@ class PurchaseOrderController extends Controller
 {
     public function save(Request $request)
     {
+        $purchaseOrderId = $request->input('purchase_order_id');
+        
         $validator = Validator::make($request->all(), [
             'purchase_order_id' => ['nullable', 'integer'],
-            'reference_number' => ['required', 'string'],
+            'reference_number' => ['required', 'string', Rule::unique('purchase_order', 'reference_number')->ignore($purchaseOrderId)],
             'supplier_id' => ['required', 'integer', Rule::exists('supplier', 'id')],
             'warehouse_id' => ['required', 'integer', Rule::exists('warehouse', 'id')],
             'order_date' => ['required', 'date'],
@@ -535,7 +537,7 @@ class PurchaseOrderController extends Controller
                 'For Approval' => 'badge badge-warning',
                 'Approved' => 'badge badge-success',
                 'On-Process' => 'badge badge-warning',
-                'Complete' => 'badge badge-success',
+                'Completed' => 'badge badge-success',
                 'Cancelled' => 'badge badge-danger',
                 default => 'badge badge-light',
             };
