@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         ],
-        detailsList: [
+        details: [
             {
                 url: '/product-category/fetch-details',
                 formSelector: '#product_category_form',
@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
     (async () => {
         try {
             const fetchDetailsPromise = Promise.all(
-                config.detailsList.map((cfg) => displayDetails(cfg))
+                config.details.map((cfg) => displayDetails(cfg))
             );
 
             await Promise.all([

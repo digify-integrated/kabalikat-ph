@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         ],
-        detailsList: [
+        details: [
             {
                 url: '/stock-transfer-reason/fetch-details',
                 formSelector: '#stock_transfer_reason_form',
@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
     (async () => {
         try {
             const fetchDetailsPromise = Promise.all(
-                config.detailsList.map((cfg) => displayDetails(cfg))
+                config.details.map((cfg) => displayDetails(cfg))
             );
 
             await Promise.all([

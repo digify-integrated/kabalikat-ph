@@ -132,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
             },
         },
-        detailsList: [
+        details: [
             {
                 url: '/attribute/fetch-details',
                 formSelector: '#attribute_form',
@@ -178,7 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
         );
 
         const fetchDetailsPromise = Promise.all(
-            config.detailsList.map((cfg) => displayDetails(cfg))
+            config.details.map((cfg) => displayDetails(cfg))
         );
 
         await Promise.all([

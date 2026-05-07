@@ -270,7 +270,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
             },
         ],
-        detailsList: [
+        details: [
             {
                 url: '/role/fetch-details',
                 formSelector: '#role_form',
@@ -375,7 +375,7 @@ document.addEventListener('DOMContentLoaded', () => {
         );
 
         const fetchDetailsPromise = Promise.all(
-            config.detailsList.map((cfg) => displayDetails(cfg))
+            config.details.map((cfg) => displayDetails(cfg))
         );
 
         await Promise.all([

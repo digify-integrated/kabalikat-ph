@@ -160,8 +160,11 @@ class PurchaseOrderItemsController extends Controller
             $stock->quantity = ($stock->quantity ?? 0) + $receivedQty;
             $stock->last_log_by = Auth::id();
 
+            $reorderLevel = $purchaseOrderItem->product->reorder_level ?? 0;
+
             $stock->stock_status = match (true) {
                 $stock->quantity <= 0 => 'Out of Stock',
+                $stock->quantity <= $reorderLevel => 'Low Stock',
                 default => 'In Stock',
             };
 

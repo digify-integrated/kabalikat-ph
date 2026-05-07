@@ -2,10 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\InventoryLot;
 use App\Models\PurchaseOrder;
-use App\Models\StockLevel;
-use App\Models\StockMovement;
 use App\Models\Supplier;
 use App\Models\Warehouse;
 use Carbon\Carbon;

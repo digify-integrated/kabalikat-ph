@@ -14,6 +14,7 @@ use App\Http\Controllers\ExportController;
 use App\Http\Controllers\FileExtensionController;
 use App\Http\Controllers\FileTypeController;
 use App\Http\Controllers\ImportController;
+use App\Http\Controllers\InventoryDashboardController;
 use App\Http\Controllers\NavigationMenuController;
 use App\Http\Controllers\ProductAddonController;
 use App\Http\Controllers\ProductBOMController;
@@ -348,6 +349,15 @@ Route::middleware('auth')->group(function () {
             Route::post('/save', 'save')->name('save');
             Route::post('/delete', 'delete')->name('delete');
             Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
+            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
+            Route::post('/generate-table', 'generateTable')->name('generate.table');
+        });
+
+    // Inventory Dashboard
+    Route::prefix('inventory-dashboard')
+        ->name('inventory.dashboard.')
+        ->controller(InventoryDashboardController::class)
+        ->group(function () {
             Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
             Route::post('/generate-table', 'generateTable')->name('generate.table');
         });

@@ -185,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
             { url: '/navigation-menu/generate-options', dropdownSelector: '#parent_id' },
             { url: '/export/table-list', dropdownSelector: '#table_name' },
         ],
-        detailsList: [
+        details: [
             {
                 url: '/navigation-menu/fetch-details',
                 formSelector: '#navigation_menu_form', // ✅ no self-reference
@@ -265,7 +265,7 @@ document.addEventListener('DOMContentLoaded', () => {
             );
 
             const fetchDetailsPromise = Promise.all(
-                config.detailsList.map((cfg) => displayDetails(cfg))
+                config.details.map((cfg) => displayDetails(cfg))
             );
 
             await Promise.all([

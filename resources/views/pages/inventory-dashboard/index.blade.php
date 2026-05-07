@@ -6,76 +6,286 @@
 @endpush
 
 @section('content')
-    <div class="card">
-        <div class="card-header border-0 pt-6">
-            <div class="card-title">
-                @include('partials.datatable-search')
-            </div>
+    <div class="row g-5 g-xl-8 mb-5">
+        <div class="col-xl-3">
+            <div class="card card-flush bgi-no-repeat bgi-size-contain bgi-position-x-end h-xl-100 bg-danger">
+                <div class="card-header pt-5 mb-0">
+                    <div class="d-flex flex-center rounded-circle h-80px w-80px"> 
+                        <i class="ki-duotone ki-tag-cross text-white fs-3x lh-0"></i>             
+                    </div>    
+                </div>
 
-            <div class="card-toolbar">
-                <div class="d-flex justify-content-end" data-kt-customer-table-toolbar="base">
-                    @if(($deletePermission ?? 0) > 0 || ($exportPermission ?? 0) > 0)
-                        <a href="#"
-                        class="btn btn-light-primary btn-flex btn-center btn-active-light-primary show menu-dropdown action-dropdown me-3 d-none"
-                        data-kt-menu-trigger="click"
-                        data-kt-menu-placement="bottom-end">
-                            Actions
-                            <i class="ki-outline ki-down fs-5 ms-1"></i>
-                        </a>
+                <div class="card-body d-flex align-items-end mb-3">
+                    <div class="d-flex align-items-center">
+                        <span class="fs-4hx text-white fw-bold me-6" id="out-of-stock-count">0</span>
 
-                        <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-125px py-4"
-                            data-kt-menu="true">
-
-                            @if(($exportPermission ?? 0) > 0)
-                                <div class="menu-item px-3">
-                                    <a href="javascript:void(0);"
-                                    class="menu-link px-3"
-                                    id="export-data"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#export-modal">
-                                        Export
-                                    </a>
-                                </div>
-                            @endif
-
-                            @if(($deletePermission ?? 0) > 0)
-                                <div class="menu-item px-3">
-                                    <a href="javascript:void(0);"
-                                    class="menu-link px-3"
-                                    id="delete-data">
-                                        Delete
-                                    </a>
-                                </div>
-                            @endif
-
-                        </div>
-                    @endif
+                        <div class="fw-bold fs-6 text-white">
+                            <span class="d-block fs-2">Out of Stock</span>
+                            <span class="">Requires restock</span>
+                        </div>            
+                    </div>
                 </div>
             </div>
         </div>
+        <div class="col-xl-3">
+            <div class="card card-flush bgi-no-repeat bgi-size-contain bgi-position-x-end h-xl-100 bg-warning">
+                <div class="card-header pt-5 mb-0">
+                    <div class="d-flex flex-center rounded-circle h-80px w-80px"> 
+                        <i class="ki-duotone ki-calendar-remove text-white fs-3x lh-0"></i>             
+                    </div>    
+                </div>
 
-        <div class="card-body pt-9">
-            <div class="table-responsive">
-                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5" id="country-table">
-                    <thead>
-                        <tr class="text-start text-gray-800 fw-bold fs-7 text-uppercase gs-0">
-                            <th>
-                                <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                                    <input class="form-check-input" id="datatable-checkbox" type="checkbox">
-                                </div>
-                            </th>
-                            <th>Country</th>
-                        </tr>
-                    </thead>
-                    <tbody class="fw-semibold text-gray-800"></tbody>
-                </table>
+                <div class="card-body d-flex align-items-end mb-3">
+                    <div class="d-flex align-items-center">
+                        <span class="fs-4hx text-white fw-bold me-6" id="expired-items-count">0</span>
+
+                        <div class="fw-bold fs-6 text-white">
+                            <span class="d-block fs-2">Expired Items</span>
+                            <span class="">Remove from shelf</span>
+                        </div>            
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3">
+            <div class="card card-flush bgi-no-repeat bgi-size-contain bgi-position-x-end h-xl-100 bg-info">
+                <div class="card-header pt-5 mb-0">
+                    <div class="d-flex flex-center rounded-circle h-80px w-80px"> 
+                        <i class="ki-duotone ki-information text-white fs-3x lh-0"></i>             
+                    </div>    
+                </div>
+
+                <div class="card-body d-flex align-items-end mb-3">
+                    <div class="d-flex align-items-center">
+                        <span class="fs-4hx text-white fw-bold me-6" id="low-stock-count">0</span>
+
+                        <div class="fw-bold fs-6 text-white">
+                            <span class="d-block fs-2">Low Stock</span>
+                            <span class="">Below threshold</span>
+                        </div>            
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3">
+            <div class="card card-flush bgi-no-repeat bgi-size-contain bgi-position-x-end h-xl-100 bg-primary">
+                <div class="card-header pt-5 mb-0">
+                    <div class="d-flex flex-center rounded-circle h-80px w-80px"> 
+                        <i class="ki-duotone ki-calendar text-white fs-3x lh-0"></i>             
+                    </div>    
+                </div>
+
+                <div class="card-body d-flex align-items-end mb-3">
+                    <div class="d-flex align-items-center">
+                        <span class="fs-4hx text-white fw-bold me-6" id="expiring-soon-count">0</span>
+
+                        <div class="fw-bold fs-6 text-white">
+                            <span class="d-block fs-2">Expiring Soon</span>
+                            <span class="">Next 30 days</span>
+                        </div>            
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    @if(($exportPermission ?? 0) > 0)
-        @include('partials.export-modal')
-    @endif
+    <div class="row">
+        <div class="col-xl-6">
+            <div class="card mb-5">
+                <div class="card-header border-0 pt-5">
+                    <h3 class="card-title align-items-start flex-column">
+                        <span class="card-label fw-bold fs-3 mb-1">
+                            Out of stock products
+                        </span>
+                        <span class="text-muted mt-1 fw-semibold fs-7">
+                            These products are at zero and cannot be sold.
+                        </span>
+                    </h3>
+                </div>
+
+                <div class="card-body py-3">
+                    <div class="table-responsive">
+                        <table class="table align-middle table-row-dashed fs-6 gy-3">
+                            <thead>
+                                <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
+                                    <th class="min-w-100px">Product</th>
+                                    <th class="min-w-100px">Warehouse</th>
+                                </tr>
+                            </thead>
+                            
+                            <tbody class="fw-bold text-gray-600">
+                                <tr>
+                                    <td>
+                                        <a href="/metronic8/demo8/?page=apps/ecommerce/catalog/edit-product" class="text-gray-800 text-hover-primary">
+                                            #XGY-346
+                                        </a>
+                                    </td>
+                                    <td>
+                                        7 min ago
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-6">
+            <div class="card mb-5">
+                <div class="card-header border-0 pt-5">
+                    <h3 class="card-title align-items-start flex-column">
+                        <span class="card-label fw-bold fs-3 mb-1">
+                            Expired Stock
+                        </span>
+                        <span class="text-muted mt-1 fw-semibold fs-7">
+                            Items that are no longer safe or legal to sell
+                        </span>
+                    </h3>
+                </div>
+
+                <div class="card-body py-3">
+                    <div class="table-responsive">
+                        <table class="table align-middle table-row-dashed fs-6 gy-3">
+                            <thead>
+                                <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
+                                    <th class="min-w-100px">Product</th>
+                                    <th class="min-w-100px">Warehouse</th>
+                                    <th class="min-w-100px">Batch Number</th>
+                                    <th class="min-w-100px">Qty</th>
+                                    <th class="min-w-100px">Expiration Date</th>
+                                </tr>
+                            </thead>
+                                
+                            <tbody class="fw-bold text-gray-600">
+                                <tr>
+                                    <td>
+                                        <a href="/metronic8/demo8/?page=apps/ecommerce/catalog/edit-product" class="text-gray-800 text-hover-primary">
+                                            #XGY-346
+                                        </a>
+                                    </td>
+                                    <td>
+                                        7 min ago
+                                    </td>
+                                    <td>
+                                        7 min ago
+                                    </td>
+                                    <td>
+                                        7 min ago
+                                    </td>
+                                    <td>
+                                        7 min ago
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-6">
+            <div class="card mb-5">
+                <div class="card-header border-0 pt-5">
+                    <h3 class="card-title align-items-start flex-column">
+                        <span class="card-label fw-bold fs-3 mb-1">
+                            Low Inventory
+                        </span>
+                        <span class="text-muted mt-1 fw-semibold fs-7">
+                            Items that will run out if not replenished soon
+                        </span>
+                    </h3>
+                </div>
+
+                <div class="card-body py-3">
+                    <div class="table-responsive">
+                        <table class="table align-middle table-row-dashed fs-6 gy-3">
+                            <thead>
+                                <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
+                                    <th class="min-w-100px">Product</th>
+                                    <th class="min-w-100px">Warehouse</th>
+                                    <th class="min-w-100px">Current Qty</th>
+                                    <th class="min-w-100px">Reorder At</th>
+                                </tr>
+                            </thead>
+                                
+                            <tbody class="fw-bold text-gray-600">
+                                <tr>
+                                    <td>
+                                        <a href="/metronic8/demo8/?page=apps/ecommerce/catalog/edit-product" class="text-gray-800 text-hover-primary">
+                                            #XGY-346
+                                        </a>
+                                    </td>
+                                    <td>
+                                        7 min ago
+                                    </td>
+                                    <td>
+                                        7 min ago
+                                    </td>
+                                    <td>
+                                        7 min ago
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-6">
+            <div class="card mb-5">
+                <div class="card-header border-0 pt-5">
+                    <h3 class="card-title align-items-start flex-column">
+                        <span class="card-label fw-bold fs-3 mb-1">
+                            Near Expiry
+                        </span>
+                        <span class="text-muted mt-1 fw-semibold fs-7">
+                            Items approaching their expiration date
+                        </span>
+                    </h3>
+                </div>
+
+                <div class="card-body py-3">
+                    <div class="table-responsive">
+                        <table class="table align-middle table-row-dashed fs-6 gy-3">
+                            <thead>
+                                <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
+                                    <th class="min-w-100px">Product</th>
+                                    <th class="min-w-100px">Warehouse</th>
+                                    <th class="min-w-100px">Batch Number</th>
+                                    <th class="min-w-100px">Qty</th>
+                                    <th class="min-w-100px">Expiration Date</th>
+                                </tr>
+                            </thead>
+                                
+                            <tbody class="fw-bold text-gray-600">
+                                <tr>
+                                    <td>
+                                        <a href="/metronic8/demo8/?page=apps/ecommerce/catalog/edit-product" class="text-gray-800 text-hover-primary">
+                                            #XGY-346
+                                        </a>
+                                    </td>
+                                    <td>
+                                        7 min ago
+                                    </td>
+                                    <td>
+                                        7 min ago
+                                    </td>
+                                    <td>
+                                        7 min ago
+                                    </td>
+                                    <td>
+                                        7 min ago
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('scripts')

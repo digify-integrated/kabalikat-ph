@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         ],
-        detailsList: [
+        details: [
             {
                 url: '/country/fetch-details',
                 formSelector: '#country_form',
@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
     (async () => {
         try {
             const fetchDetailsPromise = Promise.all(
-                config.detailsList.map((cfg) => displayDetails(cfg))
+                config.details.map((cfg) => displayDetails(cfg))
             );
 
             await Promise.all([
