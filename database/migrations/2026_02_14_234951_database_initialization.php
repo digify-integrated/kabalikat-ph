@@ -1572,7 +1572,7 @@ return new class extends Migration
             ->nullable();
 
             $table->enum('is_restaurant', ['Yes', 'No'])->default('No');
-            $table->enum('shop_status', ['Active', 'Archived'])->default('Active');
+            $table->enum('shop_register_status', ['Active', 'Archived'])->default('Active');
             $table->enum('register_status', ['Open', 'Closed'])->default('Closed');
             
             $table->date('archived_date')->nullable();
@@ -1582,7 +1582,7 @@ return new class extends Migration
 
             $table->index(['company_id']);
             $table->index(['is_restaurant']);
-            $table->index(['shop_status']);
+            $table->index(['shop_register_status']);
             $table->index(['register_status']);
             $table->index(['archived_date']);
         });
@@ -1601,6 +1601,7 @@ return new class extends Migration
         Schema::disableForeignKeyConstraints();
 
         // 2. Now you can drop them in any order
+        Schema::dropIfExists('users');
         Schema::dropIfExists('audit_log');
         Schema::dropIfExists('navigation_menu_route');
         Schema::dropIfExists('role_user_account');
@@ -1651,12 +1652,12 @@ return new class extends Migration
         Schema::dropIfExists('floor_plan');
         Schema::dropIfExists('floor_plan_table');
         Schema::dropIfExists('payment_method');
+        Schema::dropIfExists('shop_register');
         Schema::dropIfExists('nationality');
         Schema::dropIfExists('currency');
         Schema::dropIfExists('country');
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
-        Schema::dropIfExists('users');
 
         // 3. Re-enable constraints
         Schema::enableForeignKeyConstraints();

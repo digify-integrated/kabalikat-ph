@@ -37,6 +37,7 @@ class DatabaseSeeder extends Seeder
             WarehouseTypeSeeder::class,
             StockAdjustmentReasonSeeder::class,
             StockTransferReasonSeeder::class,
+            PaymentMethodSeeder::class,
         ]);
     }
 }

@@ -2348,6 +2348,296 @@ return new class extends Migration
                 VALUES ('purchase_order_cancellations', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
             END
         SQL);
+
+        /* =============================================================================================
+            TABLE: CHARGE TYPE
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_charge_type_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_charge_type_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_charge_type_update
+            AFTER UPDATE ON charge_type
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Charge type changed.<br/><br/>';
+
+                IF NEW.charge_type_name <> OLD.charge_type_name THEN
+                    SET audit_log = CONCAT(audit_log, "Charge Type:", OLD.charge_type_name, " -> ", NEW.charge_type_name, "<br/>");
+                END IF;
+
+                IF NEW.value_type <> OLD.value_type THEN
+                    SET audit_log = CONCAT(audit_log, "Value Type: ", OLD.value_type, " -> ", NEW.value_type, "<br/>");
+                END IF;
+
+                IF NEW.charge_value <> OLD.charge_value THEN
+                    SET audit_log = CONCAT(audit_log, "Charge Value: ", OLD.charge_value, " -> ", NEW.charge_value, "<br/>");
+                END IF;
+
+                IF NEW.is_variable <> OLD.is_variable THEN
+                    SET audit_log = CONCAT(audit_log, "Is Variable: ", OLD.is_variable, " -> ", NEW.is_variable, "<br/>");
+                END IF;
+
+                IF NEW.application_order <> OLD.application_order THEN
+                    SET audit_log = CONCAT(audit_log, "Application Order: ", OLD.application_order, " -> ", NEW.application_order, "<br/>");
+                END IF;
+
+                IF NEW.tax_type <> OLD.tax_type THEN
+                    SET audit_log = CONCAT(audit_log, "Tax Type: ", OLD.tax_type, " -> ", NEW.tax_type, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Charge type changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('charge_type', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_charge_type_insert
+            AFTER INSERT ON charge_type
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Charge type created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('charge_type', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
+
+        /* =============================================================================================
+            TABLE: DISCOUNT TYPE
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_discount_type_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_discount_type_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_discount_type_update
+            AFTER UPDATE ON discount_type
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Discount type changed.<br/><br/>';
+
+                IF NEW.discount_type_name <> OLD.discount_type_name THEN
+                    SET audit_log = CONCAT(audit_log, "Discount Type:", OLD.discount_type_name, " -> ", NEW.discount_type_name, "<br/>");
+                END IF;
+
+                IF NEW.value_type <> OLD.value_type THEN
+                    SET audit_log = CONCAT(audit_log, "Value Type: ", OLD.value_type, " -> ", NEW.value_type, "<br/>");
+                END IF;
+
+                IF NEW.discount_value <> OLD.discount_value THEN
+                    SET audit_log = CONCAT(audit_log, "Discount Value: ", OLD.discount_value, " -> ", NEW.discount_value, "<br/>");
+                END IF;
+
+                IF NEW.is_variable <> OLD.is_variable THEN
+                    SET audit_log = CONCAT(audit_log, "Is Variable: ", OLD.is_variable, " -> ", NEW.is_variable, "<br/>");
+                END IF;
+
+                IF NEW.application_order <> OLD.application_order THEN
+                    SET audit_log = CONCAT(audit_log, "Application Order: ", OLD.application_order, " -> ", NEW.application_order, "<br/>");
+                END IF;
+
+                IF NEW.is_vat_exempt <> OLD.is_vat_exempt THEN
+                    SET audit_log = CONCAT(audit_log, "Is VAT Exempt: ", OLD.is_vat_exempt, " -> ", NEW.is_vat_exempt, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Discount type changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('discount_type', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_discount_type_insert
+            AFTER INSERT ON discount_type
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Discount type created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('discount_type', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
+
+        /* =============================================================================================
+            TABLE: FLOOR PLAN
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_floor_plan_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_floor_plan_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_floor_plan_update
+            AFTER UPDATE ON floor_plan
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Floor plan changed.<br/><br/>';
+
+                IF NEW.floor_plan_name <> OLD.floor_plan_name THEN
+                    SET audit_log = CONCAT(audit_log, "Floor Plan:", OLD.floor_plan_name, " -> ", NEW.floor_plan_name, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Floor plan changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('floor_plan', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_floor_plan_insert
+            AFTER INSERT ON floor_plan
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Floor plan created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('floor_plan', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
+
+        /* =============================================================================================
+            TABLE: FLOOR PLAN TABLE
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_floor_plan_table_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_floor_plan_table_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_floor_plan_table_update
+            AFTER UPDATE ON floor_plan_table
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Floor plan table changed.<br/><br/>';
+
+                IF NEW.floor_plan_name <> OLD.floor_plan_name THEN
+                    SET audit_log = CONCAT(audit_log, "Floor Plan:", OLD.floor_plan_name, " -> ", NEW.floor_plan_name, "<br/>");
+                END IF;
+
+                IF NEW.table_number <> OLD.table_number THEN
+                    SET audit_log = CONCAT(audit_log, "Floor Plan:", OLD.table_number, " -> ", NEW.table_number, "<br/>");
+                END IF;
+
+                IF NEW.seats <> OLD.seats THEN
+                    SET audit_log = CONCAT(audit_log, "Seats:", OLD.seats, " -> ", NEW.seats, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Floor plan table changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('floor_plan_table', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_floor_plan_table_insert
+            AFTER INSERT ON floor_plan_table
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Floor plan table created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('floor_plan_table', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
+
+        /* =============================================================================================
+            TABLE: PAYMENT METHOD
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_payment_method_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_payment_method_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_payment_method_update
+            AFTER UPDATE ON payment_method
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Payment method changed.<br/><br/>';
+
+                IF NEW.payment_method_name <> OLD.payment_method_name THEN
+                    SET audit_log = CONCAT(audit_log, "Payment Method:", OLD.payment_method_name, " -> ", NEW.payment_method_name, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Payment method changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('payment_method', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_payment_method_insert
+            AFTER INSERT ON payment_method
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Payment method created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('payment_method', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
+
+        /* =============================================================================================
+            TABLE: SHOP REGISTER
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_register_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_register_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_shop_register_update
+            AFTER UPDATE ON shop_register
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Shop register changed.<br/><br/>';
+
+                IF NEW.shop_register_name <> OLD.shop_register_name THEN
+                    SET audit_log = CONCAT(audit_log, "Shop Register:", OLD.shop_register_name, " -> ", NEW.shop_register_name, "<br/>");
+                END IF;
+
+                IF NEW.company_name <> OLD.company_name THEN
+                    SET audit_log = CONCAT(audit_log, "Company:", OLD.company_name, " -> ", NEW.company_name, "<br/>");
+                END IF;
+
+                IF NEW.is_restaurant <> OLD.is_restaurant THEN
+                    SET audit_log = CONCAT(audit_log, "Is Restaurant:", OLD.is_restaurant, " -> ", NEW.is_restaurant, "<br/>");
+                END IF;
+
+                IF NEW.shop_register_status <> OLD.shop_register_status THEN
+                    SET audit_log = CONCAT(audit_log, "Shop Register Status:", OLD.shop_register_status, " -> ", NEW.shop_register_status, "<br/>");
+                END IF;
+
+                IF NEW.register_status <> OLD.register_status THEN
+                    SET audit_log = CONCAT(audit_log, "Register Status:", OLD.register_status, " -> ", NEW.register_status, "<br/>");
+                END IF;
+
+                IF NEW.archived_date <> OLD.archived_date THEN
+                    SET audit_log = CONCAT(audit_log, "Archived Date:", OLD.archived_date, " -> ", NEW.archived_date, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Shop register changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('shop_register', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_shop_register_insert
+            AFTER INSERT ON shop_register
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Shop register created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('shop_register', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
     }
 
     /**
@@ -2676,5 +2966,47 @@ return new class extends Migration
 
         DB::unprepared('DROP TRIGGER IF EXISTS trg_purchase_order_cancellations_update');
         DB::unprepared('DROP TRIGGER IF EXISTS trg_purchase_order_cancellations_insert');
+
+        /* =============================================================================================
+            TABLE: CHARGE TYPE
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_charge_type_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_charge_type_insert');
+
+        /* =============================================================================================
+            TABLE: DISCOUNT TYPE
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_discount_type_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_discount_type_insert');
+
+        /* =============================================================================================
+            TABLE: FLOOR PLAN
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_floor_plan_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_floor_plan_insert');
+
+        /* =============================================================================================
+            TABLE: FLOOR PLAN TABLE
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_floor_plan_table_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_floor_plan_table_insert');
+
+        /* =============================================================================================
+            TABLE: PAYMENT METHOD
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_payment_method_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_payment_method_insert');
+
+        /* =============================================================================================
+            TABLE: SHOP REGISTER
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_register_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_register_insert');
     }
 };
