@@ -466,6 +466,90 @@ class NavigationMenuSeeder extends Seeder
                 'database_table'                => 'warehouse_type',
                 'order_sequence'                => 6
             ],
+
+            // Point of Sale ID: 39
+            [
+                'navigation_menu_name'          => 'Point of Sale',
+                'navigation_menu_icon'          => 'ki-outline ki-screen',
+                'app_id'                        => 3,
+                'app_name'                      => 'Point of Sale',
+                'parent_navigation_menu_id'     => null,
+                'parent_navigation_menu_name'   => null,
+                'database_table'                => null,
+                'order_sequence'                => 1
+            ],
+
+            // Shop Register ID: 40
+            [
+                'navigation_menu_name'          => 'Shop Register',
+                'navigation_menu_icon'          => 'ki-outline ki-shop',
+                'app_id'                        => 3,
+                'app_name'                      => 'Point of Sale',
+                'parent_navigation_menu_id'     => null,
+                'parent_navigation_menu_name'   => null,
+                'database_table'                => 'shop_register',
+                'order_sequence'                => 2
+            ],
+
+            // Configurations ID: 41
+            [
+                'navigation_menu_name'          => 'Configurations',
+                'navigation_menu_icon'          => 'ki-outline ki-wrench',
+                'app_id'                        => 3,
+                'app_name'                      => 'Point of Sale',
+                'parent_navigation_menu_id'     => null,
+                'parent_navigation_menu_name'   => null,
+                'database_table'                => null,
+                'order_sequence'                => 7
+            ],
+
+            // Configurations -> Charge Type ID: 42
+            [
+                'navigation_menu_name'          => 'Charge Type',
+                'navigation_menu_icon'          => null,
+                'app_id'                        => 3,
+                'app_name'                      => 'Point of Sale',
+                'parent_navigation_menu_id'     => 41,
+                'parent_navigation_menu_name'   => 'Configurations',
+                'database_table'                => 'charge_type',
+                'order_sequence'                => 3
+            ],
+
+            // Configurations -> Discount Type ID: 43
+            [
+                'navigation_menu_name'          => 'Discount Type',
+                'navigation_menu_icon'          => null,
+                'app_id'                        => 3,
+                'app_name'                      => 'Point of Sale',
+                'parent_navigation_menu_id'     => 41,
+                'parent_navigation_menu_name'   => 'Configurations',
+                'database_table'                => 'discount_type',
+                'order_sequence'                => 4
+            ],
+
+            // Configurations -> Floor Plan ID: 44
+            [
+                'navigation_menu_name'          => 'Floor Plan',
+                'navigation_menu_icon'          => null,
+                'app_id'                        => 3,
+                'app_name'                      => 'Point of Sale',
+                'parent_navigation_menu_id'     => 41,
+                'parent_navigation_menu_name'   => 'Configurations',
+                'database_table'                => 'floor_plan',
+                'order_sequence'                => 6
+            ],
+
+            // Configurations -> Payment Method ID: 45
+            [
+                'navigation_menu_name'          => 'Payment Method',
+                'navigation_menu_icon'          => null,
+                'app_id'                        => 3,
+                'app_name'                      => 'Point of Sale',
+                'parent_navigation_menu_id'     => 41,
+                'parent_navigation_menu_name'   => 'Configurations',
+                'database_table'                => 'payment_method',
+                'order_sequence'                => 16
+            ],
         ];
 
         DB::table('navigation_menu')->insert(

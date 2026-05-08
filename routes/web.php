@@ -359,7 +359,10 @@ Route::middleware('auth')->group(function () {
         ->controller(InventoryDashboardController::class)
         ->group(function () {
             Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
-            Route::post('/generate-table', 'generateTable')->name('generate.table');
+            Route::post('/generate-out-of-stock-table', 'generateOutOfStockTable')->name('generate.out.of.stock.table');
+            Route::post('/generate-expired-stock-table', 'generateExpiredStockTable')->name('generate.expired.stock.table');
+            Route::post('/generate-low-stock-table', 'generateLowStockTable')->name('generate.low.stock.table');
+            Route::post('/generate-near-expiry-table', 'generateNearExpiryTable')->name('generate.near-expiry.table');
         });
 
     // Attribute
@@ -727,6 +730,19 @@ Route::middleware('auth')->group(function () {
         ->controller(AuditLogController::class)
         ->group(function () {
             Route::post('/fetch', 'fetch')->name('fetch');
+        });
+        
+    // Account Setting
+    Route::prefix('account-setting')
+        ->name('account.setting.')
+        ->controller(UserController::class)
+        ->group(function () {
+
+            Route::get('/{userId}', 'accountSetting')
+                ->name('index');
+
+            Route::post('/save', 'saveAccountSetting')
+                ->name('save');
         });
 
     Route::get('/logout', [AuthenticationController::class, 'logout'])->name('logout');

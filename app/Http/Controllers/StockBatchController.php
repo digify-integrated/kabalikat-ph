@@ -18,9 +18,11 @@ class StockBatchController extends Controller
 {
     public function save(Request $request)
     {
+        $stockBatchId = $request->input('stock_batch_id');
+
         $validator = Validator::make($request->all(), [
             'stock_batch_id' => ['nullable', 'integer'],
-            'reference_number' => ['required', 'string'],
+            'reference_number' => ['required', 'string', Rule::unique('stock_batch', 'reference_number')->ignore($stockBatchId)],
             'warehouse_id' => ['required', 'integer', Rule::exists('warehouse', 'id')],
             'remarks' => ['nullable', 'string'],
         ]);

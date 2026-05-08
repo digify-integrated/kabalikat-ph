@@ -40,8 +40,8 @@ class AppSeeder extends Seeder
                 'app_description'       => 'Handle checkouts and payments for shops and restaurants.',
                 'app_version'           => '1.0.0',
                 'app_logo'              => 'app/3/pos.png',
-                'navigation_menu_id'    => 1,
-                'navigation_menu_name'  => 'App',
+                'navigation_menu_id'    => 39,
+                'navigation_menu_name'  => 'Point of Sale',
                 'order_sequence'        => 6,
             ],
             [

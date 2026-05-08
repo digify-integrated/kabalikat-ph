@@ -72,7 +72,7 @@
                                 </div>
                             </div>
                             <div class="menu-item px-5 my-1">
-                                <a href="/metronic8/demo34/?page=account/settings" class="menu-link px-5">
+                                <a href="{{ route('account.setting.index', ['userId' => Auth::id()]) }}" class="menu-link px-5">
                                     Account Settings
                                 </a>
                             </div>

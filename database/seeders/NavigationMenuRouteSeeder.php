@@ -815,6 +815,125 @@ class NavigationMenuRouteSeeder extends Seeder
                 'view_file'             => 'pages.import.index',
                 'js_file'               => 'import/import',
             ],
+
+            // Point of Sale
+            [
+                'navigation_menu_id'    => 39,
+                'route_type'            => 'index',
+                'view_file'             => 'pages.point-of-sale.index',
+                'js_file'               => 'point-of-sale/index',
+            ],
+            [
+                'navigation_menu_id'    => 39,
+                'route_type'            => 'details',
+                'view_file'             => 'pages.point-of-sale.details',
+                'js_file'               => 'point-of-sale/details',
+            ],
+
+            
+            // Shop Register
+            [
+                'navigation_menu_id'    => 40,
+                'route_type'            => 'index',
+                'view_file'             => 'pages.shop-register.index',
+                'js_file'               => 'shop-register/index',
+            ],
+            [
+                'navigation_menu_id'    => 40,
+                'route_type'            => 'new',
+                'view_file'             => 'pages.shop-register.new',
+                'js_file'               => 'shop-register/new',
+            ],
+            [
+                'navigation_menu_id'    => 40,
+                'route_type'            => 'details',
+                'view_file'             => 'pages.shop-register.details',
+                'js_file'               => 'shop-register/details',
+            ],
+            [
+                'navigation_menu_id'    => 40,
+                'route_type'            => 'import',
+                'view_file'             => 'pages.import.index',
+                'js_file'               => 'import/import',
+            ],
+            
+            // Charge Type
+            [
+                'navigation_menu_id'    => 42,
+                'route_type'            => 'index',
+                'view_file'             => 'pages.charge-type.index',
+                'js_file'               => 'charge-type/index',
+            ],
+            [
+                'navigation_menu_id'    => 42,
+                'route_type'            => 'new',
+                'view_file'             => 'pages.charge-type.new',
+                'js_file'               => 'charge-type/new',
+            ],
+            [
+                'navigation_menu_id'    => 42,
+                'route_type'            => 'details',
+                'view_file'             => 'pages.charge-type.details',
+                'js_file'               => 'charge-type/details',
+            ],
+            [
+                'navigation_menu_id'    => 42,
+                'route_type'            => 'import',
+                'view_file'             => 'pages.import.index',
+                'js_file'               => 'import/import',
+            ],
+            
+            // Discount Type
+            [
+                'navigation_menu_id'    => 43,
+                'route_type'            => 'index',
+                'view_file'             => 'pages.discount-type.index',
+                'js_file'               => 'discount-type/index',
+            ],
+            [
+                'navigation_menu_id'    => 43,
+                'route_type'            => 'new',
+                'view_file'             => 'pages.discount-type.new',
+                'js_file'               => 'discount-type/new',
+            ],
+            [
+                'navigation_menu_id'    => 43,
+                'route_type'            => 'details',
+                'view_file'             => 'pages.discount-type.details',
+                'js_file'               => 'discount-type/details',
+            ],
+            [
+                'navigation_menu_id'    => 43,
+                'route_type'            => 'import',
+                'view_file'             => 'pages.import.index',
+                'js_file'               => 'import/import',
+            ],
+            
+            // Payment Method
+            [
+                'navigation_menu_id'    => 45,
+                'route_type'            => 'index',
+                'view_file'             => 'pages.payment-method.index',
+                'js_file'               => 'payment-method/index',
+            ],
+            [
+                'navigation_menu_id'    => 45,
+                'route_type'            => 'new',
+                'view_file'             => 'pages.payment-method.new',
+                'js_file'               => 'payment-method/new',
+            ],
+            [
+                'navigation_menu_id'    => 45,
+                'route_type'            => 'details',
+                'view_file'             => 'pages.payment-method.details',
+                'js_file'               => 'payment-method/details',
+            ],
+            [
+                'navigation_menu_id'    => 45,
+                'route_type'            => 'import',
+                'view_file'             => 'pages.import.index',
+                'js_file'               => 'import/import',
+            ],
         ];
 
         DB::table('navigation_menu_route')->insert(

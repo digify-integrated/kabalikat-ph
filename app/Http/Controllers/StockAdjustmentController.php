@@ -16,9 +16,11 @@ class StockAdjustmentController extends Controller
 {
     public function save(Request $request)
     {
+        $stockAdjustmentId = $request->input('stock_adjustment_id');
+
         $validator = Validator::make($request->all(), [
             'stock_adjustment_id' => ['nullable', 'integer'],
-            'reference_number' => ['required', 'string'],
+            'reference_number' => ['required', 'string', Rule::unique('stock_adjustment', 'reference_number')->ignore($stockAdjustmentId)],
             'stock_adjustment_reason_id' => ['required', 'integer', Rule::exists('stock_adjustment_reason', 'id')],
             'remarks' => ['nullable', 'string'],
         ]);

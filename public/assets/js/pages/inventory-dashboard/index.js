@@ -6,14 +6,49 @@ document.addEventListener('DOMContentLoaded', () => {
     const config = {
         table: [
             {
-                url: '/country/generate-table',
-                selector: '#country-table',
+                url: '/inventory-dashboard/generate-out-of-stock-table',
+                selector: '#out-of-stock-table',
                 serverSide: false,
+                order: [[0, 'asc']],
                 columns: [
-                    { data: 'CHECK_BOX' },
-                    { data: 'COUNTRY' }
+                    { data: 'PRODUCT' }
                 ],
-            }
+            },
+            {
+                url: '/inventory-dashboard/generate-expired-stock-table',
+                selector: '#expired-stock-table',
+                serverSide: false,
+                order: [[0, 'asc']],
+                columns: [
+                    { data: 'PRODUCT' },
+                    { data: 'BATCH_NUMBER' },
+                    { data: 'QUANTITY' },
+                    { data: 'EXPIRATION_DATE' },
+                ],
+            },
+            {
+                url: '/inventory-dashboard/generate-low-stock-table',
+                selector: '#low-stock-table',
+                serverSide: false,
+                order: [[0, 'asc']],
+                columns: [
+                    { data: 'PRODUCT' },
+                    { data: 'QUANTITY' },
+                    { data: 'REORDER_LEVEL' },
+                ],
+            },
+            {
+                url: '/inventory-dashboard/generate-near-expiry-table',
+                selector: '#near-expiry-table',
+                serverSide: false,
+                order: [[0, 'asc']],
+                columns: [
+                    { data: 'PRODUCT' },
+                    { data: 'BATCH_NUMBER' },
+                    { data: 'QUANTITY' },
+                    { data: 'EXPIRATION_DATE' },
+                ],
+            },
         ],
         details: [
             {
@@ -31,6 +66,5 @@ document.addEventListener('DOMContentLoaded', () => {
     checkNotification()
     
     config.details.map((cfg) => displayDetails(cfg))
-
-    //initializeDatatable(config.table);
+    config.table.map((cfg) => initializeDatatable(cfg))
 });

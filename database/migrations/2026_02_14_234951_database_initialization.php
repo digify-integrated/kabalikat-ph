@@ -1457,6 +1457,137 @@ return new class extends Migration
         });
 
         /* =============================================================================================
+            TABLE: Charge Type
+        ============================================================================================= */
+
+        Schema::create('charge_type', function (Blueprint $table) {
+            $table->id();
+
+            $table->string('charge_type_name');
+
+            $table->enum('value_type', ['Percentage', 'Fixed Amount'])->default('Percentage');
+            $table->decimal('charge_value', 10, 2)->default(0);
+            $table->enum('is_variable', ['Yes', 'No'])->default('No');
+            $table->enum('application_order', ['Before Tax','After Tax'])->default('After Tax');
+            $table->enum('tax_type', ['Vatable','Non Vatable'])->default('Non Vatable');
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+            
+            $table->index(['value_type']);
+            $table->index(['is_variable']);
+            $table->index(['application_order']);
+            $table->index(['tax_type']);
+        });
+
+        /* =============================================================================================
+            TABLE: Discount Type
+        ============================================================================================= */
+
+        Schema::create('discount_type', function (Blueprint $table) {
+            $table->id();
+
+            $table->string('discount_type_name');
+
+            $table->enum('value_type', ['Percentage', 'Fixed Amount'])->default('Percentage');
+            $table->decimal('discount_value', 10, 2)->default(0);
+            $table->enum('is_variable', ['Yes', 'No'])->default('No');
+            $table->enum('application_order', ['Before Tax','After Tax'])->default('After Tax');
+            $table->enum('is_vat_exempt', ['Yes', 'No'])->default('No');
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+            
+            $table->index(['value_type']);
+            $table->index(['is_variable']);
+            $table->index(['application_order']);
+            $table->index(['is_vat_exempt']);
+        });
+
+        /* =============================================================================================
+            TABLE: Floor Plan
+        ============================================================================================= */
+
+        Schema::create('floor_plan', function (Blueprint $table) {
+            $table->id();
+
+            $table->string('floor_plan_name');
+            
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+        });
+        
+        /* =============================================================================================
+            TABLE: Floor Plan Table
+        ============================================================================================= */
+
+        Schema::create('floor_plan_table', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('floor_plan_id')
+                ->constrained('floor_plan')
+                ->cascadeOnDelete();
+
+            $table->string('floor_plan_name');
+
+            $table->integer('table_number');
+            $table->integer('seats');
+
+            $table->foreignId('last_log_by')->nullable()->default(1)
+                ->constrained('users')->nullOnDelete();
+
+            $table->timestamps();
+
+            $table->index(['floor_plan_id']);
+        });
+
+        /* =============================================================================================
+            TABLE: Payment Method
+        ============================================================================================= */
+
+        Schema::create('payment_method', function (Blueprint $table) {
+            $table->id();
+
+            $table->string('payment_method_name');
+            
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+        });
+
+        /* =============================================================================================
+            TABLE: Shop Register
+        ============================================================================================= */
+
+        Schema::create('shop_register', function (Blueprint $table) {
+            $table->id();
+
+            $table->string('shop_register_name');
+
+            $table->foreignId('company_id')
+                ->nullable()
+                ->constrained('company')
+                ->nullOnDelete();
+            
+            $table->string('company_name')
+            ->nullable();
+
+            $table->enum('is_restaurant', ['Yes', 'No'])->default('No');
+            $table->enum('shop_status', ['Active', 'Archived'])->default('Active');
+            $table->enum('register_status', ['Open', 'Closed'])->default('Closed');
+            
+            $table->date('archived_date')->nullable();
+            
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+
+            $table->index(['company_id']);
+            $table->index(['is_restaurant']);
+            $table->index(['shop_status']);
+            $table->index(['register_status']);
+            $table->index(['archived_date']);
+        });
+
+        /* =============================================================================================
             TABLE: 
         ============================================================================================= */
     }
@@ -1515,6 +1646,11 @@ return new class extends Migration
         Schema::dropIfExists('purchase_order_receipt_items');
         Schema::dropIfExists('purchase_order_items');
         Schema::dropIfExists('purchase_order');
+        Schema::dropIfExists('charge_type');
+        Schema::dropIfExists('discount_type');
+        Schema::dropIfExists('floor_plan');
+        Schema::dropIfExists('floor_plan_table');
+        Schema::dropIfExists('payment_method');
         Schema::dropIfExists('nationality');
         Schema::dropIfExists('currency');
         Schema::dropIfExists('country');

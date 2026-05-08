@@ -543,4 +543,12 @@ class UserController extends Controller
 
         return response()->json($response);
     }
+
+    public function accountSetting(
+        int $userId,
+    ) {
+        return view('pages.account-setting.index', [
+            'pageTitle' => 'Account Setting'
+        ]);
+    }
 }
