@@ -31,7 +31,7 @@
                     <form id="charge_type_form" method="post" action="#" novalidate>
                         @csrf
 
-                        <div class="row row-cols-1 row-cols-sm-3 rol-cols-md-3 row-cols-lg-3">
+                        <div class="row">
                             <div class="col">
                                 <div class="fv-row mb-4">
                                     <label class="fs-6 fw-semibold required form-label mt-3" for="charge_type_name">
@@ -41,39 +41,69 @@
                                     <input type="text" class="form-control" id="charge_type_name" name="charge_type_name" maxlength="100" autocomplete="off" @disabled(!$canWrite)>
                                 </div>
                             </div>
+
                             <div class="col">
                                 <div class="fv-row mb-4">
-                                    <label class="fs-6 fw-semibold required form-label mt-3" for="charge_type">
-                                        Extension
+                                    <label class="fs-6 fw-semibold required form-label mt-3" for="value_type">
+                                        Value Type
                                     </label>
 
-                                    <input
-                                        type="text"
-                                        class="form-control"
-                                        id="charge_type"
-                                        name="charge_type"
-                                        maxlength="100"
-                                        autocomplete="off"
-                                        @disabled(!$canWrite)
-                                    >
+                                    <select id="value_type" name="value_type" class="form-select" data-control="select2" data-allow-clear="false" @disabled(!$canWrite)>
+                                        <option value="">--</option>
+                                        <option value="Percentage">Percentage</option>
+                                        <option value="Fixed Amount">Fixed Amount</option>
+                                    </select>
                                 </div>
                             </div>
-
+                            
                             <div class="col">
                                 <div class="fv-row mb-4">
-                                    <label class="fs-6 fw-semibold required form-label mt-3" for="file_type_id">
-                                        File Type
+                                    <label class="fs-6 fw-semibold required form-label mt-3" for="charge_value">
+                                        Charge Value
                                     </label>
 
-                                    <select
-                                        id="file_type_id"
-                                        name="file_type_id"
-                                        class="form-select"
-                                        data-control="select2"
-                                        data-allow-clear="false"
-                                        @disabled(!$canWrite)
-                                    >
-                                        <option>--</option>
+                                    <input type="number" class="form-control" id="charge_value" name="charge_value" min="0" step="0.01" @disabled(!$canWrite)>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col">
+                                <div class="fv-row mb-4">
+                                    <label class="fs-6 fw-semibold required form-label mt-3" for="is_variable">
+                                        Is Variable?
+                                    </label>
+
+                                    <select id="is_variable" name="is_variable" class="form-select" data-control="select2" data-allow-clear="false" @disabled(!$canWrite)>
+                                        <option value="">--</option>
+                                        <option value="Yes">Yes</option>
+                                        <option value="No">No</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="fv-row mb-4">
+                                    <label class="fs-6 fw-semibold required form-label mt-3" for="application_order">
+                                        Application Order
+                                    </label>
+
+                                    <select id="application_order" name="application_order" class="form-select" data-control="select2" data-allow-clear="false" @disabled(!$canWrite)>
+                                        <option value="">--</option>
+                                        <option value="Before Tax">Before Tax</option>
+                                        <option value="After Tax">After Tax</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="fv-row mb-4">
+                                    <label class="fs-6 fw-semibold required form-label mt-3" for="tax_type">
+                                        Tax Type
+                                    </label>
+
+                                    <select id="tax_type" name="tax_type" class="form-select" data-control="select2" data-allow-clear="false" @disabled(!$canWrite)>
+                                        <option value="">--</option>
+                                        <option value="Vatable">Vatable</option>
+                                        <option value="Non Vatable">Non Vatable</option>
                                     </select>
                                 </div>
                             </div>

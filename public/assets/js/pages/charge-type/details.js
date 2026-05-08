@@ -16,13 +16,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 rules: {
                     rules: {
                         charge_type_name: { required: true},
-                        charge_type: { required: true},
-                        file_type_id: { required: true},
+                        value_type: { required: true},
+                        charge_value: { required: true},
+                        is_variable: { required: true},
+                        application_order: { required: true},
+                        tax_type: { required: true},
                     },
                     messages: {
                         charge_type_name: { required: 'Enter the charge type' },
-                        charge_type: { required: 'Enter the extension' },
-                        file_type_id: { required: 'Choose the file type' },
+                        value_type: { required: 'Choose the value type' },
+                        charge_value: { required: 'Enter the charge value' },
+                        is_variable: { required: 'Choose if is variable' },
+                        application_order: { required: 'Choose the application order' },
+                        tax_type: { required: 'Choose the tax type' },
                     },
                     submitHandler: async (form) => {
                         const ctx = getPageContext();
@@ -66,11 +72,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 busyHideTargets: ['#submit-data'],
                 onSuccess: async (data) => {
                     document.getElementById('charge_type_name').value = data.chargeTypeName || '';
-                    document.getElementById('charge_type').value = data.chargeType || '';
+                    document.getElementById('charge_value').value = data.chargeValue || '0';
 
                     await optionsPromise;
 
-                    $('#file_type_id').val(data.fileTypeId).trigger('change');
+                    $('#value_type').val(data.valueType).trigger('change');
+                    $('#is_variable').val(data.isVariable).trigger('change');
+                    $('#application_order').val(data.applicationOrder).trigger('change');
+                    $('#tax_type').val(data.taxType).trigger('change');
                 },
             }
         ],
@@ -81,17 +90,10 @@ document.addEventListener('DOMContentLoaded', () => {
             swalText: 'Are you sure you want to delete this charge type?',
             confirmButtonText: 'Delete',
         },
-        dropdown: [
-            { url: '/file-type/generate-options', dropdownSelector: '#file_type_id' }
-        ],
     };
 
     (async () => {
         try {
-            optionsPromise = Promise.all(
-                config.dropdown.map((cfg) => generateDropdownOptions(cfg))
-            );
-
             const fetchDetailsPromise = Promise.all(
                 config.details.map((cfg) => displayDetails(cfg))
             );
@@ -109,4 +111,16 @@ document.addEventListener('DOMContentLoaded', () => {
     attachLogNotesHandler();
 
     detailsDeleteButton(config.delete);
+
+    $('#is_variable').on('change', function () {
+        const isVariable = $(this).val(); // Get the selected value
+        const $chargeInput = $('#charge_value'); // Target the input field
+
+        if (isVariable === 'Yes') {
+            $chargeInput.val(0);           // Set value to 0
+            $chargeInput.prop('readonly', true); // Add readonly
+        } else {
+            $chargeInput.prop('readonly', false); // Remove readonly
+        }
+    });
 });

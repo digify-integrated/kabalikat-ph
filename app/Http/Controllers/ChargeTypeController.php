@@ -16,8 +16,11 @@ class ChargeTypeController extends Controller
         $validator = Validator::make($request->all(), [
             'charge_type_id' => ['nullable', 'integer'],
             'charge_type_name' => ['required', 'string', 'max:255'],
-            'charge_type' => ['required', 'string', 'max:255'],
-            'file_type_id' => ['integer'],
+            'value_type' => ['required', 'string', 'max:255'],
+            'charge_value' => ['required', 'numeric', 'min:0'],
+            'is_variable' => ['required', 'string', 'max:255'],
+            'application_order' => ['required', 'string', 'max:255'],
+            'tax_type' => ['required', 'string', 'max:255'],
         ]);
 
         if ($validator->fails()) {
@@ -32,17 +35,13 @@ class ChargeTypeController extends Controller
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
 
-        $fileTypeId = (int) $validated['file_type_id'];
-
-        $fileTypeName = (string) FileType::query()
-            ->whereKey($fileTypeId)
-            ->value('file_type_name');
-
         $payload = [
             'charge_type_name' => $validated['charge_type_name'],
-            'charge_type' => $validated['charge_type'],
-            'file_type_id' => $fileTypeId,
-            'file_type_name' => $fileTypeName,
+            'value_type' => $validated['value_type'],
+            'charge_value' => $validated['charge_value'],
+            'is_variable' => $validated['is_variable'],
+            'application_order' => $validated['application_order'],
+            'tax_type' => $validated['tax_type'],
             'last_log_by' => Auth::id(),
         ];
 
@@ -54,14 +53,6 @@ class ChargeTypeController extends Controller
         } else {
             $chargeType = ChargeType::query()->create($payload);
         }
-
-        UploadSettingChargeType::query()
-            ->where('charge_type_id', $chargeType->id)
-            ->update([
-                'charge_type_name' => $chargeType->charge_type_name,
-                'charge_type' => $chargeType->charge_type,
-                'last_log_by' => Auth::id(),
-            ]);
 
         $link = route('apps.details', [
             'appId' => $pageAppId,
@@ -173,8 +164,11 @@ class ChargeTypeController extends Controller
             'success' => true,
             'notExist' => false,
             'chargeTypeName' => $chargeType->charge_type_name ?? null,
-            'chargeType' => $chargeType->charge_type ?? null,
-            'fileTypeId' => $chargeType->file_type_id ?? null,
+            'valueType' => $chargeType->value_type ?? 'Percentage',
+            'chargeValue' => $chargeType->charge_value ?? 0,
+            'isVariable' => $chargeType->is_variable ?? 'No',
+            'applicationOrder' => $chargeType->application_order ?? 'After Tax',
+            'taxType' => $chargeType->tax_type ?? 'Non Vatable',
         ]);
     }
 
@@ -182,17 +176,38 @@ class ChargeTypeController extends Controller
     {
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
-        $filterByFileType = $request->input('filter_by_file_type');
+        $filterByValueType = $request->input('filter_by_value_type');
+        $filterByIsVariable = $request->input('filter_by_is_variable');
+        $filterByApplicationOrder = $request->input('filter_by_application_order');
+        $filterByTaxType = $request->input('filter_by_tax_type');
 
         $chargeTypes = DB::table('charge_type')
-        ->when(!empty($filterByFileType), fn($q) => $q->whereIn('file_type_id', $filterByFileType))
+        ->when(!empty($filterByValueType), function ($q) use ($filterByValueType) {
+            $q->where('value_type', $filterByValueType);
+        })
+        ->when(!empty($filterByIsVariable), function ($q) use ($filterByIsVariable) {
+            $q->where('is_variable', $filterByIsVariable);
+        })
+        ->when(!empty($filterByApplicationOrder), function ($q) use ($filterByApplicationOrder) {
+            $q->where('application_order', $filterByApplicationOrder);
+        })
+        ->when(!empty($filterByTaxType), function ($q) use ($filterByTaxType) {
+            $q->where('taxt_type', $filterByTaxType);
+        })
         ->orderBy('charge_type_name')
         ->get();
 
         $response = $chargeTypes->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
             $chargeTypeId = $row->id;
             $chargeTypeName = $row->charge_type_name;
-            $fileTypeName = $row->file_type_name;
+            $valueType = $row->value_type;
+            $chargeValue = ($valueType == 'Percentage') 
+                ? number_format($row->charge_value, 2) . '%' 
+                : number_format($row->charge_value, 2);
+            $isVariable = $row->is_variable;
+            $applicationOrder = $row->application_order;
+            $taxType = $row->tax_type;
+            
 
             $link = route('apps.details', [
                 'appId' => $pageAppId,
@@ -206,8 +221,11 @@ class ChargeTypeController extends Controller
                         <input class="form-check-input datatable-checkbox-children" type="checkbox" value="'.$chargeTypeId.'">
                     </div>
                 ',
-                'FILE_EXTENSION' => $chargeTypeName,
-                'FILE_TYPE' => $fileTypeName,
+                'CHARGE_TYPE' => $chargeTypeName,
+                'CHARGE_VALUE' => $chargeValue,
+                'IS_VARIABLE' => $isVariable,
+                'APPLICATION_ORDER' => $applicationOrder,
+                'TAX_TYPE' => $taxType,
                 'LINK' => $link,
             ];
         })->values();

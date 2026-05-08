@@ -69,6 +69,14 @@
                                 </select>
                             </div>
                             <div class="mb-5">
+                                <label class="form-label fs-6 fw-semibold" for="filter_by_is_variable">Filter By Is Variable:</label>
+                                <select id="filter_by_is_variable" class="form-select" data-control="select2" data-allow-clear="false">
+                                    <option value="">--</option>
+                                    <option value="Yes">Yes</option>
+                                    <option value="No">No</option>
+                                </select>
+                            </div>
+                            <div class="mb-5">
                                 <label class="form-label fs-6 fw-semibold" for="filter_by_application_order">Filter By Application Order:</label>
                                 <select id="filter_by_application_order" class="form-select" data-control="select2" data-allow-clear="false">
                                     <option value="">--</option>
@@ -77,8 +85,8 @@
                                 </select>
                             </div>
                             <div class="mb-5">
-                                <label class="form-label fs-6 fw-semibold" for="filter_by_application_order">Filter By Tax Type:</label>
-                                <select id="filter_by_application_order" class="form-select" data-control="select2" data-allow-clear="false">
+                                <label class="form-label fs-6 fw-semibold" for="filter_by_tax_type">Filter By Tax Type:</label>
+                                <select id="filter_by_tax_type" class="form-select" data-control="select2" data-allow-clear="false">
                                     <option value="">--</option>
                                     <option value="Vatable">Vatable</option>
                                     <option value="Non Vatable">Non Vatable</option>
