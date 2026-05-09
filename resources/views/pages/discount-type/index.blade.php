@@ -104,7 +104,7 @@
 
         <div class="card-body pt-9">
             <div class="table-responsive">
-                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5" id="charge-type-table">
+                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5" id="discount-type-table">
                     <thead>
                         <tr class="text-start text-gray-800 fw-bold fs-7 text-uppercase gs-0">
                             <th>
@@ -112,11 +112,11 @@
                                     <input class="form-check-input" id="datatable-checkbox" type="checkbox">
                                 </div>
                             </th>
-                            <th>Charge Type</th>
-                            <th>Charge Value</th>
+                            <th>Discount Type</th>
+                            <th>Discount Value</th>
                             <th>Is Variable</th>
                             <th>Application Order</th>
-                            <th>Tax Type</th>
+                            <th>Is VAT Exempt</th>
                         </tr>
                     </thead>
                     <tbody class="fw-semibold text-gray-800"></tbody>

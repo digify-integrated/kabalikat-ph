@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ProductCategory;
+use App\Models\ProductCategoryMap;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -46,6 +47,13 @@ class ProductCategoryController extends Controller
         } else {
             $productCategory = ProductCategory::query()->create($payload);
         }
+
+        ProductCategoryMap::query()
+            ->where('product_category_id', $productCategory->id)
+            ->update([
+                'product_category_name' => $productCategory->product_category_name,
+                'last_log_by' => Auth::id(),
+            ]);
 
         $link = route('apps.details', [
             'appId' => $pageAppId,

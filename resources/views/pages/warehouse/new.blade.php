@@ -10,7 +10,7 @@
                 @csrf
                 
                 <input type="hidden" id="warehouse_status" name="warehouse_status" value="Active">
-                <div class="row row-cols-1 row-cols-sm-3 rol-cols-md-3 row-cols-lg-3">
+                <div class="row">
                     <div class="col">
                         <div class="fv-row mb-4">
                             <label class="fs-6 fw-semibold required form-label mt-3" for="warehouse_name">
@@ -41,7 +41,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="row row-cols-1 row-cols-sm-3 rol-cols-md-3 row-cols-lg-3">
+                <div class="row">
                     <div class="col">
                         <div class="fv-row mb-4">
                             <label class="fs-6 fw-semibold required form-label mt-3" for="address">
@@ -72,7 +72,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="row row-cols-1 row-cols-sm-3 rol-cols-md-3 row-cols-lg-3">
+                <div class="row">
                     <div class="col">
                         <div class="fv-row mb-4">
                             <label class="fs-6 fw-semibold form-label mt-3" for="telephone">

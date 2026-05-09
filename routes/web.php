@@ -18,6 +18,7 @@ use App\Http\Controllers\FileTypeController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\InventoryDashboardController;
 use App\Http\Controllers\NavigationMenuController;
+use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\ProductAddonController;
 use App\Http\Controllers\ProductBOMController;
 use App\Http\Controllers\ProductCategoryController;
@@ -724,6 +725,19 @@ Route::middleware('auth')->group(function () {
     Route::prefix('discount-type')
         ->name('discount.type.')
         ->controller(DiscountTypeController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
+            Route::post('/delete', 'delete')->name('delete');
+            Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
+            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
+            Route::post('/generate-table', 'generateTable')->name('generate.table');
+            Route::post('/generate-options', 'generateOptions')->name('generate.options');
+        });
+    
+    // Payment Method
+    Route::prefix('payment-method')
+        ->name('payment.method.')
+        ->controller(PaymentMethodController::class)
         ->group(function () {
             Route::post('/save', 'save')->name('save');
             Route::post('/delete', 'delete')->name('delete');

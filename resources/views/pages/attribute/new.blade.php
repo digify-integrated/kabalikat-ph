@@ -8,7 +8,7 @@
         <div class="card-body">
             <form id="attribute_form" method="post" action="#" novalidate>
                 @csrf
-                <div class="row row-cols-1 row-cols-sm-2 rol-cols-md-2 row-cols-lg-2">
+                <div class="row">
                     <div class="col">
                         <label class="fs-6 fw-semibold required form-label mt-3" for="attribute_name">
                             Display Name

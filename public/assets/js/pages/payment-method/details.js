@@ -4,49 +4,41 @@ import { attachLogNotesHandler } from '../../util/log-notes.js';
 import { disableButton, enableButton, detailsDeleteButton } from '../../form/button.js';
 import { displayDetails, getPageContext } from '../../form/form.js';
 import { handleSystemError } from '../../util/system-errors.js';
-import { generateDropdownOptions } from '../../form/field.js';
+import { initializeDatatable } from '../../util/datatable.js';
 
 document.addEventListener('DOMContentLoaded', () => {
+    const ctx = getPageContext();
+
     let optionsPromise = Promise.resolve();
 
     const config = {
         forms: [
             {
-                selector: '#charge_type_form',
+                selector: '#payment_method_form',
                 rules: {
                     rules: {
-                        charge_type_name: { required: true},
-                        value_type: { required: true},
-                        charge_value: { required: true},
-                        is_variable: { required: true},
-                        application_order: { required: true},
-                        tax_type: { required: true},
+                        payment_method_name: { required: true},
                     },
                     messages: {
-                        charge_type_name: { required: 'Enter the charge type' },
-                        value_type: { required: 'Choose the value type' },
-                        charge_value: { required: 'Enter the charge value' },
-                        is_variable: { required: 'Choose if is variable' },
-                        application_order: { required: 'Choose the application order' },
-                        tax_type: { required: 'Choose the tax type' },
+                        payment_method_name: { required: 'Enter the payment method' },
                     },
                     submitHandler: async (form) => {
-                        const ctx = getPageContext();
+                        const ctx2 = getPageContext();
                         const formData = new URLSearchParams(new FormData(form));
-                        formData.append('charge_type_id', ctx.detailId ?? '');
-                        formData.append('appId', ctx.appId ?? '');
-                        formData.append('navigationMenuId', ctx .navigationMenuId ?? '');
+                        formData.append('payment_method_id', ctx2.detailId ?? '');
+                        formData.append('appId', ctx2.appId ?? '');
+                        formData.append('navigationMenuId', ctx2.navigationMenuId ?? '');
 
                         disableButton('submit-data');
 
                         try {
-                            const response = await fetch('/charge-type/save', {
+                            const response = await fetch('/payment-method/save', {
                                 method: 'POST',
                                 body: formData,
                             });
 
                             if (!response.ok) {
-                                throw new Error(`Save charge type failed with status: ${response.status}`);
+                                throw new Error(`Save payment method failed with status: ${response.status}`);
                             }
 
                             const data = await response.json();
@@ -67,29 +59,23 @@ document.addEventListener('DOMContentLoaded', () => {
         ],
         details: [
             {
-                url: '/charge-type/fetch-details',
-                formSelector: '#charge_type_form',
+                url: '/payment-method/fetch-details',
+                formSelector: '#payment_method_form',
                 busyHideTargets: ['#submit-data'],
                 onSuccess: async (data) => {
-                    document.getElementById('charge_type_name').value = data.chargeTypeName || '';
-                    document.getElementById('charge_value').value = data.chargeValue || '0';
+                    document.getElementById('payment_method_name').value = data.paymentMethodName || '';
 
                     await optionsPromise;
-
-                    $('#value_type').val(data.valueType).trigger('change');
-                    $('#is_variable').val(data.isVariable).trigger('change');
-                    $('#application_order').val(data.applicationOrder).trigger('change');
-                    $('#tax_type').val(data.taxType).trigger('change');
                 },
             }
         ],
         delete: {
-            trigger: '#delete-charge-type',
-            url: '/charge-type/delete',
-            swalTitle: 'Confirm Charge Type Deletion',
-            swalText: 'Are you sure you want to delete this charge type?',
+            trigger: '#delete-payment-method',
+            url: '/payment-method/delete',
+            swalTitle: 'Confirm Payment Method Deletion',
+            swalText: 'Are you sure you want to delete this payment method?',
             confirmButtonText: 'Delete',
-        },
+        }
     };
 
     (async () => {
@@ -111,16 +97,4 @@ document.addEventListener('DOMContentLoaded', () => {
     attachLogNotesHandler();
 
     detailsDeleteButton(config.delete);
-
-    $('#is_variable').on('change', function () {
-        const isVariable = $(this).val();
-        const $chargeInput = $('#charge_value');
-
-        if (isVariable === 'Yes') {
-            $chargeInput.val(0);
-            $chargeInput.prop('readonly', true);
-        } else {
-            $chargeInput.prop('readonly', false);
-        }
-    });
 });

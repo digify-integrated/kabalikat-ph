@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Warehouse;
 use App\Models\WarehouseType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -43,6 +44,13 @@ class WarehouseTypeController extends Controller
         } else {
             $warehouseType = WarehouseType::query()->create($payload);
         }
+
+        Warehouse::query()
+            ->where('warehouse_type_id', $warehouseType->id)
+            ->update([
+                'warehouse_type_name' => $warehouseType->warehouse_type_name,
+                'last_log_by' => Auth::id(),
+            ]);
 
         $link = route('apps.details', [
             'appId' => $pageAppId,

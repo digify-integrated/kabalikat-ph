@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Unit;
 use App\Models\UnitType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -43,6 +44,13 @@ class UnitTypeController extends Controller
         } else {
             $unitType = UnitType::query()->create($payload);
         }
+
+        Unit::query()
+            ->where('unit_type_id', $unitType->id)
+            ->update([
+                'unit_type_name' => $unitType->unit_type_name,
+                'last_log_by' => Auth::id(),
+            ]);
 
         $link = route('apps.details', [
             'appId' => $pageAppId,

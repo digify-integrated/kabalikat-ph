@@ -3,6 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\City;
+use App\Models\PurchaseOrder;
+use App\Models\StockBatch;
+use App\Models\StockLevel;
+use App\Models\StockMovement;
+use App\Models\StockTransfer;
 use App\Models\Warehouse;
 use App\Models\WarehouseType;
 use Illuminate\Http\Request;
@@ -81,6 +86,48 @@ class WarehouseController extends Controller
         } else {
             $warehouse = Warehouse::query()->create($payload);
         }
+
+        StockLevel::query()
+            ->where('warehouse_id', $warehouse->id)
+            ->update([
+                'warehouse_name' => $warehouse->warehouse_name,
+                'last_log_by' => Auth::id(),
+            ]);
+
+        StockBatch::query()
+            ->where('warehouse_id', $warehouse->id)
+            ->update([
+                'warehouse_name' => $warehouse->warehouse_name,
+                'last_log_by' => Auth::id(),
+            ]);
+
+        StockTransfer::query()
+            ->where('from_warehouse_id', $warehouse->id)
+            ->update([
+                'from_warehouse_name' => $warehouse->warehouse_name,
+                'last_log_by' => Auth::id(),
+            ]);
+
+        StockTransfer::query()
+            ->where('to_warehouse_id', $warehouse->id)
+            ->update([
+                'to_warehouse_name' => $warehouse->warehouse_name,
+                'last_log_by' => Auth::id(),
+            ]);
+
+        StockMovement::query()
+            ->where('warehouse_id', $warehouse->id)
+            ->update([
+                'warehouse_name' => $warehouse->warehouse_name,
+                'last_log_by' => Auth::id(),
+            ]);
+
+        PurchaseOrder::query()
+            ->where('warehouse_id', $warehouse->id)
+            ->update([
+                'warehouse_name' => $warehouse->warehouse_name,
+                'last_log_by' => Auth::id(),
+            ]);
 
         $link = route('apps.details', [
             'appId' => $pageAppId,

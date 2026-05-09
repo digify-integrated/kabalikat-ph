@@ -8,7 +8,7 @@
         <div class="card-body">
             <form id="company_form" method="post" action="#" novalidate>
                 @csrf
-                <div class="row row-cols-1 row-cols-sm-3 rol-cols-md-3 row-cols-lg-3">
+                <div class="row">
                     <div class="col">
                         <div class="fv-row mb-4">
                             <label class="fs-6 fw-semibold required form-label mt-3" for="company_name">
@@ -39,7 +39,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="row row-cols-1 row-cols-sm-3 rol-cols-md-3 row-cols-lg-3">
+                <div class="row">
                     <div class="col">
                         <div class="fv-row mb-4">
                             <label class="fs-6 fw-semibold form-label mt-3" for="tax_id">
@@ -70,7 +70,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="row row-cols-1 row-cols-sm-3 rol-cols-md-3 row-cols-lg-3">
+                <div class="row">
                     <div class="col">
                         <div class="fv-row mb-4">
                             <label class="fs-6 fw-semibold form-label mt-3" for="telephone">

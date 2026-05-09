@@ -6,8 +6,8 @@ import { generateDropdownOptions } from '../../form/field.js';
 document.addEventListener('DOMContentLoaded', () => {
     const config = {
         table: {
-            url: '/charge-type/generate-table',
-            selector: '#charge-type-table',
+            url: '/discount-type/generate-table',
+            selector: '#discount-type-table',
             serverSide: false,
             ajaxData: () => ({
                 filter_by_value_type: $('#filter_by_value_type').val(),
@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 { data: 'CHARGE_VALUE' },
                 { data: 'IS_VARIABLE' },
                 { data: 'APPLICATION_ORDER' },
-                { data: 'TAX_TYPE' },
+                { data: 'IS_VAT_EXEMPT' },
             ],
             columnDefs: [
                 { width: '5%', bSortable: false, targets: 0, responsivePriority: 1 },
@@ -36,17 +36,17 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             addons: {
                 controls: true,
-                export: 'charge_type',
+                export: 'discount_type',
             }
         },
         delete: {
             trigger : '#delete-data',
-            url : '/charge-type/delete-multiple',
-            swalTitle : 'Confirm Multiple Charge Type Deletion',
-            swalText : 'Are you sure you want to delete these charge type?',
+            url : '/discount-type/delete-multiple',
+            swalTitle : 'Confirm Multiple Discount Type Deletion',
+            swalText : 'Are you sure you want to delete these discount type?',
             confirmButtonText : 'Delete',
-            validationMessage : 'Please select the charge type you want to delete',
-            table : '#charge-type-table'
+            validationMessage : 'Please select the discount type you want to delete',
+            table : '#discount-type-table'
         },
     }
     

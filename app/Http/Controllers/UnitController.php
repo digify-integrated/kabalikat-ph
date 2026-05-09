@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Product;
 use App\Models\Unit;
+use App\Models\UnitConversion;
 use App\Models\UnitType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -55,6 +57,28 @@ class UnitController extends Controller
         } else {
             $unit = Unit::query()->create($payload);
         }
+
+        UnitConversion::query()
+            ->where('from_unit_id', $unit->id)
+            ->update([
+                'from_unit_name' => $unit->unit_name,
+                'last_log_by' => Auth::id(),
+            ]);
+
+        UnitConversion::query()
+            ->where('to_unit_id', $unit->id)
+            ->update([
+                'to_unit_name' => $unit->unit_name,
+                'last_log_by' => Auth::id(),
+            ]);
+
+        Product::query()
+            ->where('base_unit_id', $unit->id)
+            ->update([
+                'base_unit_name' => $unit->unit_name,
+                'base_unit_abbreviation' => $unit->abbreviation,
+                'last_log_by' => Auth::id(),
+            ]);
 
         $link = route('apps.details', [
             'appId' => $pageAppId,

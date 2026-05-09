@@ -2,7 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\InventoryLot;
 use App\Models\Product;
+use App\Models\ProductAddon;
+use App\Models\ProductAttribute;
+use App\Models\ProductBOM;
+use App\Models\ProductCategoryMap;
+use App\Models\PurchaseOrderCancellations;
+use App\Models\PurchaseOrderItems;
+use App\Models\PurchaseOrderReceiptItems;
+use App\Models\StockBatchItems;
+use App\Models\StockLevel;
+use App\Models\StockMovement;
 use App\Models\Unit;
 use App\Models\UploadSetting;
 use Illuminate\Http\Request;
@@ -18,19 +29,19 @@ class ProductController extends Controller
     public function save(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'product_id'            => ['nullable', 'integer'],
-            'product_name'          => ['required', 'string'],
-            'sku'                   => ['nullable', 'string'],
-            'barcode'               => ['nullable', 'string'],
-            'product_type'          => ['required', 'string'],
-            'product_status'        => ['required', 'string'],
-            'tax_classification'    => ['required', 'string'],
-            'base_price'            => ['required', 'numeric'],
-            'cost_price'            => ['required', 'numeric'],
-            'base_unit_id'          => ['required', 'integer', Rule::exists('unit', 'id')],
-            'inventory_flow'        => ['required', 'string'],
-            'reorder_level'         => ['required', 'numeric'],
-            'product_description'   => ['nullable', 'string'],
+            'product_id' => ['nullable', 'integer'],
+            'product_name' => ['required', 'string'],
+            'sku' => ['nullable', 'string'],
+            'barcode' => ['nullable', 'string'],
+            'product_type' => ['required', 'string'],
+            'product_status' => ['required', 'string'],
+            'tax_classification' => ['required', 'string'],
+            'base_price' => ['required', 'numeric'],
+            'cost_price' => ['required', 'numeric'],
+            'base_unit_id' => ['required', 'integer', Rule::exists('unit', 'id')],
+            'inventory_flow' => ['required', 'string'],
+            'reorder_level' => ['required', 'numeric'],
+            'product_description' => ['nullable', 'string'],
         ]);
 
         if ($validator->fails()) {
@@ -83,6 +94,104 @@ class ProductController extends Controller
             $product = Product::query()->create($payload);
         }
 
+        Product::query()
+            ->where('parent_product_id', $product->id)
+            ->update([
+                'parent_product_name' => $product->product_name,
+                'last_log_by' => Auth::id(),
+            ]);
+
+        ProductCategoryMap::query()
+            ->where('product_id', $product->id)
+            ->update([
+                'product_name' => $product->product_name,
+                'last_log_by' => Auth::id(),
+            ]);
+
+        ProductAttribute::query()
+            ->where('product_id', $product->id)
+            ->update([
+                'product_name' => $product->product_name,
+                'last_log_by' => Auth::id(),
+            ]);
+
+        ProductBOM::query()
+            ->where('product_id', $product->id)
+            ->update([
+                'product_name' => $product->product_name,
+                'last_log_by' => Auth::id(),
+            ]);
+
+        ProductBOM::query()
+            ->where('bom_product_id', $product->id)
+            ->update([
+                'bom_product_name' => $product->product_name,
+                'last_log_by' => Auth::id(),
+            ]);
+
+        ProductAddon::query()
+            ->where('product_id', $product->id)
+            ->update([
+                'product_name' => $product->product_name,
+                'last_log_by' => Auth::id(),
+            ]);
+
+        ProductAddon::query()
+            ->where('addon_product_id', $product->id)
+            ->update([
+                'addon_product_name' => $product->product_name,
+                'last_log_by' => Auth::id(),
+            ]);
+
+        InventoryLot::query()
+            ->where('product_id', $product->id)
+            ->update([
+                'product_name' => $product->product_name,
+                'last_log_by' => Auth::id(),
+            ]);
+
+        StockLevel::query()
+            ->where('product_id', $product->id)
+            ->update([
+                'product_name' => $product->product_name,
+                'last_log_by' => Auth::id(),
+            ]);
+
+        StockBatchItems::query()
+            ->where('product_id', $product->id)
+            ->update([
+                'product_name' => $product->product_name,
+                'last_log_by' => Auth::id(),
+            ]);
+
+        StockMovement::query()
+            ->where('product_id', $product->id)
+            ->update([
+                'product_name' => $product->product_name,
+                'last_log_by' => Auth::id(),
+            ]);
+
+        PurchaseOrderItems::query()
+            ->where('product_id', $product->id)
+            ->update([
+                'product_name' => $product->product_name,
+                'last_log_by' => Auth::id(),
+            ]);
+
+        PurchaseOrderReceiptItems::query()
+            ->where('product_id', $product->id)
+            ->update([
+                'product_name' => $product->product_name,
+                'last_log_by' => Auth::id(),
+            ]);
+
+        PurchaseOrderCancellations::query()
+            ->where('product_id', $product->id)
+            ->update([
+                'product_name' => $product->product_name,
+                'last_log_by' => Auth::id(),
+            ]);
+
         $link = route('apps.details', [
             'appId' => $pageAppId,
             'navigationMenuId' => $pageNavigationMenuId,
@@ -105,17 +214,12 @@ class ProductController extends Controller
         $product = Product::findOrFail($request->product_id);
 
         DB::transaction(function () use ($product) {
-
-            // 1. Get attribute values grouped
             $groupedValues = $this->getGroupedAttributeValues($product->id);
 
-            // 🔥 DO NOT RETURN HERE
             if (!empty($groupedValues)) {
 
-                // 2. Generate combinations
                 $combinations = $this->generateCombinations($groupedValues);
 
-                // 3. Get existing signatures
                 $existing = Product::where('parent_product_id', $product->id)
                     ->pluck('variant_signature')
                     ->toArray();
@@ -162,11 +266,9 @@ class ProductController extends Controller
                     Product::insert($variantsToInsert);
                 }
 
-                // Duplicate BOM only if variants exist
                 $this->duplicateBomToVariants($product->id);
             }
 
-            // ✅ ALWAYS RUN THIS (critical fix)
             $this->activateOnlyCompleteVariants($product->id);
         });
 
@@ -215,14 +317,12 @@ class ProductController extends Controller
 
     private function duplicateBomToVariants(int $parentId): void
     {
-        // Get parent BOM once
         $bomItems = DB::table('product_bom')
             ->where('product_id', $parentId)
             ->get();
 
         if ($bomItems->isEmpty()) return;
 
-        // Get all variants
         $variants = DB::table('product')
             ->where('parent_product_id', $parentId)
             ->pluck('id', 'product_name');
@@ -245,7 +345,6 @@ class ProductController extends Controller
             }
         }
 
-        // Avoid duplicates (optional but recommended)
         if (!empty($insert)) {
             DB::table('product_bom')->insert($insert);
         }
@@ -260,7 +359,6 @@ class ProductController extends Controller
             ->values()
             ->toArray();
 
-        // If no attributes → deactivate ALL variants
         if (empty($attributeIds)) {
             DB::table('product')
                 ->where('parent_product_id', $parentId)

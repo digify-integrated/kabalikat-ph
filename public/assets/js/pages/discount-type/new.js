@@ -9,23 +9,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const config = {
         forms: [
             {
-                selector: '#charge_type_form',
+                selector: '#discount_type_form',
                 rules: {
                     rules: {
-                        charge_type_name: { required: true},
+                        discount_type_name: { required: true},
                         value_type: { required: true},
-                        charge_value: { required: true},
+                        discount_value: { required: true},
                         is_variable: { required: true},
                         application_order: { required: true},
-                        tax_type: { required: true},
+                        is_vat_exempt: { required: true},
                     },
                     messages: {
-                        charge_type_name: { required: 'Enter the charge type' },
+                        discount_type_name: { required: 'Enter the discount type' },
                         value_type: { required: 'Choose the value type' },
-                        charge_value: { required: 'Enter the charge value' },
+                        discount_value: { required: 'Enter the discount value' },
                         is_variable: { required: 'Choose if is variable' },
                         application_order: { required: 'Choose the application order' },
-                        tax_type: { required: 'Choose the tax type' },
+                        is_vat_exempt: { required: 'Choose the if is VAT exempt' },
                     },
                     submitHandler: async (form) => {
                         const ctx = getPageContext();
@@ -36,13 +36,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         disableButton('submit-data');
 
                         try {
-                            const response = await fetch('/charge-type/save', {
+                            const response = await fetch('/discount-type/save', {
                                 method: 'POST',
                                 body: formData
                             });
 
                             if (!response.ok) {
-                                throw new Error(`Save charge type failed with status: ${response.status}`);
+                                throw new Error(`Save discount type failed with status: ${response.status}`);
                             }
 
                             const data = await response.json();
@@ -72,13 +72,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     $('#is_variable').on('change', function () {
         const isVariable = $(this).val();
-        const $chargeInput = $('#charge_value');
+        const $discountInput = $('#discount_value');
 
         if (isVariable === 'Yes') {
-            $chargeInput.val(0);
-            $chargeInput.prop('readonly', true);
+            $discountInput.val(0);
+            $discountInput.prop('readonly', true);
         } else {
-            $chargeInput.prop('readonly', false);
+            $discountInput.prop('readonly', false);
         }
     });
 });

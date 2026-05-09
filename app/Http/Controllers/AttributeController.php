@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Attribute;
 use App\Models\AttributeValue;
+use App\Models\ProductAttribute;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -48,6 +49,13 @@ class AttributeController extends Controller
         }
 
         AttributeValue::query()
+            ->where('attribute_id', $attribute->id)
+            ->update([
+                'attribute_name' => $attribute->attribute_name,
+                'last_log_by' => Auth::id(),
+            ]);
+
+        ProductAttribute::query()
             ->where('attribute_id', $attribute->id)
             ->update([
                 'attribute_name' => $attribute->attribute_name,

@@ -3,29 +3,20 @@ import { showNotification, setNotification } from '../../util/notifications.js';
 import { disableButton, enableButton, discardCreate } from '../../form/button.js';
 import { handleSystemError } from '../../util/system-errors.js';
 import { getPageContext } from '../../form/form.js';
-import { generateDropdownOptions } from '../../form/field.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const config = {
         forms: [
             {
-                selector: '#charge_type_form',
+                selector: '#attribute_form',
                 rules: {
                     rules: {
-                        charge_type_name: { required: true},
-                        value_type: { required: true},
-                        charge_value: { required: true},
-                        is_variable: { required: true},
-                        application_order: { required: true},
-                        tax_type: { required: true},
+                        attribute_name: { required: true},
+                        selection_type: { required: true },
                     },
                     messages: {
-                        charge_type_name: { required: 'Enter the charge type' },
-                        value_type: { required: 'Choose the value type' },
-                        charge_value: { required: 'Enter the charge value' },
-                        is_variable: { required: 'Choose if is variable' },
-                        application_order: { required: 'Choose the application order' },
-                        tax_type: { required: 'Choose the tax type' },
+                        attribute_name: { required: 'Enter the display name' },
+                        selection_type: { required: 'Choose the selection type' },
                     },
                     submitHandler: async (form) => {
                         const ctx = getPageContext();
@@ -36,13 +27,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         disableButton('submit-data');
 
                         try {
-                            const response = await fetch('/charge-type/save', {
+                            const response = await fetch('/attribute/save', {
                                 method: 'POST',
                                 body: formData
                             });
 
                             if (!response.ok) {
-                                throw new Error(`Save charge type failed with status: ${response.status}`);
+                                throw new Error(`Save attribute failed with status: ${response.status}`);
                             }
 
                             const data = await response.json();
@@ -69,16 +60,4 @@ document.addEventListener('DOMContentLoaded', () => {
     discardCreate();
 
     config.forms.map((cfg) => initValidation(cfg.selector, cfg.rules));
-
-    $('#is_variable').on('change', function () {
-        const isVariable = $(this).val();
-        const $chargeInput = $('#charge_value');
-
-        if (isVariable === 'Yes') {
-            $chargeInput.val(0);
-            $chargeInput.prop('readonly', true);
-        } else {
-            $chargeInput.prop('readonly', false);
-        }
-    });
 });

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\City;
+use App\Models\PurchaseOrder;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -72,6 +73,13 @@ class SupplierController extends Controller
         } else {
             $supplier = Supplier::query()->create($payload);
         }
+
+        PurchaseOrder::query()
+            ->where('supplier_id', $supplier->id)
+            ->update([
+                'supplier_name' => $supplier->supplier_name,
+                'last_log_by' => Auth::id(),
+            ]);
 
         $link = route('apps.details', [
             'appId' => $pageAppId,
