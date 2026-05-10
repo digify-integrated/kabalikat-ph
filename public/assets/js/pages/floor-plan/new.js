@@ -8,15 +8,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const config = {
         forms: [
             {
-                selector: '#attribute_form',
+                selector: '#floor_plan_form',
                 rules: {
                     rules: {
-                        attribute_name: { required: true},
-                        selection_type: { required: true },
+                        floor_plan_name: { required: true},
                     },
                     messages: {
-                        attribute_name: { required: 'Enter the display name' },
-                        selection_type: { required: 'Choose the selection type' },
+                        floor_plan_name: { required: 'Enter the display name' },
                     },
                     submitHandler: async (form) => {
                         const ctx = getPageContext();
@@ -27,13 +25,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         disableButton('submit-data');
 
                         try {
-                            const response = await fetch('/attribute/save', {
+                            const response = await fetch('/floor-plan/save', {
                                 method: 'POST',
                                 body: formData
                             });
 
                             if (!response.ok) {
-                                throw new Error(`Save attribute failed with status: ${response.status}`);
+                                throw new Error(`Save floor plan failed with status: ${response.status}`);
                             }
 
                             const data = await response.json();

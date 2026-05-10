@@ -99,15 +99,17 @@
                                 </select>
                             </div>
                             <div class="card-toolbar">
-                                <div class="d-flex justify-content-end" data-kt-customer-table-toolbar="base">
-                                    <button type="button"
-                                        class="btn btn-light-primary me-3"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#attribute-value-modal"
-                                        id="add-attribute-value">
-                                        <i class="ki-outline ki-plus fs-2"></i> Add
-                                    </button>
-                                </div>
+                                @if($canWrite)
+                                    <div class="d-flex justify-content-end" data-kt-customer-table-toolbar="base">
+                                        <button type="button"
+                                            class="btn btn-light-primary me-3"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#attribute-value-modal"
+                                            id="add-attribute-value">
+                                            <i class="ki-outline ki-plus fs-2"></i> Add
+                                        </button>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                         <div class="card-body pt-9">
@@ -145,7 +147,7 @@
                                 Value
                             </label>
                             <div class="col-lg-9">
-                                <input type="text" class="form-control" id="attribute_value" name="attribute_value" maxlength="100" autocomplete="off" @disabled(!$canWrite)>
+                                <input type="text" class="form-control" id="attribute_value" name="attribute_value" maxlength="100" autocomplete="off">
                             </div>
                         </div>
                     </form>

@@ -51,6 +51,8 @@
 
                         </div>
                     @endif
+                    
+                    @include('partials.datatable-buttons')
                 </div>
                 <div>
                     <button type="button" class="btn btn-light-primary me-3" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end"><i class="ki-outline ki-filter fs-2"></i> Filter</button>

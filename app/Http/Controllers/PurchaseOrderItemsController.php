@@ -10,6 +10,7 @@ use App\Models\PurchaseOrderItems;
 use App\Models\PurchaseOrderReceiptItems;
 use App\Models\StockLevel;
 use App\Models\StockMovement;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -123,26 +124,77 @@ class PurchaseOrderItemsController extends Controller
 
             $referenceNumber = $purchaseOrder->reference_number;
 
-            /*
+           /*
             |--------------------------------------------------------------------------
-            | Create Inventory Lot
+            | Normalize Values
             |--------------------------------------------------------------------------
             */
 
-            $lot = InventoryLot::firstOrCreate(
-                [
-                    'product_id'      => $productId,
-                    'batch_number'    => $validated['batch_number'] ?? null,
-                    'cost_per_unit'   => $validated['cost_per_unit'],
-                    'expiration_date' => $validated['expiration_date'] ?? null,
-                ],
-                [
-                    'product_name'  => $productName,
-                    'received_date' => $validated['received_date'],
-                    'last_log_by'   => Auth::id(),
-                ]
+            $batchNumber = !empty($validated['batch_number'])
+                ? trim($validated['batch_number'])
+                : null;
+
+            $costPerUnit = number_format(
+                (float) $validated['cost_per_unit'],
+                2,
+                '.',
+                ''
             );
 
+            $expirationDate = !empty($validated['expiration_date'])
+                ? Carbon::parse($validated['expiration_date'])->format('Y-m-d')
+                : null;
+
+            /*
+            |--------------------------------------------------------------------------
+            | Find Existing Lot First
+            |--------------------------------------------------------------------------
+            */
+
+            $lot = InventoryLot::query()
+
+                ->where('product_id', $productId)
+
+                ->where(function ($query) use ($batchNumber) {
+
+                    if ($batchNumber === null) {
+                        $query->whereNull('batch_number');
+                    } else {
+                        $query->where('batch_number', $batchNumber);
+                    }
+                })
+
+                ->where('cost_per_unit', $costPerUnit)
+
+                ->where(function ($query) use ($expirationDate) {
+
+                    if ($expirationDate === null) {
+                        $query->whereNull('expiration_date');
+                    } else {
+                        $query->whereDate('expiration_date', $expirationDate);
+                    }
+                })
+
+                ->first();
+
+            /*
+            |--------------------------------------------------------------------------
+            | Create Lot If Not Existing
+            |--------------------------------------------------------------------------
+            */
+
+            if (!$lot) {
+
+                $lot = InventoryLot::create([
+                    'product_id'      => $productId,
+                    'product_name'    => $productName,
+                    'batch_number'    => $batchNumber,
+                    'cost_per_unit'   => $costPerUnit,
+                    'expiration_date' => $expirationDate,
+                    'received_date'   => $validated['received_date'],
+                    'last_log_by'     => Auth::id(),
+                ]);
+            }
             /*
             |--------------------------------------------------------------------------
             | Create / Update Stock Level

@@ -10,6 +10,11 @@ import { initializeExportFeature } from '../util/export.js';
  * - Avoids re-binding handlers on every draw
  */
 
+const getFormattedExportTitle = () => {
+  const today = new Date().toISOString().split('T')[0]; // yyyy-mm-dd
+  return `${document.title} Export ${today}`;
+};
+
 const dtByNode = new WeakMap();
 
 const getTableNode = (selectorOrNode) => {
@@ -149,6 +154,13 @@ export const initializeDatatable = ({
 
   const csrf = getCsrfToken();
 
+  // ========================================
+  // Detect custom export UI automatically
+  // ========================================
+  const exportWrapper = document.querySelector('.table-export');
+  const enableExport =
+    !!exportWrapper || addons?.export;
+
   const dt = $(table).DataTable({
     serverSide,
     processing,
@@ -168,6 +180,49 @@ export const initializeDatatable = ({
     columnDefs,
     lengthMenu,
 
+    // ========================================
+    // DataTable Export Buttons
+    // ========================================
+
+    buttons: enableExport
+    ? [
+        {
+          extend: 'csvHtml5',
+          title: getFormattedExportTitle(),
+          exportOptions: {
+            columns: ':visible',
+          },
+          className: 'd-none buttons-csv',
+        },
+        {
+          extend: 'pdfHtml5',
+          title: getFormattedExportTitle(),
+          exportOptions: {
+            columns: ':visible',
+          },
+          className: 'd-none buttons-pdf',
+          orientation: 'landscape',
+          pageSize: 'A4',
+        },
+        {
+          extend: 'excelHtml5',
+          title: getFormattedExportTitle(),
+          exportOptions: {
+            columns: ':visible',
+          },
+          className: 'd-none buttons-excel',
+        },
+        {
+          extend: 'print',
+          title: getFormattedExportTitle(),
+          exportOptions: {
+            columns: ':visible',
+          },
+          className: 'd-none buttons-print',
+        },
+      ]
+    : [],
+
     ajax: {
       url,
       type: 'POST',
@@ -175,9 +230,17 @@ export const initializeDatatable = ({
       headers: csrf ? { 'X-CSRF-Token': csrf } : {},
       data: (d) => {
         const ctx = getPageContext();
+
         const extra =
-          typeof ajaxData === 'function' ? ajaxData(d) : ajaxData || {};
-        return { ...d, ...extra, ...ctx };
+          typeof ajaxData === 'function'
+            ? ajaxData(d)
+            : ajaxData || {};
+
+        return {
+          ...d,
+          ...extra,
+          ...ctx,
+        };
       },
       dataSrc: serverSide ? 'data' : '',
       error: (xhr, status, err) =>
@@ -197,30 +260,45 @@ export const initializeDatatable = ({
     },
 
     initComplete: function () {
-      // ✅ Fix layout once on init
+      // ========================================
+      // Fix layout once on init
+      // ========================================
       dt.columns.adjust();
 
-      // ===============================
-      // Addons
-      // ===============================
+      // ========================================
+      // Bind custom export UI
+      // ========================================
+      if (enableExport) {
+        bindCustomExportButtons(dt);
+      }
 
+      // ========================================
+      // Addons
+      // ========================================
       if (addons?.controls) {
         const tableRef =
-          typeof addons.controls === 'object' && addons.controls?.table
+          typeof addons.controls === 'object' &&
+          addons.controls?.table
             ? addons.controls.table
             : selector;
+
         initializeDatatableControls(tableRef);
       }
 
       if (addons?.export) {
         const exportRef =
-          typeof addons.export === 'object' && addons.export?.table
+          typeof addons.export === 'object' &&
+          addons.export?.table
             ? addons.export.table
             : addons.export;
+
         initializeExportFeature(exportRef);
       }
 
-      if (addons?.subControls && typeof addons.subControls === 'object') {
+      if (
+        addons?.subControls &&
+        typeof addons.subControls === 'object'
+      ) {
         const {
           searchSelector,
           lengthSelector,
@@ -241,7 +319,7 @@ export const initializeDatatable = ({
   dtByNode.set(table, dt);
 
   // ========================================
-  // 🧠 GLOBAL EVENT BINDING (ONLY ONCE)
+  // GLOBAL EVENT BINDING (ONLY ONCE)
   // ========================================
   if (!globalDtEventsBound) {
     globalDtEventsBound = true;
@@ -249,30 +327,47 @@ export const initializeDatatable = ({
     const adjustAllTables = () => {
       $('.dataTable').each(function () {
         if ($.fn.DataTable.isDataTable(this)) {
-          $(this).DataTable().columns.adjust().draw(false);
+          $(this)
+            .DataTable()
+            .columns.adjust()
+            .draw(false);
         }
       });
     };
 
     // Bootstrap events
-    document.addEventListener('shown.bs.tab', adjustAllTables);
-    document.addEventListener('shown.bs.modal', adjustAllTables);
-    document.addEventListener('shown.bs.collapse', adjustAllTables);
+    document.addEventListener(
+      'shown.bs.tab',
+      adjustAllTables
+    );
 
-    // ResizeObserver (debounced)
+    document.addEventListener(
+      'shown.bs.modal',
+      adjustAllTables
+    );
+
+    document.addEventListener(
+      'shown.bs.collapse',
+      adjustAllTables
+    );
+
+    // ResizeObserver
     if (window.ResizeObserver) {
       let resizeTimeout;
 
       resizeObserverInstance = new ResizeObserver(() => {
         clearTimeout(resizeTimeout);
+
         resizeTimeout = setTimeout(() => {
           adjustAllTables();
         }, 100);
       });
 
-      document.querySelectorAll('.dataTables_wrapper').forEach((el) => {
-        resizeObserverInstance.observe(el);
-      });
+      document
+        .querySelectorAll('.dataTables_wrapper')
+        .forEach((el) => {
+          resizeObserverInstance.observe(el);
+        });
     }
   }
 
@@ -281,20 +376,80 @@ export const initializeDatatable = ({
   // ========================================
   if (typeof onRowClick === 'function') {
     const tbody = table.tBodies?.[0];
+
     if (tbody) {
-      const ns = `.dtRowClick_${table.id || selector.replace(/[^a-z0-9]/gi, '')}`;
+      const ns = `.dtRowClick_${
+        table.id || selector.replace(/[^a-z0-9]/gi, '')
+      }`;
+
       $(tbody)
         .off(ns)
-        .on(`click${ns}`, 'td:nth-child(n+2)', function () {
-          const rowData = dt.row(this.closest('tr')).data();
-          if (rowData) onRowClick(rowData);
-        });
+        .on(
+          `click${ns}`,
+          'td:nth-child(n+2)',
+          function () {
+            const rowData = dt
+              .row(this.closest('tr'))
+              .data();
+
+            if (rowData) {
+              onRowClick(rowData);
+            }
+          }
+        );
     }
   }
 
   return dt;
 };
 
+// =====================================================
+// Custom Export Button Binder
+// =====================================================
+const bindCustomExportButtons = (dt) => {
+  // Prevent duplicate bindings
+  $(document).off('click.dtExport');
+
+  // CSV
+  $(document).on(
+    'click.dtExport',
+    '.export-csv',
+    function (e) {
+      e.preventDefault();
+      dt.button('.buttons-csv').trigger();
+    }
+  );
+
+  // PDF
+  $(document).on(
+    'click.dtExport',
+    '.export-pdf',
+    function (e) {
+      e.preventDefault();
+      dt.button('.buttons-pdf').trigger();
+    }
+  );
+
+  // Excel
+  $(document).on(
+    'click.dtExport',
+    '.export-excel',
+    function (e) {
+      e.preventDefault();
+      dt.button('.buttons-excel').trigger();
+    }
+  );
+
+  // Print
+  $(document).on(
+    'click.dtExport',
+    '.export-print',
+    function (e) {
+      e.preventDefault();
+      dt.button('.buttons-print').trigger();
+    }
+  );
+};
 
 /** Bind checkbox handlers once globally (fast, delegated) */
 let checkboxHandlersBound = false;

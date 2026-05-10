@@ -14,7 +14,6 @@
 
             <div class="card-toolbar">
                 <div class="d-flex justify-content-end" data-kt-customer-table-toolbar="base">
-
                     @if(($deletePermission ?? 0) > 0 || ($exportPermission ?? 0) > 0)
                         <a href="#"
                         class="btn btn-light-primary btn-flex btn-center btn-active-light-primary show menu-dropdown action-dropdown me-3 d-none"
@@ -51,6 +50,8 @@
 
                         </div>
                     @endif
+                    
+                    @include('partials.datatable-buttons')
                 </div>
                 <div>
                     <button type="button" class="btn btn-light-primary me-3" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end"><i class="ki-outline ki-filter fs-2"></i> Filter</button>

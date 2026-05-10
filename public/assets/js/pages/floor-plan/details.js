@@ -19,33 +19,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const config = {
         forms: [
             {
-                selector: '#attribute_form',
+                selector: '#floor_plan_form',
                 rules: {
                     rules: {
-                        attribute_name: { required: true},
-                        selection_type: { required: true },
+                        floor_plan_name: { required: true},
                     },
                     messages: {
-                        attribute_name: { required: 'Enter the display name' },
-                        selection_type: { required: 'Choose the selection type' },
+                        floor_plan_name: { required: 'Enter the display name' },
                     },
                     submitHandler: async (form) => {
                         const ctx2 = getPageContext();
                         const formData = new URLSearchParams(new FormData(form));
-                        formData.append('attribute_id', ctx2.detailId ?? '');
+                        formData.append('floor_plan_id', ctx2.detailId ?? '');
                         formData.append('appId', ctx2.appId ?? '');
                         formData.append('navigationMenuId', ctx2.navigationMenuId ?? '');
 
                         disableButton('submit-data');
 
                         try {
-                            const response = await fetch('/attribute/save', {
+                            const response = await fetch('/floor-plan/save', {
                                 method: 'POST',
                                 body: formData,
                             });
 
                             if (!response.ok) {
-                                throw new Error(`Save attribute failed with status: ${response.status}`);
+                                throw new Error(`Save floor plan failed with status: ${response.status}`);
                             }
 
                             const data = await response.json();
@@ -64,37 +62,39 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             },
             {
-                selector: '#attribute_value_form',
+                selector: '#floor_plan_value_form',
                 rules: {
-                     rules: {
-                        attribute_value: { required: true},
+                    rules: {
+                        table_number: { required: true},
+                        seats: { required: true},
                     },
                     messages: {
-                        attribute_value: { required: 'Enter the value' },
+                        table_number: { required: 'Enter the table number' },
+                        seats: { required: 'Enter the seats' },
                     },
                     submitHandler: async (form) => {
                         const formData = new URLSearchParams(new FormData(form));
-                        formData.append('attribute_id', ctx.detailId ?? '');
+                        formData.append('floor_plan_id', ctx.detailId ?? '');
                         formData.append('appId', ctx.appId ?? '');
                         formData.append('navigationMenuId', ctx.navigationMenuId ?? '');
 
-                        disableButton('submit-attribute-value');
+                        disableButton('submit-floor-plan-tables');
 
                         try {
-                            const response = await fetch('/attribute-value/save', {
+                            const response = await fetch('/floor-plan-tables/save', {
                                 method: 'POST',
                                 body: formData,
                             });
 
                             if (!response.ok) {
-                                throw new Error(`Save attribute value failed with status: ${response.status}`);
+                                throw new Error(`Save floor plan table failed with status: ${response.status}`);
                             }
 
                             const data = await response.json();
 
                             if (data.success) {
-                                reloadDatatable('#attribute-value-table');
-                                $('#attribute-value-modal').modal('hide');
+                                reloadDatatable('#floor-plan-tables-table');
+                                $('#floor-plan-tables-modal').modal('hide');
                                 showNotification(data.message, 'success');
                             } else {
                                 showNotification(data.message);
@@ -102,19 +102,19 @@ document.addEventListener('DOMContentLoaded', () => {
                         } catch (error) {
                             handleSystemError(error, 'fetch_failed', `Fetch request failed: ${error.message}`);
                         } finally {
-                            enableButton('submit-attribute-value');
+                            enableButton('submit-floor-plan-tables');
                         }
                     },
                 }
             },
         ],
         table: {
-            url: '/attribute-value/generate-table',
-            selector: '#attribute-value-table',
+            url: '/floor-plan-tables/generate-table',
+            selector: '#floor-plan-tables-table',
             serverSide: false,
             order: [[0, 'asc']],
             ajaxData: {
-                attribute_id: ctx.detailId,
+                floor_plan_id: ctx.detailId,
                 page_navigation_menu_id: ctx.navigationMenuId,
             },
             columns: [
@@ -127,53 +127,51 @@ document.addEventListener('DOMContentLoaded', () => {
             ],
             addons: {
                 subControls: {
-                    searchSelector: '#attribute-value-datatable-search',
-                    lengthSelector: '#attribute-value-datatable-length',
+                    searchSelector: '#floor-plan-tables-datatable-search',
+                    lengthSelector: '#floor-plan-tables-datatable-length',
                 },
             },
         },
         details: [
             {
-                url: '/attribute/fetch-details',
-                formSelector: '#attribute_form',
+                url: '/floor-plan/fetch-details',
+                formSelector: '#floor_plan_form',
                 busyHideTargets: ['#submit-data'],
                 onSuccess: async (data) => {
-                    document.getElementById('attribute_name').value = data.attributeName || '';
-
-                    $('#selection_type').val(data.selectionType).trigger('change');
+                    document.getElementById('floor_plan_name').value = data.floorPlanName || '';
 
                     await optionsPromise;
                 },
             }
         ],
         delete: {
-            trigger: '#delete-attribute',
-            url: '/attribute/delete',
+            trigger: '#delete-floor-plan',
+            url: '/floor-plan/delete',
             swalTitle: 'Confirm Attribute Deletion',
-            swalText: 'Are you sure you want to delete this attribute?',
+            swalText: 'Are you sure you want to delete this floor plan?',
             confirmButtonText: 'Delete',
         },
         table_action: {
-            trigger: '.delete-attribute-value',
-            url: '/attribute-value/delete',
-            table: '#attribute-value-table',
+            trigger: '.delete-floor-plan-tables',
+            url: '/floor-plan-tables/delete',
+            table: '#floor-plan-tables-table',
             swalTitle: 'Confirm Attribute Value Deletion',
-            swalText: 'Are you sure you want to delete this attribute value?',
+            swalText: 'Are you sure you want to delete this floor plan table?',
             confirmButtonText: 'Delete'
         },
         permission_toggle: {
-            trigger: '.update-attribute-value',
-            url: '/attribute-value/update',
+            trigger: '.update-floor-plan-tables',
+            url: '/floor-plan-tables/update',
         },
         lognotes: {
-            trigger: '.view-attribute-value-log-notes',
-            table: 'attribute_value'
+            trigger: '.view-floor-plan-tables-log-notes',
+            table: 'floor_plan_value'
         }
     };
 
     (async () => {
         try {
-        const attributeValueTablePromise = Promise.resolve().then(() =>
+        const floorPlanTablesTablePromise = Promise.resolve().then(() =>
             initializeDatatable(config.table)
         );
 
@@ -183,7 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         await Promise.all([
             fetchDetailsPromise,
-            attributeValueTablePromise,
+            floorPlanTablesTablePromise,
         ]);
         } catch (err) {
             handleSystemError(err, 'init_failed', `Initialization failed: ${err.message}`);
@@ -202,9 +200,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('click', async (event) => {
         const target = event.target;
 
-        const addAttributeValueBtn = target.closest('#add-attribute-value');
-        if (addAttributeValueBtn) {
-            resetForm('attribute_value_form');
+        const addFloorPlanTablesBtn = target.closest('#add-floor-plan-tables');
+        if (addFloorPlanTablesBtn) {
+            resetForm('floor_plan_value_form');
         }
     });
 });

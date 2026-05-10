@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Attribute;
+use App\Models\FloorPlan;
+use App\Models\FloorPlanTable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -14,9 +15,8 @@ class FloorPlanController extends Controller
     public function save(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'attribute_id' => ['nullable', 'integer'],
-            'attribute_name' => ['required', 'string', 'max:255'],
-            'selection_type' => ['required', 'string', 'max:255']
+            'floor_plan_id' => ['nullable', 'integer'],
+            'floor_plan_name' => ['required', 'string', 'max:255'],
         ]);
 
         if ($validator->fails()) {
@@ -32,50 +32,42 @@ class FloorPlanController extends Controller
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
 
         $payload = [
-            'attribute_name' => $validated['attribute_name'],
-            'selection_type' => $validated['selection_type'],
+            'floor_plan_name' => $validated['floor_plan_name'],
             'last_log_by' => Auth::id(),
         ];
 
-        $attributeId = $validated['attribute_id'] ?? null;
+        $floorPlanId = $validated['floor_plan_id'] ?? null;
 
-        if ($attributeId && Attribute::query()->whereKey($attributeId)->exists()) {
-            $attribute = Attribute::query()->findOrFail($attributeId);
-            $attribute->update($payload);
+        if ($floorPlanId && FloorPlan::query()->whereKey($floorPlanId)->exists()) {
+            $floorPlan = FloorPlan::query()->findOrFail($floorPlanId);
+            $floorPlan->update($payload);
         } else {
-            $attribute = Attribute::query()->create($payload);
+            $floorPlan = FloorPlan::query()->create($payload);
         }
 
-        AttributeValue::query()
-            ->where('attribute_id', $attribute->id)
+        FloorPlanTable::query()
+            ->where('floor_plan_id', $floorPlan->id)
             ->update([
-                'attribute_name' => $attribute->attribute_name,
-                'last_log_by' => Auth::id(),
-            ]);
-
-        ProductAttribute::query()
-            ->where('attribute_id', $attribute->id)
-            ->update([
-                'attribute_name' => $attribute->attribute_name,
+                'floor_plan_name' => $floorPlan->floor_plan_name,
                 'last_log_by' => Auth::id(),
             ]);
 
         $link = route('apps.details', [
             'appId' => $pageAppId,
             'navigationMenuId' => $pageNavigationMenuId,
-            'details_id' => $attribute->id,
+            'details_id' => $floorPlan->id,
         ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'The attribute has been saved successfully',
+            'message' => 'The floor plan has been saved successfully',
             'redirect_link' => $link,
         ]);
     }
     public function delete(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'detailId' => ['required', 'integer', 'min:1', Rule::exists('attribute', 'id')],
+            'detailId' => ['required', 'integer', 'min:1', Rule::exists('floor_plan', 'id')],
         ]);
 
         $pageAppId = (int) $request->input('appId');
@@ -91,9 +83,9 @@ class FloorPlanController extends Controller
         $detailId = (int) $validator->validated()['detailId'];
 
         DB::transaction(function () use ($detailId) {
-            $attribute = Attribute::query()->select(['id'])->findOrFail($detailId);
+            $floorPlan = FloorPlan::query()->select(['id'])->findOrFail($detailId);
 
-            $attribute->delete();
+            $floorPlan->delete();
         });        
 
         $link = route('apps.base', [
@@ -103,7 +95,7 @@ class FloorPlanController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'The attribute has been deleted successfully',
+            'message' => 'The floor plan has been deleted successfully',
             'redirect_link' => $link,
         ]);
     }
@@ -112,18 +104,18 @@ class FloorPlanController extends Controller
     {
         $validated = $request->validate([
             'selected_id'   => ['required', 'array', 'min:1'],
-            'selected_id.*' => ['integer', 'distinct', Rule::exists('attribute', 'id')],
+            'selected_id.*' => ['integer', 'distinct', Rule::exists('floor_plan', 'id')],
         ]);
 
         $ids = $validated['selected_id'];
 
         DB::transaction(function () use ($ids) {
-            Attribute::query()->whereIn('id', $ids)->delete();
+            FloorPlan::query()->whereIn('id', $ids)->delete();
         });
 
         return response()->json([
             'success' => true,
-            'message' => 'The selected attributes have been deleted successfully',
+            'message' => 'The selected floor plans have been deleted successfully',
         ]);
     }
 
@@ -146,11 +138,11 @@ class FloorPlanController extends Controller
 
         $validated = $validator->validated();
 
-        $attribute = DB::table('attribute')
+        $floorPlan = DB::table('floor_plan')
             ->where('id', $validated['detailId'])
             ->first();
 
-        if (!$attribute) {
+        if (!$floorPlan) {
             $link = route('apps.base', [
                 'appId' => $pageAppId,
                 'navigationMenuId' => $pageNavigationMenuId,
@@ -160,7 +152,7 @@ class FloorPlanController extends Controller
                 'success'  => false,
                 'notExist' => true,
                 'redirect_link' => $link,
-                'message'  => 'Attribute not found',
+                'message'  => 'Floor plan not found',
             ]);
         }
         
@@ -168,8 +160,7 @@ class FloorPlanController extends Controller
         return response()->json([
             'success' => true,
             'notExist' => false,
-            'attributeName' => $attribute->attribute_name ?? null,
-            'selectionType' => $attribute->selection_type ?? null
+            'floorPlanName' => $floorPlan->floor_plan_name ?? null
         ]);
     }
 
@@ -178,29 +169,27 @@ class FloorPlanController extends Controller
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
 
-        $attributes = DB::table('attribute')
-        ->orderBy('attribute_name')
+        $floorPlans = DB::table('floor_plan')
+        ->orderBy('floor_plan_name')
         ->get();
 
-        $response = $attributes->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
-            $attributeId = $row->id;
-            $attributeName = $row->attribute_name;
-            $selectionType = $row->selection_type;
+        $response = $floorPlans->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
+            $floorPlanId = $row->id;
+            $floorPlanName = $row->floor_plan_name;
 
             $link = route('apps.details', [
                 'appId' => $pageAppId,
                 'navigationMenuId' => $pageNavigationMenuId,
-                'details_id' => $attributeId,
+                'details_id' => $floorPlanId,
             ]);
 
             return [
                 'CHECK_BOX' => '
                     <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                        <input class="form-check-input datatable-checkbox-children" type="checkbox" value="'.$attributeId.'">
+                        <input class="form-check-input datatable-checkbox-children" type="checkbox" value="'.$floorPlanId.'">
                     </div>
                 ',
-                'ATTRIBUTE' => $attributeName,
-                'SELECTION_TYPE' => $selectionType,
+                'FLOOR_PLAN' => $floorPlanName,
                 'LINK' => $link,
             ];
         })->values();
@@ -208,9 +197,9 @@ class FloorPlanController extends Controller
         return response()->json($response);
     }
 
-    public function generateProductAttributeOptions(Request $request)
+    public function generateShowRegisterFloorPlanOptions(Request $request)
     {
-        $productId = $request->input('product_id');
+        $showRegisterId = $request->input('shop_register_id');
         $multiple = filter_var($request->input('multiple', false), FILTER_VALIDATE_BOOLEAN);
 
         $response = collect();
@@ -222,20 +211,20 @@ class FloorPlanController extends Controller
             ]);
         }
 
-        $attributes = DB::table('attribute')
-            ->select(['id', 'attribute_name'])
-            ->whereNotIn('id', function ($query) use ($productId) {
-                $query->select('attribute_id')
-                    ->from('product_attribute')
-                    ->where('product_id', $productId);
+        $floorPlans = DB::table('floor_plan')
+            ->select(['id', 'floor_plan_name'])
+            ->whereNotIn('id', function ($query) use ($showRegisterId) {
+                $query->select('floor_plan_id')
+                    ->from('shop_register')
+                    ->where('shop_register_id', $showRegisterId);
             })
-            ->orderBy('attribute_name')
+            ->orderBy('floor_plan_name')
             ->get();
 
         $response = $response->concat(
-            $attributes->map(fn ($row) => [
+            $floorPlans->map(fn ($row) => [
                 'id'   => $row->id,
-                'text' => $row->attribute_name,
+                'text' => $row->floor_plan_name,
             ])
         )->values();
 
