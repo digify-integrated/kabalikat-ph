@@ -9,29 +9,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const config = {
         forms: [
             {
-                selector: '#product_form',
+                selector: '#shop_register_form',
                 rules: {
                     rules: {
-                        product_name: { required: true},
-                        product_type: { required: true},
-                        product_status: { required: true},
-                        tax_classification: { required: true},
-                        base_price: { required: true},
-                        cost_price: { required: true},
-                        base_unit_id: { required: true},
-                        inventory_flow: { required: true},
-                        reorder_level: { required: true},
+                        shop_register_name: { required: true},
+                        company_id: { required: true},
+                        is_restaurant: { required: true},
+                        shop_register_status: { required: true},
                     },
                     messages: {
-                        product_name: { required: 'Enter the product name' },
-                        product_type: { required: 'Choose the product type' },
-                        product_status: { required: 'Choose the product status' },
-                        tax_classification: { required: 'Choose the tax classification' },
-                        base_price: { required: 'Enter the base price' },
-                        cost_price: { required: 'Enter the cost price' },
-                        base_unit_id: { required: 'Choose the base unit' },
-                        inventory_flow: { required: 'Choose the inventory flow' },
-                        reorder_level: { required: 'Enter the reorder level' },
+                        shop_register_name: { required: 'Enter the shop register name' },
+                        company_id: { required: 'Choose the company' },
+                        is_restaurant: { required: 'Choose if resturant' },
+                        shop_register_status: { required: 'Choose the shop register status' },
                     },
                     submitHandler: async (form) => {
                         const ctx = getPageContext();
@@ -42,13 +32,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         disableButton('submit-data');
 
                         try {
-                            const response = await fetch('/products/save', {
+                            const response = await fetch('/shop-register/save', {
                                 method: 'POST',
                                 body: formData
                             });
 
                             if (!response.ok) {
-                                throw new Error(`Save product failed with status: ${response.status}`);
+                                throw new Error(`Save shop register failed with status: ${response.status}`);
                             }
 
                             const data = await response.json();
@@ -71,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         ],
         dropdown: [
-            { url: '/unit/generate-options', dropdownSelector: '#base_unit_id' }
+            { url: '/company/generate-options', dropdownSelector: '#company_id' }
         ]
     }
 

@@ -15,7 +15,7 @@
             <div class="card-toolbar">
                 <div class="d-flex justify-content-end" data-kt-customer-table-toolbar="base">
 
-                    @if(($deletePermission ?? 0) > 0 || ($exportPermission ?? 0) > 0)
+                    @if(($deletePermission ?? 0) > 0 || ($exportPermission ?? 0) > 0 || ($activateUser ?? false) === true || ($deactivateUser ?? false) === true)
                         <a href="#"
                         class="btn btn-light-primary btn-flex btn-center btn-active-light-primary show menu-dropdown action-dropdown me-3 d-none"
                         data-kt-menu-trigger="click"
@@ -87,7 +87,7 @@
 
         <div class="card-body pt-9">
             <div class="table-responsive">
-                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5" id="shop-register-table">
+                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5" id="product-table">
                     <thead>
                         <tr class="text-start text-gray-800 fw-bold fs-7 text-uppercase gs-0">
                             <th>
@@ -95,9 +95,12 @@
                                     <input class="form-check-input" id="datatable-checkbox" type="checkbox">
                                 </div>
                             </th>
-                            <th>Shop Register</th>
-                            <th>Company</th>
-                            <th>Is Restaurant?</th>
+                            <th>Product</th>
+                            <th>SKU</th>
+                            <th>Barcode</th>
+                            <th>Parent Product</th>
+                            <th>Type</th>
+                            <th>Price</th>
                             <th>Status</th>
                         </tr>
                     </thead>
@@ -120,4 +123,3 @@
         <script type="module" src="{{ asset('assets/js/pages/' . $jsFile . '.js') }}"></script>
     @endif
 @endpush
-

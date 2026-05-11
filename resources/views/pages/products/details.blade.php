@@ -13,7 +13,7 @@
 
     <div class="row">
         <div class="col-lg-4">
-            <div class="card card-flush mb-6">
+            <div class="card card-flush mb-5">
                 <div class="card-body text-center">
                     <div class="image-input image-input-outline" data-kt-image-input="true">
                         <div
@@ -173,7 +173,7 @@
                 </li>
             </ul>
             <div class="tab-content">
-                <div class="tab-content" id="product_account_tab_content">
+                <div class="tab-content" id="product_tab_content">
                     <div class="tab-pane fade active show" id="overview_tab" role="tabpanel">
                         <div class="card mb-5">
                             <form id="product_form" method="post" action="#" novalidate>

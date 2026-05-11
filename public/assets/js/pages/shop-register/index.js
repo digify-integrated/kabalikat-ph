@@ -1,24 +1,24 @@
 import { initializeDatatable } from '../../util/datatable.js';
 import { multipleActionButton } from '../../form/button.js';
 import { checkNotification } from '../../util/notifications.js';
+import { generateDropdownOptions } from '../../form/field.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const config = {
         table: {
-            url: '/products/generate-table',
-            selector: '#product-table',
+            url: '/shop-register/generate-table',
+            selector: '#shop-register-table',
             serverSide: false,
             ajaxData: () => ({
-                filter_by_product_status: $('#filter_by_product_status').val()
+                filter_by_company: $('#filter_by_company').val(),
+                filter_by_is_restaurant: $('#filter_by_is_restaurant').val(),
+                filter_by_status: $('#filter_by_status').val(),
             }),
             columns: [
                 { data: 'CHECK_BOX' },
-                { data: 'PRODUCT' },
-                { data: 'SKU' },
-                { data: 'BARCODE' },
-                { data: 'PARENT_PRODUCT' },
-                { data: 'PRODUCT_TYPE' },
-                { data: 'BASE_PRICE' },
+                { data: 'SHOP_REGISTER' },
+                { data: 'COMPANY' },
+                { data: 'IS_RESTAURANT' },
                 { data: 'STATUS' },
             ],
             columnDefs: [
@@ -26,30 +26,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 { width: 'auto', targets: 1, responsivePriority: 2 },
                 { width: 'auto', targets: 2, responsivePriority: 3 },
                 { width: 'auto', targets: 3, responsivePriority: 4 },
-                { width: 'auto', targets: 4, responsivePriority: 5 },
-                { width: 'auto', targets: 5, responsivePriority: 6 },
-                { width: 'auto', targets: 6, responsivePriority: 7 },
-                { width: 'auto', targets: 7, responsivePriority: 8 },
             ],
             onRowClick: (rowData) => {
                 if (rowData?.LINK) window.open(rowData.LINK, '_blank');
             },
             addons: {
                 controls: true,
-                export: 'product',
+                export: 'shop_register',
             }
         },
         action: [
             {
                 trigger : '#delete-data',
-                url : '/product/delete-multiple',
-                swalTitle : 'Confirm Multiple Product Deletion',
-                swalText : 'Are you sure you want to delete these product?',
+                url : '/shop-register/delete-multiple',
+                swalTitle : 'Confirm Multiple Shop Register Deletion',
+                swalText : 'Are you sure you want to delete these shop register?',
                 confirmButtonText : 'Delete',
-                validationMessage : 'Please select the products you want to delete',
-                table : '#product-table'
+                validationMessage : 'Please select the shop registers you want to delete',
+                table : '#shop-register-table'
             },
         ],
+        dropdown: [
+            { url: '/company/generate-options', dropdownSelector: '#filter_by_company', data: { multiple : true } },
+        ]
     }
     
     checkNotification();
@@ -57,6 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeDatatable(config.table);
 
     config.action.forEach((cfg) => multipleActionButton(cfg));
+    config.dropdown.map((cfg) => generateDropdownOptions(cfg));
 
     document.addEventListener('click', async (event) => {
         if (event.target.closest('#apply-filter')) {
@@ -64,8 +64,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (event.target.closest('#reset-filter')) {
-            $('#filter_by_product_type').val(null).trigger('change');
-            $('#filter_by_product_status').val('Active').trigger('change');
+            $('#filter_by_company').val(null).trigger('change');
+            $('#filter_by_is_restaurant').val(null).trigger('change');
+            $('#filter_by_status').val('Active').trigger('change');
 
             initializeDatatable(config.table);
         }

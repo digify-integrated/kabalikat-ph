@@ -14,33 +14,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const config = {
         forms: [
             {
-                selector: '#product_form',
+                selector: '#shop_register_form',
                 rules: {
                     rules: {
-                        product_name: { required: true},
-                        product_type: { required: true},
-                        product_status: { required: true},
-                        tax_classification: { required: true},
-                        base_price: { required: true},
-                        cost_price: { required: true},
-                        base_unit_id: { required: true},
-                        inventory_flow: { required: true},
-                        reorder_level: { required: true},
+                        shop_register_name: { required: true},
+                        company_id: { required: true},
+                        is_restaurant: { required: true},
+                        shop_register_status: { required: true},
                     },
                     messages: {
-                        product_name: { required: 'Enter the product name' },
-                        product_type: { required: 'Choose the product type' },
-                        product_status: { required: 'Choose the product status' },
-                        tax_classification: { required: 'Choose the tax classification' },
-                        base_price: { required: 'Enter the base price' },
-                        cost_price: { required: 'Enter the cost price' },
-                        base_unit_id: { required: 'Choose the base unit' },
-                        inventory_flow: { required: 'Choose the inventory flow' },
-                        reorder_level: { required: 'Enter the reorder level' },
+                        shop_register_name: { required: 'Enter the shop register name' },
+                        company_id: { required: 'Choose the company' },
+                        is_restaurant: { required: 'Choose if resturant' },
+                        shop_register_status: { required: 'Choose the shop register status' },
                     },
                     submitHandler: async (form) => {
                         const formData = new URLSearchParams(new FormData(form));
-                        formData.append('product_id', ctx.detailId ?? '');
+                        formData.append('shop_register_id', ctx.detailId ?? '');
                         formData.append('appId', ctx.appId ?? '');
                         formData.append('navigationMenuId', ctx.navigationMenuId ?? '');
 
@@ -72,17 +62,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
             },
             {
-                selector: '#attribute_form',
+                selector: '#floor_plan_form',
                 rules: {
                     rules: {
-                        attribute_id: { required: true},
+                        floor_plan_id: { required: true},
                     },
                     messages: {
-                        attribute_id: { required: 'Choose the product type' },
+                        floor_plan_id: { required: 'Choose the product type' },
                     },
                     submitHandler: async (form) => {
                         const formData = new URLSearchParams(new FormData(form));
-                        formData.append('product_id', ctx.detailId ?? '');
+                        formData.append('shop_register_id', ctx.detailId ?? '');
                         formData.append('appId', ctx.appId ?? '');
                         formData.append('navigationMenuId', ctx.navigationMenuId ?? '');
             
@@ -116,21 +106,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             },
             {
-                selector: '#bom_form',
+                selector: '#discount_form',
                 rules: {
                     rules: {
-                        bom_product_id: { required: true},
+                        discount_shop_register_id: { required: true},
                         quantity: { required: true},
                         stock_policy: { required: true},
                     },
                     messages: {
-                        bom_product_id: { required: 'Choose the component product' },
+                        discount_shop_register_id: { required: 'Choose the component product' },
                         quantity: { required: 'Enter the required quantity' },
                         stock_policy: { required: 'Choose the stock policy' },
                     },
                     submitHandler: async (form) => {
                         const formData = new URLSearchParams(new FormData(form));
-                        formData.append('product_id', ctx.detailId ?? '');
+                        formData.append('shop_register_id', ctx.detailId ?? '');
                         formData.append('appId', ctx.appId ?? '');
                         formData.append('navigationMenuId', ctx.navigationMenuId ?? '');
             
@@ -164,26 +154,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             },
             {
-                selector: '#addon_form',
+                selector: '#charge_form',
                 rules: {
                     rules: {
-                        addon_product_id: { required: true},
+                        charge_shop_register_id: { required: true},
                         max_quantity: { required: true},
                     },
                     messages: {
-                        addon_product_id: { required: 'Choose the add-on product' },
+                        charge_shop_register_id: { required: 'Choose the add-on product' },
                         max_quantity: { required: 'Enter the max quantity' },
                     },
                     submitHandler: async (form) => {
                         const formData = new URLSearchParams(new FormData(form));
-                        formData.append('product_id', ctx.detailId ?? '');
+                        formData.append('shop_register_id', ctx.detailId ?? '');
                         formData.append('appId', ctx.appId ?? '');
                         formData.append('navigationMenuId', ctx.navigationMenuId ?? '');
             
-                        disableButton('submit-addon');
+                        disableButton('submit-charge');
             
                         try {
-                            const response = await fetch('/product-addon/save', {
+                            const response = await fetch('/product-charge/save', {
                                 method: 'POST',
                                 body: formData,
                             });
@@ -195,8 +185,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             const data = await response.json();
             
                             if (data.success) {
-                                reloadDatatable('#addon-table');
-                                $('#addon-modal').modal('hide');
+                                reloadDatatable('#charge-table');
+                                $('#charge-modal').modal('hide');
                                 showNotification(data.message, 'success');
                             } else {
                                 showNotification(data.message);
@@ -204,7 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         } catch (error) {
                             handleSystemError(error, 'fetch_failed', `Fetch request failed: ${error.message}`);
                         } finally {
-                            enableButton('submit-addon');
+                            enableButton('submit-charge');
                         }
                     },
                 }
@@ -217,7 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 serverSide: false,
                 order: [[0, 'asc']],
                 ajaxData: {
-                    product_id: ctx.detailId,
+                    shop_register_id: ctx.detailId,
                     page_navigation_menu_id: ctx.navigationMenuId,
                 },
                  columns: [
@@ -230,7 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     { width: 'auto', targets: 1, responsivePriority: 2 },
                     { width: 'auto', bSortable: false, targets: 2, responsivePriority: 3 },
                 ],
-                addons: {
+                charges: {
                     subControls: {
                         searchSelector: '#attribute-datatable-search',
                         lengthSelector: '#attribute-datatable-length',
@@ -243,7 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 serverSide: false,
                 order: [[0, 'asc']],
                 ajaxData: {
-                    product_id: ctx.detailId,
+                    shop_register_id: ctx.detailId,
                     page_navigation_menu_id: ctx.navigationMenuId,
                 },
                  columns: [
@@ -254,7 +244,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     { width: 'auto', targets: 0, responsivePriority: 1 },
                     { width: 'auto', bSortable: false, targets: 1, responsivePriority: 2 },
                 ],
-                addons: {
+                charges: {
                     subControls: {
                         searchSelector: '#variation-datatable-search',
                         lengthSelector: '#variation-datatable-length',
@@ -267,7 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 serverSide: false,
                 order: [[0, 'asc']],
                 ajaxData: {
-                    product_id: ctx.detailId,
+                    shop_register_id: ctx.detailId,
                     page_navigation_menu_id: ctx.navigationMenuId,
                 },
                  columns: [
@@ -282,7 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     { width: 'auto', targets: 2, responsivePriority: 3 },
                     { width: 'auto', bSortable: false, targets: 3, responsivePriority: 4 },
                 ],
-                addons: {
+                charges: {
                     subControls: {
                         searchSelector: '#bom-datatable-search',
                         lengthSelector: '#bom-datatable-length',
@@ -290,12 +280,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
             },
             {
-                url: '/product-addon/generate-table',
-                selector: '#addon-table',
+                url: '/product-charge/generate-table',
+                selector: '#charge-table',
                 serverSide: false,
                 order: [[0, 'asc']],
                 ajaxData: {
-                    product_id: ctx.detailId,
+                    shop_register_id: ctx.detailId,
                     page_navigation_menu_id: ctx.navigationMenuId,
                 },
                  columns: [
@@ -308,10 +298,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     { width: 'auto', targets: 1, responsivePriority: 2 },
                     { width: 'auto', bSortable: false, targets: 2, responsivePriority: 3 },
                 ],
-                addons: {
+                charges: {
                     subControls: {
-                        searchSelector: '#addon-datatable-search',
-                        lengthSelector: '#addon-datatable-length',
+                        searchSelector: '#charge-datatable-search',
+                        lengthSelector: '#charge-datatable-length',
                     },
                 },
             },
@@ -319,38 +309,21 @@ document.addEventListener('DOMContentLoaded', () => {
         details:[
             {
                 url: '/products/fetch-details',
-                formSelector: '#product_form',
+                formSelector: '#shop_register_form',
                 busyHideTargets: ['#submit-data'],
                 onSuccess: async (data) => {
-                    document.getElementById('product_name').value = data.productName || '';
-                    document.getElementById('sku').value = data.sku || '';
-                    document.getElementById('barcode').value = data.barcode || '';
-                    document.getElementById('base_price').value = data.basePrice || 0;
-                    document.getElementById('cost_price').value = data.costPrice || 0;
-                    document.getElementById('reorder_level').value = data.reorderLevel || 0;
-                    document.getElementById('product_description').value = data.productDescription || '';
-                    
-                    const thumbnail = document.getElementById('product_image_thumbnail');
-                    if (thumbnail) thumbnail.style.backgroundImage = `url(${data.productImage || ''})`;
+                    document.getElementById('shop_register_name').value = data.shopRegisterName || '';
 
                     await optionsPromise;
                     
-                    $('#product_type').val(data.productType ?? '').trigger('change');
-                    $('#product_status').val(data.productStatus ?? 'Active').trigger('change');
-                    $('#tax_classification').val(data.taxClassification ?? '').trigger('change');
-                    $('#base_unit_id').val(data.baseUnitId ?? '').trigger('change');
-                    $('#inventory_flow').val(data.inventoryFlow ?? '').trigger('change');
-                    $('#product_category_id').val(data.productCategoryId ?? '').trigger('change');
-
-                    document.getElementById('track-inventory').checked = data.trackInventory === 'Yes';
-                    document.getElementById('is-addon').checked = data.isAddon === 'Yes';
-                    document.getElementById('show-on-pos').checked = data.showOnPos === 'Yes';
-                    document.getElementById('is-purchasable').checked = data.isPurchasable === 'Yes';
+                    $('#company_id').val(data.companyId ?? '').trigger('change');
+                    $('#is_restaurant').val(data.isRestaurant ?? 'No').trigger('change');
+                    $('#shop_register_status').val(data.shopRegisterStatus ?? 'Active').trigger('change');
                 },
             },
         ],
         delete: {
-            trigger: '#delete-product',
+            trigger: '#delete-shop-register',
             url: '/products/delete',
             swalTitle: 'Confirm User Deletion',
             swalText: 'Are you sure you want to delete this product?',
@@ -374,56 +347,54 @@ document.addEventListener('DOMContentLoaded', () => {
                 confirmButtonText: 'Delete'
             },
             {
-                trigger: '.delete-addon',
-                url: '/product-addon/delete',
-                table: '#addon-table',
+                trigger: '.delete-charge',
+                url: '/product-charge/delete',
+                table: '#charge-table',
                 swalTitle: 'Confirm Add-on Deletion',
                 swalText: 'Are you sure you want to delete this add-on?',
                 confirmButtonText: 'Delete'
             },
         ],
-        upload: {
-            trigger: '#product_image',
-            url: '/products/upload-product-image',
-        },
         lognotes: [
             {
-                trigger: '.view-attribute-log-notes',
-                table: 'product_attribute'
+                trigger: '.view-floor-plan-log-notes',
+                table: 'shop_register_floor_plan'
             },
             {
-                trigger: '.view-bom-log-notes',
-                table: 'product_bom'
+                trigger: '.view-discount-log-notes',
+                table: 'shop_register_discount'
             },
             {
-                trigger: '.view-addon-log-notes',
-                table: 'product_addon'
+                trigger: '.view-charge-log-notes',
+                table: 'shop_register_charge'
             },
         ],
         dropdown: [
-            { url: '/unit/generate-options', dropdownSelector: '#base_unit_id' },
-            { url: '/product-category/generate-options', dropdownSelector: '#product_category_id', data : { product_id : ctx.detailId, multiple: true } }
+            { url: '/company/generate-options', dropdownSelector: '#company_id' },
+            { url: '/warehouse/generate-options', dropdownSelector: '#warehouse_id', data : { multiple: true } },
+            { url: '/payment-method/generate-options', dropdownSelector: '#payment_method_id', data : { multiple: true } },
+            { url: '/user/generate-options', dropdownSelector: '#access', data : { multiple: true } },
         ],
         attributeDropdown: {
-            url: '/attribute/generate-product-attribute-options',
-            dropdownSelector: '#attribute_id',
+            url: '/attribute/generate-shop-register-attribute-options',
+            dropdownSelector: '#floor_plan_id',
             data : {
-                product_id : ctx.detailId,
+                shop_register_id : ctx.detailId,
                 multiple: true
             }
         },
         bomDropdown: {
-            url: '/products/generate-product-bom-options',
-            dropdownSelector: '#bom_product_id',
+            url: '/products/generate-shop-register-bom-options',
+            dropdownSelector: '#discount_shop_register_id',
             data : {
-                product_id : ctx.detailId,
+                shop_register_id : ctx.detailId,
             }
         },
-        addonDropdown: {
-            url: '/products/generate-product-addon-options',
-            dropdownSelector: '#addon_product_id',
+        chargeDropdown: {
+            url: '/products/generate-shop-register-charge-options',
+            dropdownSelector: '#charge_shop_register_id',
             data : {
-                product_id : ctx.detailId,
+                shop_register_id : ctx.detailId,
             }
         },
     };
@@ -456,14 +427,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     config.table_action.map((cfg) => detailsTableActionButton(cfg));
 
-    imageRealtimeUploadButton(config.upload);
-
     document.addEventListener('click', async (event) => {
         const target = event.target;
     
         const addAttribute = target.closest('#add-attribute');
         if (addAttribute) {
-            resetForm('attribute_form');
+            resetForm('floor_plan_form');
 
             generateDropdownOptions({
                 url: config.attributeDropdown.url,
@@ -474,7 +443,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
         const addBom = target.closest('#add-bom');
         if (addBom) {
-            resetForm('bom_form');
+            resetForm('discount_form');
 
             generateDropdownOptions({
                 url: config.bomDropdown.url,
@@ -483,14 +452,14 @@ document.addEventListener('DOMContentLoaded', () => {
             });            
         }
     
-        const addAddon = target.closest('#add-addon');
+        const addAddon = target.closest('#add-charge');
         if (addAddon) {
-            resetForm('addon_form');
+            resetForm('charge_form');
 
             generateDropdownOptions({
-                url: config.addonDropdown.url,
-                dropdownSelector: config.addonDropdown.dropdownSelector,
-                data: config.addonDropdown.data
+                url: config.chargeDropdown.url,
+                dropdownSelector: config.chargeDropdown.dropdownSelector,
+                data: config.chargeDropdown.data
             });
         }
     
@@ -503,11 +472,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 disableButton('generate-variant');
             
                 const formData = new URLSearchParams();
-                formData.append('product_id', ctx.detailId ?? '');
+                formData.append('shop_register_id', ctx.detailId ?? '');
                 formData.append('appId', ctx.appId ?? '');
                 formData.append('navigationMenuId', ctx.navigationMenuId ?? '')
             
-                const response = await fetch('/products/save-product-variation', {
+                const response = await fetch('/products/save-shop-register-variation', {
                     method: 'POST',
                     body: formData,
                     headers: {
@@ -552,11 +521,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const formData = new URLSearchParams();
                 formData.append('setting', setting);
                 formData.append('value', value);
-                formData.append('product_id', ctx.detailId ?? '');
+                formData.append('shop_register_id', ctx.detailId ?? '');
                 formData.append('appId', ctx.appId ?? '');
                 formData.append('navigationMenuId', ctx.navigationMenuId ?? '')
             
-                const response = await fetch('/products/save-product-setting', {
+                const response = await fetch('/products/save-shop-register-setting', {
                     method: 'POST',
                     body: formData,
                     headers: {
@@ -579,15 +548,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    $('#product_category_id').on('change', async function () {
+    $('#shop_register_category_id').on('change', async function () {
         try {
             const productCategoryId = $(this).val();
             const csrf = getCsrfToken();
             const ctx = getPageContext();
             
             const formData = new URLSearchParams();
-            formData.append('product_category_id', productCategoryId);
-            formData.append('product_id', ctx.detailId ?? '');
+            formData.append('shop_register_category_id', productCategoryId);
+            formData.append('shop_register_id', ctx.detailId ?? '');
             formData.append('appId', ctx.appId ?? '');
             formData.append('navigationMenuId', ctx.navigationMenuId ?? '');
             

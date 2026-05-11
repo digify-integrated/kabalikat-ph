@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Company;
+use App\Models\ShopRegister;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -15,19 +17,11 @@ class ShopRegisterController extends Controller
     public function save(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'product_id' => ['nullable', 'integer'],
-            'product_name' => ['required', 'string'],
-            'sku' => ['nullable', 'string'],
-            'barcode' => ['nullable', 'string'],
-            'product_type' => ['required', 'string'],
-            'product_status' => ['required', 'string'],
-            'tax_classification' => ['required', 'string'],
-            'base_price' => ['required', 'numeric'],
-            'cost_price' => ['required', 'numeric'],
-            'base_unit_id' => ['required', 'integer', Rule::exists('unit', 'id')],
-            'inventory_flow' => ['required', 'string'],
-            'reorder_level' => ['required', 'numeric'],
-            'product_description' => ['nullable', 'string'],
+            'shop_register_id' => ['nullable', 'integer'],
+            'shop_register_name' => ['required', 'string'],
+            'company_id' => ['required', 'integer', Rule::exists('company', 'id')],
+            'is_restaurant' => ['required', 'string'],
+            'shop_register_status' => ['required', 'string'],
         ]);
 
         if ($validator->fails()) {
@@ -42,129 +36,29 @@ class ShopRegisterController extends Controller
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
 
-        $baseUnitId = (int) $validated['base_unit_id'];
+        $companyId = (int) $validated['company_id'];
 
-        $baseUnitName = (string) Unit::query()
-            ->whereKey($baseUnitId)
-            ->value('unit_name');
-
-        $baseUnitDetails = Unit::query()->find($baseUnitId);
-        $baseUnitName = $baseUnitDetails?->unit_name;
-        $baseUnitabbreviation = $baseUnitDetails?->abbreviation;
-        
+        $companyName = (string) Company::query()
+            ->whereKey($companyId)
+            ->value('company_name');        
 
         $payload = [
-            'product_name' => $validated['product_name'],
-            'sku' => $validated['sku'] ?? null,
-            'barcode' => $validated['barcode'] ?? null,
-            'product_type' => $validated['product_type'] ?? null,
-            'product_status' => $validated['product_status'] ?? 'Active',
-            'tax_classification' => $validated['tax_classification'] ?? null,
-            'base_price' => $validated['base_price'] ?? 0,
-            'cost_price' => $validated['cost_price'] ?? 0,
-            'base_unit_id' => $validated['base_unit_id'] ?? null,
-            'base_unit_name' => $baseUnitName,
-            'base_unit_abbreviation' => $baseUnitabbreviation,
-            'inventory_flow' => $validated['inventory_flow'] ?? null,
-            'reorder_level' => $validated['reorder_level'] ?? 0,
-            'product_description' => $validated['product_description'] ?? null,
+            'shop_register_name' => $validated['shop_register_name'],
+            'company_id' => $companyId,
+            'company_name' => $companyName,
+            'is_restaurant' => $validated['is_restaurant'] ?? 'No',
+            'shop_register_status' => $validated['shop_register_status'] ?? 'Active',
             'last_log_by' => Auth::id(),
         ];   
 
-        $product = isset($validated['product_id'])
-            ? Product::query()->find($validated['product_id'])
+        $product = isset($validated['shop_register_id'])
+            ? ShopRegister::query()->find($validated['shop_register_id'])
             : null;
 
         if ($product) {
             $product->update($payload);
         } else {
-            $product = Product::query()->create($payload);
-        }
-
-        $lastLogBy = Auth::id();
-        $productName = $product->product_name;
-        $productId = $product->id;
-
-        $updates = [
-            [
-                'model' => Product::class,
-                'where' => ['parent_product_id' => $productId],
-                'data' => ['parent_product_name' => $productName],
-            ],
-            [
-                'model' => ProductCategoryMap::class,
-                'where' => ['product_id' => $productId],
-                'data' => ['product_name' => $productName],
-            ],
-            [
-                'model' => ProductAttribute::class,
-                'where' => ['product_id' => $productId],
-                'data' => ['product_name' => $productName],
-            ],
-            [
-                'model' => ProductBOM::class,
-                'where' => ['product_id' => $productId],
-                'data' => ['product_name' => $productName],
-            ],
-            [
-                'model' => ProductBOM::class,
-                'where' => ['bom_product_id' => $productId],
-                'data' => ['bom_product_name' => $productName],
-            ],
-            [
-                'model' => ProductAddon::class,
-                'where' => ['product_id' => $productId],
-                'data' => ['product_name' => $productName],
-            ],
-            [
-                'model' => ProductAddon::class,
-                'where' => ['addon_product_id' => $productId],
-                'data' => ['addon_product_name' => $productName],
-            ],
-            [
-                'model' => InventoryLot::class,
-                'where' => ['product_id' => $productId],
-                'data' => ['product_name' => $productName],
-            ],
-            [
-                'model' => StockLevel::class,
-                'where' => ['product_id' => $productId],
-                'data' => ['product_name' => $productName],
-            ],
-            [
-                'model' => StockBatchItems::class,
-                'where' => ['product_id' => $productId],
-                'data' => ['product_name' => $productName],
-            ],
-            [
-                'model' => StockMovement::class,
-                'where' => ['product_id' => $productId],
-                'data' => ['product_name' => $productName],
-            ],
-            [
-                'model' => PurchaseOrderItems::class,
-                'where' => ['product_id' => $productId],
-                'data' => ['product_name' => $productName],
-            ],
-            [
-                'model' => PurchaseOrderReceiptItems::class,
-                'where' => ['product_id' => $productId],
-                'data' => ['product_name' => $productName],
-            ],
-            [
-                'model' => PurchaseOrderCancellations::class,
-                'where' => ['product_id' => $productId],
-                'data' => ['product_name' => $productName],
-            ],
-        ];
-
-        foreach ($updates as $update) {
-            $update['model']::query()
-                ->where($update['where'])
-                ->update([
-                    ...$update['data'],
-                    'last_log_by' => $lastLogBy,
-                ]);
+            $product = ShopRegister::query()->create($payload);
         }
 
         $link = route('apps.details', [
@@ -175,7 +69,7 @@ class ShopRegisterController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'The product has been saved successfully',
+            'message' => 'The shop register has been saved successfully',
             'redirect_link' => $link,
         ]);
     }
@@ -183,7 +77,7 @@ class ShopRegisterController extends Controller
     public function delete(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'detailId' => ['required', 'integer', 'min:1', Rule::exists('product', 'id')],
+            'detailId' => ['required', 'integer', 'min:1', Rule::exists('shop_register_id', 'id')],
         ]);
 
         $pageAppId = (int) $request->input('appId');
@@ -199,18 +93,9 @@ class ShopRegisterController extends Controller
         $detailId = (int) $validator->validated()['detailId'];
 
         DB::transaction(function () use ($detailId) {
-            $product = Product::query()->select(['id', 'product_image'])->findOrFail($detailId);
+            $shopRegister = ShopRegister::query()->select(['id'])->findOrFail($detailId);
 
-            $path = ltrim((string) $product->product_image, '/');
-            $path = Str::replaceFirst('storage/', '', $path);
-            $path = Str::replaceFirst('app/public/', '', $path);
-            $path = Str::replaceFirst('public/', '', $path);
-
-            if ($path !== '') {
-                Storage::disk('public')->delete($path);
-            }
-
-            $product->delete();
+            $shopRegister->delete();
         });        
 
         $link = route('apps.base', [
@@ -220,7 +105,7 @@ class ShopRegisterController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'The product has been deleted successfully',
+            'message' => 'The shop register has been deleted successfully',
             'redirect_link' => $link,
         ]);
     }
@@ -229,42 +114,18 @@ class ShopRegisterController extends Controller
     {
         $validated = $request->validate([
             'selected_id'   => ['required', 'array', 'min:1'],
-            'selected_id.*' => ['integer', 'distinct', Rule::exists('product', 'id')],
+            'selected_id.*' => ['integer', 'distinct', Rule::exists('shop_register', 'id')],
         ]);
 
         $ids = $validated['selected_id'];
 
         DB::transaction(function () use ($ids) {
-            $authId = Auth::id();
-
-            $ids = array_values(array_diff($ids, [$authId]));
-            if (empty($ids)) return;
-
-            $products = Product::query()
-                ->whereIn('id', $ids)
-                ->get(['id', 'product_image']);
-
-            foreach ($products as $product) {
-                $existing = (string) ($product->product_image ?? '');
-                if ($existing === '') continue;
-
-                $path = ltrim($existing, '/');
-                $path = Str::replaceFirst('storage/', '', $path);
-                $path = Str::replaceFirst('app/public/', '', $path);
-                $path = Str::replaceFirst('public/', '', $path);
-
-                if ($path !== '') {
-                    Storage::disk('public')->delete($path);
-                }
-            }
-
-            Product::query()->whereIn('id', $ids)->delete();
+            ShopRegister::query()->whereIn('id', $ids)->delete();
         });
-
 
         return response()->json([
             'success' => true,
-            'message' => 'The selected products have been deleted successfully',
+            'message' => 'The selected shop registers have been deleted successfully',
         ]);
     }
 
@@ -287,11 +148,11 @@ class ShopRegisterController extends Controller
 
         $validated = $validator->validated();
 
-        $product = DB::table('product')
+        $shopRegister = DB::table('shop_register')
             ->where('id', $validated['detailId'])
             ->first();
 
-        if (!$product) {
+        if (!$shopRegister) {
             $link = route('apps.base', [
                 'appId' => $pageAppId,
                 'navigationMenuId' => $pageNavigationMenuId,
@@ -305,39 +166,13 @@ class ShopRegisterController extends Controller
             ]);
         }
 
-        $defaultProductImage = asset('assets/media/default/upload-placeholder.png');
-        $path = trim((string) ($product->product_image ?? ''));
-
-        $productImageUrl = $path !== '' && Storage::disk('public')->exists($path)
-            ? Storage::url($path)
-            : $defaultProductImage;
-
-        $productCategoryIds = DB::table('product_category_map')
-            ->where('product_id', $product->id)
-            ->pluck('product_category_id')
-            ->toArray();
-
         return response()->json([
-            'success'               => true,
-            'notExist'              => false,
-            'productName'           => $product->product_name ?? null,
-            'sku'                   => $product->sku ?? null,
-            'barcode'               => $product->barcode ?? null,
-            'productType'           => $product->product_type ?? null,
-            'productStatus'         => $product->product_status ?? null,
-            'taxClassification'     => $product->tax_classification ?? null,
-            'basePrice'             => $product->base_price ?? null,
-            'costPrice'             => $product->cost_price ?? null,
-            'baseUnitId'            => $product->base_unit_id ?? null,
-            'inventoryFlow'         => $product->inventory_flow ?? null,
-            'reorderLevel'          => $product->reorder_level ?? null,
-            'productDescription'    => $product->product_description ?? null,
-            'trackInventory'        => $product->track_inventory ?? 'Yes',
-            'isAddon'               => $product->is_addon ?? 'No',
-            'showOnPos'             => $product->show_on_pos ?? 'No',
-            'isPurchasable'         => $product->is_purchasable ?? 'Yes',
-            'productImage'          => $productImageUrl,
-            'productCategoryId'     => $productCategoryIds,
+            'success' => true,
+            'notExist' => false,
+            'shopRegisterName' => $shopRegister->shop_register_name ?? null,
+            'companyId' => $shopRegister->company_id ?? null,
+            'isRestaurant' => $shopRegister->is_restaurant ?? 'No',
+            'shopRegisterStatus' => $shopRegister->shop_register_status ?? 'Yes',
         ]);
     }
 
@@ -345,68 +180,45 @@ class ShopRegisterController extends Controller
     {
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
-        $filterByProductType = $request->input('filter_by_product_type');
-        $filterByProductStatus = $request->input('filter_by_product_status');
+        $filterByCompany = $request->input('filter_by_company');
+        $filterByIsRestaurant = $request->input('filter_by_is_restaurant');
+        $filterByStatus = $request->input('filter_by_status');
 
-        $products = DB::table('product')
-        ->when(!empty($filterByProductType), function ($q) use ($filterByProductType) {
-            $q->where('product_type', $filterByProductType);
+        $products = DB::table('shop_register')
+        ->when(!empty($filterByCompany), fn($q) => $q->whereIn('company_id', $filterByCompany))
+        ->when(!empty($filterByIsRestaurant), function ($q) use ($filterByIsRestaurant) {
+            $q->where('is_restaurant', $filterByIsRestaurant);
         })
-        ->when(!empty($filterByProductStatus), function ($q) use ($filterByProductStatus) {
-            $q->where('product_status', $filterByProductStatus);
+        ->when(!empty($filterByStatus), function ($q) use ($filterByStatus) {
+            $q->where('shop_register_status', $filterByStatus);
         })
-        ->orderBy('product_name')
+        ->orderBy('shop_register_name')
         ->get();
 
         $response = $products->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
-            $productId = $row->id;
-            $productName = $row->product_name;
-            $productDescription = $row->product_description;
-            $parentProductName = $row->parent_product_name ?? '--';
-            $sku = $row->sku ?? '--';
-            $barcode = $row->barcode ?? '--';
-            $productType = $row->product_type;
-            $basePrice = $row->base_price;
-            $productStatus = $row->product_status;
-            $class = $productStatus === 'Active' ? 'success' : 'danger';
-            $activeBadge = "<span class=\"badge badge-light-{$class}\">{$productStatus}</span>";
-            
-            $defaultProductImage = asset('assets/media/default/upload-placeholder.png');
-
-            $path = trim((string) ($row->product_image ?? ''));
-
-            $productImageLUrl = $path !== '' && Storage::disk('public')->exists($path)
-                ? Storage::url($path)
-                : $defaultProductImage;
+            $shopRegisterId = $row->id;
+            $shopRegisterName = $row->shop_register_name;
+            $companyName = $row->company_name;
+            $isRestaurant = $row->is_restaurant ?? 'No';
+            $shopRegisterStatus = $row->shop_register_status;
+            $class = $shopRegisterStatus === 'Active' ? 'success' : 'danger';
+            $activeBadge = "<span class=\"badge badge-light-{$class}\">{$shopRegisterStatus}</span>";
 
             $link = route('apps.details', [
                 'appId' => $pageAppId,
                 'navigationMenuId' => $pageNavigationMenuId,
-                'details_id' => $productId,
+                'details_id' => $shopRegisterId,
             ]);
 
             return [
                 'CHECK_BOX' => '
                     <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                        <input class="form-check-input datatable-checkbox-children" type="checkbox" value="'.$productId.'">
+                        <input class="form-check-input datatable-checkbox-children" type="checkbox" value="'.$shopRegisterId.'">
                     </div>
                 ',
-                'PRODUCT' => '
-                    <div class="d-flex align-items-center">
-                        <img src="'.$productImageLUrl.'" alt="product-image" width="45" />
-                        <div class="ms-3">
-                            <div class="user-meta-info">
-                                <h6 class="mb-0">'.$productName.'</h6>
-                                <small class="text-wrap fs-7 text-gray-500">'.$productDescription.'</small>
-                            </div>
-                        </div>
-                    </div>
-                ',
-                'SKU' => $sku,
-                'BARCODE' => $barcode,
-                'PARENT_PRODUCT' => $parentProductName,
-                'PRODUCT_TYPE' => $productType,
-                'BASE_PRICE' => number_format($basePrice, 2),
+                'SHOP_REGISTER' => $shopRegisterName,
+                'COMPANY' => $companyName,
+                'IS_RESTAURANT' => $isRestaurant,
                 'STATUS' => $activeBadge,
                 'LINK' => $link,
             ];

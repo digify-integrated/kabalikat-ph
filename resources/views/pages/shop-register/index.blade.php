@@ -59,20 +59,24 @@
                         </div>
                         <div class="separator border-gray-200"></div>
                         <div class="px-7 py-5">
+                             <div class="mb-5">
+                                <label class="form-label fs-6 fw-semibold" for="filter_by_company">Filter By Company:</label>
+                                <select id="filter_by_company" multiple="multiple" class="form-select" data-control="select2" data-allow-clear="false"></select>
+                            </div>
                             <div class="mb-5">
-                                <label class="form-label fs-6 fw-semibold" for="filter_by_product_type">Filter By Type:</label>
-                                <select id="filter_by_product_type" class="form-select" data-control="select2" data-allow-clear="false">
+                                <label class="form-label fs-6 fw-semibold" for="filter_by_is_restaurant">Filter By Is Restaunrant:</label>
+                                <select id="filter_by_is_restaurant" class="form-select" data-control="select2" data-allow-clear="false">
                                     <option value="">--</option>
-                                    <option value="Goods">Goods</option>
-                                    <option value="Service">Service</option>
+                                    <option value="Yes">Yes</option>
+                                    <option value="No">No</option>
                                 </select>
                             </div>
                             <div class="mb-5">
-                                <label class="form-label fs-6 fw-semibold" for="filter_by_product_status">Filter By Status:</label>
-                                <select id="filter_by_product_status" class="form-select" data-control="select2" data-allow-clear="false">
+                                <label class="form-label fs-6 fw-semibold" for="filter_by_status">Filter By Status:</label>
+                                <select id="filter_by_status" class="form-select" data-control="select2" data-allow-clear="false">
                                     <option value="">--</option>
                                     <option value="Active" selected>Active</option>
-                                    <option value="Inactive">Inactive</option>
+                                    <option value="Archived">Archived</option>
                                 </select>
                             </div>
                             <div class="d-flex justify-content-end">
@@ -87,7 +91,7 @@
 
         <div class="card-body pt-9">
             <div class="table-responsive">
-                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5" id="product-table">
+                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5" id="shop-register-table">
                     <thead>
                         <tr class="text-start text-gray-800 fw-bold fs-7 text-uppercase gs-0">
                             <th>
@@ -95,12 +99,9 @@
                                     <input class="form-check-input" id="datatable-checkbox" type="checkbox">
                                 </div>
                             </th>
-                            <th>Product</th>
-                            <th>SKU</th>
-                            <th>Barcode</th>
-                            <th>Parent Product</th>
-                            <th>Type</th>
-                            <th>Price</th>
+                            <th>Shop Register</th>
+                            <th>Company</th>
+                            <th>Is Restaurant</th>
                             <th>Status</th>
                         </tr>
                     </thead>

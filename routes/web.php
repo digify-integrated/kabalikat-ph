@@ -33,6 +33,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\RoleSystemActionPermissionController;
 use App\Http\Controllers\RoleUserAccountController;
+use App\Http\Controllers\ShopRegisterController;
 use App\Http\Controllers\StateController;
 use App\Http\Controllers\StockAdjustmentController;
 use App\Http\Controllers\StockAdjustmentItemsController;
@@ -780,22 +781,13 @@ Route::middleware('auth')->group(function () {
     // Shop Register
     Route::prefix('shop-register')
         ->name('shop.register.')
-        ->controller(ProductController::class)
+        ->controller(ShopRegisterController::class)
         ->group(function () {
             Route::post('/save', 'save')->name('save');
-            Route::post('/save-product-setting', 'saveProductSetting')->name('save.product.setting');
-            Route::post('/save-product-variation', 'saveProductVariation')->name('save.product.variation');
-            Route::post('/upload-product-image', 'uploadProductImage')->name('upload.product-image');
             Route::post('/delete', 'delete')->name('delete');
             Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
             Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
             Route::post('/generate-table', 'generateTable')->name('generate.table');
-            Route::post('/generate-variation-table', 'generateVariationTable')->name('generate.variation.table');
-            Route::post('/generate-options', 'generateOptions')->name('generate.options');
-            Route::post('/generate-active-product-options', 'generateActiveProductOptions')->name('generate.active.product.options');
-            Route::post('/generate-product-bom-options', 'generateBomOptions')->name('generate.bom.options');
-            Route::post('/generate-product-addon-options', 'generateAddOnOptions')->name('generate.addon.options');
-            Route::post('/generate-product-purchasable-options', 'generatePurchasableOptions')->name('generate.purchasable.options');
         });
 
     // Import
