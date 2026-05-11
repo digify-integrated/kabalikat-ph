@@ -17,7 +17,7 @@
                 <a class="nav-link text-active-primary pb-4 active" data-bs-toggle="tab" href="#overview_tab" aria-selected="true" role="tab">Overview</a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="nav-link text-active-primary pb-4" data-bs-toggle="tab" href="#floor_plan_tables_tab" aria-selected="false" role="tab">Values</a>
+                <a class="nav-link text-active-primary pb-4" data-bs-toggle="tab" href="#floor_plan_tables_tab" aria-selected="false" role="tab">Tables</a>
             </li>
             <li class="nav-item ms-auto">
                 @if($canDelete)
@@ -130,6 +130,8 @@
                 <div class="modal-body">
                     <form id="floor_plan_tables_form" method="post" action="#">
                         @csrf
+
+                        <input type="hidden" id="floor_plan_table_id" name="floor_plan_table_id">
 
                         <div class="row mb-6">
                             <label class="col-lg-3 col-form-label required fw-semibold fs-6" for="table_number">

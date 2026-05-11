@@ -7,7 +7,7 @@ import {
   detailsDeleteButton,
   detailsTableActionButton,
 } from '../../form/button.js';
-import { displayDetails, getPageContext, resetForm } from '../../form/form.js';
+import { displayDetails, handleActionFetch, getPageContext, getCsrfToken, resetForm } from '../../form/form.js';
 import { handleSystemError } from '../../util/system-errors.js';
 import { initializeDatatable, reloadDatatable } from '../../util/datatable.js';
 
@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             },
             {
-                selector: '#floor_plan_value_form',
+                selector: '#floor_plan_tables_form',
                 rules: {
                     rules: {
                         table_number: { required: true},
@@ -118,12 +118,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 page_navigation_menu_id: ctx.navigationMenuId,
             },
             columns: [
-                { data: 'VALUE' },
+                { data: 'TABLE_NUMBER' },
+                { data: 'SEATS' },
                 { data: 'ACTION' },
             ],
             columnDefs: [
                 { width: 'auto', targets: 0, responsivePriority: 1 },
-                { width: 'auto', bSortable: false, targets: 1, responsivePriority: 2 },
+                { width: 'auto', targets: 1, responsivePriority: 2 },
+                { width: 'auto', bSortable: false, targets: 2, responsivePriority: 3 },
             ],
             addons: {
                 subControls: {
@@ -147,25 +149,21 @@ document.addEventListener('DOMContentLoaded', () => {
         delete: {
             trigger: '#delete-floor-plan',
             url: '/floor-plan/delete',
-            swalTitle: 'Confirm Attribute Deletion',
+            swalTitle: 'Confirm Floor Plan Deletion',
             swalText: 'Are you sure you want to delete this floor plan?',
             confirmButtonText: 'Delete',
         },
         table_action: {
-            trigger: '.delete-floor-plan-tables',
+            trigger: '.delete-floor-plan-table',
             url: '/floor-plan-tables/delete',
             table: '#floor-plan-tables-table',
-            swalTitle: 'Confirm Attribute Value Deletion',
+            swalTitle: 'Confirm Floor Plan Table Deletion',
             swalText: 'Are you sure you want to delete this floor plan table?',
             confirmButtonText: 'Delete'
         },
-        permission_toggle: {
-            trigger: '.update-floor-plan-tables',
-            url: '/floor-plan-tables/update',
-        },
         lognotes: {
-            trigger: '.view-floor-plan-tables-log-notes',
-            table: 'floor_plan_value'
+            trigger: '.view-floor-plan-table-log-notes',
+            table: 'floor_plan_table'
         }
     };
 
@@ -203,6 +201,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const addFloorPlanTablesBtn = target.closest('#add-floor-plan-tables');
         if (addFloorPlanTablesBtn) {
             resetForm('floor_plan_value_form');
+        }
+
+        const updateFloorPlanTable = target.closest('.update-floor-plan-table');
+        if (updateFloorPlanTable) {
+            const referenceId = updateFloorPlanTable.dataset.referenceId;
+        
+            await handleActionFetch({
+                triggerElement: updateFloorPlanTable,
+                url: '/floor-plan-tables/fetch-details',
+                referenceKey: 'referenceId',
+        
+                onSuccess: (data) => {
+                    const item = data.data;
+        
+                    document.getElementById('floor_plan_table_id').value = referenceId;
+                    document.getElementById('table_number').value = data.tableNumber || '';
+                    document.getElementById('seats').value = data.seats || '';
+                }
+            });
         }
     });
 });

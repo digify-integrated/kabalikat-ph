@@ -85,112 +85,101 @@ class ProductController extends Controller
             'last_log_by' => Auth::id(),
         ];   
 
-        $productId = $validated['product_id'] ?? null;
+        $product = isset($validated['product_id'])
+            ? Product::query()->find($validated['product_id'])
+            : null;
 
-        if ($productId && Product::query()->whereKey($productId)->exists()) {
-            $product = Product::query()->findOrFail($productId);
+        if ($product) {
             $product->update($payload);
         } else {
             $product = Product::query()->create($payload);
         }
 
-        Product::query()
-            ->where('parent_product_id', $product->id)
-            ->update([
-                'parent_product_name' => $product->product_name,
-                'last_log_by' => Auth::id(),
-            ]);
+        $lastLogBy = Auth::id();
+        $productName = $product->product_name;
+        $productId = $product->id;
 
-        ProductCategoryMap::query()
-            ->where('product_id', $product->id)
-            ->update([
-                'product_name' => $product->product_name,
-                'last_log_by' => Auth::id(),
-            ]);
+        $updates = [
+            [
+                'model' => Product::class,
+                'where' => ['parent_product_id' => $productId],
+                'data' => ['parent_product_name' => $productName],
+            ],
+            [
+                'model' => ProductCategoryMap::class,
+                'where' => ['product_id' => $productId],
+                'data' => ['product_name' => $productName],
+            ],
+            [
+                'model' => ProductAttribute::class,
+                'where' => ['product_id' => $productId],
+                'data' => ['product_name' => $productName],
+            ],
+            [
+                'model' => ProductBOM::class,
+                'where' => ['product_id' => $productId],
+                'data' => ['product_name' => $productName],
+            ],
+            [
+                'model' => ProductBOM::class,
+                'where' => ['bom_product_id' => $productId],
+                'data' => ['bom_product_name' => $productName],
+            ],
+            [
+                'model' => ProductAddon::class,
+                'where' => ['product_id' => $productId],
+                'data' => ['product_name' => $productName],
+            ],
+            [
+                'model' => ProductAddon::class,
+                'where' => ['addon_product_id' => $productId],
+                'data' => ['addon_product_name' => $productName],
+            ],
+            [
+                'model' => InventoryLot::class,
+                'where' => ['product_id' => $productId],
+                'data' => ['product_name' => $productName],
+            ],
+            [
+                'model' => StockLevel::class,
+                'where' => ['product_id' => $productId],
+                'data' => ['product_name' => $productName],
+            ],
+            [
+                'model' => StockBatchItems::class,
+                'where' => ['product_id' => $productId],
+                'data' => ['product_name' => $productName],
+            ],
+            [
+                'model' => StockMovement::class,
+                'where' => ['product_id' => $productId],
+                'data' => ['product_name' => $productName],
+            ],
+            [
+                'model' => PurchaseOrderItems::class,
+                'where' => ['product_id' => $productId],
+                'data' => ['product_name' => $productName],
+            ],
+            [
+                'model' => PurchaseOrderReceiptItems::class,
+                'where' => ['product_id' => $productId],
+                'data' => ['product_name' => $productName],
+            ],
+            [
+                'model' => PurchaseOrderCancellations::class,
+                'where' => ['product_id' => $productId],
+                'data' => ['product_name' => $productName],
+            ],
+        ];
 
-        ProductAttribute::query()
-            ->where('product_id', $product->id)
-            ->update([
-                'product_name' => $product->product_name,
-                'last_log_by' => Auth::id(),
-            ]);
-
-        ProductBOM::query()
-            ->where('product_id', $product->id)
-            ->update([
-                'product_name' => $product->product_name,
-                'last_log_by' => Auth::id(),
-            ]);
-
-        ProductBOM::query()
-            ->where('bom_product_id', $product->id)
-            ->update([
-                'bom_product_name' => $product->product_name,
-                'last_log_by' => Auth::id(),
-            ]);
-
-        ProductAddon::query()
-            ->where('product_id', $product->id)
-            ->update([
-                'product_name' => $product->product_name,
-                'last_log_by' => Auth::id(),
-            ]);
-
-        ProductAddon::query()
-            ->where('addon_product_id', $product->id)
-            ->update([
-                'addon_product_name' => $product->product_name,
-                'last_log_by' => Auth::id(),
-            ]);
-
-        InventoryLot::query()
-            ->where('product_id', $product->id)
-            ->update([
-                'product_name' => $product->product_name,
-                'last_log_by' => Auth::id(),
-            ]);
-
-        StockLevel::query()
-            ->where('product_id', $product->id)
-            ->update([
-                'product_name' => $product->product_name,
-                'last_log_by' => Auth::id(),
-            ]);
-
-        StockBatchItems::query()
-            ->where('product_id', $product->id)
-            ->update([
-                'product_name' => $product->product_name,
-                'last_log_by' => Auth::id(),
-            ]);
-
-        StockMovement::query()
-            ->where('product_id', $product->id)
-            ->update([
-                'product_name' => $product->product_name,
-                'last_log_by' => Auth::id(),
-            ]);
-
-        PurchaseOrderItems::query()
-            ->where('product_id', $product->id)
-            ->update([
-                'product_name' => $product->product_name,
-                'last_log_by' => Auth::id(),
-            ]);
-
-        PurchaseOrderReceiptItems::query()
-            ->where('product_id', $product->id)
-            ->update([
-                'product_name' => $product->product_name,
-                'last_log_by' => Auth::id(),
-            ]);
-
-        PurchaseOrderCancellations::query()
-            ->where('product_id', $product->id)
-            ->update([
-                'product_name' => $product->product_name,
-                'last_log_by' => Auth::id(),
-            ]);
+        foreach ($updates as $update) {
+            $update['model']::query()
+                ->where($update['where'])
+                ->update([
+                    ...$update['data'],
+                    'last_log_by' => $lastLogBy,
+                ]);
+        }
 
         $link = route('apps.details', [
             'appId' => $pageAppId,

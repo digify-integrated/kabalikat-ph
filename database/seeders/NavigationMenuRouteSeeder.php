@@ -909,6 +909,32 @@ class NavigationMenuRouteSeeder extends Seeder
                 'js_file'               => 'import/import',
             ],
             
+            // Floor Plan
+            [
+                'navigation_menu_id'    => 44,
+                'route_type'            => 'index',
+                'view_file'             => 'pages.floor-plan.index',
+                'js_file'               => 'floor-plan/index',
+            ],
+            [
+                'navigation_menu_id'    => 44,
+                'route_type'            => 'new',
+                'view_file'             => 'pages.floor-plan.new',
+                'js_file'               => 'floor-plan/new',
+            ],
+            [
+                'navigation_menu_id'    => 44,
+                'route_type'            => 'details',
+                'view_file'             => 'pages.floor-plan.details',
+                'js_file'               => 'floor-plan/details',
+            ],
+            [
+                'navigation_menu_id'    => 44,
+                'route_type'            => 'import',
+                'view_file'             => 'pages.import.index',
+                'js_file'               => 'import/import',
+            ],
+            
             // Payment Method
             [
                 'navigation_menu_id'    => 45,

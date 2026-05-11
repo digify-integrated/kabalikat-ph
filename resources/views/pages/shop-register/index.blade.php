@@ -87,7 +87,7 @@
 
         <div class="card-body pt-9">
             <div class="table-responsive">
-                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5" id="shop-register-table">
+                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5" id="product-table">
                     <thead>
                         <tr class="text-start text-gray-800 fw-bold fs-7 text-uppercase gs-0">
                             <th>
@@ -95,9 +95,12 @@
                                     <input class="form-check-input" id="datatable-checkbox" type="checkbox">
                                 </div>
                             </th>
-                            <th>Shop Register</th>
-                            <th>Company</th>
-                            <th>Is Restaurant?</th>
+                            <th>Product</th>
+                            <th>SKU</th>
+                            <th>Barcode</th>
+                            <th>Parent Product</th>
+                            <th>Type</th>
+                            <th>Price</th>
                             <th>Status</th>
                         </tr>
                     </thead>

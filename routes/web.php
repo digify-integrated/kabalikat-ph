@@ -15,6 +15,8 @@ use App\Http\Controllers\DiscountTypeController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\FileExtensionController;
 use App\Http\Controllers\FileTypeController;
+use App\Http\Controllers\FloorPlanController;
+use App\Http\Controllers\FloorPlanTableController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\InventoryDashboardController;
 use App\Http\Controllers\NavigationMenuController;
@@ -382,7 +384,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/generate-product-attribute-options', 'generateProductAttributeOptions')->name('generate.options');
         });
 
-     // Attribute Value
+    // Attribute Value
     Route::prefix('attribute-value')
         ->name('attribute.value.')
         ->controller(AttributeValueController::class)
@@ -745,6 +747,55 @@ Route::middleware('auth')->group(function () {
             Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
             Route::post('/generate-table', 'generateTable')->name('generate.table');
             Route::post('/generate-options', 'generateOptions')->name('generate.options');
+        });
+    
+    // Floor Plan
+    Route::prefix('floor-plan')
+        ->name('floor.plan.')
+        ->controller(FloorPlanController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
+            Route::post('/delete', 'delete')->name('delete');
+            Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
+            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
+            Route::post('/generate-table', 'generateTable')->name('generate.table');
+            Route::post('/generate-options', 'generateOptions')->name('generate.options');
+        });
+        
+    // Floor Plan Table
+    Route::prefix('floor-plan-tables')
+        ->name('floor.plan.tables.')
+        ->controller(FloorPlanTableController::class)
+        ->group(function () {
+            Route::post('/save', 'save')
+                ->name('save');
+
+            Route::post('/delete', 'delete')->name('delete');
+            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
+
+            Route::post('/generate-table', 'generateTable')
+                ->name('generate.table');
+        });
+    
+    // Shop Register
+    Route::prefix('shop-register')
+        ->name('shop.register.')
+        ->controller(ProductController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
+            Route::post('/save-product-setting', 'saveProductSetting')->name('save.product.setting');
+            Route::post('/save-product-variation', 'saveProductVariation')->name('save.product.variation');
+            Route::post('/upload-product-image', 'uploadProductImage')->name('upload.product-image');
+            Route::post('/delete', 'delete')->name('delete');
+            Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
+            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
+            Route::post('/generate-table', 'generateTable')->name('generate.table');
+            Route::post('/generate-variation-table', 'generateVariationTable')->name('generate.variation.table');
+            Route::post('/generate-options', 'generateOptions')->name('generate.options');
+            Route::post('/generate-active-product-options', 'generateActiveProductOptions')->name('generate.active.product.options');
+            Route::post('/generate-product-bom-options', 'generateBomOptions')->name('generate.bom.options');
+            Route::post('/generate-product-addon-options', 'generateAddOnOptions')->name('generate.addon.options');
+            Route::post('/generate-product-purchasable-options', 'generatePurchasableOptions')->name('generate.purchasable.options');
         });
 
     // Import

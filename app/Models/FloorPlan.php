@@ -10,7 +10,7 @@ class FloorPlan extends Model
     protected $table = 'floor_plan';
 
     protected $fillable = [
-        'floor_plan',
+        'floor_plan_name',
         'last_log_by'
     ];
 
