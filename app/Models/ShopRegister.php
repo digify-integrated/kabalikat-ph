@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ShopRegister extends Model
 {
@@ -22,5 +23,35 @@ class ShopRegister extends Model
     public function company()
     {
         return $this->belongsTo(Company::class, 'company_id');
+    }
+
+    public function shopRegisterAccess(): HasMany
+    {
+        return $this->hasMany(ShopRegisterAccess::class, 'shop_register_id', 'id');
+    }
+
+    public function shopRegisterCharge(): HasMany
+    {
+        return $this->hasMany(ShopRegisterCharge::class, 'shop_register_id', 'id');
+    }
+
+    public function shopRegisterDiscount(): HasMany
+    {
+        return $this->hasMany(ShopRegisterDiscount::class, 'shop_register_id', 'id');
+    }
+
+    public function shopRegisterFloorPlan(): HasMany
+    {
+        return $this->hasMany(ShopRegisterFloorPlan::class, 'shop_register_id', 'id');
+    }
+
+    public function shopRegisterPaymentMethod(): HasMany
+    {
+        return $this->hasMany(ShopRegisterPaymentMethod::class, 'shop_register_id', 'id');
+    }
+
+    public function shopRegisterWarehouse(): HasMany
+    {
+        return $this->hasMany(ShopRegisterWarehouse::class, 'shop_register_id', 'id');
     }
 }

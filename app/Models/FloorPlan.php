@@ -18,4 +18,9 @@ class FloorPlan extends Model
     {
         return $this->hasMany(FloorPlanTable::class, 'floor_plan_id');
     }
+
+    public function shopRegisteFloorPlan(): HasMany
+    {
+        return $this->hasMany(ShopRegisterFloorPlan::class, 'floor_plan_id', 'id');
+    }
 }

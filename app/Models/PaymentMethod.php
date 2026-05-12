@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PaymentMethod extends Model
 {
@@ -12,4 +13,9 @@ class PaymentMethod extends Model
         'payment_method_name',
         'last_log_by'
     ];
+
+    public function shopRegistePaymentMethod(): HasMany
+    {
+        return $this->hasMany(ShopRegisterPaymentMethod::class, 'payment_method_id', 'id');
+    }
 }

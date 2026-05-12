@@ -808,15 +808,15 @@ return new class extends Migration
 
             $table->foreignId('product_category_id')
                 ->constrained('product_category')
-                ->nullOnDelete();
+                ->cascadeOnDelete();
 
             $table->string('product_category_name');
 
             $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
             $table->timestamps();
 
-            $table->index(['product_id'], 'product_category_map_product_id_idx');
-            $table->index(['product_category_id'], 'product_category_map_product_category_id_idx');
+            $table->index(['product_id']);
+            $table->index(['product_category_id']);
         });
 
         /* =============================================================================================
@@ -1811,6 +1811,12 @@ return new class extends Migration
         Schema::dropIfExists('floor_plan');
         Schema::dropIfExists('floor_plan_table');
         Schema::dropIfExists('payment_method');
+        Schema::dropIfExists('shop_register_access');
+        Schema::dropIfExists('shop_register_warehouse');
+        Schema::dropIfExists('shop_register_payment_method');
+        Schema::dropIfExists('shop_register_floor_plan');
+        Schema::dropIfExists('shop_register_discount');
+        Schema::dropIfExists('shop_register_charge');
         Schema::dropIfExists('shop_register');
         Schema::dropIfExists('nationality');
         Schema::dropIfExists('currency');

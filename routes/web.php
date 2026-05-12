@@ -790,6 +790,36 @@ Route::middleware('auth')->group(function () {
             Route::post('/generate-table', 'generateTable')->name('generate.table');
         });
 
+    // Shop Register Discount
+    Route::prefix('shop-register-discount')
+        ->name('shop.register.discount.')
+        ->controller(FloorPlanTableController::class)
+        ->group(function () {
+            Route::post('/save', 'save')
+                ->name('save');
+
+            Route::post('/delete', 'delete')->name('delete');
+            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
+
+            Route::post('/generate-table', 'generateTable')
+                ->name('generate.table');
+        });
+
+    // Shop Register Charge
+    Route::prefix('shop-register-charge')
+        ->name('shop.register.charge.')
+        ->controller(FloorPlanTableController::class)
+        ->group(function () {
+            Route::post('/save', 'save')
+                ->name('save');
+
+            Route::post('/delete', 'delete')->name('delete');
+            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
+
+            Route::post('/generate-table', 'generateTable')
+                ->name('generate.table');
+        });
+
     // Import
     Route::prefix('import')
         ->name('import.')

@@ -44,6 +44,28 @@
                     </div>
 
                     <div class="mb-8">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label for="floor_plan_id" class="form-label fw-semibold mb-0">
+                                Floor Plan
+                            </label>
+                        </div>
+
+                        <select
+                            id="floor_plan_id"
+                            name="floor_plan_id[]"
+                            multiple
+                            class="form-select form-select-solid"
+                            data-control="select2"
+                            data-placeholder="Assign floor plan to this register"
+                            @disabled(!$canWrite)
+                        ></select>
+
+                        <div class="form-text">
+                            Select the floor plans for this shop register.
+                        </div>
+                    </div>
+
+                    <div class="mb-8">
                         <label for="payment_method_id" class="form-label fw-semibold">
                             Payment Methods
                         </label>
@@ -74,7 +96,7 @@
                             multiple
                             class="form-select form-select-solid"
                             data-control="select2"
-                            data-placeholder="Assign allowed roles or users"
+                            data-placeholder="Assign allowed users"
                             @disabled(!$canWrite)
                         ></select>
 
@@ -89,9 +111,6 @@
             <ul class="nav nav-custom nav-tabs nav-line-tabs nav-line-tabs-2x border-0 fs-4 fw-semibold mb-6" role="tablist">
                 <li class="nav-item" role="presentation">
                     <a class="nav-link text-active-primary pb-4 active" data-bs-toggle="tab" href="#overview_tab" aria-selected="true" role="tab">Overview</a>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <a class="nav-link text-active-primary pb-4" data-bs-toggle="tab" href="#floor_plan_tab" aria-selected="false" role="tab">Table Layouts</a>
                 </li>
                 <li class="nav-item" role="presentation">
                     <a class="nav-link text-active-primary pb-4" data-bs-toggle="tab" href="#discounts_tab" aria-selected="false" role="tab">POS Discounts</a>
@@ -367,7 +386,7 @@
         <div class="modal-dialog modal-dialog-scrollable modal-md">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3 class="modal-title">Bill of Materials</h3>
+                    <h3 class="modal-title">POS Discounts</h3>
                     <div class="btn btn-icon btn-sm btn-active-light-primary ms-2" data-bs-dismiss="modal" aria-label="Close">
                         <i class="ki-duotone ki-cross fs-1"><span class="path1"></span><span class="path2"></span></i>
                     </div>
@@ -376,39 +395,31 @@
                 <div class="modal-body">
                     <form id="discount_form" method="post" action="#">
                         @csrf
+
+                        <input type="hidden" id="shop_register_discount_id" name="shop_register_discount_id">
+
                         <div class="row">
                             <div class="col">
                                 <div class="fv-row mb-4">
-                                    <label class="fs-6 fw-semibold required form-label mt-3" for="discount_shop_register_id">
-                                        Component Product
+                                    <label class="fs-6 fw-semibold required form-label mt-3" for="discount_type_id">
+                                        Discount
                                     </label>
 
-                                    <select id="discount_shop_register_id" name="discount_shop_register_id" class="form-select" data-control="select2" data-allow-clear="false"></select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col">
-                                <div class="fv-row mb-4">
-                                    <label class="fs-6 fw-semibold required form-label mt-3" for="quantity">
-                                        Required Quantity
-                                    </label>
-
-                                    <input type="number" class="form-control" id="quantity" name="quantity" min="0.01" step="0.01">
+                                    <select id="discount_type_id" name="discount_type_id" class="form-select" data-control="select2" data-allow-clear="false"></select>
                                 </div>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col">
                                 <div class="fv-row">
-                                    <label class="fs-6 fw-semibold required form-label mt-3" for="stock_policy">
-                                        Stock Policy
+                                    <label class="fs-6 fw-semibold required form-label mt-3" for="discount_automatic_application">
+                                        Automatic Application
                                     </label>
 
-                                    <select id="stock_policy" name="stock_policy" class="form-select" data-control="select2" data-hide-search="true">
+                                    <select id="discount_automatic_application" name="discount_automatic_application" class="form-select" data-control="select2" data-hide-search="true">
                                         <option value="">--</option>
-                                        <option value="Strict">Strict</option>
-                                        <option value="Allow Negative">Allow Negative</option>
+                                        <option value="Yes">Yes</option>
+                                        <option value="No">No</option>
                                     </select>
                                 </div>
                             </div>
@@ -428,7 +439,7 @@
         <div class="modal-dialog modal-dialog-scrollable modal-md">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3 class="modal-title">Add-ons</h3>
+                    <h3 class="modal-title">Service Charges</h3>
                     <div class="btn btn-icon btn-sm btn-active-light-primary ms-2" data-bs-dismiss="modal" aria-label="Close">
                         <i class="ki-duotone ki-cross fs-1"><span class="path1"></span><span class="path2"></span></i>
                     </div>
@@ -437,25 +448,32 @@
                 <div class="modal-body">
                     <form id="charge_form" method="post" action="#">
                         @csrf
+                        
+                        <input type="hidden" id="shop_register_charge_id" name="shop_register_charge_id">
+
                         <div class="row">
                             <div class="col">
                                 <div class="fv-row mb-4">
-                                    <label class="fs-6 fw-semibold required form-label mt-3" for="charge_shop_register_id">
-                                        Add-on Product
+                                    <label class="fs-6 fw-semibold required form-label mt-3" for="charge_type_id">
+                                        Charge
                                     </label>
 
-                                    <select id="charge_shop_register_id" name="charge_shop_register_id" class="form-select" data-control="select2" data-allow-clear="false"></select>
+                                    <select id="charge_type_id" name="charge_type_id" class="form-select" data-control="select2" data-allow-clear="false"></select>
                                 </div>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col">
                                 <div class="fv-row">
-                                    <label class="fs-6 fw-semibold required form-label mt-3" for="max_quantity">
-                                        Max Quantity
+                                    <label class="fs-6 fw-semibold required form-label mt-3" for="charge_automatic_application">
+                                        Automatic Application
                                     </label>
 
-                                    <input type="number" class="form-control" id="max_quantity" name="max_quantity" min="0.01" step="0.01">
+                                    <select id="charge_automatic_application" name="charge_automatic_application" class="form-select" data-control="select2" data-hide-search="true">
+                                        <option value="">--</option>
+                                        <option value="Yes">Yes</option>
+                                        <option value="No">No</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>

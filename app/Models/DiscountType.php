@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DiscountType extends Model
 {
@@ -17,4 +18,9 @@ class DiscountType extends Model
         'is_vat_exempt',
         'last_log_by'
     ];
+
+    public function shopRegisterCharge(): HasMany
+    {
+        return $this->hasMany(ShopRegisterDiscount::class, 'discount_type_id', 'id');
+    }
 }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Warehouse extends Model
 {
@@ -51,6 +52,11 @@ class Warehouse extends Model
     public function isActive(): bool
     {
         return $this->warehouse_status === 'Active';
+    }
+
+    public function shopRegisterWarehouse(): HasMany
+    {
+        return $this->hasMany(ShopRegisterWarehouse::class, 'warehouse_id', 'id');
     }
 
     public function scopeActive($query)

@@ -2705,7 +2705,7 @@ return new class extends Migration
 
         DB::unprepared(<<<SQL
             CREATE TRIGGER trg_shop_register_access_update
-            AFTER UPDATE ON shop_register
+            AFTER UPDATE ON shop_register_access
             FOR EACH ROW
             BEGIN
                 DECLARE audit_log TEXT DEFAULT 'Shop register access changed.<br/><br/>';
@@ -2746,7 +2746,7 @@ return new class extends Migration
 
         DB::unprepared(<<<SQL
             CREATE TRIGGER trg_shop_register_warehouse_update
-            AFTER UPDATE ON shop_register
+            AFTER UPDATE ON shop_register_warehouse
             FOR EACH ROW
             BEGIN
                 DECLARE audit_log TEXT DEFAULT 'Shop register warehouse changed.<br/><br/>';
@@ -2787,7 +2787,7 @@ return new class extends Migration
 
         DB::unprepared(<<<SQL
             CREATE TRIGGER trg_shop_register_payment_method_update
-            AFTER UPDATE ON shop_register
+            AFTER UPDATE ON shop_register_payment_method
             FOR EACH ROW
             BEGIN
                 DECLARE audit_log TEXT DEFAULT 'Shop register playment method changed.<br/><br/>';
@@ -2828,7 +2828,7 @@ return new class extends Migration
 
         DB::unprepared(<<<SQL
             CREATE TRIGGER trg_shop_register_floor_plan_update
-            AFTER UPDATE ON shop_register
+            AFTER UPDATE ON shop_register_floor_plan
             FOR EACH ROW
             BEGIN
                 DECLARE audit_log TEXT DEFAULT 'Shop register floor plan changed.<br/><br/>';
@@ -2869,7 +2869,7 @@ return new class extends Migration
 
         DB::unprepared(<<<SQL
             CREATE TRIGGER trg_shop_register_discount_update
-            AFTER UPDATE ON shop_register
+            AFTER UPDATE ON shop_register_discount
             FOR EACH ROW
             BEGIN
                 DECLARE audit_log TEXT DEFAULT 'Shop register discount changed.<br/><br/>';
@@ -2914,7 +2914,7 @@ return new class extends Migration
 
         DB::unprepared(<<<SQL
             CREATE TRIGGER trg_shop_register_charge_update
-            AFTER UPDATE ON shop_register
+            AFTER UPDATE ON shop_register_charge
             FOR EACH ROW
             BEGIN
                 DECLARE audit_log TEXT DEFAULT 'Shop register charge changed.<br/><br/>';
