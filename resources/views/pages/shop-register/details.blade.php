@@ -16,41 +16,71 @@
             <div class="card mb-5 mb-xl-8">
                 <div class="card-header">
                     <div class="card-title">
-                        <h2>Warehouse</h2>
+                        <h2 class="fw-bold">Shop Register Setup</h2>
                     </div>
                 </div>
-                                
-                <div class="card-body border-top p-9">
-                    <div class="fv-row mb-0">
-                        <select id="warehouse_id" name="warehouse_id[]" multiple="multiple" class="form-select" data-control="select2" data-allow-clear="false"  @disabled(!$canWrite)></select>
-                    </div>
-                </div>
-            </div>
 
-            <div class="card mb-5 mb-xl-8">
-                <div class="card-header">
-                    <div class="card-title">
-                        <h2>Payment Method</h2>
-                    </div>
-                </div>
-                                
-                <div class="card-body border-top p-9">
-                    <div class="fv-row mb-0">
-                        <select id="payment_method_id" name="payment_method_id[]" multiple="multiple" class="form-select" data-control="select2" data-allow-clear="false"  @disabled(!$canWrite)></select>
-                    </div>
-                </div>
-            </div>
+                <div class="card-body border-top p-6">
+                    <div class="mb-8">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label for="warehouse_id" class="form-label fw-semibold mb-0">
+                                Warehouses
+                            </label>
+                        </div>
 
-            <div class="card mb-5 mb-xl-8">
-                <div class="card-header">
-                    <div class="card-title">
-                        <h2>Access</h2>
+                        <select
+                            id="warehouse_id"
+                            name="warehouse_id[]"
+                            multiple
+                            class="form-select form-select-solid"
+                            data-control="select2"
+                            data-placeholder="Assign warehouses to this register"
+                            @disabled(!$canWrite)
+                        ></select>
+
+                        <div class="form-text">
+                            Select the warehouses from which this shop register will deduct stock during POS transactions.
+                        </div>
                     </div>
-                </div>
-                                
-                <div class="card-body border-top p-9">
-                    <div class="fv-row mb-0">
-                        <select id="access" name="access[]" multiple="multiple" class="form-select" data-control="select2" data-allow-clear="false"  @disabled(!$canWrite)></select>
+
+                    <div class="mb-8">
+                        <label for="payment_method_id" class="form-label fw-semibold">
+                            Payment Methods
+                        </label>
+
+                        <select
+                            id="payment_method_id"
+                            name="payment_method_id[]"
+                            multiple
+                            class="form-select form-select-solid"
+                            data-control="select2"
+                            data-placeholder="Allow payment methods"
+                            @disabled(!$canWrite)
+                        ></select>
+
+                        <div class="form-text">
+                            Define accepted payment methods for transactions
+                        </div>
+                    </div>
+
+                    <div class="mb-2">
+                        <label for="access" class="form-label fw-semibold">
+                            Access Permissions
+                        </label>
+
+                        <select
+                            id="access"
+                            name="access[]"
+                            multiple
+                            class="form-select form-select-solid"
+                            data-control="select2"
+                            data-placeholder="Assign allowed roles or users"
+                            @disabled(!$canWrite)
+                        ></select>
+
+                        <div class="form-text">
+                            Control who can use this cash register
+                        </div>
                     </div>
                 </div>
             </div>
@@ -61,13 +91,13 @@
                     <a class="nav-link text-active-primary pb-4 active" data-bs-toggle="tab" href="#overview_tab" aria-selected="true" role="tab">Overview</a>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <a class="nav-link text-active-primary pb-4" data-bs-toggle="tab" href="#floor_plan_tab" aria-selected="false" role="tab">Floor Plan</a>
+                    <a class="nav-link text-active-primary pb-4" data-bs-toggle="tab" href="#floor_plan_tab" aria-selected="false" role="tab">Table Layouts</a>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <a class="nav-link text-active-primary pb-4" data-bs-toggle="tab" href="#discounts_tab" aria-selected="false" role="tab">Discounts</a>
+                    <a class="nav-link text-active-primary pb-4" data-bs-toggle="tab" href="#discounts_tab" aria-selected="false" role="tab">POS Discounts</a>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <a class="nav-link text-active-primary pb-4" data-bs-toggle="tab" href="#charges_tab" aria-selected="false" role="tab">Charges</a>
+                    <a class="nav-link text-active-primary pb-4" data-bs-toggle="tab" href="#charges_tab" aria-selected="false" role="tab">Service Charges</a>
                 </li>
                 <li class="nav-item ms-auto">
                     @if($canDelete)

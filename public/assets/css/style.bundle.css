@@ -53729,3 +53729,28 @@ body {
 .footer {
     background-color: var(--bs-footer-bg-color)
 }
+
+.app-version-badge {
+    position: absolute;
+    bottom: 5px;
+    right: 3px;
+    font-size: 10px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+}
+
+.app-open-btn {
+    transition: color 0.2s ease;
+}
+
+.app-open-btn:hover {
+    color: var(--bs-primary-dark);
+}
+
+.app-open-btn:hover i {
+    transform: translateX(3px);
+}
+
+.app-open-btn i {
+    transition: transform 0.2s ease;
+}

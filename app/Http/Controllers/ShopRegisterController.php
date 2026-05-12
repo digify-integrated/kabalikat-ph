@@ -132,7 +132,7 @@ class ShopRegisterController extends Controller
     public function fetchDetails(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'detailId' => ['required', 'integer', 'min:1'],
+            'detailId' => ['required', 'integer', 'min:1', Rule::exists('shop_register', 'id')],
         ]);
 
         $pageAppId = (int) $request->input('appId');
@@ -162,7 +162,7 @@ class ShopRegisterController extends Controller
                 'success'  => false,
                 'notExist' => true,
                 'redirect_link' => $link,
-                'message'  => 'Product not found',
+                'message'  => 'Shop register not found',
             ]);
         }
 

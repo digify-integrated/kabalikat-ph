@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         disableButton('submit-data');
 
                         try {
-                            const response = await fetch('/products/save', {
+                            const response = await fetch('/shop-register/save', {
                                 method: 'POST',
                                 body: formData,
                             });
@@ -228,7 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
             },
             {
-                url: '/products/generate-variation-table',
+                url: '/shop-register/generate-variation-table',
                 selector: '#variation-table',
                 serverSide: false,
                 order: [[0, 'asc']],
@@ -308,7 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ],
         details:[
             {
-                url: '/products/fetch-details',
+                url: '/shop-register/fetch-details',
                 formSelector: '#shop_register_form',
                 busyHideTargets: ['#submit-data'],
                 onSuccess: async (data) => {
@@ -324,7 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ],
         delete: {
             trigger: '#delete-shop-register',
-            url: '/products/delete',
+            url: '/shop-register/delete',
             swalTitle: 'Confirm User Deletion',
             swalText: 'Are you sure you want to delete this product?',
             confirmButtonText: 'Delete',
@@ -384,14 +384,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         },
         bomDropdown: {
-            url: '/products/generate-shop-register-bom-options',
+            url: '/shop-register/generate-shop-register-bom-options',
             dropdownSelector: '#discount_shop_register_id',
             data : {
                 shop_register_id : ctx.detailId,
             }
         },
         chargeDropdown: {
-            url: '/products/generate-shop-register-charge-options',
+            url: '/shop-register/generate-shop-register-charge-options',
             dropdownSelector: '#charge_shop_register_id',
             data : {
                 shop_register_id : ctx.detailId,
@@ -476,7 +476,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 formData.append('appId', ctx.appId ?? '');
                 formData.append('navigationMenuId', ctx.navigationMenuId ?? '')
             
-                const response = await fetch('/products/save-shop-register-variation', {
+                const response = await fetch('/shop-register/save-shop-register-variation', {
                     method: 'POST',
                     body: formData,
                     headers: {
@@ -525,7 +525,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 formData.append('appId', ctx.appId ?? '');
                 formData.append('navigationMenuId', ctx.navigationMenuId ?? '')
             
-                const response = await fetch('/products/save-shop-register-setting', {
+                const response = await fetch('/shop-register/save-shop-register-setting', {
                     method: 'POST',
                     body: formData,
                     headers: {

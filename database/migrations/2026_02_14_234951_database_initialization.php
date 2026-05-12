@@ -801,13 +801,14 @@ return new class extends Migration
             $table->id();
 
             $table->foreignId('product_id')
-            ->constrained('product')
-            ->cascadeOnDelete();
+                ->constrained('product')
+                ->cascadeOnDelete();
 
             $table->string('product_name');
 
             $table->foreignId('product_category_id')
-            ->constrained('product_category');
+                ->constrained('product_category')
+                ->nullOnDelete();
 
             $table->string('product_category_name');
 
@@ -1585,6 +1586,164 @@ return new class extends Migration
             $table->index(['shop_register_status']);
             $table->index(['register_status']);
             $table->index(['archived_date']);
+        });
+
+        /* =============================================================================================
+            TABLE: Shop Register Access
+        ============================================================================================= */
+
+        Schema::create('shop_register_access', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('shop_register_id')
+            ->constrained('shop_register')
+            ->cascadeOnDelete();
+
+            $table->string('shop_register_name');
+
+            $table->foreignId('user_account_id')
+            ->constrained('users')
+            ->cascadeOnDelete();
+
+            $table->string('user_name');
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+
+            $table->index(['shop_register_id']);
+            $table->index(['user_account_id']);
+        });
+        
+        /* =============================================================================================
+            TABLE: Shop Register Warehouse
+        ============================================================================================= */
+
+        Schema::create('shop_register_warehouse', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('shop_register_id')
+            ->constrained('shop_register')
+            ->cascadeOnDelete();
+
+            $table->string('shop_register_name');
+
+            $table->foreignId('warehouse_id')
+            ->constrained('warehouse')
+            ->cascadeOnDelete();
+
+            $table->string('warehouse_name');
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+
+            $table->index(['shop_register_id']);
+            $table->index(['warehouse_id']);
+        });
+        
+        /* =============================================================================================
+            TABLE: Shop Register Payment Method
+        ============================================================================================= */
+
+        Schema::create('shop_register_payment_method', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('shop_register_id')
+            ->constrained('shop_register')
+            ->cascadeOnDelete();
+
+            $table->string('shop_register_name');
+
+            $table->foreignId('payment_method_id')
+            ->constrained('payment_method')
+            ->cascadeOnDelete();
+
+            $table->string('payment_method_name');
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+
+            $table->index(['shop_register_id']);
+            $table->index(['payment_method_id']);
+        });
+
+        /* =============================================================================================
+            TABLE: Shop Register Floor Plan
+        ============================================================================================= */
+
+        Schema::create('shop_register_floor_plan', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('shop_register_id')
+            ->constrained('shop_register')
+            ->cascadeOnDelete();
+
+            $table->string('shop_register_name');
+
+            $table->foreignId('floor_plan_id')
+            ->constrained('floor_plan')
+            ->cascadeOnDelete();
+
+            $table->string('floor_plan_name');
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+
+            $table->index(['shop_register_id']);
+            $table->index(['floor_plan_id']);
+        });
+
+        /* =============================================================================================
+            TABLE: Shop Register Discount
+        ============================================================================================= */
+
+        Schema::create('shop_register_discount', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('shop_register_id')
+            ->constrained('shop_register')
+            ->cascadeOnDelete();
+
+            $table->string('shop_register_name');
+
+            $table->foreignId('discount_type_id')
+            ->constrained('discount_type')
+            ->cascadeOnDelete();
+
+            $table->string('discount_type_name');
+            $table->enum('automatic_application', ['Yes', 'No'])->default('No');
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+
+            $table->index(['shop_register_id']);
+            $table->index(['discount_type_id']);
+        });
+
+        /* =============================================================================================
+            TABLE: Shop Register Charge
+        ============================================================================================= */
+
+        Schema::create('shop_register_charge', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('shop_register_id')
+            ->constrained('shop_register')
+            ->cascadeOnDelete();
+
+            $table->string('shop_register_name');
+
+            $table->foreignId('charge_type_id')
+            ->constrained('charge_type')
+            ->cascadeOnDelete();
+
+            $table->string('charge_type_name');
+            $table->enum('automatic_application', ['Yes', 'No'])->default('No');
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+
+            $table->index(['shop_register_id']);
+            $table->index(['charge_type_id']);
         });
 
         /* =============================================================================================
