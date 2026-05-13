@@ -197,9 +197,8 @@ class FloorPlanController extends Controller
         return response()->json($response);
     }
 
-    public function generateShowRegisterFloorPlanOptions(Request $request)
+    public function generateOptions(Request $request)
     {
-        $showRegisterId = $request->input('shop_register_id');
         $multiple = filter_var($request->input('multiple', false), FILTER_VALIDATE_BOOLEAN);
 
         $response = collect();
@@ -211,18 +210,13 @@ class FloorPlanController extends Controller
             ]);
         }
 
-        $floorPlans = DB::table('floor_plan')
+        $fileExtensions = DB::table('floor_plan')
             ->select(['id', 'floor_plan_name'])
-            ->whereNotIn('id', function ($query) use ($showRegisterId) {
-                $query->select('floor_plan_id')
-                    ->from('shop_register')
-                    ->where('shop_register_id', $showRegisterId);
-            })
             ->orderBy('floor_plan_name')
             ->get();
 
         $response = $response->concat(
-            $floorPlans->map(fn ($row) => [
+            $fileExtensions->map(fn ($row) => [
                 'id'   => $row->id,
                 'text' => $row->floor_plan_name,
             ])

@@ -200,7 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const addFloorPlanTablesBtn = target.closest('#add-floor-plan-tables');
         if (addFloorPlanTablesBtn) {
-            resetForm('floor_plan_value_form');
+            resetForm('floor_plan_tables_form');
         }
 
         const updateFloorPlanTable = target.closest('.update-floor-plan-table');

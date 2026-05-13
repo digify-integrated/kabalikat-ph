@@ -77,7 +77,7 @@ class ShopRegisterController extends Controller
     public function delete(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'detailId' => ['required', 'integer', 'min:1', Rule::exists('shop_register_id', 'id')],
+            'detailId' => ['required', 'integer', 'min:1', Rule::exists('shop_register', 'id')],
         ]);
 
         $pageAppId = (int) $request->input('appId');
@@ -166,6 +166,26 @@ class ShopRegisterController extends Controller
             ]);
         }
 
+        $warehouseIds = DB::table('shop_register_warehouse')
+            ->where('shop_register_id', $shopRegister->id)
+            ->pluck('warehouse_id')
+            ->toArray();
+
+        $floorPlanIds = DB::table('shop_register_floor_plan')
+            ->where('shop_register_id', $shopRegister->id)
+            ->pluck('floor_plan_id')
+            ->toArray();
+
+        $paymentMethodIds = DB::table('shop_register_payment_method')
+            ->where('shop_register_id', $shopRegister->id)
+            ->pluck('payment_method_id')
+            ->toArray();
+
+        $accessIds = DB::table('shop_register_access')
+            ->where('shop_register_id', $shopRegister->id)
+            ->pluck('user_account_id')
+            ->toArray();
+
         return response()->json([
             'success' => true,
             'notExist' => false,
@@ -173,6 +193,10 @@ class ShopRegisterController extends Controller
             'companyId' => $shopRegister->company_id ?? null,
             'isRestaurant' => $shopRegister->is_restaurant ?? 'No',
             'shopRegisterStatus' => $shopRegister->shop_register_status ?? 'Yes',
+            'warehouseId' => $warehouseIds,
+            'floorPlanId' => $floorPlanIds,
+            'paymentMethodId' => $paymentMethodIds,
+            'accessId' => $accessIds,
         ]);
     }
 

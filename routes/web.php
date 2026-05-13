@@ -33,7 +33,13 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\RoleSystemActionPermissionController;
 use App\Http\Controllers\RoleUserAccountController;
+use App\Http\Controllers\ShopRegisterAccessController;
+use App\Http\Controllers\ShopRegisterChargeController;
 use App\Http\Controllers\ShopRegisterController;
+use App\Http\Controllers\ShopRegisterDiscountController;
+use App\Http\Controllers\ShopRegisterFloorPlanController;
+use App\Http\Controllers\ShopRegisterPaymentMethodController;
+use App\Http\Controllers\ShopRegisterWarehouseController;
 use App\Http\Controllers\StateController;
 use App\Http\Controllers\StockAdjustmentController;
 use App\Http\Controllers\StockAdjustmentItemsController;
@@ -793,7 +799,7 @@ Route::middleware('auth')->group(function () {
     // Shop Register Discount
     Route::prefix('shop-register-discount')
         ->name('shop.register.discount.')
-        ->controller(FloorPlanTableController::class)
+        ->controller(ShopRegisterDiscountController::class)
         ->group(function () {
             Route::post('/save', 'save')
                 ->name('save');
@@ -808,7 +814,7 @@ Route::middleware('auth')->group(function () {
     // Shop Register Charge
     Route::prefix('shop-register-charge')
         ->name('shop.register.charge.')
-        ->controller(FloorPlanTableController::class)
+        ->controller(ShopRegisterChargeController::class)
         ->group(function () {
             Route::post('/save', 'save')
                 ->name('save');
@@ -818,6 +824,38 @@ Route::middleware('auth')->group(function () {
 
             Route::post('/generate-table', 'generateTable')
                 ->name('generate.table');
+        });
+    
+    // Shop Register Warehouse
+    Route::prefix('shop-register-warehouse')
+        ->name('shop.register.warehouse.')
+        ->controller(ShopRegisterWarehouseController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
+        });
+    
+    // Shop Register Floor Plan
+    Route::prefix('shop-register-floor-plan')
+        ->name('shop.register.floor.plan.')
+        ->controller(ShopRegisterFloorPlanController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
+        });
+    
+    // Shop Register Payment Method
+    Route::prefix('shop-register-payment-method')
+        ->name('shop.register.payment.method.')
+        ->controller(ShopRegisterPaymentMethodController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
+        });
+    
+    // Shop Register Access
+    Route::prefix('shop-register-access')
+        ->name('shop.register.access.')
+        ->controller(ShopRegisterAccessController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
         });
 
     // Import

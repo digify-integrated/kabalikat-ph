@@ -86,13 +86,13 @@
                     </div>
 
                     <div class="mb-2">
-                        <label for="access" class="form-label fw-semibold">
+                        <label for="user_account_id" class="form-label fw-semibold">
                             Access Permissions
                         </label>
 
                         <select
-                            id="access"
-                            name="access[]"
+                            id="user_account_id"
+                            name="user_account_id[]"
                             multiple
                             class="form-select form-select-solid"
                             data-control="select2"
@@ -113,7 +113,7 @@
                     <a class="nav-link text-active-primary pb-4 active" data-bs-toggle="tab" href="#overview_tab" aria-selected="true" role="tab">Overview</a>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <a class="nav-link text-active-primary pb-4" data-bs-toggle="tab" href="#discounts_tab" aria-selected="false" role="tab">POS Discounts</a>
+                    <a class="nav-link text-active-primary pb-4" data-bs-toggle="tab" href="#discounts_tab" aria-selected="false" role="tab">Discounts</a>
                 </li>
                 <li class="nav-item" role="presentation">
                     <a class="nav-link text-active-primary pb-4" data-bs-toggle="tab" href="#charges_tab" aria-selected="false" role="tab">Service Charges</a>
@@ -127,7 +127,7 @@
                         <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-125px py-4" data-kt-menu="true" style="z-index: 107; position: fixed; inset: 0px 0px auto auto; margin: 0px; transform: translate(-60px, 539px);" data-popper-placement="bottom-end">
                             @if($canDelete)
                                 <div class="menu-item px-3">
-                                    <a href="javascript:void(0);" class="menu-link px-3" id="delete-product">
+                                    <a href="javascript:void(0);" class="menu-link px-3" id="delete-shop-register">
                                         Delete
                                     </a>
                                 </div>
@@ -200,52 +200,6 @@
                             </form>
                         </div>
                     </div>
-                    <div class="tab-pane fade" id="floor_plan_tab" role="tabpanel">
-                        <div class="card mb-5">
-                            <div class="card-header border-0 pt-6">
-                                <div class="card-title">
-                                    <div class="d-flex align-items-center position-relative my-1 me-3">
-                                        <i class="ki-outline ki-magnifier fs-3 position-absolute ms-5"></i> <input type="text" class="form-control w-250px ps-12" id="floor-plan-datatable-search" placeholder="Search..." autocomplete="off" />
-                                    </div>
-                                    <select id="floor-plan-datatable-length" class="form-select w-auto">
-                                        <option value="-1">All</option>
-                                        <option value="5">5</option>
-                                        <option value="10" selected>10</option>
-                                        <option value="20">20</option>
-                                        <option value="25">25</option>
-                                        <option value="50">50</option>
-                                        <option value="100">100</option>
-                                    </select>
-                                </div>
-                                <div class="card-toolbar">
-                                    <div class="d-flex justify-content-end" data-kt-customer-table-toolbar="base">
-                                        @if($canWrite)
-                                            <button type="button"
-                                                    class="btn btn-light-primary me-3"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#floor-plan-modal"
-                                                    id="add-attribute">
-                                                <i class="ki-outline ki-plus fs-2"></i> Add
-                                            </button>
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="card-body pt-9">
-                                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5 gs-7" id="floor-plan-table">
-                                    <thead>
-                                        <tr class="fw-semibold fs-6 text-gray-800">
-                                            <th>Floor Plan</th>
-                                            <th>No. Tables</th>
-                                            <th>Total Seats</th>
-                                            <th></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="fw-semibold text-gray-600"></tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
                     <div class="tab-pane fade" id="discounts_tab" role="tabpanel">
                         <div class="card mb-5">
                             <div class="card-header border-0 pt-6">
@@ -282,7 +236,6 @@
                                     <thead>
                                         <tr class="fw-semibold fs-6 text-gray-800">
                                             <th>Discount</th>
-                                            <th>Value Type</th>
                                             <th>Is Variable</th>
                                             <th>Discount Value</th>
                                             <th>Automatic Application</th>
@@ -330,7 +283,6 @@
                                     <thead>
                                         <tr class="fw-semibold fs-6 text-gray-800">
                                             <th>Charge</th>
-                                            <th>Value Type</th>
                                             <th>Is Variable</th>
                                             <th>Charge Value</th>
                                             <th>Automatic Application</th>
@@ -347,46 +299,11 @@
         </div>
     </div>
 
-    <div id="floor-plan-modal" class="modal fade" tabindex="-1" aria-labelledby="floor-plan-modal" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-scrollable modal-md">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3 class="modal-title">Attribute</h3>
-                    <div class="btn btn-icon btn-sm btn-active-light-primary ms-2" data-bs-dismiss="modal" aria-label="Close">
-                        <i class="ki-duotone ki-cross fs-1"><span class="path1"></span><span class="path2"></span></i>
-                    </div>
-                </div>
-
-                <div class="modal-body">
-                    <form id="attribute_form" method="post" action="#">
-                        @csrf
-                        <div class="row">
-                            <div class="col">
-                                <div class="fv-row mb-4">
-                                    <label class="fs-6 fw-semibold required form-label mt-3" for="attribute_id">
-                                        Attribute
-                                    </label>
-
-                                    <select id="attribute_id" name="attribute_id[]" multiple="multiple" class="form-select" data-control="select2" data-allow-clear="false"></select>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" form="attribute_form" class="btn btn-primary" id="submit-attribute">Add</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <div id="discount-modal" class="modal fade" tabindex="-1" aria-labelledby="discount-modal" aria-hidden="true">
         <div class="modal-dialog modal-dialog-scrollable modal-md">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3 class="modal-title">POS Discounts</h3>
+                    <h3 class="modal-title">Discounts</h3>
                     <div class="btn btn-icon btn-sm btn-active-light-primary ms-2" data-bs-dismiss="modal" aria-label="Close">
                         <i class="ki-duotone ki-cross fs-1"><span class="path1"></span><span class="path2"></span></i>
                     </div>

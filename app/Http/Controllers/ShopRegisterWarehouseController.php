@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\FloorPlan;
+use App\Models\Warehouse;
 use App\Models\ShopRegister;
-use App\Models\ShopRegisterFloorPlan;
+use App\Models\ShopRegisterWarehouse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Validator;
 
-class ShopRegisterFloorPlanController extends Controller
+class ShopRegisterWarehouseController extends Controller
 {
     public function save(Request $request)
     {
@@ -33,43 +33,43 @@ class ShopRegisterFloorPlanController extends Controller
             ->whereKey($shopRegisterId)
             ->value('shop_register_name');
 
-        $floorPlans = $request->input('floor_plan_id') ?? [];
+        $warehouses = $request->input('warehouse_id') ?? [];
 
-        if (is_string($floorPlans)) {
-            $floorPlans = explode(',', $floorPlans);
+        if (is_string($warehouses)) {
+            $warehouses = explode(',', $warehouses);
         }
 
-        if (!empty($floorPlans)) {
-            ShopRegisterFloorPlan::query()
+        if (!empty($warehouses)) {
+            ShopRegisterWarehouse::query()
             ->where('shop_register_id', $shopRegisterId)
             ->delete();
 
-            foreach ($floorPlans as $floorPlanId) {
-                $floorPlan = FloorPlan::find($floorPlanId);
+            foreach ($warehouses as $warehouseId) {
+                $warehouse = Warehouse::find($warehouseId);
 
-                if (!$floorPlan) {
+                if (!$warehouse) {
                     continue;
                 }
 
-                $floorPlanName = (string) FloorPlan::query()
-                ->whereKey($floorPlanId)
-                ->value('floor_plan_name');
+                $warehouseName = (string) Warehouse::query()
+                ->whereKey($warehouseId)
+                ->value('warehouse_name');
 
                 $payload = [
                     'shop_register_id' => $shopRegisterId,
                     'shop_register_name' => $shopRegisterName,
-                    'floor_plan_id' => $floorPlanId,
-                    'floor_plan_name' => $floorPlanName,
+                    'warehouse_id' => $warehouseId,
+                    'warehouse_name' => $warehouseName,
                     'last_log_by' => Auth::id(),
                 ];
 
-                ShopRegisterFloorPlan::query()->create($payload);
+                ShopRegisterWarehouse::query()->create($payload);
             }
         }        
 
         return response()->json([
             'success' => true,
-            'message' => 'The floor plan has been saved successfully',
+            'message' => 'The warehouse has been saved successfully',
         ]);
     }
 }

@@ -1747,6 +1747,74 @@ return new class extends Migration
         });
 
         /* =============================================================================================
+            TABLE: Shop Register Session
+        ============================================================================================= */
+
+        Schema::create('shop_register_session', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('shop_register_id')
+            ->constrained('shop_register')
+            ->cascadeOnDelete();
+
+            $table->string('shop_register_name');
+
+            $table->datetime('open_time')->nullable();
+            $table->decimal('open_amount', 10, 2)->default(0);
+            $table->string('open_remarks')->nullable();
+            $table->foreignId('open_user_account_id')
+            ->constrained('users')
+            ->nullOnDelete()
+            ->nullable();
+            $table->string('open_user_name');
+
+            $table->datetime('close_time')->nullable();
+            $table->decimal('close_amount', 10, 2)->default(0);
+            $table->string('close_remarks')->nullable();
+            $table->foreignId('close_user_account_id')
+            ->constrained('users')
+            ->nullOnDelete()
+            ->nullable();
+            $table->string('close_user_name');
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+
+            $table->index(['shop_register_id']);
+            $table->index(['open_time']);
+            $table->index(['open_user_account_id']);
+            $table->index(['close_time']);
+            $table->index(['close_user_account_id']);
+        });
+
+        /* =============================================================================================
+            TABLE: Shop Register Denomination
+        ============================================================================================= */
+
+        Schema::create('shop_session_denomination', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('shop_register_session_id')
+            ->constrained('shop_register_session')
+            ->cascadeOnDelete();
+            
+            $table->enum('count_type', ['Open', 'Close']);
+            $table->decimal('denomination_value', 10, 2)->default(0);
+            $table->integer('quantity')->default(0);
+
+            $table->decimal('line_total', 15, 2)->storedAs('denomination_value * quantity');
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+
+            $table->index(['shop_register_id']);
+            $table->index(['open_time']);
+            $table->index(['open_user_account_id']);
+            $table->index(['close_time']);
+            $table->index(['close_user_account_id']);
+        });
+
+        /* =============================================================================================
             TABLE: 
         ============================================================================================= */
     }
@@ -1817,6 +1885,8 @@ return new class extends Migration
         Schema::dropIfExists('shop_register_floor_plan');
         Schema::dropIfExists('shop_register_discount');
         Schema::dropIfExists('shop_register_charge');
+        Schema::dropIfExists('shop_register_session');
+        Schema::dropIfExists('shop_session_denomination');
         Schema::dropIfExists('shop_register');
         Schema::dropIfExists('nationality');
         Schema::dropIfExists('currency');

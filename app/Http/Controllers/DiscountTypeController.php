@@ -221,8 +221,8 @@ class DiscountTypeController extends Controller
                         <input class="form-check-input datatable-checkbox-children" type="checkbox" value="'.$discountTypeId.'">
                     </div>
                 ',
-                'CHARGE_TYPE' => $discountTypeName,
-                'CHARGE_VALUE' => $discountValue,
+                'DISCOUNT_TYPE' => $discountTypeName,
+                'DISCOUNT_VALUE' => $discountValue,
                 'IS_VARIABLE' => $isVariable,
                 'APPLICATION_ORDER' => $applicationOrder,
                 'IS_VAT_EXEMPT' => $isVatExempt,
@@ -247,14 +247,14 @@ class DiscountTypeController extends Controller
         }
 
         $discountTypes = DB::table('discount_type')
-            ->select(['id', 'discount_type_name', 'discount_type'])
+            ->select(['id', 'discount_type_name'])
             ->orderBy('discount_type_name')
             ->get();
 
         $response = $response->concat(
             $discountTypes->map(fn ($row) => [
                 'id'   => $row->id,
-                'text' => $row->discount_type_name . ' (.' . $row->discount_type . ')',
+                'text' => $row->discount_type_name,
             ])
         )->values();
 

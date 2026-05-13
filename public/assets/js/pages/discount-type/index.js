@@ -17,8 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }),
             columns: [
                 { data: 'CHECK_BOX' },
-                { data: 'CHARGE_TYPE' },
-                { data: 'CHARGE_VALUE' },
+                { data: 'DISCOUNT_TYPE' },
+                { data: 'DISCOUNT_VALUE' },
                 { data: 'IS_VARIABLE' },
                 { data: 'APPLICATION_ORDER' },
                 { data: 'IS_VAT_EXEMPT' },

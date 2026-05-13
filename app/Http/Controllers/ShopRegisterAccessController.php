@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\FloorPlan;
 use App\Models\ShopRegister;
-use App\Models\ShopRegisterFloorPlan;
+use App\Models\ShopRegisterAccess;
+use App\Models\ShopRegisterPaymentMethod;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Validator;
 
-class ShopRegisterFloorPlanController extends Controller
+class ShopRegisterAccessController extends Controller
 {
     public function save(Request $request)
     {
@@ -33,43 +34,43 @@ class ShopRegisterFloorPlanController extends Controller
             ->whereKey($shopRegisterId)
             ->value('shop_register_name');
 
-        $floorPlans = $request->input('floor_plan_id') ?? [];
+        $userAccounts = $request->input('user_account_id') ?? [];
 
-        if (is_string($floorPlans)) {
-            $floorPlans = explode(',', $floorPlans);
+        if (is_string($userAccounts)) {
+            $userAccounts = explode(',', $userAccounts);
         }
 
-        if (!empty($floorPlans)) {
-            ShopRegisterFloorPlan::query()
+        if (!empty($userAccounts)) {
+            ShopRegisterAccess::query()
             ->where('shop_register_id', $shopRegisterId)
             ->delete();
 
-            foreach ($floorPlans as $floorPlanId) {
-                $floorPlan = FloorPlan::find($floorPlanId);
+            foreach ($userAccounts as $userAccountId) {
+                $userAccount = User::find($userAccountId);
 
-                if (!$floorPlan) {
+                if (!$userAccount) {
                     continue;
                 }
 
-                $floorPlanName = (string) FloorPlan::query()
-                ->whereKey($floorPlanId)
-                ->value('floor_plan_name');
+                $userAccountName = (string) User::query()
+                ->whereKey($userAccountId)
+                ->value('name');
 
                 $payload = [
                     'shop_register_id' => $shopRegisterId,
                     'shop_register_name' => $shopRegisterName,
-                    'floor_plan_id' => $floorPlanId,
-                    'floor_plan_name' => $floorPlanName,
+                    'user_account_id' => $userAccountId,
+                    'user_name' => $userAccountName,
                     'last_log_by' => Auth::id(),
                 ];
 
-                ShopRegisterFloorPlan::query()->create($payload);
+                ShopRegisterAccess::query()->create($payload);
             }
         }        
 
         return response()->json([
             'success' => true,
-            'message' => 'The floor plan has been saved successfully',
+            'message' => 'The access has been saved successfully',
         ]);
     }
 }

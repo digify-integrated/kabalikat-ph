@@ -2,7 +2,7 @@ import { initValidation } from '../../util/validation.js';
 import { showNotification } from '../../util/notifications.js';
 import { attachLogNotesHandler, attachLogNotesClassHandler } from '../../util/log-notes.js';
 import { disableButton, enableButton, detailsDeleteButton, detailsActionButton, imageRealtimeUploadButton, detailsTableActionButton, } from '../../form/button.js';
-import { displayDetails, getPageContext, getCsrfToken, resetForm } from '../../form/form.js';
+import { displayDetails, handleActionFetch, getPageContext, getCsrfToken, resetForm } from '../../form/form.js';
 import { initializeDatatable, reloadDatatable } from '../../util/datatable.js';
 import { handleSystemError } from '../../util/system-errors.js';
 import { generateDropdownOptions } from '../../form/field.js';
@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         disableButton('submit-discount');
             
                         try {
-                            const response = await fetch('/op-register-discount/save', {
+                            const response = await fetch('/shop-register-discount/save', {
                                 method: 'POST',
                                 body: formData,
                             });
@@ -166,7 +166,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                  columns: [
                     { data: 'DISCOUNT' },
-                    { data: 'VALUE_TYPE' },
                     { data: 'IS_VARIABLE' },
                     { data: 'DISCOUNT_VALUE' },
                     { data: 'AUTOMATIC_APPLICATION' },
@@ -177,8 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     { width: 'auto', targets: 1, responsivePriority: 2 },
                     { width: 'auto', targets: 2, responsivePriority: 3 },
                     { width: 'auto', targets: 3, responsivePriority: 4 },
-                    { width: 'auto', targets: 4, responsivePriority: 5 },
-                    { width: 'auto', bSortable: false, targets: 2, responsivePriority: 6 },
+                    { width: 'auto', bSortable: false, targets: 4, responsivePriority: 5 },
                 ],
                 charges: {
                     subControls: {
@@ -198,7 +196,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                  columns: [
                     { data: 'CHARGE' },
-                    { data: 'VALUE_TYPE' },
                     { data: 'IS_VARIABLE' },
                     { data: 'CHARGE_VALUE' },
                     { data: 'AUTOMATIC_APPLICATION' },
@@ -209,8 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     { width: 'auto', targets: 1, responsivePriority: 2 },
                     { width: 'auto', targets: 2, responsivePriority: 3 },
                     { width: 'auto', targets: 3, responsivePriority: 4 },
-                    { width: 'auto', targets: 4, responsivePriority: 5 },
-                    { width: 'auto', bSortable: false, targets: 2, responsivePriority: 6 },
+                    { width: 'auto', bSortable: false, targets: 4, responsivePriority: 5 },
                 ],
                 charges: {
                     subControls: {
@@ -233,13 +229,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     $('#company_id').val(data.companyId ?? '').trigger('change');
                     $('#is_restaurant').val(data.isRestaurant ?? 'No').trigger('change');
                     $('#shop_register_status').val(data.shopRegisterStatus ?? 'Active').trigger('change');
+                    
+                    $('#warehouse_id').val(data.warehouseId ?? '').trigger('change');
+                    $('#floor_plan_id').val(data.floorPlanId ?? '').trigger('change');
+                    $('#payment_method_id').val(data.paymentMethodId ?? '').trigger('change');
+                    $('#user_account_id').val(data.accessId ?? '').trigger('change');
                 },
             },
         ],
         delete: {
             trigger: '#delete-shop-register',
             url: '/shop-register/delete',
-            swalTitle: 'Confirm User Deletion',
+            swalTitle: 'Confirm Shop Register Deletion',
             swalText: 'Are you sure you want to delete this product?',
             confirmButtonText: 'Delete',
         },
@@ -247,8 +248,8 @@ document.addEventListener('DOMContentLoaded', () => {
             {
                 trigger: '.delete-discount',
                 url: '/shop-register-discount/delete',
-                table: '#bom-table',
-                swalTitle: 'Confirm POS Discount Deletion',
+                table: '#discount-table',
+                swalTitle: 'Confirm Discount Deletion',
                 swalText: 'Are you sure you want to delete this discount?',
                 confirmButtonText: 'Delete'
             },
@@ -256,7 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 trigger: '.delete-charge',
                 url: '/shop-register-charge/delete',
                 table: '#charge-table',
-                swalTitle: 'Confirm Service Charge Deletion',
+                swalTitle: 'Confirm Charge Deletion',
                 swalText: 'Are you sure you want to delete this charge',
                 confirmButtonText: 'Delete'
             },
@@ -273,25 +274,13 @@ document.addEventListener('DOMContentLoaded', () => {
         ],
         dropdown: [
             { url: '/company/generate-options', dropdownSelector: '#company_id' },
+            { url: '/discount-type/generate-options', dropdownSelector: '#discount_type_id' },
+            { url: '/charge-type/generate-options', dropdownSelector: '#charge_type_id' },
             { url: '/warehouse/generate-options', dropdownSelector: '#warehouse_id', data : { multiple: true } },
             { url: '/floor-plan/generate-options', dropdownSelector: '#floor_plan_id', data : { multiple: true } },
             { url: '/payment-method/generate-options', dropdownSelector: '#payment_method_id', data : { multiple: true } },
-            { url: '/user/generate-options', dropdownSelector: '#access', data : { multiple: true } },
+            { url: '/user/generate-options', dropdownSelector: '#user_account_id', data : { multiple: true } },
         ],
-        discountDropdown: {
-            url: '/shop-register-discount/generate-options',
-            dropdownSelector: '#discount_type_id',
-            data : {
-                shop_register_id : ctx.detailId,
-            }
-        },
-        chargeDropdown: {
-            url: '/shop-register-charge/generate-options',
-            dropdownSelector: '#charge_type_id',
-            data : {
-                shop_register_id : ctx.detailId,
-            }
-        },
     };
 
     (async () => {
@@ -328,39 +317,169 @@ document.addEventListener('DOMContentLoaded', () => {
         const addDiscount = target.closest('#add-discount');
         if (addDiscount) {
             resetForm('discount_form');
+        }
 
-            generateDropdownOptions({
-                url: config.discountDropdown.url,
-                dropdownSelector: config.discountDropdown.dropdownSelector,
-                data: config.discountDropdown.data
-            });            
+        const updateShopOrderDiscount = target.closest('.update-discount');
+        if (updateShopOrderDiscount) {
+            const referenceId = updateShopOrderDiscount.dataset.referenceId;
+        
+            await handleActionFetch({
+                triggerElement: updateShopOrderDiscount,
+                url: '/shop-register-discount/fetch-details',
+                referenceKey: 'referenceId',
+        
+                onSuccess: (data) => {
+                    const item = data.data;
+        
+                    document.getElementById('shop_register_discount_id').value = referenceId;
+        
+                    $('#discount_type_id').val(data.discountTypeId).trigger('change');
+                    $('#discount_automatic_application').val(data.automaticApplication).trigger('change');
+                }
+            });
         }
     
         const addCharge = target.closest('#add-charge');
         if (addCharge) {
             resetForm('charge_form');
+        }
 
-            generateDropdownOptions({
-                url: config.chargeDropdown.url,
-                dropdownSelector: config.chargeDropdown.dropdownSelector,
-                data: config.chargeDropdown.data
+        const updateShopOrderCharge = target.closest('.update-charge');
+        if (updateShopOrderCharge) {
+            const referenceId = updateShopOrderCharge.dataset.referenceId;
+        
+            await handleActionFetch({
+                triggerElement: updateShopOrderCharge,
+                url: '/shop-register-charge/fetch-details',
+                referenceKey: 'referenceId',
+        
+                onSuccess: (data) => {
+                    const item = data.data;
+        
+                    document.getElementById('shop_register_charge_id').value = referenceId;
+        
+                    $('#charge_type_id').val(data.chargeTypeId).trigger('change');
+                    $('#charge_automatic_application').val(data.automaticApplication).trigger('change');
+                }
             });
         }
     });
 
-    $('#shop_register_category_id').on('change', async function () {
+    $('#warehouse_id').on('change', async function () {
         try {
-            const productCategoryId = $(this).val();
+            const warehouseId = $(this).val();
             const csrf = getCsrfToken();
             const ctx = getPageContext();
             
             const formData = new URLSearchParams();
-            formData.append('shop_register_category_id', productCategoryId);
+            formData.append('warehouse_id', warehouseId);
             formData.append('shop_register_id', ctx.detailId ?? '');
             formData.append('appId', ctx.appId ?? '');
             formData.append('navigationMenuId', ctx.navigationMenuId ?? '');
             
-            const response = await fetch('/product-category-map/save', {
+            const response = await fetch('/shop-register-warehouse/save', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    Accept: 'application/json',
+                    ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+                },
+            });
+            
+            if (!response.ok) throw new Error(`Request failed with status: ${response.status}`);
+            
+            const data = await response.json();
+            
+            if (!data.success) {
+                showNotification(data.message);
+            }
+        } catch (error) {
+            handleSystemError(error, 'fetch_failed', `Failed to settings: ${error.message}`);
+        }
+    });
+
+    $('#floor_plan_id').on('change', async function () {
+        try {
+            const floorPlanId = $(this).val();
+            const csrf = getCsrfToken();
+            const ctx = getPageContext();
+            
+            const formData = new URLSearchParams();
+            formData.append('floor_plan_id', floorPlanId);
+            formData.append('shop_register_id', ctx.detailId ?? '');
+            formData.append('appId', ctx.appId ?? '');
+            formData.append('navigationMenuId', ctx.navigationMenuId ?? '');
+            
+            const response = await fetch('/shop-register-floor-plan/save', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    Accept: 'application/json',
+                    ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+                },
+            });
+            
+            if (!response.ok) throw new Error(`Request failed with status: ${response.status}`);
+            
+            const data = await response.json();
+            
+            if (!data.success) {
+                showNotification(data.message);
+            }
+        } catch (error) {
+            handleSystemError(error, 'fetch_failed', `Failed to settings: ${error.message}`);
+        }
+    });
+
+    $('#payment_method_id').on('change', async function () {
+        try {
+            const paymentMethodId = $(this).val();
+            const csrf = getCsrfToken();
+            const ctx = getPageContext();
+            
+            const formData = new URLSearchParams();
+            formData.append('payment_method_id', paymentMethodId);
+            formData.append('shop_register_id', ctx.detailId ?? '');
+            formData.append('appId', ctx.appId ?? '');
+            formData.append('navigationMenuId', ctx.navigationMenuId ?? '');
+            
+            const response = await fetch('/shop-register-payment-method/save', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    Accept: 'application/json',
+                    ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+                },
+            });
+            
+            if (!response.ok) throw new Error(`Request failed with status: ${response.status}`);
+            
+            const data = await response.json();
+            
+            if (!data.success) {
+                showNotification(data.message);
+            }
+        } catch (error) {
+            handleSystemError(error, 'fetch_failed', `Failed to settings: ${error.message}`);
+        }
+    });
+
+    $('#user_account_id').on('change', async function () {
+        try {
+            const userAccountId = $(this).val();
+            const csrf = getCsrfToken();
+            const ctx = getPageContext();
+            
+            const formData = new URLSearchParams();
+            formData.append('user_account_id', userAccountId);
+            formData.append('shop_register_id', ctx.detailId ?? '');
+            formData.append('appId', ctx.appId ?? '');
+            formData.append('navigationMenuId', ctx.navigationMenuId ?? '');
+            
+            const response = await fetch('/shop-register-access/save', {
                 method: 'POST',
                 body: formData,
                 headers: {

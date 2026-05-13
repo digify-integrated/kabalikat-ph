@@ -352,7 +352,7 @@ document.addEventListener('DOMContentLoaded', () => {
         delete: {
             trigger: '#delete-product',
             url: '/products/delete',
-            swalTitle: 'Confirm User Deletion',
+            swalTitle: 'Confirm Product Deletion',
             swalText: 'Are you sure you want to delete this product?',
             confirmButtonText: 'Delete',
         },

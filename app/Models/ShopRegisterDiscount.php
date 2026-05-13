@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ShopRegisterDiscount extends Model
 {
-    protected $table = 'shop_register_access';
+    protected $table = 'shop_register_discount';
 
     protected $fillable = [
         'shop_register_id',

@@ -247,14 +247,14 @@ class ChargeTypeController extends Controller
         }
 
         $chargeTypes = DB::table('charge_type')
-            ->select(['id', 'charge_type_name', 'charge_type'])
+            ->select(['id', 'charge_type_name'])
             ->orderBy('charge_type_name')
             ->get();
 
         $response = $response->concat(
             $chargeTypes->map(fn ($row) => [
                 'id'   => $row->id,
-                'text' => $row->charge_type_name . ' (.' . $row->charge_type . ')',
+                'text' => $row->charge_type_name,
             ])
         )->values();
 
