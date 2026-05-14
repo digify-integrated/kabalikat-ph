@@ -2949,6 +2949,124 @@ return new class extends Migration
                 VALUES ('shop_register_charge', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
             END
         SQL);
+
+        /* =============================================================================================
+            TABLE: SHOP REGISTER SESSION
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_register_session_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_register_session_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_shop_register_session_update
+            AFTER UPDATE ON shop_register_session
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Shop register session changed.<br/><br/>';
+
+                IF NEW.shop_register_name <> OLD.shop_register_name THEN
+                    SET audit_log = CONCAT(audit_log, "Shop Register:", OLD.shop_register_name, " -> ", NEW.shop_register_name, "<br/>");
+                END IF;
+
+                IF NEW.open_time <> OLD.open_time THEN
+                    SET audit_log = CONCAT(audit_log, "Open Time:", OLD.open_time, " -> ", NEW.open_time, "<br/>");
+                END IF;
+
+                IF NEW.open_amount <> OLD.open_amount THEN
+                    SET audit_log = CONCAT(audit_log, "Open Amount:", OLD.open_amount, " -> ", NEW.open_amount, "<br/>");
+                END IF;
+
+                IF NEW.open_remarks <> OLD.open_remarks THEN
+                    SET audit_log = CONCAT(audit_log, "Open Remarks:", OLD.open_remarks, " -> ", NEW.open_remarks, "<br/>");
+                END IF;
+
+                IF NEW.open_user_name <> OLD.open_user_name THEN
+                    SET audit_log = CONCAT(audit_log, "Opened By:", OLD.open_user_name, " -> ", NEW.open_user_name, "<br/>");
+                END IF;
+
+                IF NEW.close_time <> OLD.close_time THEN
+                    SET audit_log = CONCAT(audit_log, "Close Time:", OLD.close_time, " -> ", NEW.close_time, "<br/>");
+                END IF;
+
+                IF NEW.close_amount <> OLD.close_amount THEN
+                    SET audit_log = CONCAT(audit_log, "Close Amount:", OLD.close_amount, " -> ", NEW.close_amount, "<br/>");
+                END IF;
+
+                IF NEW.close_remarks <> OLD.close_remarks THEN
+                    SET audit_log = CONCAT(audit_log, "Close Remarks:", OLD.close_remarks, " -> ", NEW.close_remarks, "<br/>");
+                END IF;
+
+                IF NEW.close_user_name <> OLD.close_user_name THEN
+                    SET audit_log = CONCAT(audit_log, "Closed By:", OLD.close_user_name, " -> ", NEW.close_user_name, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Shop register session changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('shop_register_session', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_shop_register_session_insert
+            AFTER INSERT ON shop_register_session
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Shop register session created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('shop_register_session', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
+
+        /* =============================================================================================
+            TABLE: SHOP REGISTER SESSION
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_session_denomination_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_session_denomination_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_shop_session_denomination_update
+            AFTER UPDATE ON shop_session_denomination
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Shop session denomination changed.<br/><br/>';
+
+                IF NEW.count_type <> OLD.count_type THEN
+                    SET audit_log = CONCAT(audit_log, "Count Type:", OLD.count_type, " -> ", NEW.count_type, "<br/>");
+                END IF;
+
+                IF NEW.denomination_value <> OLD.denomination_value THEN
+                    SET audit_log = CONCAT(audit_log, "Denomination Value:", OLD.denomination_value, " -> ", NEW.denomination_value, "<br/>");
+                END IF;
+
+                IF NEW.quantity <> OLD.quantity THEN
+                    SET audit_log = CONCAT(audit_log, "Quantity:", OLD.quantity, " -> ", NEW.quantity, "<br/>");
+                END IF;
+
+                IF NEW.line_total <> OLD.line_total THEN
+                    SET audit_log = CONCAT(audit_log, "Line Total:", OLD.line_total, " -> ", NEW.line_total, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Shop session denomination changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('shop_session_denomination', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_shop_session_denomination_insert
+            AFTER INSERT ON shop_session_denomination
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Shop session denomination created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('shop_session_denomination', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
     }
 
     /**

@@ -1763,18 +1763,20 @@ return new class extends Migration
             $table->decimal('open_amount', 10, 2)->default(0);
             $table->string('open_remarks')->nullable();
             $table->foreignId('open_user_account_id')
-            ->constrained('users')
-            ->nullOnDelete()
-            ->nullable();
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
             $table->string('open_user_name');
 
             $table->datetime('close_time')->nullable();
             $table->decimal('close_amount', 10, 2)->default(0);
             $table->string('close_remarks')->nullable();
+           
+
             $table->foreignId('close_user_account_id')
-            ->constrained('users')
-            ->nullOnDelete()
-            ->nullable();
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
             $table->string('close_user_name');
 
             $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
@@ -1807,11 +1809,8 @@ return new class extends Migration
             $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
             $table->timestamps();
 
-            $table->index(['shop_register_id']);
-            $table->index(['open_time']);
-            $table->index(['open_user_account_id']);
-            $table->index(['close_time']);
-            $table->index(['close_user_account_id']);
+            $table->index(['shop_register_session_id']);
+            $table->index(['count_type']);
         });
 
         /* =============================================================================================

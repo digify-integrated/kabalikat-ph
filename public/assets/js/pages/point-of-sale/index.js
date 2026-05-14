@@ -1,70 +1,56 @@
-import { initializeDatatable } from '../../util/datatable.js';
-import { displayDetails } from '../../form/form.js';
-import { checkNotification } from '../../util/notifications.js';
+import { getPageContext, getCsrfToken } from '../../form/form.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    const config = {
-        table: [
-            {
-                url: '/inventory-dashboard/generate-out-of-stock-table',
-                selector: '#out-of-stock-table',
-                serverSide: false,
-                order: [[0, 'asc']],
-                columns: [
-                    { data: 'PRODUCT' }
-                ],
-            },
-            {
-                url: '/inventory-dashboard/generate-expired-stock-table',
-                selector: '#expired-stock-table',
-                serverSide: false,
-                order: [[0, 'asc']],
-                columns: [
-                    { data: 'PRODUCT' },
-                    { data: 'BATCH_NUMBER' },
-                    { data: 'QUANTITY' },
-                    { data: 'EXPIRATION_DATE' },
-                ],
-            },
-            {
-                url: '/inventory-dashboard/generate-low-stock-table',
-                selector: '#low-stock-table',
-                serverSide: false,
-                order: [[0, 'asc']],
-                columns: [
-                    { data: 'PRODUCT' },
-                    { data: 'QUANTITY' },
-                    { data: 'REORDER_LEVEL' },
-                ],
-            },
-            {
-                url: '/inventory-dashboard/generate-near-expiry-table',
-                selector: '#near-expiry-table',
-                serverSide: false,
-                order: [[0, 'asc']],
-                columns: [
-                    { data: 'PRODUCT' },
-                    { data: 'BATCH_NUMBER' },
-                    { data: 'QUANTITY' },
-                    { data: 'EXPIRATION_DATE' },
-                ],
-            },
-        ],
-        details: [
-            {
-                url: '/inventory-dashboard/fetch-details',
-                onSuccess: async (data) => {
-                    document.getElementById('out-of-stock-count').textContent = data.outOfStockCount || '0';
-                    document.getElementById('expired-items-count').textContent = data.expiredItemsCount || '0';
-                    document.getElementById('low-stock-count').textContent = data.lowStockCount || '0';
-                    document.getElementById('expiring-soon-count').textContent = data.expiringSoonCount || '0';
-                },
+    const generateShopRegister = (url) => {
+        try {        
+            const csrf = getCsrfToken();
+            const ctx = getPageContext();
+        
+            const params = new URLSearchParams();
+            params.append('appId', ctx.appId ?? '');
+            params.append('navigationMenuId', ctx.navigationMenuId ?? '');
+            appendObject(params, otherData);
+        
+            const response = await fetch(url, {
+              method: 'POST',
+              body: params,
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                Accept: 'application/json',
+                ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+              },
+            });
+        
+            if (!response.ok) throw new Error(`Request failed with status: ${response.status}`);
+        
+            const data = await response.json();
+        
+            if (data?.success) {
+              await onSuccess(data);
+              return data;
             }
-        ]
+        
+            if (data?.notExist) {
+              if (typeof onNotExist === 'function') onNotExist(data);
+              else {
+                setNotification(data.message);
+                window.location.replace(data.redirect_link);
+              }
+              return data;
+            }
+        
+            if (typeof onFailureMessage === 'function') onFailureMessage(data);
+            else showNotification(data?.message ?? 'Request failed.');
+        
+            return data;
+          } catch (error) {
+            handleSystemError(error, 'fetch_failed', `Fetch request failed: ${error.message}`);
+            throw error;
+          } finally {
+            setHiddenBusy(hideNodes, false);
+            if (disableWhileFetching) setFormBusy(targetForm, false);
+          }
     }
-    
-    checkNotification()
-    
-    config.details.map((cfg) => displayDetails(cfg))
-    config.table.map((cfg) => initializeDatatable(cfg))
+
+    generateShopRegister('/shop-register/generate-register');
 });

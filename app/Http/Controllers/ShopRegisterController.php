@@ -208,7 +208,7 @@ class ShopRegisterController extends Controller
         $filterByIsRestaurant = $request->input('filter_by_is_restaurant');
         $filterByStatus = $request->input('filter_by_status');
 
-        $products = DB::table('shop_register')
+        $shopRegisters = DB::table('shop_register')
         ->when(!empty($filterByCompany), fn($q) => $q->whereIn('company_id', $filterByCompany))
         ->when(!empty($filterByIsRestaurant), function ($q) use ($filterByIsRestaurant) {
             $q->where('is_restaurant', $filterByIsRestaurant);
@@ -219,7 +219,52 @@ class ShopRegisterController extends Controller
         ->orderBy('shop_register_name')
         ->get();
 
-        $response = $products->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
+        $response = $shopRegisters->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
+            $shopRegisterId = $row->id;
+            $shopRegisterName = $row->shop_register_name;
+            $companyName = $row->company_name;
+            $isRestaurant = $row->is_restaurant ?? 'No';
+            $shopRegisterStatus = $row->shop_register_status;
+            $class = $shopRegisterStatus === 'Active' ? 'success' : 'danger';
+            $activeBadge = "<span class=\"badge badge-light-{$class}\">{$shopRegisterStatus}</span>";
+
+            $link = route('apps.details', [
+                'appId' => $pageAppId,
+                'navigationMenuId' => $pageNavigationMenuId,
+                'details_id' => $shopRegisterId,
+            ]);
+
+            return [
+                'CHECK_BOX' => '
+                    <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
+                        <input class="form-check-input datatable-checkbox-children" type="checkbox" value="'.$shopRegisterId.'">
+                    </div>
+                ',
+                'SHOP_REGISTER' => $shopRegisterName,
+                'COMPANY' => $companyName,
+                'IS_RESTAURANT' => $isRestaurant,
+                'STATUS' => $activeBadge,
+                'LINK' => $link,
+            ];
+        })->values();
+
+        return response()->json($response);
+    }
+
+    public function generateRegister(Request $request)
+    {
+        $pageAppId = (int) $request->input('appId');
+        $pageNavigationMenuId = (int) $request->input('navigationMenuId');
+
+        $shopRegisters = DB::table('shop_register')
+        ->whereIn('id', function ($query) {
+            $query->select('shop_register_id')
+                ->from('shop_register_access')
+                ->where('user_account_id', Auth::id());
+        })
+        ->get();
+
+        $response = $shopRegisters->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
             $shopRegisterId = $row->id;
             $shopRegisterName = $row->shop_register_name;
             $companyName = $row->company_name;

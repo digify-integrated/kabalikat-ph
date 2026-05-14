@@ -6,214 +6,403 @@
 @endpush
 
 @section('content')
-    <div class="row g-5 g-xl-8 mb-5">
-        <div class="col-xl-3">
-            <div class="card card-flush bgi-no-repeat bgi-size-contain bgi-position-x-end h-xl-100 bg-danger">
-                <div class="card-header pt-5 mb-0">
-                    <div class="d-flex flex-center rounded-circle h-80px w-80px border-white" style="border: 1px dashed"> 
-                        <i class="ki-duotone ki-tag-cross text-white fs-3x lh-0"></i>             
-                    </div>    
-                </div>
+   <div class="row g-5 g-xl-9">
 
-                <div class="card-body d-flex align-items-end mb-3">
+    <!-- OPEN REGISTER -->
+    <div class="col-md-6 col-xl-4">
+
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100">
+
+            <!-- Accent -->
+            <div class="h-5px bg-success"></div>
+
+            <!-- Header -->
+            <div class="card-header border-0 pt-6 pb-4">
+
+                <div class="d-flex align-items-center justify-content-between w-100">
+
                     <div class="d-flex align-items-center">
-                        <span class="fs-4hx text-white fw-bold me-6" id="out-of-stock-count">0</span>
 
-                        <div class="fw-bold fs-6 text-white">
-                            <span class="d-block fs-2">Out of Stock</span>
-                            <span class="">Requires restock</span>
-                        </div>            
+                        <div class="symbol symbol-45px me-4">
+                            <div class="symbol-label bg-light-success">
+                                <i class="ki-outline ki-shop fs-2x text-success"></i>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="fw-bold mb-1">Main Cashier</h3>
+
+                            <div class="d-flex align-items-center fs-7 text-muted">
+                                <span class="bullet bullet-dot bg-success me-2"></span>
+                                Active session
+                            </div>
+                        </div>
+
                     </div>
+
+                    <span class="badge badge-light-success fw-bold px-4 py-2">
+                        OPEN
+                    </span>
+
                 </div>
+
             </div>
-        </div>
-        <div class="col-xl-3">
-            <div class="card card-flush bgi-no-repeat bgi-size-contain bgi-position-x-end h-xl-100 bg-warning">
-                <div class="card-header pt-5 mb-0">
-                    <div class="d-flex flex-center rounded-circle h-80px w-80px border-white" style="border: 1px dashed"> 
-                        <i class="ki-duotone ki-calendar-remove text-white fs-3x lh-0"></i>             
-                    </div>    
-                </div>
 
-                <div class="card-body d-flex align-items-end mb-3">
-                    <div class="d-flex align-items-center">
-                        <span class="fs-4hx text-white fw-bold me-6" id="expired-items-count">0</span>
+            <!-- Stats -->
+            <div class="px-6 mb-5">
 
-                        <div class="fw-bold fs-6 text-white">
-                            <span class="d-block fs-2">Expired Items</span>
-                            <span class="">Remove from shelf</span>
-                        </div>            
+                <div class="row g-3">
+
+                    <div class="col-4">
+                        <div class="bg-light-success rounded-4 px-3 py-3 text-center">
+                            <div class="text-muted fs-8 mb-1">Cash</div>
+                            <div class="fw-bold fs-4">₱8.4K</div>
+                        </div>
                     </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-3">
-            <div class="card card-flush bgi-no-repeat bgi-size-contain bgi-position-x-end h-xl-100 bg-info">
-                <div class="card-header pt-5 mb-0">
-                    <div class="d-flex flex-center rounded-circle h-80px w-80px border-white" style="border: 1px dashed"> 
-                        <i class="ki-duotone ki-information text-white fs-3x lh-0"></i>             
-                    </div>    
-                </div>
 
-                <div class="card-body d-flex align-items-end mb-3">
-                    <div class="d-flex align-items-center">
-                        <span class="fs-4hx text-white fw-bold me-6" id="low-stock-count">0</span>
-
-                        <div class="fw-bold fs-6 text-white">
-                            <span class="d-block fs-2">Low Stock</span>
-                            <span class="">Below threshold</span>
-                        </div>            
+                    <div class="col-4">
+                        <div class="bg-light-primary rounded-4 px-3 py-3 text-center">
+                            <div class="text-muted fs-8 mb-1">Sales</div>
+                            <div class="fw-bold fs-4">42</div>
+                        </div>
                     </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-3">
-            <div class="card card-flush bgi-no-repeat bgi-size-contain bgi-position-x-end h-xl-100 bg-primary">
-                <div class="card-header pt-5 mb-0">
-                    <div class="d-flex flex-center rounded-circle h-80px w-80px border-white" style="border: 1px dashed"> 
-                        <i class="ki-duotone ki-calendar text-white fs-3x lh-0"></i>             
-                    </div>    
-                </div>
 
-                <div class="card-body d-flex align-items-end mb-3">
-                    <div class="d-flex align-items-center">
-                        <span class="fs-4hx text-white fw-bold me-6" id="expiring-soon-count">0</span>
-
-                        <div class="fw-bold fs-6 text-white">
-                            <span class="d-block fs-2">Expiring Soon</span>
-                            <span class="">Next 30 days</span>
-                        </div>            
+                    <div class="col-4">
+                        <div class="bg-light-info rounded-4 px-3 py-3 text-center">
+                            <div class="text-muted fs-8 mb-1">Duration</div>
+                            <div class="fw-bold fs-4">5h</div>
+                        </div>
                     </div>
+
                 </div>
+
             </div>
+
+            <!-- Timeline -->
+            <div class="px-6 mb-5">
+
+                <div class="bg-light rounded-4 p-5">
+
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="fw-bold mb-0">Session Timeline</h5>
+                        <span class="badge badge-light-success">LIVE</span>
+                    </div>
+
+                    <div class="timeline">
+
+                        <div class="timeline-item align-items-center mb-7">
+
+                            <div class="timeline-line mt-1 mb-n6"></div>
+
+                            <div class="timeline-icon">
+                                <i class="ki-duotone ki-check-circle fs-2 text-success">
+                                    <span class="path1"></span>
+                                    <span class="path2"></span>
+                                </i>
+                            </div>
+
+                            <div class="timeline-content m-0">
+
+                                <span class="fs-7 text-gray-500 d-block">
+                                    Register Opened
+                                </span>
+
+                                <span class="fs-6 fw-bold text-gray-800">
+                                    04 Mar 2026 · 02:58 PM
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                        <div class="timeline-item align-items-center">
+
+                            <div class="timeline-line"></div>
+
+                            <div class="timeline-icon">
+                                <i class="ki-duotone ki-time fs-2 text-warning">
+                                    <span class="path1"></span>
+                                    <span class="path2"></span>
+                                </i>
+                            </div>
+
+                            <div class="timeline-content m-0">
+
+                                <span class="fs-7 text-gray-500 d-block">
+                                    Currently Active
+                                </span>
+
+                                <span class="fs-6 fw-bold text-gray-800">
+                                    Awaiting closing
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Action -->
+            <div class="card-body pt-0">
+
+                <a href="#"
+                   class="btn btn-primary fw-bold w-100 py-3 rounded-3">
+                    View Register
+                </a>
+
+            </div>
+
         </div>
+
     </div>
 
-    <div class="row">
-        <div class="col-xl-6">
-            <div class="card mb-5">
-                <div class="card-header border-0 pt-5">
-                    <h3 class="card-title align-items-start flex-column">
-                        <span class="card-label fw-bold fs-3 mb-1">
-                            Out of stock products
-                        </span>
-                        <span class="text-muted mt-1 fw-semibold fs-7">
-                            These products are at zero and cannot be sold.
-                        </span>
-                    </h3>
+    <!-- CLOSED REGISTER -->
+    <div class="col-md-6 col-xl-4">
+
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100">
+
+            <!-- Accent -->
+            <div class="h-5px bg-danger"></div>
+
+            <!-- Header -->
+            <div class="card-header border-0 pt-6 pb-4">
+
+                <div class="d-flex align-items-center justify-content-between w-100">
+
+                    <div class="d-flex align-items-center">
+
+                        <div class="symbol symbol-45px me-4">
+                            <div class="symbol-label bg-light-danger">
+                                <i class="ki-outline ki-lock-2 fs-2x text-danger"></i>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="fw-bold mb-1">Main Cashier</h3>
+
+                            <div class="d-flex align-items-center fs-7 text-muted">
+                                <span class="bullet bullet-dot bg-danger me-2"></span>
+                                Closed session
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <span class="badge badge-light-danger fw-bold px-4 py-2">
+                        CLOSED
+                    </span>
+
                 </div>
 
-                <div class="card-body py-3">
-                    <div class="table-responsive">
-                        <table class="table align-middle table-row-dashed fs-6 gy-3" id="out-of-stock-table">
-                            <thead>
-                                <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
-                                    <th class="min-w-100px">Product</th>
-                                </tr>
-                            </thead>
-                            
-                            <tbody class="fw-bold text-gray-600"></tbody>
-                        </table>
-                    </div>
-                </div>
             </div>
-        </div>
-        <div class="col-xl-6">
-            <div class="card mb-5">
-                <div class="card-header border-0 pt-5">
-                    <h3 class="card-title align-items-start flex-column">
-                        <span class="card-label fw-bold fs-3 mb-1">
-                            Expired Stock
-                        </span>
-                        <span class="text-muted mt-1 fw-semibold fs-7">
-                            Items that are no longer safe or legal to sell
-                        </span>
-                    </h3>
+
+            <!-- Stats -->
+            <div class="px-6 mb-5">
+
+                <div class="row g-3">
+
+                    <div class="col-4">
+                        <div class="bg-light-danger rounded-4 px-3 py-3 text-center">
+                            <div class="text-muted fs-8 mb-1">Closing</div>
+                            <div class="fw-bold fs-4">₱5.4K</div>
+                        </div>
+                    </div>
+
+                    <div class="col-4">
+                        <div class="bg-light-warning rounded-4 px-3 py-3 text-center">
+                            <div class="text-muted fs-8 mb-1">Sales</div>
+                            <div class="fw-bold fs-4">31</div>
+                        </div>
+                    </div>
+
+                    <div class="col-4">
+                        <div class="bg-light-info rounded-4 px-3 py-3 text-center">
+                            <div class="text-muted fs-8 mb-1">Shift</div>
+                            <div class="fw-bold fs-4">12h</div>
+                        </div>
+                    </div>
+
                 </div>
 
-                <div class="card-body py-3">
-                    <div class="table-responsive">
-                        <table class="table align-middle table-row-dashed fs-6 gy-3" id="expired-stock-table">
-                            <thead>
-                                <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
-                                    <th class="min-w-100px">Product</th>
-                                    <th class="min-w-100px">Batch Number</th>
-                                    <th class="min-w-100px">Qty</th>
-                                    <th class="min-w-100px">Expiration Date</th>
-                                </tr>
-                            </thead>
-                                
-                            <tbody class="fw-bold text-gray-600"></tbody>
-                        </table>
-                    </div>
-                </div>
             </div>
+
+            <!-- Timeline -->
+            <div class="px-6 mb-5">
+
+                <div class="bg-light rounded-4 p-5">
+
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="fw-bold mb-0">Last Session</h5>
+                        <span class="badge badge-light-danger">CLOSED</span>
+                    </div>
+
+                    <div class="timeline">
+
+                        <div class="timeline-item align-items-center mb-7">
+
+                            <div class="timeline-line mt-1 mb-n6"></div>
+
+                            <div class="timeline-icon">
+                                <i class="ki-duotone ki-check-circle fs-2 text-success">
+                                    <span class="path1"></span>
+                                    <span class="path2"></span>
+                                </i>
+                            </div>
+
+                            <div class="timeline-content m-0">
+
+                                <span class="fs-7 text-gray-500 d-block">
+                                    Register Opened
+                                </span>
+
+                                <span class="fs-6 fw-bold text-gray-800">
+                                    03 Mar 2026 · 08:00 AM
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                        <div class="timeline-item align-items-center">
+
+                            <div class="timeline-line"></div>
+
+                            <div class="timeline-icon">
+                                <i class="ki-duotone ki-cross-circle fs-2 text-danger">
+                                    <span class="path1"></span>
+                                    <span class="path2"></span>
+                                </i>
+                            </div>
+
+                            <div class="timeline-content m-0">
+
+                                <span class="fs-7 text-gray-500 d-block">
+                                    Register Closed
+                                </span>
+
+                                <span class="fs-6 fw-bold text-gray-800">
+                                    03 Mar 2026 · 08:15 PM
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Action -->
+            <div class="card-body pt-0">
+
+                <a href="#"
+                   class="btn btn-success fw-bold w-100 py-3 rounded-3">
+                    Open Register
+                </a>
+
+            </div>
+
         </div>
+
     </div>
 
-    <div class="row">
-        <div class="col-xl-6">
-            <div class="card mb-5">
-                <div class="card-header border-0 pt-5">
-                    <h3 class="card-title align-items-start flex-column">
-                        <span class="card-label fw-bold fs-3 mb-1">
-                            Low Inventory
-                        </span>
-                        <span class="text-muted mt-1 fw-semibold fs-7">
-                            Items that will run out if not replenished soon
-                        </span>
-                    </h3>
+    <div class="col-md-6 col-xl-4">
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100">
+
+        <!-- Accent -->
+        <div class="h-5px bg-secondary"></div>
+
+        <!-- Header -->
+        <div class="card-header border-0 pt-6 pb-3">
+
+            <div class="d-flex align-items-center justify-content-between w-100">
+
+                <div class="d-flex align-items-center">
+
+                    <div class="symbol symbol-45px me-4">
+                        <div class="symbol-label bg-light-secondary">
+                            <i class="ki-outline ki-setting-2 fs-2x text-gray-700"></i>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="fw-bold mb-0">
+                            Main Cashier
+                        </h3>
+
+                        <div class="text-muted fs-7 mt-1">
+                            Not initialized
+                        </div>
+                    </div>
+
                 </div>
 
-                <div class="card-body py-3">
-                    <div class="table-responsive">
-                        <table class="table align-middle table-row-dashed fs-6 gy-3" id="low-stock-table">
-                            <thead>
-                                <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
-                                    <th class="min-w-100px">Product</th>
-                                    <th class="min-w-100px">Current Qty</th>
-                                    <th class="min-w-100px">Reorder At</th>
-                                </tr>
-                            </thead>
-                                
-                            <tbody class="fw-bold text-gray-600"></tbody>
-                        </table>
-                    </div>
-                </div>
+                <span class="badge badge-light-secondary fw-semibold px-3 py-2">
+                    READY
+                </span>
+
             </div>
+
         </div>
-        <div class="col-xl-6">
-            <div class="card mb-5">
-                <div class="card-header border-0 pt-5">
-                    <h3 class="card-title align-items-start flex-column">
-                        <span class="card-label fw-bold fs-3 mb-1">
-                            Near Expiry
-                        </span>
-                        <span class="text-muted mt-1 fw-semibold fs-7">
-                            Items approaching their expiration date
-                        </span>
-                    </h3>
+
+        <!-- Core Message -->
+        <div class="card-body pt-4 pb-3">
+
+            <div class="text-center py-6">
+
+                <i class="ki-outline ki-information-5 fs-3x text-gray-400 mb-4"></i>
+
+                <h4 class="fw-bold text-gray-800 mb-2">
+                    No register session yet
+                </h4>
+
+                <div class="text-muted fs-7 px-4">
+                    This cashier register is ready. Start the first session to begin tracking sales and cash flow.
                 </div>
 
-                <div class="card-body py-3">
-                    <div class="table-responsive">
-                        <table class="table align-middle table-row-dashed fs-6 gy-3" id="near-expiry-table">
-                            <thead>
-                                <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
-                                    <th class="min-w-100px">Product</th>
-                                    <th class="min-w-100px">Batch Number</th>
-                                    <th class="min-w-100px">Qty</th>
-                                    <th class="min-w-100px">Expiration Date</th>
-                                </tr>
-                            </thead>
-                                
-                            <tbody class="fw-bold text-gray-600"></tbody>
-                        </table>
-                    </div>
-                </div>
             </div>
+
         </div>
+
+        <!-- Minimal Status -->
+        <div class="px-7 pb-5">
+
+            <div class="d-flex justify-content-between py-2 border-bottom">
+                <span class="text-muted fs-7">State</span>
+                <span class="fw-semibold text-dark">Not started</span>
+            </div>
+
+            <div class="d-flex justify-content-between py-2">
+                <span class="text-muted fs-7">History</span>
+                <span class="fw-semibold text-muted">Empty</span>
+            </div>
+
+        </div>
+
+        <!-- CTA -->
+        <div class="card-body pt-0">
+
+            <a href="#"
+               class="btn btn-primary fw-bold w-100 py-3 rounded-3">
+
+                Open First Register
+
+            </a>
+
+        </div>
+
     </div>
+
+</div>
+
+</div>
 @endsection
 
 @push('scripts')

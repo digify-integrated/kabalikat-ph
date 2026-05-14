@@ -794,6 +794,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
             Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
             Route::post('/generate-table', 'generateTable')->name('generate.table');
+            Route::post('/generate-register', 'generateRegister')->name('generate.register');
         });
 
     // Shop Register Discount
