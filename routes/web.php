@@ -790,6 +790,7 @@ Route::middleware('auth')->group(function () {
         ->controller(ShopRegisterController::class)
         ->group(function () {
             Route::post('/save', 'save')->name('save');
+            Route::post('/save-session', 'saveSession')->name('save');
             Route::post('/delete', 'delete')->name('delete');
             Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
             Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');

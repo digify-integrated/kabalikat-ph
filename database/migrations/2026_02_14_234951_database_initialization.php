@@ -1766,7 +1766,7 @@ return new class extends Migration
                 ->nullable()
                 ->constrained('users')
                 ->nullOnDelete();
-            $table->string('open_user_name');
+            $table->string('open_user_name')->nullable();
 
             $table->datetime('close_time')->nullable();
             $table->decimal('close_amount', 10, 2)->default(0);
@@ -1777,7 +1777,7 @@ return new class extends Migration
                 ->nullable()
                 ->constrained('users')
                 ->nullOnDelete();
-            $table->string('close_user_name');
+            $table->string('close_user_name')->nullable();
 
             $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
             $table->timestamps();

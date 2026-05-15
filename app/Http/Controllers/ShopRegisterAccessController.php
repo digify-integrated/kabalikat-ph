@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\ShopRegister;
 use App\Models\ShopRegisterAccess;
-use App\Models\ShopRegisterPaymentMethod;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
