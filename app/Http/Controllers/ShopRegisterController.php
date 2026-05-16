@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Company;
+use App\Models\Product;
 use App\Models\ShopRegister;
 use App\Models\ShopRegisterSession;
 use App\Models\ShopSessionDenomination;
@@ -601,6 +602,281 @@ class ShopRegisterController extends Controller
                 'sales_count' => 0,
 
                 'link' => $link,
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $response,
+        ]);
+    }
+
+    public function generateCategory(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'detailId' => [
+                'required',
+                'integer',
+                Rule::exists('shop_register', 'id')
+            ],
+        ]);
+
+        if ($validator->fails()) {
+
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ]);
+        }
+
+        $shopRegisterId = (int) $request->detailId;
+
+        /*
+        |--------------------------------------------------------------------------
+        | REGISTER WAREHOUSES
+        |--------------------------------------------------------------------------
+        */
+
+        $warehouseIds = DB::table('shop_register_warehouse')
+            ->where('shop_register_id', $shopRegisterId)
+            ->pluck('warehouse_id');
+
+        /*
+        |--------------------------------------------------------------------------
+        | CATEGORIES
+        |--------------------------------------------------------------------------
+        */
+
+        $categories = DB::table('product_category_map as pcm')
+
+            ->join('product as p', 'p.id', '=', 'pcm.product_id')
+
+            ->where('p.product_status', 'Active')
+            ->where('p.show_on_pos', 'Yes')
+
+            ->select(
+                'pcm.product_category_id as id',
+                'pcm.product_category_name as name'
+            )
+
+            ->distinct()
+
+            ->orderBy('pcm.product_category_name')
+
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $categories,
+        ]);
+    }
+
+    public function generateProduct(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'detailId' => [
+                'required',
+                'integer',
+                Rule::exists('shop_register', 'id'),
+            ],
+
+            'category_id' => ['nullable'],
+            'search' => ['nullable', 'string'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ]);
+        }
+
+        $validated = $validator->validated();
+
+        $shopRegisterId = (int) $validated['detailId'];
+        $categoryId = $validated['category_id'] ?? 'all';
+        $search = trim($validated['search'] ?? '');
+
+        /*
+        |--------------------------------------------------------------------------
+        | REGISTER WAREHOUSES
+        |--------------------------------------------------------------------------
+        */
+
+        $warehouseIds = DB::table('shop_register_warehouse')
+            ->where('shop_register_id', $shopRegisterId)
+            ->pluck('warehouse_id');
+
+        /*
+        |--------------------------------------------------------------------------
+        | PRODUCTS
+        |--------------------------------------------------------------------------
+        */
+
+        $products = DB::table('product')
+            ->where('show_on_pos', 'Yes')
+            ->where('product_status', 'Active')
+
+            ->when($categoryId !== 'all', function ($query) use ($categoryId) {
+
+                $query->whereExists(function ($sub) use ($categoryId) {
+
+                    $sub->select(DB::raw(1))
+                        ->from('product_category_map')
+                        ->whereColumn(
+                            'product_category_map.product_id',
+                            'product.id'
+                        )
+                        ->where(
+                            'product_category_map.product_category_id',
+                            $categoryId
+                        );
+                });
+            })
+
+            ->when($search, function ($query) use ($search) {
+
+                $query->where(function ($sub) use ($search) {
+
+                    $sub->where('product_name', 'like', "%{$search}%")
+                        ->orWhere('sku', 'like', "%{$search}%")
+                        ->orWhere('barcode', 'like', "%{$search}%");
+                });
+            })
+
+            ->orderBy('product_name')
+            ->get();
+
+        /*
+        |--------------------------------------------------------------------------
+        | STOCK VALIDATION
+        |--------------------------------------------------------------------------
+        */
+
+        $response = $products->map(function ($product) use ($warehouseIds) {
+
+            $inStock = true;
+            $stockReason = 'Available';
+
+            /*
+            |--------------------------------------------------------------------------
+            | BOM PRODUCTS
+            |--------------------------------------------------------------------------
+            */
+
+            $bomItems = DB::table('product_bom')
+                ->where('product_id', $product->id)
+                ->get();
+
+            /*
+            |--------------------------------------------------------------------------
+            | BOM STRICT VALIDATION
+            |--------------------------------------------------------------------------
+            */
+
+            foreach ($bomItems as $bom) {
+
+                if ($bom->stock_policy !== 'Strict') {
+                    continue;
+                }
+
+                $availableStock = DB::table('stock_level')
+                    ->join(
+                        'inventory_lot',
+                        'inventory_lot.id',
+                        '=',
+                        'stock_level.inventory_lot_id'
+                    )
+                    ->where('stock_level.product_id', $bom->bom_product_id)
+                    ->whereIn('stock_level.warehouse_id', $warehouseIds)
+                    ->where('stock_level.quantity', '>', 0)
+
+                    ->where(function ($query) {
+
+                        $query->whereNull('inventory_lot.expiration_date')
+                            ->orWhere(
+                                'inventory_lot.expiration_date',
+                                '>=',
+                                now()->toDateString()
+                            );
+                    })
+
+                    ->sum('stock_level.quantity');
+
+                if ($availableStock <= 0) {
+
+                    $inStock = false;
+                    $stockReason = 'BOM ingredient unavailable';
+
+                    break;
+                }
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | TRACK INVENTORY
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                $inStock &&
+                $product->track_inventory === 'Yes'
+            ) {
+
+                $availableStock = DB::table('stock_level')
+                    ->join(
+                        'inventory_lot',
+                        'inventory_lot.id',
+                        '=',
+                        'stock_level.inventory_lot_id'
+                    )
+                    ->where('stock_level.product_id', $product->id)
+                    ->whereIn('stock_level.warehouse_id', $warehouseIds)
+                    ->where('stock_level.quantity', '>', 0)
+
+                    ->where(function ($query) {
+
+                        $query->whereNull('inventory_lot.expiration_date')
+                            ->orWhere(
+                                'inventory_lot.expiration_date',
+                                '>=',
+                                now()->toDateString()
+                            );
+                    })
+
+                    ->sum('stock_level.quantity');
+
+                if ($availableStock <= 0) {
+
+                    $inStock = false;
+                    $stockReason = 'Out of stock';
+                }
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | CATEGORY
+            |--------------------------------------------------------------------------
+            */
+
+            $category = DB::table('product_category_map')
+                ->where('product_id', $product->id)
+                ->first();
+
+            return [
+                'id' => $product->id,
+
+                'product_name' => $product->product_name,
+
+                'price' => number_format($product->base_price, 2),
+
+                'image' => $product->product_image,
+
+                'category_name' => $category?->product_category_name ?? 'Uncategorized',
+
+                'in_stock' => $inStock,
+
+                'stock_status' => $stockReason,
             ];
         });
 

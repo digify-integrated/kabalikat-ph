@@ -8,187 +8,21 @@
 @section('content')
 
     <div class="row">
-        <div class="col-lg-8" id="">
+        <div class="col-lg-8">
             <div class="row mb-5">
                 <div class="col">
                     <div class="d-flex align-items-center position-relative my-1">
                         <i class="ki-duotone ki-magnifier fs-3 position-absolute ms-4"></i>
-                        <input type="text" class="form-control form-control-solid w-100 ps-12" placeholder="Search products, SKU, barcode...">
+                        <input type="text" class="form-control form-control-solid w-100 ps-12" id="product_search" placeholder="Search products, SKU, barcode...">
                     </div>
                 </div>
             </div>
 
             <div class="mb-4 overflow-auto">
-                <div class="d-flex flex-nowrap gap-2 pb-1" id="shop-product-category-container">
-
-                    <button
-                        type="button"
-                        class="btn btn-primary rounded-pill px-4 py-2 product-category-filter active"
-                        data-product-filter="all">
-                        All
-                    </button>
-
-                    <button
-                        type="button"
-                        class="btn btn-light rounded-pill px-4 py-2 product-category-filter"
-                        data-product-filter="1">
-                        Appetizer
-                    </button>
-
-                    <button
-                        type="button"
-                        class="btn btn-light rounded-pill px-4 py-2 product-category-filter"
-                        data-product-filter="2">
-                        Fries
-                    </button>
-
-                    <button
-                        type="button"
-                        class="btn btn-light rounded-pill px-4 py-2 product-category-filter"
-                        data-product-filter="3">
-                        Drinks
-                    </button>
-
-                    <button
-                        type="button"
-                        class="btn btn-light rounded-pill px-4 py-2 product-category-filter"
-                        data-product-filter="4">
-                        Desserts
-                    </button>
-
-                </div>
+                <div class="d-flex flex-nowrap gap-2 pb-1" id="shop-product-category-container"></div>
             </div>
 
-            <div class="row g-3">
-
-                <!-- AVAILABLE -->
-                <div class="col-6 col-md-4 col-xl-3">
-
-                    <button
-                        type="button"
-                        class="card border-0 shadow-sm h-100 w-100 text-start product-card">
-
-                        <div class="card-body">
-
-                            <!-- STATUS -->
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-
-                                <span class="badge rounded-pill bg-success-subtle text-success px-3 py-2">
-                                    Available
-                                </span>
-
-                                <i class="ki-duotone ki-basket fs-2 text-muted">
-                                    <span class="path1"></span>
-                                    <span class="path2"></span>
-                                </i>
-
-                            </div>
-
-                            <!-- PRODUCT -->
-                            <div class="mb-4">
-
-                                <h5 class="fw-bold text-dark mb-1">
-                                    Bacon Cheese Fries
-                                </h5>
-
-                                <div class="text-muted small">
-                                    Fries Category
-                                </div>
-
-                            </div>
-
-                            <!-- PRICE -->
-                            <div class="d-flex align-items-center justify-content-between">
-
-                                <div>
-
-                                    <div class="small text-muted mb-1">
-                                        Price
-                                    </div>
-
-                                    <div class="fw-bold fs-2 text-primary">
-                                        ₱189
-                                    </div>
-
-                                </div>
-
-                                <div class="text-primary">
-                                    <i class="ki-duotone ki-arrow-right fs-2"></i>
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                    </button>
-
-                </div>
-
-                <!-- OUT OF STOCK -->
-                <div class="col-6 col-md-4 col-xl-3">
-
-                    <button
-                        type="button"
-                        disabled
-                        class="card border-0 shadow-sm h-100 w-100 text-start product-card product-card-disabled">
-
-                        <div class="card-body">
-
-                            <!-- STATUS -->
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-
-                                <span class="badge rounded-pill bg-danger-subtle text-danger px-3 py-2">
-                                    Out of Stock
-                                </span>
-
-                                <i class="ki-duotone ki-cross-circle fs-2 text-danger">
-                                    <span class="path1"></span>
-                                    <span class="path2"></span>
-                                </i>
-
-                            </div>
-
-                            <!-- PRODUCT -->
-                            <div class="mb-4">
-
-                                <h5 class="fw-bold text-muted mb-1">
-                                    Truffle Fries
-                                </h5>
-
-                                <div class="text-muted small">
-                                    Fries Category
-                                </div>
-
-                            </div>
-
-                            <!-- PRICE -->
-                            <div class="d-flex align-items-center justify-content-between">
-
-                                <div>
-
-                                    <div class="small text-muted mb-1">
-                                        Price
-                                    </div>
-
-                                    <div class="fw-bold fs-2 text-muted">
-                                        ₱249
-                                    </div>
-
-                                </div>
-
-                                <div class="text-danger">
-                                    <i class="ki-duotone ki-information fs-2"></i>
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                    </button>
-
-                </div>
-
-            </div>
+            <div class="row g-3" id="product-container"></div>
         </div>
     
         <div class="col-lg-4">
@@ -200,6 +34,8 @@
                 <div class="d-flex flex-column">
 
                     <h2 class="fw-bold mb-1 text-primary" id="order-details-title">
+                        <i class="ki-duotone text-primary ki-handcart fs-3 me-2"></i>
+
                         Cart
                     </h2>
 

@@ -79,7 +79,7 @@
 
                         <div class="separator separator-dashed my-5"></div>
 
-                        <div class="d-flex flex-stack">
+                        <div class="d-flex flex-stack d-none">
                             <div class="d-flex">
                                 <div class="d-flex flex-column">
                                     <div class="fs-5 text-gray-900 fw-bold">Add-On Item</div>
@@ -97,7 +97,7 @@
                             </div>
                         </div>
 
-                        <div class="separator separator-dashed my-5"></div>
+                        <!--<div class="separator separator-dashed my-5"></div>-->
 
                         <div class="d-flex flex-stack">
                             <div class="d-flex">
@@ -145,13 +145,13 @@
                 <li class="nav-item" role="presentation">
                     <a class="nav-link text-active-primary pb-4 active" data-bs-toggle="tab" href="#overview_tab" aria-selected="true" role="tab">Overview</a>
                 </li>
-                <li class="nav-item" role="presentation">
+                <li class="nav-item d-none" role="presentation">
                     <a class="nav-link text-active-primary pb-4" data-bs-toggle="tab" href="#product_attribute_tab" aria-selected="false" role="tab">Attributes & Variations</a>
                 </li>
                 <li class="nav-item" role="presentation">
                     <a class="nav-link text-active-primary pb-4" data-bs-toggle="tab" href="#product_bom_tab" aria-selected="false" role="tab">Bill of Materials</a>
                 </li>
-                <li class="nav-item" role="presentation">
+                <li class="nav-item d-none" role="presentation">
                     <a class="nav-link text-active-primary pb-4" data-bs-toggle="tab" href="#product_addon_tab" aria-selected="false" role="tab">Add-Ons</a>
                 </li>
                 <li class="nav-item ms-auto">

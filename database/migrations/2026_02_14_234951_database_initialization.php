@@ -1814,6 +1814,44 @@ return new class extends Migration
         });
 
         /* =============================================================================================
+            TABLE: Shop Register Order
+        ============================================================================================= */
+
+        Schema::create('shop_register_order', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('shop_register_id')
+            ->constrained('shop_register')
+            ->cascadeOnDelete();
+
+            $table->string('shop_register_name');           
+
+            $table->foreignId('floor_plan_id')
+                ->nullable()
+                ->constrained('floor_plan')
+                ->nullOnDelete();
+
+            $table->string('floor_plan_name')->nullable();
+
+            $table->foreignId('floor_plan_table_id')
+                ->nullable()
+                ->constrained('floor_plan_table')
+                ->nullOnDelete();
+
+            $table->enum('order_preset', ['Walk-in', 'Dine-in', 'Takeout', 'Delivery'])->default('Walk-in');
+            $table->enum('shop_order_status', ['Active', 'Paid', 'Void', 'Refunded', 'Cancelled'])->default('Active');
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+
+            $table->index(['shop_register_id']);
+            $table->index(['open_time']);
+            $table->index(['open_user_account_id']);
+            $table->index(['close_time']);
+            $table->index(['close_user_account_id']);
+        });
+
+        /* =============================================================================================
             TABLE: 
         ============================================================================================= */
     }

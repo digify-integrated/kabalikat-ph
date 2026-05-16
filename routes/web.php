@@ -796,6 +796,8 @@ Route::middleware('auth')->group(function () {
             Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
             Route::post('/generate-table', 'generateTable')->name('generate.table');
             Route::post('/generate-register', 'generateRegister')->name('generate.register');
+            Route::post('/generate-category', 'generateCategory')->name('generate.category');
+            Route::post('/generate-product', 'generateProduct')->name('generate.product');
         });
 
     // Shop Register Discount
