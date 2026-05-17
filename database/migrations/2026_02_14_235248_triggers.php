@@ -2546,6 +2546,43 @@ return new class extends Migration
         SQL);
 
         /* =============================================================================================
+            TABLE: KITCHEN ROUTE
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_kitchen_route_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_kitchen_route_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_kitchen_route_update
+            AFTER UPDATE ON kitchen_route
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Kitchen route changed.<br/><br/>';
+
+                IF NEW.kitchen_route_name <> OLD.kitchen_route_name THEN
+                    SET audit_log = CONCAT(audit_log, "Kitchen Route:", OLD.kitchen_route_name, " -> ", NEW.kitchen_route_name, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Kitchen route changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('kitchen_route', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_kitchen_route_insert
+            AFTER INSERT ON kitchen_route
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Kitchen route created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('kitchen_route', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
+
+        /* =============================================================================================
             TABLE: PAYMENT METHOD
         ============================================================================================= */
 
@@ -2779,6 +2816,47 @@ return new class extends Migration
         SQL);
 
         /* =============================================================================================
+            TABLE: SHOP REGISTER PRODUCT
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_register_product_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_register_product_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_shop_register_product_update
+            AFTER UPDATE ON shop_register_product
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Shop register product changed.<br/><br/>';
+
+                IF NEW.shop_register_name <> OLD.shop_register_name THEN
+                    SET audit_log = CONCAT(audit_log, "Shop Register:", OLD.shop_register_name, " -> ", NEW.shop_register_name, "<br/>");
+                END IF;
+
+                IF NEW.product_name <> OLD.product_name THEN
+                    SET audit_log = CONCAT(audit_log, "Warehouse:", OLD.product_name, " -> ", NEW.product_name, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Shop register product changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('shop_register_product', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_shop_register_product_insert
+            AFTER INSERT ON shop_register_product
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Shop register product created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('shop_register_product', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
+
+        /* =============================================================================================
             TABLE: SHOP REGISTER PAYMENT METHOD
         ============================================================================================= */
 
@@ -2790,7 +2868,7 @@ return new class extends Migration
             AFTER UPDATE ON shop_register_payment_method
             FOR EACH ROW
             BEGIN
-                DECLARE audit_log TEXT DEFAULT 'Shop register playment method changed.<br/><br/>';
+                DECLARE audit_log TEXT DEFAULT 'Shop register payment method changed.<br/><br/>';
 
                 IF NEW.shop_register_name <> OLD.shop_register_name THEN
                     SET audit_log = CONCAT(audit_log, "Shop Register:", OLD.shop_register_name, " -> ", NEW.shop_register_name, "<br/>");
@@ -2857,6 +2935,47 @@ return new class extends Migration
 
                 INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
                 VALUES ('shop_register_floor_plan', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
+
+        /* =============================================================================================
+            TABLE: SHOP REGISTER KITCHEN ROUTE
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_register_kitchen_route_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_register_kitchen_route_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_shop_register_kitchen_route_update
+            AFTER UPDATE ON shop_register_kitchen_route
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Shop register kitchen route changed.<br/><br/>';
+
+                IF NEW.shop_register_name <> OLD.shop_register_name THEN
+                    SET audit_log = CONCAT(audit_log, "Shop Register:", OLD.shop_register_name, " -> ", NEW.shop_register_name, "<br/>");
+                END IF;
+
+                IF NEW.kitchen_route_name <> OLD.kitchen_route_name THEN
+                    SET audit_log = CONCAT(audit_log, "Kitchen Route:", OLD.kitchen_route_name, " -> ", NEW.kitchen_route_name, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Shop register kitchen route changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('shop_register_kitchen_route', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_shop_register_kitchen_route_insert
+            AFTER INSERT ON shop_register_kitchen_route
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Shop register kitchen route created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('shop_register_kitchen_route', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
             END
         SQL);
 
@@ -3432,6 +3551,13 @@ return new class extends Migration
         DB::unprepared('DROP TRIGGER IF EXISTS trg_payment_method_insert');
 
         /* =============================================================================================
+            TABLE: KITCHEN ROUTE
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_kitchen_route_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_kitchen_route_insert');
+
+        /* =============================================================================================
             TABLE: SHOP REGISTER
         ============================================================================================= */
 
@@ -3453,6 +3579,13 @@ return new class extends Migration
         DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_register_warehouse_insert');
 
         /* =============================================================================================
+            TABLE: SHOP REGISTER PRODUCT
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_register_product_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_register_product_insert');
+
+        /* =============================================================================================
             TABLE: SHOP REGISTER PAYMENT METHOD
         ============================================================================================= */
 
@@ -3465,6 +3598,14 @@ return new class extends Migration
 
         DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_register_floor_plan_update');
         DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_register_floor_plan_insert');
+
+
+        /* =============================================================================================
+            TABLE: SHOP REGISTER KITCHEN ROUTE
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_register_kitchen_route_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_register_kitchen_route_insert');
         
         /* =============================================================================================
             TABLE: SHOP REGISTER DISCOUNT

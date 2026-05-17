@@ -1543,6 +1543,19 @@ return new class extends Migration
         });
 
         /* =============================================================================================
+            TABLE: Kitchen Route
+        ============================================================================================= */
+
+        Schema::create('kitchen_route', function (Blueprint $table) {
+            $table->id();
+
+            $table->string('kitchen_route_name');
+            
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+        });
+
+        /* =============================================================================================
             TABLE: Payment Method
         ============================================================================================= */
 
@@ -1612,6 +1625,32 @@ return new class extends Migration
 
             $table->index(['shop_register_id']);
             $table->index(['user_account_id']);
+        });
+        
+        /* =============================================================================================
+            TABLE: Shop Register Product
+        ============================================================================================= */
+
+        Schema::create('shop_register_product', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('shop_register_id')
+            ->constrained('shop_register')
+            ->cascadeOnDelete();
+
+            $table->string('shop_register_name');
+
+            $table->foreignId('product_id')
+            ->constrained('product')
+            ->cascadeOnDelete();
+
+            $table->string('product_name');
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+
+            $table->index(['shop_register_id']);
+            $table->index(['product_id']);
         });
         
         /* =============================================================================================
@@ -1747,6 +1786,32 @@ return new class extends Migration
         });
 
         /* =============================================================================================
+            TABLE: Shop Register Kitchen Route
+        ============================================================================================= */
+
+        Schema::create('shop_register_kitchen_route', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('shop_register_id')
+            ->constrained('shop_register')
+            ->cascadeOnDelete();
+
+            $table->string('shop_register_name');
+
+            $table->foreignId('kitchen_route_id')
+            ->constrained('kitchen_route')
+            ->cascadeOnDelete();
+
+            $table->string('kitchen_route_name');
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+
+            $table->index(['shop_register_id']);
+            $table->index(['kitchen_route_id']);
+        });
+
+        /* =============================================================================================
             TABLE: Shop Register Session
         ============================================================================================= */
 
@@ -1814,44 +1879,6 @@ return new class extends Migration
         });
 
         /* =============================================================================================
-            TABLE: Shop Register Order
-        ============================================================================================= */
-
-        Schema::create('shop_register_order', function (Blueprint $table) {
-            $table->id();
-
-            $table->foreignId('shop_register_id')
-            ->constrained('shop_register')
-            ->cascadeOnDelete();
-
-            $table->string('shop_register_name');           
-
-            $table->foreignId('floor_plan_id')
-                ->nullable()
-                ->constrained('floor_plan')
-                ->nullOnDelete();
-
-            $table->string('floor_plan_name')->nullable();
-
-            $table->foreignId('floor_plan_table_id')
-                ->nullable()
-                ->constrained('floor_plan_table')
-                ->nullOnDelete();
-
-            $table->enum('order_preset', ['Walk-in', 'Dine-in', 'Takeout', 'Delivery'])->default('Walk-in');
-            $table->enum('shop_order_status', ['Active', 'Paid', 'Void', 'Refunded', 'Cancelled'])->default('Active');
-
-            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
-            $table->timestamps();
-
-            $table->index(['shop_register_id']);
-            $table->index(['open_time']);
-            $table->index(['open_user_account_id']);
-            $table->index(['close_time']);
-            $table->index(['close_user_account_id']);
-        });
-
-        /* =============================================================================================
             TABLE: 
         ============================================================================================= */
     }
@@ -1915,15 +1942,19 @@ return new class extends Migration
         Schema::dropIfExists('discount_type');
         Schema::dropIfExists('floor_plan');
         Schema::dropIfExists('floor_plan_table');
+        Schema::dropIfExists('kitchen_route');
         Schema::dropIfExists('payment_method');
         Schema::dropIfExists('shop_register_access');
         Schema::dropIfExists('shop_register_warehouse');
+        Schema::dropIfExists('shop_register_product');
         Schema::dropIfExists('shop_register_payment_method');
         Schema::dropIfExists('shop_register_floor_plan');
         Schema::dropIfExists('shop_register_discount');
         Schema::dropIfExists('shop_register_charge');
+        Schema::dropIfExists('shop_register_kitchen_route');
         Schema::dropIfExists('shop_register_session');
         Schema::dropIfExists('shop_session_denomination');
+        Schema::dropIfExists('shop_register_order');
         Schema::dropIfExists('shop_register');
         Schema::dropIfExists('nationality');
         Schema::dropIfExists('currency');

@@ -31,7 +31,7 @@ class ShopRegisterSession extends Model
         return $this->belongsTo(ShopRegister::class, 'shop_register_id', 'id');
     }
 
-    public function shopRegisterWarehouse(): HasMany
+    public function shopRegisterDenomination(): HasMany
     {
         return $this->hasMany(ShopSessionDenomination::class, 'shop_register_session_id', 'id');
     }

@@ -437,6 +437,11 @@ class ShopRegisterController extends Controller
             ->pluck('user_account_id')
             ->toArray();
 
+        $kitchenRouteIds = DB::table('shop_register_kitchen_route')
+            ->where('shop_register_id', $shopRegister->id)
+            ->pluck('kitchen_route_id')
+            ->toArray();
+
         return response()->json([
             'success' => true,
             'notExist' => false,
@@ -448,6 +453,7 @@ class ShopRegisterController extends Controller
             'floorPlanId' => $floorPlanIds,
             'paymentMethodId' => $paymentMethodIds,
             'accessId' => $accessIds,
+            'kitchenRouteId' => $kitchenRouteIds,
         ]);
     }
 
@@ -694,7 +700,9 @@ class ShopRegisterController extends Controller
         $validated = $validator->validated();
 
         $shopRegisterId = (int) $validated['detailId'];
+
         $categoryId = $validated['category_id'] ?? 'all';
+
         $search = trim($validated['search'] ?? '');
 
         /*
@@ -709,42 +717,93 @@ class ShopRegisterController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | PRODUCTS
+        | PRODUCTS ASSIGNED TO REGISTER
         |--------------------------------------------------------------------------
         */
 
-        $products = DB::table('product')
-            ->where('show_on_pos', 'Yes')
-            ->where('product_status', 'Active')
+        $products = DB::table('shop_register_product')
+            ->join(
+                'product',
+                'product.id',
+                '=',
+                'shop_register_product.product_id'
+            )
 
-            ->when($categoryId !== 'all', function ($query) use ($categoryId) {
+            ->select(
+                'product.*'
+            )
 
-                $query->whereExists(function ($sub) use ($categoryId) {
+            ->where(
+                'shop_register_product.shop_register_id',
+                $shopRegisterId
+            )
 
-                    $sub->select(DB::raw(1))
-                        ->from('product_category_map')
-                        ->whereColumn(
-                            'product_category_map.product_id',
-                            'product.id'
-                        )
-                        ->where(
-                            'product_category_map.product_category_id',
-                            $categoryId
-                        );
-                });
-            })
+            ->where('product.show_on_pos', 'Yes')
+
+            ->where('product.product_status', 'Active')
+
+            /*
+            |--------------------------------------------------------------------------
+            | CATEGORY FILTER
+            |--------------------------------------------------------------------------
+            */
+
+            ->when(
+                $categoryId !== 'all',
+                function ($query) use ($categoryId) {
+
+                    $query->whereExists(function ($sub) use ($categoryId) {
+
+                        $sub->select(DB::raw(1))
+                            ->from('product_category_map')
+
+                            ->whereColumn(
+                                'product_category_map.product_id',
+                                'product.id'
+                            )
+
+                            ->where(
+                                'product_category_map.product_category_id',
+                                $categoryId
+                            );
+                    });
+                }
+            )
+
+            /*
+            |--------------------------------------------------------------------------
+            | SEARCH
+            |--------------------------------------------------------------------------
+            */
 
             ->when($search, function ($query) use ($search) {
 
                 $query->where(function ($sub) use ($search) {
 
-                    $sub->where('product_name', 'like', "%{$search}%")
-                        ->orWhere('sku', 'like', "%{$search}%")
-                        ->orWhere('barcode', 'like', "%{$search}%");
+                    $sub->where(
+                        'product.product_name',
+                        'like',
+                        "%{$search}%"
+                    )
+
+                    ->orWhere(
+                        'product.sku',
+                        'like',
+                        "%{$search}%"
+                    )
+
+                    ->orWhere(
+                        'product.barcode',
+                        'like',
+                        "%{$search}%"
+                    );
                 });
             })
 
-            ->orderBy('product_name')
+            ->distinct()
+
+            ->orderBy('product.product_name')
+
             ->get();
 
         /*
@@ -756,11 +815,12 @@ class ShopRegisterController extends Controller
         $response = $products->map(function ($product) use ($warehouseIds) {
 
             $inStock = true;
+
             $stockReason = 'Available';
 
             /*
             |--------------------------------------------------------------------------
-            | BOM PRODUCTS
+            | BOM ITEMS
             |--------------------------------------------------------------------------
             */
 
@@ -770,42 +830,84 @@ class ShopRegisterController extends Controller
 
             /*
             |--------------------------------------------------------------------------
-            | BOM STRICT VALIDATION
+            | STRICT BOM VALIDATION
             |--------------------------------------------------------------------------
             */
 
             foreach ($bomItems as $bom) {
 
+                /*
+                |--------------------------------------------------------------------------
+                | SKIP NON STRICT
+                |--------------------------------------------------------------------------
+                */
+
                 if ($bom->stock_policy !== 'Strict') {
                     continue;
                 }
 
+                /*
+                |--------------------------------------------------------------------------
+                | VALID STOCK
+                |--------------------------------------------------------------------------
+                */
+
                 $availableStock = DB::table('stock_level')
+
                     ->join(
                         'inventory_lot',
                         'inventory_lot.id',
                         '=',
                         'stock_level.inventory_lot_id'
                     )
-                    ->where('stock_level.product_id', $bom->bom_product_id)
-                    ->whereIn('stock_level.warehouse_id', $warehouseIds)
-                    ->where('stock_level.quantity', '>', 0)
+
+                    ->where(
+                        'stock_level.product_id',
+                        $bom->bom_product_id
+                    )
+
+                    ->whereIn(
+                        'stock_level.warehouse_id',
+                        $warehouseIds
+                    )
+
+                    ->where(
+                        'stock_level.quantity',
+                        '>',
+                        0
+                    )
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | EXPIRATION VALIDATION
+                    |--------------------------------------------------------------------------
+                    */
 
                     ->where(function ($query) {
 
-                        $query->whereNull('inventory_lot.expiration_date')
-                            ->orWhere(
-                                'inventory_lot.expiration_date',
-                                '>=',
-                                now()->toDateString()
-                            );
+                        $query->whereNull(
+                            'inventory_lot.expiration_date'
+                        )
+
+                        ->orWhere(
+                            'inventory_lot.expiration_date',
+                            '>=',
+                            now()->toDateString()
+                        );
                     })
 
                     ->sum('stock_level.quantity');
 
+                /*
+                |--------------------------------------------------------------------------
+                | OUT OF STOCK
+                |--------------------------------------------------------------------------
+                */
+
                 if ($availableStock <= 0) {
 
                     $inStock = false;
+
                     $stockReason = 'BOM ingredient unavailable';
 
                     break;
@@ -824,24 +926,47 @@ class ShopRegisterController extends Controller
             ) {
 
                 $availableStock = DB::table('stock_level')
+
                     ->join(
                         'inventory_lot',
                         'inventory_lot.id',
                         '=',
                         'stock_level.inventory_lot_id'
                     )
-                    ->where('stock_level.product_id', $product->id)
-                    ->whereIn('stock_level.warehouse_id', $warehouseIds)
-                    ->where('stock_level.quantity', '>', 0)
+
+                    ->where(
+                        'stock_level.product_id',
+                        $product->id
+                    )
+
+                    ->whereIn(
+                        'stock_level.warehouse_id',
+                        $warehouseIds
+                    )
+
+                    ->where(
+                        'stock_level.quantity',
+                        '>',
+                        0
+                    )
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | EXPIRATION VALIDATION
+                    |--------------------------------------------------------------------------
+                    */
 
                     ->where(function ($query) {
 
-                        $query->whereNull('inventory_lot.expiration_date')
-                            ->orWhere(
-                                'inventory_lot.expiration_date',
-                                '>=',
-                                now()->toDateString()
-                            );
+                        $query->whereNull(
+                            'inventory_lot.expiration_date'
+                        )
+
+                        ->orWhere(
+                            'inventory_lot.expiration_date',
+                            '>=',
+                            now()->toDateString()
+                        );
                     })
 
                     ->sum('stock_level.quantity');
@@ -849,6 +974,7 @@ class ShopRegisterController extends Controller
                 if ($availableStock <= 0) {
 
                     $inStock = false;
+
                     $stockReason = 'Out of stock';
                 }
             }
@@ -863,16 +989,36 @@ class ShopRegisterController extends Controller
                 ->where('product_id', $product->id)
                 ->first();
 
+            /*
+            |--------------------------------------------------------------------------
+            | RESPONSE
+            |--------------------------------------------------------------------------
+            */
+
             return [
+
                 'id' => $product->id,
 
                 'product_name' => $product->product_name,
 
-                'price' => number_format($product->base_price, 2),
+                'sku' => $product->sku,
+
+                'barcode' => $product->barcode,
+
+                'price' => number_format(
+                    $product->base_price,
+                    2
+                ),
+
+                'base_price' => $product->base_price,
 
                 'image' => $product->product_image,
 
-                'category_name' => $category?->product_category_name ?? 'Uncategorized',
+                'track_inventory' => $product->track_inventory,
+
+                'category_name' =>
+                    $category?->product_category_name
+                    ?? 'Uncategorized',
 
                 'in_stock' => $inStock,
 

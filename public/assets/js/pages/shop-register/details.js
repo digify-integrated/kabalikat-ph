@@ -153,6 +153,50 @@ document.addEventListener('DOMContentLoaded', () => {
                     },
                 }
             },
+            {
+                selector: '#product_form',
+                rules: {
+                    rules: {
+                        product_id: { required: true},
+                    },
+                    messages: {
+                        product_id: { required: 'Choose the product' },
+                    },
+                    submitHandler: async (form) => {
+                        const formData = new URLSearchParams(new FormData(form));
+                        formData.append('shop_register_id', ctx.detailId ?? '');
+                        formData.append('appId', ctx.appId ?? '');
+                        formData.append('navigationMenuId', ctx.navigationMenuId ?? '');
+            
+                        disableButton('submit-product');
+            
+                        try {
+                            const response = await fetch('/shop-register-product/save', {
+                                method: 'POST',
+                                body: formData,
+                            });
+            
+                            if (!response.ok) {
+                                throw new Error(`Save product failed with status: ${response.status}`);
+                            }
+            
+                            const data = await response.json();
+            
+                            if (data.success) {
+                                reloadDatatable('#product-table');
+                                $('#product-modal').modal('hide');
+                                showNotification(data.message, 'success');
+                            } else {
+                                showNotification(data.message);
+                            }
+                        } catch (error) {
+                            handleSystemError(error, 'fetch_failed', `Fetch request failed: ${error.message}`);
+                        } finally {
+                            enableButton('submit-product');
+                        }
+                    },
+                }
+            },
         ],
         table: [
             {
@@ -178,7 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     { width: 'auto', targets: 3, responsivePriority: 4 },
                     { width: 'auto', bSortable: false, targets: 4, responsivePriority: 5 },
                 ],
-                charges: {
+                addons: {
                     subControls: {
                         searchSelector: '#discount-datatable-search',
                         lengthSelector: '#discount-datatable-length',
@@ -208,10 +252,34 @@ document.addEventListener('DOMContentLoaded', () => {
                     { width: 'auto', targets: 3, responsivePriority: 4 },
                     { width: 'auto', bSortable: false, targets: 4, responsivePriority: 5 },
                 ],
-                charges: {
+                addons: {
                     subControls: {
                         searchSelector: '#discount-datatable-search',
                         lengthSelector: '#discount-datatable-length',
+                    },
+                },
+            },
+            {
+                url: '/shop-register-product/generate-table',
+                selector: '#product-table',
+                serverSide: false,
+                order: [[0, 'asc']],
+                ajaxData: {
+                    shop_register_id: ctx.detailId,
+                    page_navigation_menu_id: ctx.navigationMenuId,
+                },
+                 columns: [
+                    { data: 'PRODUCT' },
+                    { data: 'ACTION' },
+                ],
+                columnDefs: [
+                    { width: 'auto', targets: 0, responsivePriority: 1 },
+                    { width: 'auto', bSortable: false, targets: 1, responsivePriority: 5 },
+                ],
+                addons: {
+                    subControls: {
+                        searchSelector: '#product-datatable-search',
+                        lengthSelector: '#product-datatable-length',
                     },
                 },
             },
@@ -234,6 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     $('#floor_plan_id').val(data.floorPlanId ?? '').trigger('change');
                     $('#payment_method_id').val(data.paymentMethodId ?? '').trigger('change');
                     $('#user_account_id').val(data.accessId ?? '').trigger('change');
+                    $('#kitchen_route_id').val(data.kitchenRouteId ?? '').trigger('change');
                 },
             },
         ],
@@ -261,6 +330,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 swalText: 'Are you sure you want to delete this charge',
                 confirmButtonText: 'Delete'
             },
+            {
+                trigger: '.delete-product',
+                url: '/shop-register-product/delete',
+                table: '#product-table',
+                swalTitle: 'Confirm Product Deletion',
+                swalText: 'Are you sure you want to delete this product',
+                confirmButtonText: 'Delete'
+            },
         ],
         lognotes: [
             {
@@ -271,6 +348,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 trigger: '.view-charge-log-notes',
                 table: 'shop_register_charge'
             },
+            {
+                trigger: '.view-product-log-notes',
+                table: 'shop_register_product'
+            },
         ],
         dropdown: [
             { url: '/company/generate-options', dropdownSelector: '#company_id' },
@@ -280,7 +361,16 @@ document.addEventListener('DOMContentLoaded', () => {
             { url: '/floor-plan/generate-options', dropdownSelector: '#floor_plan_id', data : { multiple: true } },
             { url: '/payment-method/generate-options', dropdownSelector: '#payment_method_id', data : { multiple: true } },
             { url: '/user/generate-options', dropdownSelector: '#user_account_id', data : { multiple: true } },
+            { url: '/kitchen-route/generate-options', dropdownSelector: '#kitchen_route_id', data : { multiple: true } },
         ],
+        productDropdown: {
+            url: '/products/generate-product-shop-register-options',
+            dropdownSelector: '#product_id',
+            data : {
+                shop_register_id : ctx.detailId,
+                multiple: true
+            }
+        }
     };
 
     (async () => {
@@ -362,6 +452,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     $('#charge_automatic_application').val(data.automaticApplication).trigger('change');
                 }
             });
+        }
+
+        const addProduct = target.closest('#add-product');
+        if (addProduct) {
+            resetForm('product_form');
+
+            generateDropdownOptions({
+                url: config.productDropdown.url,
+                dropdownSelector: config.productDropdown.dropdownSelector,
+                data: config.productDropdown.data
+            });            
         }
     });
 
@@ -480,6 +581,40 @@ document.addEventListener('DOMContentLoaded', () => {
             formData.append('navigationMenuId', ctx.navigationMenuId ?? '');
             
             const response = await fetch('/shop-register-access/save', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    Accept: 'application/json',
+                    ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+                },
+            });
+            
+            if (!response.ok) throw new Error(`Request failed with status: ${response.status}`);
+            
+            const data = await response.json();
+            
+            if (!data.success) {
+                showNotification(data.message);
+            }
+        } catch (error) {
+            handleSystemError(error, 'fetch_failed', `Failed to settings: ${error.message}`);
+        }
+    });
+
+    $('#kitchen_route_id').on('change', async function () {
+        try {
+            const userAccountId = $(this).val();
+            const csrf = getCsrfToken();
+            const ctx = getPageContext();
+            
+            const formData = new URLSearchParams();
+            formData.append('kitchen_route_id', userAccountId);
+            formData.append('shop_register_id', ctx.detailId ?? '');
+            formData.append('appId', ctx.appId ?? '');
+            formData.append('navigationMenuId', ctx.navigationMenuId ?? '');
+            
+            const response = await fetch('/shop-register-kitchen-route/save', {
                 method: 'POST',
                 body: formData,
                 headers: {

@@ -966,6 +966,42 @@ class ProductController extends Controller
         return response()->json($response);
     }
 
+    public function generateShopRegisterOptions(Request $request)
+    {
+        $shopRegisterId = $request->input('shop_register_id');
+        $multiple = filter_var($request->input('multiple', false), FILTER_VALIDATE_BOOLEAN);
+
+        $response = collect();
+
+        if (!$multiple) {
+            $response->push([
+                'id'   => '',
+                'text' => '--',
+            ]);
+        }
+
+        $boms = DB::table('product')
+            ->select(['id', 'product_name'])
+            ->whereNotIn('id', function ($query) use ($shopRegisterId) {
+                $query->select('product_id')
+                    ->from('shop_register_product')
+                    ->where('product_id', $shopRegisterId);
+            })
+            ->where('show_on_pos', 'Yes')
+            ->where('product_status', 'Active')
+            ->orderBy('product_name')
+            ->get();
+
+        $response = $response->concat(
+            $boms->map(fn ($row) => [
+                'id'   => $row->id,
+                'text' => $row->product_name,
+            ])
+        )->values();
+
+        return response()->json($response);
+    }
+
     public function generatePurchasableOptions(Request $request)
     {
         $multiple = filter_var($request->input('multiple', false), FILTER_VALIDATE_BOOLEAN);

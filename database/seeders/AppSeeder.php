@@ -41,7 +41,7 @@ class AppSeeder extends Seeder
                 'app_version'           => '1.0.0',
                 'app_logo'              => 'app/3/pos.png',
                 'navigation_menu_id'    => 39,
-                'navigation_menu_name'  => 'Point of Sale',
+                'navigation_menu_name'  => 'Dashboard',
                 'order_sequence'        => 6,
             ],
             [

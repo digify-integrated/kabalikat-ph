@@ -39,7 +39,7 @@
                         ></select>
 
                         <div class="form-text">
-                            Select the warehouses from which this shop register will deduct stock during POS transactions.
+                            Select the warehouses from which this shop register will deduct stock during POS transactions
                         </div>
                     </div>
 
@@ -61,7 +61,27 @@
                         ></select>
 
                         <div class="form-text">
-                            Select the floor plans for this shop register.
+                            Select the floor plans for this shop register
+                        </div>
+                    </div>
+
+                    <div class="mb-8">
+                        <label for="kitchen_route_id" class="form-label fw-semibold">
+                            Kitchen Route
+                        </label>
+
+                        <select
+                            id="kitchen_route_id"
+                            name="kitchen_route_id[]"
+                            multiple
+                            class="form-select form-select-solid"
+                            data-control="select2"
+                            data-placeholder="Assign kitchen route"
+                            @disabled(!$canWrite)
+                        ></select>
+
+                        <div class="form-text">
+                            Select the kitchen routes for this shop register
                         </div>
                     </div>
 
@@ -113,10 +133,13 @@
                     <a class="nav-link text-active-primary pb-4 active" data-bs-toggle="tab" href="#overview_tab" aria-selected="true" role="tab">Overview</a>
                 </li>
                 <li class="nav-item" role="presentation">
+                    <a class="nav-link text-active-primary pb-4" data-bs-toggle="tab" href="#products_tab" aria-selected="false" role="tab">Products</a>
+                </li>
+                <li class="nav-item" role="presentation">
                     <a class="nav-link text-active-primary pb-4" data-bs-toggle="tab" href="#discounts_tab" aria-selected="false" role="tab">Discounts</a>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <a class="nav-link text-active-primary pb-4" data-bs-toggle="tab" href="#charges_tab" aria-selected="false" role="tab">Service Charges</a>
+                    <a class="nav-link text-active-primary pb-4" data-bs-toggle="tab" href="#charges_tab" aria-selected="false" role="tab">Charges</a>
                 </li>
                 <li class="nav-item ms-auto">
                     @if($canDelete)
@@ -198,6 +221,50 @@
                                     </div>
                                 @endif
                             </form>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="products_tab" role="tabpanel">
+                        <div class="card mb-5">
+                            <div class="card-header border-0 pt-6">
+                                <div class="card-title">
+                                    <div class="d-flex align-items-center position-relative my-1 me-3">
+                                        <i class="ki-outline ki-magnifier fs-3 position-absolute ms-5"></i> <input type="text" class="form-control w-250px ps-12" id="product-datatable-search" placeholder="Search..." autocomplete="off" />
+                                    </div>
+                                    <select id="product-datatable-length" class="form-select w-auto">
+                                        <option value="-1">All</option>
+                                        <option value="5">5</option>
+                                        <option value="10" selected>10</option>
+                                        <option value="20">20</option>
+                                        <option value="25">25</option>
+                                        <option value="50">50</option>
+                                        <option value="100">100</option>
+                                    </select>
+                                </div>
+                                <div class="card-toolbar">
+                                    <div class="d-flex justify-content-end" data-kt-customer-table-toolbar="base">
+                                        @if($canWrite)
+                                            <button type="button"
+                                                    class="btn btn-light-primary me-3"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#product-modal"
+                                                    id="add-product">
+                                                <i class="ki-outline ki-plus fs-2"></i> Add
+                                            </button>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body pt-9">
+                                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5 gs-7" id="product-table">
+                                    <thead>
+                                        <tr class="fw-semibold fs-6 text-gray-800">
+                                            <th>Product</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="fw-semibold text-gray-600"></tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                     <div class="tab-pane fade" id="discounts_tab" role="tabpanel">
@@ -347,6 +414,42 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
                     <button type="submit" form="discount_form" class="btn btn-primary" id="submit-discount">Add</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="product-modal" class="modal fade" tabindex="-1" aria-labelledby="product-modal" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">Products</h3>
+                    <div class="btn btn-icon btn-sm btn-active-light-primary ms-2" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ki-duotone ki-cross fs-1"><span class="path1"></span><span class="path2"></span></i>
+                    </div>
+                </div>
+
+                <div class="modal-body">
+                    <form id="product_form" method="post" action="#">
+                        @csrf
+
+                        <div class="row">
+                            <div class="col">
+                                <div class="fv-row mb-4">
+                                    <label class="fs-6 fw-semibold required form-label mt-3" for="product_id">
+                                        Product
+                                    </label>
+
+                                    <select id="product_id" name="product_id" class="form-select" multiple data-control="select2" data-allow-clear="false"></select>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" form="product_form" class="btn btn-primary" id="submit-product">Add</button>
                 </div>
             </div>
         </div>

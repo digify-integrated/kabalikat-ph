@@ -17,6 +17,7 @@ use App\Http\Controllers\FileExtensionController;
 use App\Http\Controllers\FileTypeController;
 use App\Http\Controllers\FloorPlanController;
 use App\Http\Controllers\FloorPlanTableController;
+use App\Http\Controllers\KitchenRouteController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\InventoryDashboardController;
 use App\Http\Controllers\NavigationMenuController;
@@ -38,7 +39,9 @@ use App\Http\Controllers\ShopRegisterChargeController;
 use App\Http\Controllers\ShopRegisterController;
 use App\Http\Controllers\ShopRegisterDiscountController;
 use App\Http\Controllers\ShopRegisterFloorPlanController;
+use App\Http\Controllers\ShopRegisterKitchenRouteController;
 use App\Http\Controllers\ShopRegisterPaymentMethodController;
+use App\Http\Controllers\ShopRegisterProductController;
 use App\Http\Controllers\ShopRegisterWarehouseController;
 use App\Http\Controllers\StateController;
 use App\Http\Controllers\StockAdjustmentController;
@@ -540,6 +543,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/generate-product-bom-options', 'generateBomOptions')->name('generate.bom.options');
             Route::post('/generate-product-addon-options', 'generateAddOnOptions')->name('generate.addon.options');
             Route::post('/generate-product-purchasable-options', 'generatePurchasableOptions')->name('generate.purchasable.options');
+            Route::post('/generate-product-shop-register-options', 'generateShopRegisterOptions')->name('generate.shop.register.options');
         });
 
     // Product Attribute
@@ -756,6 +760,20 @@ Route::middleware('auth')->group(function () {
             Route::post('/generate-options', 'generateOptions')->name('generate.options');
         });
     
+    
+    // Kitchen Route
+    Route::prefix('kitchen-route')
+        ->name('kitchen.route.')
+        ->controller(KitchenRouteController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
+            Route::post('/delete', 'delete')->name('delete');
+            Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
+            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
+            Route::post('/generate-table', 'generateTable')->name('generate.table');
+            Route::post('/generate-options', 'generateOptions')->name('generate.options');
+        });
+    
     // Floor Plan
     Route::prefix('floor-plan')
         ->name('floor.plan.')
@@ -830,6 +848,22 @@ Route::middleware('auth')->group(function () {
                 ->name('generate.table');
         });
     
+
+    // Shop Register Product
+    Route::prefix('shop-register-product')
+        ->name('shop.register.product.')
+        ->controller(ShopRegisterProductController::class)
+        ->group(function () {
+            Route::post('/save', 'save')
+                ->name('save');
+
+            Route::post('/delete', 'delete')->name('delete');
+            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
+
+            Route::post('/generate-table', 'generateTable')
+                ->name('generate.table');
+        });
+
     // Shop Register Warehouse
     Route::prefix('shop-register-warehouse')
         ->name('shop.register.warehouse.')
@@ -858,6 +892,14 @@ Route::middleware('auth')->group(function () {
     Route::prefix('shop-register-access')
         ->name('shop.register.access.')
         ->controller(ShopRegisterAccessController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
+        });
+    
+    // Shop Register Kitchen Route
+    Route::prefix('shop-register-kitchen-route')
+        ->name('shop.register.kitchen.route.')
+        ->controller(ShopRegisterKitchenRouteController::class)
         ->group(function () {
             Route::post('/save', 'save')->name('save');
         });

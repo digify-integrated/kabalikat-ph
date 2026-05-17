@@ -540,11 +540,14 @@ class RolePermissionSeeder extends Seeder
                 'logs_access' => true,
             ],
 
+            // POS App
+
+            // POS Dashboard
             [
                 'role_id' => 1,
                 'role_name' => 'Super Admin',
                 'navigation_menu_id' => 39,
-                'navigation_menu_name' => 'Point of Sale',
+                'navigation_menu_name' => 'Dashboard',
                 'read_access' => true,
                 'write_access' => false,
                 'create_access' => false,
@@ -558,6 +561,20 @@ class RolePermissionSeeder extends Seeder
                 'role_id' => 1,
                 'role_name' => 'Super Admin',
                 'navigation_menu_id' => 40,
+                'navigation_menu_name' => 'Point of Sale',
+                'read_access' => true,
+                'write_access' => false,
+                'create_access' => false,
+                'delete_access' => false,
+                'import_access' => false,
+                'export_access' => false,
+                'logs_access' => false,
+            ],
+
+            [
+                'role_id' => 1,
+                'role_name' => 'Super Admin',
+                'navigation_menu_id' => 41,
                 'navigation_menu_name' => 'Shop Register',
                 'read_access' => true,
                 'write_access' => true,
@@ -571,7 +588,7 @@ class RolePermissionSeeder extends Seeder
             [
                 'role_id' => 1,
                 'role_name' => 'Super Admin',
-                'navigation_menu_id' => 41,
+                'navigation_menu_id' => 42,
                 'navigation_menu_name' => 'Configurations',
                 'read_access' => true,
                 'write_access' => false,
@@ -585,7 +602,7 @@ class RolePermissionSeeder extends Seeder
             [
                 'role_id' => 1,
                 'role_name' => 'Super Admin',
-                'navigation_menu_id' => 42,
+                'navigation_menu_id' => 43,
                 'navigation_menu_name' => 'Charge Type',
                 'read_access' => true,
                 'write_access' => true,
@@ -599,7 +616,7 @@ class RolePermissionSeeder extends Seeder
             [
                 'role_id' => 1,
                 'role_name' => 'Super Admin',
-                'navigation_menu_id' => 43,
+                'navigation_menu_id' => 44,
                 'navigation_menu_name' => 'Discount Type',
                 'read_access' => true,
                 'write_access' => true,
@@ -613,7 +630,7 @@ class RolePermissionSeeder extends Seeder
             [
                 'role_id' => 1,
                 'role_name' => 'Super Admin',
-                'navigation_menu_id' => 44,
+                'navigation_menu_id' => 45,
                 'navigation_menu_name' => 'Floor Plan',
                 'read_access' => true,
                 'write_access' => true,
@@ -627,7 +644,21 @@ class RolePermissionSeeder extends Seeder
             [
                 'role_id' => 1,
                 'role_name' => 'Super Admin',
-                'navigation_menu_id' => 45,
+                'navigation_menu_id' => 46,
+                'navigation_menu_name' => 'Kitchen Route',
+                'read_access' => true,
+                'write_access' => true,
+                'create_access' => true,
+                'delete_access' => true,
+                'import_access' => true,
+                'export_access' => true,
+                'logs_access' => true,
+            ],
+
+            [
+                'role_id' => 1,
+                'role_name' => 'Super Admin',
+                'navigation_menu_id' => 47,
                 'navigation_menu_name' => 'Payment Method',
                 'read_access' => true,
                 'write_access' => true,

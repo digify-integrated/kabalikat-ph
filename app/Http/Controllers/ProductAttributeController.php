@@ -29,13 +29,12 @@ class ProductAttributeController extends Controller
         $validated = $validator->validated();
 
         $productId = $validated['product_id'] ?? null;
-        $attributeId = $validated['attribute_id'] ?? null;
 
         $productName = (string) Product::query()
             ->whereKey($productId)
             ->value('product_name');
         
-        $attributeIds = $request->input('attribute_id') ?? [];
+        $attributeIds = (array) $request->input('attribute_id', []);
 
         if (empty($attributeIds)) {
             return response()->json([

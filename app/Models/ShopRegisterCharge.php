@@ -23,7 +23,7 @@ class ShopRegisterCharge extends Model
         return $this->belongsTo(ShopRegister::class, 'shop_register_id', 'id');
     }
 
-    public function productCategory(): BelongsTo
+    public function discountCharge(): BelongsTo
     {
         return $this->belongsTo(ChargeType::class, 'charge_type_id', 'id');
     }

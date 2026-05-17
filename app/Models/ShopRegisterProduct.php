@@ -5,15 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class ShopRegisterFloorPlan extends Model
+class ShopRegisterProduct extends Model
 {
-    protected $table = 'shop_register_floor_plan';
+    protected $table = 'shop_register_product';
 
     protected $fillable = [
         'shop_register_id',
         'shop_register_name',
-        'floor_plan_id',
-        'floor_plan_name',
+        'product_id',
+        'product_name',
         'last_log_by'
     ];
 
@@ -22,8 +22,8 @@ class ShopRegisterFloorPlan extends Model
         return $this->belongsTo(ShopRegister::class, 'shop_register_id', 'id');
     }
 
-    public function floorPlan(): BelongsTo
+    public function product(): BelongsTo
     {
-        return $this->belongsTo(FloorPlan::class, 'floor_plan_id', 'id');
+        return $this->belongsTo(Product::class, 'product_id', 'id');
     }
 }

@@ -23,7 +23,7 @@ class ShopRegisterDiscount extends Model
         return $this->belongsTo(ShopRegister::class, 'shop_register_id', 'id');
     }
 
-    public function productCategory(): BelongsTo
+    public function discountType(): BelongsTo
     {
         return $this->belongsTo(DiscountType::class, 'discount_type_id', 'id');
     }
