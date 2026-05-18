@@ -6,13 +6,10 @@ import { handleSystemError } from '../../util/system-errors.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const appendObject = (params, object = {}) => {
-
         Object.entries(object).forEach(([key, value]) => {
-
             if (value !== undefined && value !== null) {
                 params.append(key, value);
             }
-
         });
     };
 
@@ -190,7 +187,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const renderProduct = (product) => {
-
         const disabled = !product.in_stock;
 
         const badgeClass = disabled
@@ -205,81 +201,105 @@ document.addEventListener('DOMContentLoaded', () => {
             ? 'ki-cross-circle text-danger'
             : 'ki-basket text-muted';
 
+        const modalAttrs = !disabled
+            ? `data-bs-toggle="modal"
+            data-bs-target="#shop-register-order-modal"
+            data-product-id="${product.id}"
+            data-product-name="${product.product_name}"
+            data-price="${product.base_price}"`
+            : '';
+
         return `
-        <div class="col-6 col-md-4 col-xl-3">
+        <div class="col-6 col-md-4">
 
-            <button
-                type="button"
-                ${disabled ? 'disabled' : ''}
-                class="card border-0 shadow-sm h-100 w-100 text-start product-card ${disabled ? 'product-card-disabled' : ''}"
-                data-product-id="${product.id}">
+            <div 
+                class="card border-0 shadow-sm h-100 product-card ${
+                    disabled ? 'product-card-disabled opacity-60' : 'cursor-pointer'
+                }"
 
-                <div class="card-body">
+                ${modalAttrs}
 
-                    <!-- STATUS -->
-                    <div class="d-flex justify-content-between align-items-center mb-3">
+                style="
+                    transition: transform 0.2s ease, box-shadow 0.2s ease;
+                    ${disabled ? 'pointer-events: none;' : ''}
+                "
 
-                        <span class="badge rounded-pill ${badgeClass} px-3 py-2">
+                ${!disabled ? `
+                    onmouseover="this.style.transform='translateY(-4px)';
+                        this.classList.remove('shadow-sm');
+                        this.classList.add('shadow');"
+
+                    onmouseout="this.style.transform='translateY(0)';
+                        this.classList.remove('shadow');
+                        this.classList.add('shadow-sm');"
+                ` : ''}
+            >
+
+                <div class="card-body d-flex flex-column justify-content-between p-5">
+
+                    <!-- TOP -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <span class="badge rounded-pill ${badgeClass} px-3 py-2 fw-semibold fs-8">
                             ${badgeText}
                         </span>
 
-                        <i class="ki-duotone ${icon} fs-2">
+                        <i class="ki-duotone ${icon} fs-1">
                             <span class="path1"></span>
                             <span class="path2"></span>
                         </i>
-
                     </div>
 
-                    <!-- PRODUCT -->
-                    <div class="mb-4">
-
-                        <h5 class="fw-bold ${disabled ? 'text-muted' : 'text-dark'} mb-1">
-                            ${product.product_name}
-                        </h5>
-
-                        <div class="text-muted small">
+                    <!-- MIDDLE -->
+                    <div class="mb-4 flex-grow-1">
+                        <div class="text-muted fs-8 mb-1 text-uppercase">
                             ${product.category_name}
                         </div>
 
+                        <h5 class="fw-bold fs-2 ${
+                            disabled ? 'text-muted' : 'text-gray-900'
+                        } mb-2 lh-base">
+                            ${product.product_name}
+                        </h5>
+
                         ${
-                            disabled
+                            disabled && product.stock_status
                             ? `
-                            <div class="text-danger fs-8 mt-2">
+                            <div class="text-danger fs-8 d-inline-block px-2 py-1 rounded-sm mt-1">
+                                <i class="ki-duotone ki-information fs-7 me-1 text-danger"></i>
                                 ${product.stock_status}
                             </div>
                             `
                             : ''
                         }
-
                     </div>
 
-                    <!-- PRICE -->
-                    <div class="d-flex align-items-center justify-content-between">
-
+                    <!-- BOTTOM -->
+                    <div class="d-flex align-items-end justify-content-between pt-3 border-top border-gray-100">
                         <div>
-
-                            <div class="small text-muted mb-1">
+                            <div class="fs-8 text-muted text-uppercase mb-1">
                                 Price
                             </div>
-
-                            <div class="fw-bold fs-2 ${disabled ? 'text-muted' : 'text-primary'}">
-                                ₱${product.price}
+                            <div class="fw-bolder fs-1 ${
+                                disabled ? 'text-muted' : 'text-primary'
+                            }">
+                                ₱ ${Number(product.price).toLocaleString(undefined, {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2
+                                })}
                             </div>
-
                         </div>
 
-                        <div class="${disabled ? 'text-danger' : 'text-primary'}">
-
-                            <i class="ki-duotone ${disabled ? 'ki-information' : 'ki-arrow-right'} fs-2"></i>
-
+                        <div class="btn btn-icon btn-sm ${
+                            disabled ? 'btn-light' : 'btn-light-primary'
+                        } rounded-circle">
+                            <i class="ki-duotone ${
+                                disabled ? 'ki-information' : 'ki-arrow-right'
+                            } fs-3"></i>
                         </div>
-
                     </div>
 
                 </div>
-
-            </button>
-
+            </div>
         </div>
         `;
     };
@@ -421,6 +441,35 @@ document.addEventListener('DOMContentLoaded', () => {
     generatePOSCategory('/shop-register/generate-category');
     generatePOSProduct('/shop-register/generate-product');
 
+    let searchTimeout;
+
+    document.addEventListener('input', (event) => {
+
+        if (event.target.id !== 'product_search') {
+            return;
+        }
+
+        clearTimeout(searchTimeout);
+
+        searchTimeout = setTimeout(() => {
+
+            const activeCategory =
+                document.querySelector('.product-category-filter.active');
+
+            const categoryId =
+                activeCategory?.dataset.productFilter ?? 'all';
+
+            generatePOSProduct(
+                '/shop-register/generate-product',
+                {
+                    category_id: categoryId,
+                    search: event.target.value,
+                }
+            );
+
+        }, 100);
+    });
+
     document.addEventListener('click', (event) => {
 
         const button = event.target.closest('.product-category-filter');
@@ -453,37 +502,7 @@ document.addEventListener('DOMContentLoaded', () => {
         );
     });
 
-    let searchTimeout;
-
-    document.addEventListener('input', (event) => {
-
-        if (event.target.id !== 'product_search') {
-            return;
-        }
-
-        clearTimeout(searchTimeout);
-
-        searchTimeout = setTimeout(() => {
-
-            const activeCategory =
-                document.querySelector('.product-category-filter.active');
-
-            const categoryId =
-                activeCategory?.dataset.productFilter ?? 'all';
-
-            generatePOSProduct(
-                '/shop-register/generate-product',
-                {
-                    category_id: categoryId,
-                    search: event.target.value,
-                }
-            );
-
-        }, 300);
-    });
-
     document.addEventListener('click', (event) => {
-
         const resetButton =
             event.target.closest('.reset-product-filter');
 
@@ -541,5 +560,47 @@ document.addEventListener('DOMContentLoaded', () => {
                 search: '',
             }
         );
+    });
+
+    document.addEventListener('click', function (e) {
+        const card = e.target.closest('.product-card[data-bs-toggle="modal"]');
+
+        if (!card) return;
+
+        const productId = card.dataset.productId;
+        const productName = card.dataset.productName;
+        const price = parseFloat(card.dataset.price || 0);
+
+        // set modal values
+        document.getElementById('modal-product-id').value = productId;
+        document.getElementById('modal-product-name').textContent = productName;
+        document.getElementById('modal-product-base-price').value = price;
+
+        // reset quantity
+        const qtyInput = document.getElementById('order_qty_input');
+        qtyInput.value = 1;
+
+        // compute initial total
+        updateModalTotal();
+    });
+
+    function updateModalTotal() {
+        const qty = parseFloat(document.getElementById('order_qty_input').value || 0);
+        const price = parseFloat(document.getElementById('modal-product-base-price').value || 0);
+
+        const total = qty * price;
+
+        document.getElementById('modal-product-price').textContent =
+            '₱ ' + total.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+    }
+
+    document.addEventListener('click', function (e) {
+        if (e.target.closest('[data-kt-dialer-control="increase"], [data-kt-dialer-control="decrease"]')) {
+
+            setTimeout(updateModalTotal, 10);
+        }
     });
 });

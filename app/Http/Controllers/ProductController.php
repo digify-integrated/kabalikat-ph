@@ -892,6 +892,36 @@ class ProductController extends Controller
         return response()->json($response);
     }
 
+    public function generateTrackInventoryProductOptions(Request $request)
+    {
+        $multiple = filter_var($request->input('multiple', false), FILTER_VALIDATE_BOOLEAN);
+
+        $response = collect();
+
+        if (!$multiple) {
+            $response->push([
+                'id'   => '',
+                'text' => '--',
+            ]);
+        }
+
+        $boms = DB::table('product')
+            ->select(['id', 'product_name'])
+            ->where('product_status', 'Active')
+            ->where('track_inventory', 'Yes')
+            ->orderBy('product_name')
+            ->get();
+
+        $response = $response->concat(
+            $boms->map(fn ($row) => [
+                'id'   => $row->id,
+                'text' => $row->product_name,
+            ])
+        )->values();
+
+        return response()->json($response);
+    }
+
     public function generateBomOptions(Request $request)
     {
         $productId = $request->input('product_id');
@@ -985,7 +1015,7 @@ class ProductController extends Controller
             ->whereNotIn('id', function ($query) use ($shopRegisterId) {
                 $query->select('product_id')
                     ->from('shop_register_product')
-                    ->where('product_id', $shopRegisterId);
+                    ->where('shop_register_id', $shopRegisterId);
             })
             ->where('show_on_pos', 'Yes')
             ->where('product_status', 'Active')

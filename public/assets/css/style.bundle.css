@@ -53797,7 +53797,7 @@ body {
 }
 
 .product-card-disabled {
-    opacity: .65;
+    opacity: .80;
     cursor: not-allowed !important;
 }
 

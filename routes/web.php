@@ -540,6 +540,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/generate-variation-table', 'generateVariationTable')->name('generate.variation.table');
             Route::post('/generate-options', 'generateOptions')->name('generate.options');
             Route::post('/generate-active-product-options', 'generateActiveProductOptions')->name('generate.active.product.options');
+            Route::post('/generate-track-inventory-product-options', 'generateTrackInventoryProductOptions')->name('generate.track.inventory.product.options');
             Route::post('/generate-product-bom-options', 'generateBomOptions')->name('generate.bom.options');
             Route::post('/generate-product-addon-options', 'generateAddOnOptions')->name('generate.addon.options');
             Route::post('/generate-product-purchasable-options', 'generatePurchasableOptions')->name('generate.purchasable.options');

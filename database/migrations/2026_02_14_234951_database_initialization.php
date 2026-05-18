@@ -1879,6 +1879,217 @@ return new class extends Migration
         });
 
         /* =============================================================================================
+            TABLE: SHOP REGISTER ORDER
+        ============================================================================================= */
+
+        Schema::create('shop_order', function (Blueprint $table) {
+
+            $table->id();
+
+            /*
+            |--------------------------------------------------------------------------
+            | REGISTER / SESSION
+            |--------------------------------------------------------------------------
+            */
+
+            $table->foreignId('shop_register_id')
+                ->constrained('shop_register')
+                ->cascadeOnDelete();
+
+            $table->string('shop_register_name');
+
+            $table->foreignId('shop_register_session_id')
+                ->nullable()
+                ->constrained('shop_register_session')
+                ->nullOnDelete();
+
+            /*
+            |--------------------------------------------------------------------------
+            | ORDER INFO
+            |--------------------------------------------------------------------------
+            */
+
+            $table->string('order_number')
+                ->unique();
+
+            $table->enum('order_type', [
+                'Dine In',
+                'Take Out',
+                'Delivery',
+            ])->default('Dine In');
+
+            $table->enum('order_status', [
+                'Draft',
+                'Open',
+                'Completed',
+                'Voided',
+                'Cancelled',
+                'Refunded',
+            ])->default('Draft');
+
+            $table->enum('payment_status', [
+                'Unpaid',
+                'Partially Paid',
+                'Paid',
+                'Overpaid',
+            ])->default('Unpaid');
+
+            /*
+            |--------------------------------------------------------------------------
+            | CUSTOMER
+            |--------------------------------------------------------------------------
+            */
+
+            $table->string('customer_name')
+                ->nullable();
+
+            $table->string('customer_tin')
+                ->nullable();
+
+            /*
+            |--------------------------------------------------------------------------
+            | ORDER COUNTS
+            |--------------------------------------------------------------------------
+            */
+
+            $table->integer('item_count')
+                ->default(0);
+
+            $table->decimal('total_quantity', 15, 2)
+                ->default(0);
+
+            /*
+            |--------------------------------------------------------------------------
+            | FINANCIALS
+            |--------------------------------------------------------------------------
+            */
+
+            /*
+            |--------------------------------------------------------------------------
+            | SUBTOTAL
+            |--------------------------------------------------------------------------
+            |
+            | Before discounts/charges/taxes
+            |
+            */
+
+            $table->decimal('subtotal_amount', 15, 2)
+                ->default(0);
+
+            /*
+            |--------------------------------------------------------------------------
+            | DISCOUNTS
+            |--------------------------------------------------------------------------
+            */
+
+            $table->decimal('discount_amount', 15, 2)
+                ->default(0);
+
+            /*
+            |--------------------------------------------------------------------------
+            | CHARGES
+            |--------------------------------------------------------------------------
+            */
+
+            $table->decimal('charge_amount', 15, 2)
+                ->default(0);
+
+            /*
+            |--------------------------------------------------------------------------
+            | VAT
+            |--------------------------------------------------------------------------
+            */
+
+            $table->decimal('vatable_sales', 15, 2)
+                ->default(0);
+
+            $table->decimal('vat_exempt_sales', 15, 2)
+                ->default(0);
+
+            $table->decimal('zero_rated_sales', 15, 2)
+                ->default(0);
+
+            $table->decimal('vat_amount', 15, 2)
+                ->default(0);
+
+            /*
+            |--------------------------------------------------------------------------
+            | GRAND TOTAL
+            |--------------------------------------------------------------------------
+            */
+
+            $table->decimal('total_amount_due', 15, 2)
+                ->default(0);
+
+            /*
+            |--------------------------------------------------------------------------
+            | PAYMENT TOTALS
+            |--------------------------------------------------------------------------
+            */
+
+            $table->decimal('total_paid_amount', 15, 2)
+                ->default(0);
+
+            $table->decimal('change_amount', 15, 2)
+                ->default(0);
+
+            /*
+            |--------------------------------------------------------------------------
+            | NOTES
+            |--------------------------------------------------------------------------
+            */
+
+            $table->text('order_note')
+                ->nullable();
+
+            /*
+            |--------------------------------------------------------------------------
+            | USER TRACKING
+            |--------------------------------------------------------------------------
+            */
+
+            $table->foreignId('created_by')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
+
+            $table->string('created_by_name')
+                ->nullable();
+
+            $table->foreignId('completed_by')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
+
+            $table->string('completed_by_name')
+                ->nullable();
+
+            $table->datetime('completed_at')
+                ->nullable();
+
+            $table->foreignId('last_log_by')
+                ->nullable()
+                ->default(1)
+                ->constrained('users')
+                ->nullOnDelete();
+
+            $table->timestamps();
+
+            /*
+            |--------------------------------------------------------------------------
+            | INDEXES
+            |--------------------------------------------------------------------------
+            */
+
+            $table->index(['shop_register_id']);
+            $table->index(['shop_register_session_id']);
+            $table->index(['order_number']);
+            $table->index(['order_status']);
+            $table->index(['payment_status']);
+            $table->index(['created_at']);
+        });
+
+        /* =============================================================================================
             TABLE: 
         ============================================================================================= */
     }
