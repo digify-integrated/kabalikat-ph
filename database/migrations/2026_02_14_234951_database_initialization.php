@@ -1879,18 +1879,20 @@ return new class extends Migration
         });
 
         /* =============================================================================================
-            TABLE: SHOP REGISTER ORDER
+            TABLE: SHOP ORDER
         ============================================================================================= */
 
         Schema::create('shop_order', function (Blueprint $table) {
 
             $table->id();
+            $table->string('order_number')->unique();
 
-            /*
-            |--------------------------------------------------------------------------
-            | REGISTER / SESSION
-            |--------------------------------------------------------------------------
-            */
+            $table->enum('order_type', [
+                'Walk-in',
+                'Dine In',
+                'Take Out',
+                'Delivery',
+            ])->default('Walk-in');
 
             $table->foreignId('shop_register_id')
                 ->constrained('shop_register')
@@ -1903,102 +1905,57 @@ return new class extends Migration
                 ->constrained('shop_register_session')
                 ->nullOnDelete();
 
-            /*
-            |--------------------------------------------------------------------------
-            | ORDER INFO
-            |--------------------------------------------------------------------------
-            */
+            $table->foreignId('floor_plan_id')
+                ->nullable()
+                ->constrained('floor_plan')
+                ->nullOnDelete();
 
-            $table->string('order_number')
-                ->unique();
+            $table->string('floor_plan_name')
+                ->nullable();
 
-            $table->enum('order_type', [
-                'Dine In',
-                'Take Out',
-                'Delivery',
-            ])->default('Dine In');
+            $table->foreignId('floor_plan_table_id')
+                ->nullable()
+                ->constrained('floor_plan_table')
+                ->nullOnDelete();
 
-            $table->enum('order_status', [
-                'Draft',
-                'Open',
-                'Completed',
-                'Voided',
-                'Cancelled',
-                'Refunded',
-            ])->default('Draft');
-
-            $table->enum('payment_status', [
-                'Unpaid',
-                'Partially Paid',
-                'Paid',
-                'Overpaid',
-            ])->default('Unpaid');
-
-            /*
-            |--------------------------------------------------------------------------
-            | CUSTOMER
-            |--------------------------------------------------------------------------
-            */
+            $table->string('table_number')
+                ->nullable();
 
             $table->string('customer_name')
                 ->nullable();
 
-            $table->string('customer_tin')
+            $table->string('customer_contact_number')
                 ->nullable();
 
-            /*
-            |--------------------------------------------------------------------------
-            | ORDER COUNTS
-            |--------------------------------------------------------------------------
-            */
+            $table->enum('order_status', [
+                'Pending',
+                'Preparing',
+                'Ready',
+                'Completed',
+                'Cancelled',
+                'Voided',
+            ])->default('Pending');
 
-            $table->integer('item_count')
+            $table->enum('payment_status', [
+                'Unpaid',
+                'Paid',
+                'Refunded',
+            ])->default('Unpaid');
+
+            $table->integer('total_items')
                 ->default(0);
 
-            $table->decimal('total_quantity', 15, 2)
+            $table->decimal('total_quantity', 10, 2)
                 ->default(0);
 
-            /*
-            |--------------------------------------------------------------------------
-            | FINANCIALS
-            |--------------------------------------------------------------------------
-            */
-
-            /*
-            |--------------------------------------------------------------------------
-            | SUBTOTAL
-            |--------------------------------------------------------------------------
-            |
-            | Before discounts/charges/taxes
-            |
-            */
-
-            $table->decimal('subtotal_amount', 15, 2)
+            $table->decimal('subtotal', 15, 2)
                 ->default(0);
 
-            /*
-            |--------------------------------------------------------------------------
-            | DISCOUNTS
-            |--------------------------------------------------------------------------
-            */
-
-            $table->decimal('discount_amount', 15, 2)
+            $table->decimal('discount_total', 15, 2)
                 ->default(0);
 
-            /*
-            |--------------------------------------------------------------------------
-            | CHARGES
-            |--------------------------------------------------------------------------
-            */
-
-            $table->decimal('charge_amount', 15, 2)
+            $table->decimal('charge_total', 15, 2)
                 ->default(0);
-
-            /*
-            |--------------------------------------------------------------------------
-            | VAT
-            |--------------------------------------------------------------------------
-            */
 
             $table->decimal('vatable_sales', 15, 2)
                 ->default(0);
@@ -2012,41 +1969,35 @@ return new class extends Migration
             $table->decimal('vat_amount', 15, 2)
                 ->default(0);
 
-            /*
-            |--------------------------------------------------------------------------
-            | GRAND TOTAL
-            |--------------------------------------------------------------------------
-            */
-
-            $table->decimal('total_amount_due', 15, 2)
+            $table->decimal('gross_total', 15, 2)
                 ->default(0);
 
-            /*
-            |--------------------------------------------------------------------------
-            | PAYMENT TOTALS
-            |--------------------------------------------------------------------------
-            */
+            $table->decimal('net_total', 15, 2)
+                ->default(0);
 
-            $table->decimal('total_paid_amount', 15, 2)
+            $table->decimal('paid_amount', 15, 2)
                 ->default(0);
 
             $table->decimal('change_amount', 15, 2)
                 ->default(0);
 
-            /*
-            |--------------------------------------------------------------------------
-            | NOTES
-            |--------------------------------------------------------------------------
-            */
+            $table->decimal('balance_due', 15, 2)
+                ->default(0);
 
             $table->text('order_note')
                 ->nullable();
 
-            /*
-            |--------------------------------------------------------------------------
-            | USER TRACKING
-            |--------------------------------------------------------------------------
-            */
+            $table->text('internal_note')
+                ->nullable();
+
+            $table->timestamp('ordered_at')
+                ->nullable();
+
+            $table->timestamp('completed_at')
+                ->nullable();
+
+            $table->timestamp('cancelled_at')
+                ->nullable();
 
             $table->foreignId('created_by')
                 ->nullable()
@@ -2064,8 +2015,287 @@ return new class extends Migration
             $table->string('completed_by_name')
                 ->nullable();
 
+            $table->foreignId('cancelled_by')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
+
+            $table->string('cancelled_by_name')
+                ->nullable();
+
+            $table->foreignId('last_log_by')
+                ->nullable()
+                ->default(1)
+                ->constrained('users')
+                ->nullOnDelete();
+
+            $table->timestamps();
+
+            $table->index(['order_number']);
+            $table->index(['shop_register_id']);
+            $table->index(['shop_register_session_id']);
+            $table->index(['order_status']);
+            $table->index(['payment_status']);
+            $table->index(['ordered_at']);
+            $table->index(['floor_plan_table_id']);
+        });
+
+        /* =============================================================================================
+            TABLE: SHOP ORDER ITEM
+        ============================================================================================= */
+
+        Schema::create('shop_order_item', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('shop_order_id')
+                ->constrained('shop_order')
+                ->cascadeOnDelete();
+
+            $table->foreignId('product_id')
+                ->nullable()
+                ->constrained('product')
+                ->nullOnDelete();
+
+            $table->string('product_name');
+
+            $table->string('sku')
+                ->nullable();
+
+            $table->string('barcode')
+                ->nullable();
+
+            $table->enum('product_type', ['Goods', 'Service']);
+
+            $table->foreignId('product_category_id')
+                ->nullable()
+                ->constrained('product_category')
+                ->nullOnDelete();
+
+            $table->string('product_category_name')
+                ->nullable();
+
+            $table->foreignId('unit_id')
+                ->nullable()
+                ->constrained('unit')
+                ->nullOnDelete();
+
+            $table->string('unit_name')
+                ->nullable();
+
+            $table->string('unit_abbreviation')
+                ->nullable();
+
+            $table->decimal('quantity', 12, 2)
+                ->default(1);
+
+            $table->decimal('original_unit_price', 12, 2)
+                ->default(0);
+
+            $table->decimal('unit_price', 12, 2)
+                ->default(0);
+
+            $table->decimal('line_subtotal', 12, 2)
+                ->default(0);
+
+            $table->enum('tax_classification', [
+                'Vatable',
+                'VAT Exempt',
+                'Zero Rated'
+            ]);
+
+            $table->decimal('vatable_sales', 12, 2)
+                ->default(0);
+
+            $table->decimal('vat_exempt_sales', 12, 2)
+                ->default(0);
+
+            $table->decimal('zero_rated_sales', 12, 2)
+                ->default(0);
+
+            $table->decimal('vat_amount', 12, 2)
+                ->default(0);
+
+            $table->decimal('line_total', 12, 2)
+                ->default(0);
+
+            $table->text('order_note')
+                ->nullable();
+
+            $table->enum('item_status', [
+                'Pending',
+                'Preparing',
+                'Ready',
+                'Served',
+                'Completed',
+                'Cancelled',
+            ])->default('Pending');
+
+            $table->datetime('queued_at')
+                ->nullable();
+
+            $table->datetime('started_preparing_at')
+                ->nullable();
+
+            $table->datetime('ready_at')
+                ->nullable();
+
+            $table->datetime('served_at')
+                ->nullable();
+
             $table->datetime('completed_at')
                 ->nullable();
+
+            $table->datetime('cancelled_at')
+                ->nullable();
+
+            $table->text('cancellation_reason')
+                ->nullable();
+
+            $table->foreignId('cancelled_by')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
+
+            $table->foreignId('last_log_by')
+                ->nullable()
+                ->default(1)
+                ->constrained('users')
+                ->nullOnDelete();
+
+            $table->timestamps();
+
+            $table->index(['shop_order_id']);
+            $table->index(['product_id']);
+            $table->index(['product_category_id']);
+            $table->index(['item_status']);
+            $table->index(['tax_classification']);
+            $table->index(['queued_at']);
+            $table->index(['ready_at']);
+        });
+
+        /* =============================================================================================
+            TABLE: SHOP ORDER APPLIED DISCOUNT
+        ============================================================================================= */
+
+        Schema::create('shop_order_applied_discount', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('shop_order_id')
+                ->constrained('shop_order')
+                ->cascadeOnDelete();
+
+            /*
+            |--------------------------------------------------------------------------
+            | DISCOUNT TYPE SNAPSHOT
+            |--------------------------------------------------------------------------
+            |
+            | Snapshot values are stored so that
+            | historical orders remain accurate even if
+            | discount configuration changes later.
+            |
+            */
+
+            $table->foreignId('discount_type_id')
+                ->nullable()
+                ->constrained('discount_type')
+                ->nullOnDelete();
+
+            $table->string('discount_type_name');
+
+            /*
+            |--------------------------------------------------------------------------
+            | DISCOUNT CONFIG SNAPSHOT
+            |--------------------------------------------------------------------------
+            */
+
+            $table->enum('value_type', [
+                'Percentage',
+                'Fixed Amount'
+            ]);
+
+            $table->decimal('discount_value', 12, 2)
+                ->default(0);
+
+            $table->enum('application_order', [
+                'Before Tax',
+                'After Tax'
+            ])->default('After Tax');
+
+            $table->enum('is_vat_exempt', [
+                'Yes',
+                'No'
+            ])->default('No');
+
+            /*
+            |--------------------------------------------------------------------------
+            | COMPUTED VALUES
+            |--------------------------------------------------------------------------
+            |
+            | discount_rate
+            | - actual percentage used
+            |
+            | discount_amount
+            | - computed peso amount
+            |
+            */
+
+            $table->decimal('discount_rate', 12, 4)
+                ->default(0);
+
+            $table->decimal('discount_amount', 12, 2)
+                ->default(0);
+
+            /*
+            |--------------------------------------------------------------------------
+            | VAT EXEMPTION SNAPSHOT
+            |--------------------------------------------------------------------------
+            |
+            | Important for:
+            | - Senior Citizen
+            | - PWD
+            |
+            */
+
+            $table->decimal('vat_exempt_amount', 12, 2)
+                ->default(0);
+
+            /*
+            |--------------------------------------------------------------------------
+            | REFERENCE DETAILS
+            |--------------------------------------------------------------------------
+            |
+            | Examples:
+            | - Senior Citizen ID
+            | - PWD ID
+            | - Promo code
+            |
+            */
+
+            $table->string('reference_number')
+                ->nullable();
+
+            $table->string('reference_name')
+                ->nullable();
+
+            /*
+            |--------------------------------------------------------------------------
+            | REMARKS
+            |--------------------------------------------------------------------------
+            */
+
+            $table->text('remarks')
+                ->nullable();
+
+            /*
+            |--------------------------------------------------------------------------
+            | AUDIT
+            |--------------------------------------------------------------------------
+            */
+
+            $table->foreignId('applied_by')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
 
             $table->foreignId('last_log_by')
                 ->nullable()
@@ -2081,14 +2311,316 @@ return new class extends Migration
             |--------------------------------------------------------------------------
             */
 
-            $table->index(['shop_register_id']);
-            $table->index(['shop_register_session_id']);
-            $table->index(['order_number']);
-            $table->index(['order_status']);
-            $table->index(['payment_status']);
-            $table->index(['created_at']);
+            $table->index(['shop_order_id']);
+            $table->index(['discount_type_id']);
+            $table->index(['application_order']);
+            $table->index(['is_vat_exempt']);
         });
 
+        /* =============================================================================================
+            TABLE: SHOP ORDER APPLIED CHARGE
+        ============================================================================================= */
+
+        Schema::create('shop_order_applied_charge', function (Blueprint $table) {
+            $table->id();
+
+            /*
+            |--------------------------------------------------------------------------
+            | ORDER
+            |--------------------------------------------------------------------------
+            */
+
+            $table->foreignId('shop_order_id')
+                ->constrained('shop_order')
+                ->cascadeOnDelete();
+
+            /*
+            |--------------------------------------------------------------------------
+            | CHARGE TYPE SNAPSHOT
+            |--------------------------------------------------------------------------
+            |
+            | Snapshot values are stored so that
+            | historical orders remain accurate even if
+            | charge configuration changes later.
+            |
+            */
+
+            $table->foreignId('charge_type_id')
+                ->nullable()
+                ->constrained('charge_type')
+                ->nullOnDelete();
+
+            $table->string('charge_type_name');
+
+            /*
+            |--------------------------------------------------------------------------
+            | CHARGE CONFIG SNAPSHOT
+            |--------------------------------------------------------------------------
+            */
+
+            $table->enum('value_type', [
+                'Percentage',
+                'Fixed Amount'
+            ]);
+
+            $table->decimal('charge_value', 12, 2)
+                ->default(0);
+
+            $table->enum('application_order', [
+                'Before Tax',
+                'After Tax'
+            ])->default('After Tax');
+
+            $table->enum('tax_type', [
+                'Vatable',
+                'Non Vatable'
+            ])->default('Non Vatable');
+
+            /*
+            |--------------------------------------------------------------------------
+            | COMPUTED VALUES
+            |--------------------------------------------------------------------------
+            |
+            | charge_rate
+            | - actual percentage used
+            |
+            | charge_amount
+            | - computed peso amount
+            |
+            */
+
+            $table->decimal('charge_rate', 12, 4)
+                ->default(0);
+
+            $table->decimal('charge_amount', 12, 2)
+                ->default(0);
+
+            /*
+            |--------------------------------------------------------------------------
+            | VAT SNAPSHOT
+            |--------------------------------------------------------------------------
+            |
+            | Important for:
+            | - service charge
+            | - taxable fees
+            |
+            */
+
+            $table->decimal('vatable_amount', 12, 2)
+                ->default(0);
+
+            $table->decimal('vat_amount', 12, 2)
+                ->default(0);
+
+            /*
+            |--------------------------------------------------------------------------
+            | REMARKS
+            |--------------------------------------------------------------------------
+            */
+
+            $table->text('remarks')
+                ->nullable();
+
+            /*
+            |--------------------------------------------------------------------------
+            | AUDIT
+            |--------------------------------------------------------------------------
+            */
+
+            $table->foreignId('applied_by')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
+
+            $table->foreignId('last_log_by')
+                ->nullable()
+                ->default(1)
+                ->constrained('users')
+                ->nullOnDelete();
+
+            $table->timestamps();
+
+            /*
+            |--------------------------------------------------------------------------
+            | INDEXES
+            |--------------------------------------------------------------------------
+            */
+
+            $table->index(['shop_order_id']);
+            $table->index(['charge_type_id']);
+            $table->index(['application_order']);
+            $table->index(['tax_type']);
+        });
+                
+        /* =============================================================================================
+            TABLE: Shop Order Payment
+        ============================================================================================= */
+
+        Schema::create('shop_order_payment', function (Blueprint $table) {
+            $table->id();
+
+            /*
+            |--------------------------------------------------------------------------
+            | ORDER
+            |--------------------------------------------------------------------------
+            */
+
+            $table->foreignId('shop_order_id')
+                ->constrained('shop_order')
+                ->cascadeOnDelete();
+
+            /*
+            |--------------------------------------------------------------------------
+            | PAYMENT METHOD SNAPSHOT
+            |--------------------------------------------------------------------------
+            |
+            | Snapshot stored for historical integrity.
+            |
+            */
+
+            $table->foreignId('payment_method_id')
+                ->nullable()
+                ->constrained('payment_method')
+                ->nullOnDelete();
+
+            $table->string('payment_method_name');
+
+            /*
+            |--------------------------------------------------------------------------
+            | PAYMENT DETAILS
+            |--------------------------------------------------------------------------
+            */
+
+            $table->decimal('payment_amount', 12, 2)
+                ->default(0);
+
+            /*
+            |--------------------------------------------------------------------------
+            | CASH HANDLING
+            |--------------------------------------------------------------------------
+            |
+            | Useful for:
+            | - cash payments
+            | - mixed tenders
+            | - cashier reconciliation
+            |
+            */
+
+            $table->decimal('tendered_amount', 12, 2)
+                ->default(0);
+
+            $table->decimal('change_amount', 12, 2)
+                ->default(0);
+
+            /*
+            |--------------------------------------------------------------------------
+            | REFERENCE DETAILS
+            |--------------------------------------------------------------------------
+            |
+            | Examples:
+            | - GCash reference
+            | - Maya transaction ID
+            | - Card approval code
+            | - Bank reference number
+            |
+            */
+
+            $table->string('reference_number')
+                ->nullable();
+
+            $table->string('reference_name')
+                ->nullable();
+
+            /*
+            |--------------------------------------------------------------------------
+            | PAYMENT STATUS
+            |--------------------------------------------------------------------------
+            */
+
+            $table->enum('payment_status', [
+                'Paid',
+                'Refunded',
+                'Voided',
+                'Failed',
+            ])->default('Paid');
+
+            /*
+            |--------------------------------------------------------------------------
+            | PAYMENT TIMESTAMP
+            |--------------------------------------------------------------------------
+            */
+
+            $table->datetime('paid_at')
+                ->nullable();
+
+            /*
+            |--------------------------------------------------------------------------
+            | VOID / REFUND DETAILS
+            |--------------------------------------------------------------------------
+            */
+
+            $table->datetime('voided_at')
+                ->nullable();
+
+            $table->datetime('refunded_at')
+                ->nullable();
+
+            $table->text('void_reason')
+                ->nullable();
+
+            $table->text('refund_reason')
+                ->nullable();
+
+            $table->foreignId('voided_by')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
+
+            $table->foreignId('refunded_by')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
+
+            /*
+            |--------------------------------------------------------------------------
+            | REMARKS
+            |--------------------------------------------------------------------------
+            */
+
+            $table->text('remarks')
+                ->nullable();
+
+            /*
+            |--------------------------------------------------------------------------
+            | AUDIT
+            |--------------------------------------------------------------------------
+            */
+
+            $table->foreignId('received_by')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
+
+            $table->foreignId('last_log_by')
+                ->nullable()
+                ->default(1)
+                ->constrained('users')
+                ->nullOnDelete();
+
+            $table->timestamps();
+
+            /*
+            |--------------------------------------------------------------------------
+            | INDEXES
+            |--------------------------------------------------------------------------
+            */
+
+            $table->index(['shop_order_id']);
+            $table->index(['payment_method_id']);
+            $table->index(['payment_status']);
+            $table->index(['paid_at']);
+        });
+                
         /* =============================================================================================
             TABLE: 
         ============================================================================================= */
@@ -2165,7 +2697,7 @@ return new class extends Migration
         Schema::dropIfExists('shop_register_kitchen_route');
         Schema::dropIfExists('shop_register_session');
         Schema::dropIfExists('shop_session_denomination');
-        Schema::dropIfExists('shop_register_order');
+        Schema::dropIfExists('shop_order');
         Schema::dropIfExists('shop_register');
         Schema::dropIfExists('nationality');
         Schema::dropIfExists('currency');

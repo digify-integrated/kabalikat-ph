@@ -332,7 +332,7 @@
 
                     @csrf
 
-                    <input type="hidden" id="modal-product-id">
+                    <input type="hidden" id="modal_product_id" name="modal_product_id">
                     <input type="hidden" id="modal-product-base-price">
 
                     <div class="modal-body pt-4">

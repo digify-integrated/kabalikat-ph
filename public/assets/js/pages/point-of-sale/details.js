@@ -5,6 +5,56 @@ import { getPageContext, getCsrfToken, resetForm } from '../../form/form.js';
 import { handleSystemError } from '../../util/system-errors.js';
 
 document.addEventListener('DOMContentLoaded', () => {
+    let searchTimeout;
+
+    const config = {
+        forms: [
+            {
+                selector: '#product_form',
+                rules: {
+                    submitHandler: async (form) => {
+                        const ctx = getPageContext();
+                        const formData = new URLSearchParams(new FormData(form));
+                        formData.append('shop_register_id', ctx.detailId ?? '');
+                        formData.append('appId', ctx.appId ?? '');
+                        formData.append('navigationMenuId', ctx .navigationMenuId ?? '');
+
+                        disableButton('submit-product');
+
+                        try {
+                            const response = await fetch('/shop-order/save', {
+                                method: 'POST',
+                                body: formData,
+                            });
+
+                            if (!response.ok) {
+                                throw new Error(`Save order failed with status: ${response.status}`);
+                            }
+
+                            const data = await response.json();
+
+                            if (data.success) {
+                                showNotification(data.message, 'success');
+                            } else {
+                                showNotification(data.message);
+                            }
+                        } catch (error) {
+                            handleSystemError(error, 'fetch_failed', `Fetch request failed: ${error.message}`);
+                        } finally {
+                            enableButton('submit-product');
+                        }
+                    },
+                }
+            }
+        ],
+        posCategory: [
+            { url: '/shop-register/generate-category' }
+        ],
+        posProduct: [
+            { url: '/shop-register/generate-product' }
+        ],
+    };
+
     const appendObject = (params, object = {}) => {
         Object.entries(object).forEach(([key, value]) => {
             if (value !== undefined && value !== null) {
@@ -438,10 +488,9 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     };
 
-    generatePOSCategory('/shop-register/generate-category');
-    generatePOSProduct('/shop-register/generate-product');
-
-    let searchTimeout;
+    config.forms.map((cfg) => initValidation(cfg.selector, cfg.rules));
+    config.posCategory.map((cfg) => generatePOSCategory(cfg.url));
+    config.posProduct.map((cfg) => generatePOSProduct(cfg.url));
 
     document.addEventListener('input', (event) => {
 
@@ -572,7 +621,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const price = parseFloat(card.dataset.price || 0);
 
         // set modal values
-        document.getElementById('modal-product-id').value = productId;
+        document.getElementById('modal_product_id').value = productId;
         document.getElementById('modal-product-name').textContent = productName;
         document.getElementById('modal-product-base-price').value = price;
 

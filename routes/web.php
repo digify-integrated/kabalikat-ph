@@ -34,6 +34,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\RoleSystemActionPermissionController;
 use App\Http\Controllers\RoleUserAccountController;
+use App\Http\Controllers\ShopOrderController;
 use App\Http\Controllers\ShopRegisterAccessController;
 use App\Http\Controllers\ShopRegisterChargeController;
 use App\Http\Controllers\ShopRegisterController;
@@ -901,6 +902,14 @@ Route::middleware('auth')->group(function () {
     Route::prefix('shop-register-kitchen-route')
         ->name('shop.register.kitchen.route.')
         ->controller(ShopRegisterKitchenRouteController::class)
+        ->group(function () {
+            Route::post('/save', 'save')->name('save');
+        });
+    
+    // Shop Order Kitchen Route
+    Route::prefix('shop-order')
+        ->name('shop.order.')
+        ->controller(ShopOrderController::class)
         ->group(function () {
             Route::post('/save', 'save')->name('save');
         });
