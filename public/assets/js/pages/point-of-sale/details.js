@@ -14,7 +14,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 rules: {
                     submitHandler: async (form) => {
                         const ctx = getPageContext();
+                        const shopOrderId = sessionStorage.getItem('shop_order_id');
                         const formData = new URLSearchParams(new FormData(form));
+                        formData.append('shop_order_id', shopOrderId ?? '');
                         formData.append('shop_register_id', ctx.detailId ?? '');
                         formData.append('appId', ctx.appId ?? '');
                         formData.append('navigationMenuId', ctx .navigationMenuId ?? '');
@@ -34,7 +36,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             const data = await response.json();
 
                             if (data.success) {
-                                showNotification(data.message, 'success');
+                                sessionStorage.setItem('shop_order_id', data.shop_order_id);
+                                $('#shop-register-order-modal').modal('hide');
                             } else {
                                 showNotification(data.message);
                             }
@@ -54,6 +57,19 @@ document.addEventListener('DOMContentLoaded', () => {
             { url: '/shop-register/generate-product' }
         ],
     };
+
+    const updateModalTotal = () => {
+        const qty = parseFloat(document.getElementById('order_qty_input').value || 0);
+        const price = parseFloat(document.getElementById('modal-product-base-price').value || 0);
+
+        const total = qty * price;
+
+        document.getElementById('modal-product-price').textContent =
+            '₱ ' + total.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+    }
 
     const appendObject = (params, object = {}) => {
         Object.entries(object).forEach(([key, value]) => {
@@ -488,9 +504,406 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     };
 
+    const initializeCart = async () => {
+
+        const shopOrderId = sessionStorage.getItem('shop_order_id');
+
+        /*
+        |--------------------------------------------------------------------------
+        | NO ACTIVE ORDER
+        |--------------------------------------------------------------------------
+        */
+
+        if (!shopOrderId) {
+
+            resetCartUI();
+
+            return;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | LOAD EXISTING CART
+        |--------------------------------------------------------------------------
+        */
+
+        await loadCart(shopOrderId);
+    };
+
+    const loadCart = async (shopOrderId) => {
+        try {
+
+            showCartLoading();
+
+            const ctx = getPageContext();
+
+            const formData = new URLSearchParams();
+
+            formData.append('shop_order_id', shopOrderId);
+            formData.append('appId', ctx.appId ?? '');
+            formData.append('navigationMenuId', ctx.navigationMenuId ?? '');
+
+            const response = await fetch('/shop-order/details', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!response.ok) {
+                throw new Error(`Load cart failed: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            /*
+            |--------------------------------------------------------------------------
+            | INVALID ORDER
+            |--------------------------------------------------------------------------
+            */
+
+            if (!data.success) {
+
+                sessionStorage.removeItem('shop_order_id');
+
+                resetCartUI();
+
+                showNotification(data.message);
+
+                return;
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | EMPTY ORDER
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                !data.order ||
+                !data.order.items ||
+                data.order.items.length === 0
+            ) {
+
+                resetCartUI();
+
+                return;
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | POPULATE CART
+            |--------------------------------------------------------------------------
+            */
+
+            populateCart(data.order);
+
+        } catch (error) {
+
+            handleSystemError(
+                error,
+                'load_cart_failed',
+                error.message
+            );
+
+            resetCartUI();
+        }
+    };
+
+    const showCartLoading = () => {
+
+        $('#shop-order-loading').removeClass('d-none');
+
+        $('#shop-order-empty').addClass('d-none');
+
+        $('#shop-order-items').html('');
+
+        toggleDetailedOrder(false);
+    };
+
+    const resetCartUI = () => {
+
+        /*
+        |--------------------------------------------------------------------------
+        | HEADER
+        |--------------------------------------------------------------------------
+        */
+
+        $('#order-id').text('--');
+
+        /*
+        |--------------------------------------------------------------------------
+        | STATES
+        |--------------------------------------------------------------------------
+        */
+
+        $('#shop-order-loading').addClass('d-none');
+
+        $('#shop-order-empty').removeClass('d-none');
+
+        $('#shop-order-items').html('');
+
+        /*
+        |--------------------------------------------------------------------------
+        | TOTALS
+        |--------------------------------------------------------------------------
+        */
+
+        $('#summary-subtotal').text('₱ 0.00');
+
+        $('#summary-discount').text('₱ 0.00');
+
+        $('#summary-charge').text('₱ 0.00');
+
+        $('#summary-vatable-sales').text('₱ 0.00');
+
+        $('#summary-vat').text('₱ 0.00');
+
+        $('#summary-vat-exempt').text('₱ 0.00');
+
+        $('#summary-zero-rated').text('₱ 0.00');
+
+        $('#shop-order-total').text('₱ 0.00');
+
+        /*
+        |--------------------------------------------------------------------------
+        | BADGES
+        |--------------------------------------------------------------------------
+        */
+
+        $('#badge-order-type').text('Walk-in');
+
+        $('#badge-table').text('No Table');
+
+        $('#badge-payment-status').text('Unpaid');
+
+        /*
+        |--------------------------------------------------------------------------
+        | HIDE ACTIONS
+        |--------------------------------------------------------------------------
+        */
+
+        toggleDetailedOrder(false);
+    };
+
+    const populateCart = (order) => {
+
+        /*
+        |--------------------------------------------------------------------------
+        | HEADER
+        |--------------------------------------------------------------------------
+        */
+
+        $('#order-id').text(order.order_number ?? '--');
+
+        /*
+        |--------------------------------------------------------------------------
+        | STATES
+        |--------------------------------------------------------------------------
+        */
+
+        $('#shop-order-loading').addClass('d-none');
+
+        $('#shop-order-empty').addClass('d-none');
+
+        /*
+        |--------------------------------------------------------------------------
+        | BADGES
+        |--------------------------------------------------------------------------
+        */
+
+        $('#badge-order-type').text(
+            order.order_type ?? 'Walk-in'
+        );
+
+        $('#badge-table').text(
+            order.table_number
+                ? `Table ${order.table_number}`
+                : 'No Table'
+        );
+
+        $('#badge-payment-status').text(
+            order.payment_status ?? 'Unpaid'
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | TOTALS
+        |--------------------------------------------------------------------------
+        */
+
+        $('#summary-subtotal').text(
+            formatPeso(order.subtotal)
+        );
+
+        $('#summary-discount').text(
+            formatPeso(order.discount_total)
+        );
+
+        $('#summary-charge').text(
+            formatPeso(order.charge_total)
+        );
+
+        $('#summary-vatable-sales').text(
+            formatPeso(order.vatable_sales)
+        );
+
+        $('#summary-vat').text(
+            formatPeso(order.vat_amount)
+        );
+
+        $('#summary-vat-exempt').text(
+            formatPeso(order.vat_exempt_sales)
+        );
+
+        $('#summary-zero-rated').text(
+            formatPeso(order.zero_rated_sales)
+        );
+
+        $('#shop-order-total').text(
+            formatPeso(order.net_total)
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | ITEMS
+        |--------------------------------------------------------------------------
+        */
+
+        const html = order.items
+            .map(renderOrderItem)
+            .join('');
+
+        $('#shop-order-items').html(html);
+
+        /*
+        |--------------------------------------------------------------------------
+        | SHOW ACTIONS
+        |--------------------------------------------------------------------------
+        */
+
+        toggleDetailedOrder(true);
+
+        /*
+        |--------------------------------------------------------------------------
+        | REINITIALIZE KT COMPONENTS
+        |--------------------------------------------------------------------------
+        */
+
+        if (typeof KTComponents !== 'undefined') {
+            KTComponents.init();
+        }
+    };
+
+    const toggleDetailedOrder = (show = false) => {
+
+        if (show) {
+            $('.detailed-order').removeClass('d-none');
+        } else {
+            $('.detailed-order').addClass('d-none');
+        }
+    };
+
+    const formatPeso = (value = 0) => {
+
+        return `₱ ${Number(value).toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        })}`;
+    };
+
+    const renderOrderItem = (item) => {
+
+        return `
+        
+        <div class="card border-0 bg-light mb-3 order-item-card">
+
+            <div class="card-body p-4">
+
+                <div class="d-flex justify-content-between align-items-start mb-3">
+
+                    <div class="me-3">
+
+                        <div class="fw-bold fs-4 text-gray-900 mb-1">
+                            ${item.product_name}
+                        </div>
+
+                        <div class="text-muted fs-7">
+                            ${formatPeso(item.unit_price)}
+                            ×
+                            ${item.quantity}
+                        </div>
+
+                    </div>
+
+                    <div class="fw-bolder fs-3 text-primary">
+                        ${formatPeso(item.line_total)}
+                    </div>
+
+                </div>
+
+                ${
+                    item.order_note
+                    ? `
+                        <div class="bg-light-warning rounded p-3 fs-7 text-gray-700 mb-4">
+                            ${item.order_note}
+                        </div>
+                    `
+                    : ''
+                }
+
+                <div class="d-flex justify-content-between align-items-center">
+
+                    <div
+                        class="d-flex align-items-center gap-2"
+                        data-kt-dialer="true"
+                        data-kt-dialer-min="1"
+                        data-kt-dialer-step="1">
+
+                        <button
+                            type="button"
+                            class="btn btn-icon btn-light btn-sm"
+                            data-kt-dialer-control="decrease">
+
+                            <i class="ki-outline ki-minus fs-3"></i>
+
+                        </button>
+
+                        <input
+                            type="text"
+                            class="form-control border-0 bg-white text-center fw-bold w-60px"
+                            value="${item.quantity}"
+                            readonly>
+
+                        <button
+                            type="button"
+                            class="btn btn-icon btn-light btn-sm"
+                            data-kt-dialer-control="increase">
+
+                            <i class="ki-outline ki-plus fs-3"></i>
+
+                        </button>
+
+                    </div>
+
+                    <button
+                        class="btn btn-icon btn-light-danger btn-sm">
+
+                        <i class="ki-outline ki-trash fs-3"></i>
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+        `;
+    };
+
     config.forms.map((cfg) => initValidation(cfg.selector, cfg.rules));
     config.posCategory.map((cfg) => generatePOSCategory(cfg.url));
     config.posProduct.map((cfg) => generatePOSProduct(cfg.url));
+
+    initializeCart();
 
     document.addEventListener('input', (event) => {
 
@@ -632,19 +1045,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // compute initial total
         updateModalTotal();
     });
-
-    function updateModalTotal() {
-        const qty = parseFloat(document.getElementById('order_qty_input').value || 0);
-        const price = parseFloat(document.getElementById('modal-product-base-price').value || 0);
-
-        const total = qty * price;
-
-        document.getElementById('modal-product-price').textContent =
-            '₱ ' + total.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
-    }
 
     document.addEventListener('click', function (e) {
         if (e.target.closest('[data-kt-dialer-control="increase"], [data-kt-dialer-control="decrease"]')) {

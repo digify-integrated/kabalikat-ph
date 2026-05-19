@@ -45,7 +45,7 @@
                 </div>
 
                 <!-- ACTIONS -->
-                <div class="card-toolbar d-none">
+                <div class="card-toolbar detailed-order d-none">
 
                     <button
                         class="btn btn-icon btn-light btn-sm"
@@ -245,7 +245,7 @@
                     </div>
 
                     <!-- SECONDARY ACTIONS -->
-                    <div class="row g-3 mb-3 d-none">
+                    <div class="row g-3 mb-3 detailed-order d-none">
 
                         <div class="col">
                             <button class="btn btn-light w-100 py-3 fw-semibold">
@@ -278,7 +278,7 @@
                     </div>
 
                     <!-- PRIMARY ACTIONS -->
-                    <div class="row g-3 d-none">
+                    <div class="row g-3 detailed-order d-none">
 
                         <div class="col">
                             <button
@@ -382,6 +382,7 @@
                                             class="form-control text-center fw-bold fs-7 border-0 bg-light rounded w-75px"
                                             data-kt-dialer-control="input"
                                             id="order_qty_input"
+                                            name="order_qty_input"
                                             value="1"
                                             readonly />
 

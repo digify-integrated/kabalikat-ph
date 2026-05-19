@@ -3186,6 +3186,538 @@ return new class extends Migration
                 VALUES ('shop_session_denomination', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
             END
         SQL);
+
+        /* =============================================================================================
+            TABLE: SHOP ORDER
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_order_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_order_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_shop_order_update
+            AFTER UPDATE ON shop_order
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Shop order changed.<br/><br/>';
+
+                IF NEW.order_number <> OLD.order_number THEN
+                    SET audit_log = CONCAT(audit_log, "Order Number:", OLD.order_number, " -> ", NEW.order_number, "<br/>");
+                END IF;
+
+                IF NEW.order_type <> OLD.order_type THEN
+                    SET audit_log = CONCAT(audit_log, "Order Type:", OLD.order_type, " -> ", NEW.order_type, "<br/>");
+                END IF;
+
+                IF NEW.shop_register_name <> OLD.shop_register_name THEN
+                    SET audit_log = CONCAT(audit_log, "Shop Register:", OLD.shop_register_name, " -> ", NEW.shop_register_name, "<br/>");
+                END IF;
+
+                IF NEW.floor_plan_name <> OLD.floor_plan_name THEN
+                    SET audit_log = CONCAT(audit_log, "Floor Plan:", OLD.floor_plan_name, " -> ", NEW.floor_plan_name, "<br/>");
+                END IF;
+
+                IF NEW.table_number <> OLD.table_number THEN
+                    SET audit_log = CONCAT(audit_log, "Table Number:", OLD.table_number, " -> ", NEW.table_number, "<br/>");
+                END IF;
+
+                IF NEW.customer_name <> OLD.customer_name THEN
+                    SET audit_log = CONCAT(audit_log, "Customer:", OLD.customer_name, " -> ", NEW.customer_name, "<br/>");
+                END IF;
+
+                IF NEW.order_status <> OLD.order_status THEN
+                    SET audit_log = CONCAT(audit_log, "Order Status:", OLD.order_status, " -> ", NEW.order_status, "<br/>");
+                END IF;
+
+                IF NEW.payment_status <> OLD.payment_status THEN
+                    SET audit_log = CONCAT(audit_log, "Payment Status:", OLD.payment_status, " -> ", NEW.payment_status, "<br/>");
+                END IF;
+
+                IF NEW.total_items <> OLD.total_items THEN
+                    SET audit_log = CONCAT(audit_log, "Total Items:", OLD.total_items, " -> ", NEW.total_items, "<br/>");
+                END IF;
+
+                IF NEW.total_quantity <> OLD.total_quantity THEN
+                    SET audit_log = CONCAT(audit_log, "Total Quantity:", OLD.total_quantity, " -> ", NEW.total_quantity, "<br/>");
+                END IF;
+
+                IF NEW.subtotal <> OLD.subtotal THEN
+                    SET audit_log = CONCAT(audit_log, "Subtotal:", OLD.subtotal, " -> ", NEW.subtotal, "<br/>");
+                END IF;
+
+                IF NEW.discount_total <> OLD.discount_total THEN
+                    SET audit_log = CONCAT(audit_log, "Discount Total:", OLD.discount_total, " -> ", NEW.discount_total, "<br/>");
+                END IF;
+
+                IF NEW.charge_total <> OLD.charge_total THEN
+                    SET audit_log = CONCAT(audit_log, "Charge Total:", OLD.charge_total, " -> ", NEW.charge_total, "<br/>");
+                END IF;
+
+                IF NEW.vatable_sales <> OLD.vatable_sales THEN
+                    SET audit_log = CONCAT(audit_log, "Vatable Sales:", OLD.vatable_sales, " -> ", NEW.vatable_sales, "<br/>");
+                END IF;
+
+                IF NEW.vat_exempt_sales <> OLD.vat_exempt_sales THEN
+                    SET audit_log = CONCAT(audit_log, "VAT Exempt Sales:", OLD.vat_exempt_sales, " -> ", NEW.vat_exempt_sales, "<br/>");
+                END IF;
+
+                IF NEW.zero_rated_sales <> OLD.zero_rated_sales THEN
+                    SET audit_log = CONCAT(audit_log, "Zero Rated Sales:", OLD.zero_rated_sales, " -> ", NEW.zero_rated_sales, "<br/>");
+                END IF;
+
+                IF NEW.vat_amount <> OLD.vat_amount THEN
+                    SET audit_log = CONCAT(audit_log, "VAT Amount:", OLD.vat_amount, " -> ", NEW.vat_amount, "<br/>");
+                END IF;
+
+                IF NEW.gross_total <> OLD.gross_total THEN
+                    SET audit_log = CONCAT(audit_log, "Gross Total:", OLD.gross_total, " -> ", NEW.gross_total, "<br/>");
+                END IF;
+
+                IF NEW.net_total <> OLD.net_total THEN
+                    SET audit_log = CONCAT(audit_log, "Net Total:", OLD.net_total, " -> ", NEW.net_total, "<br/>");
+                END IF;
+
+                IF NEW.paid_amount <> OLD.paid_amount THEN
+                    SET audit_log = CONCAT(audit_log, "Paid Amount:", OLD.paid_amount, " -> ", NEW.paid_amount, "<br/>");
+                END IF;
+
+                IF NEW.change_amount <> OLD.change_amount THEN
+                    SET audit_log = CONCAT(audit_log, "Change Amount:", OLD.change_amount, " -> ", NEW.change_amount, "<br/>");
+                END IF;
+
+                IF NEW.balance_due <> OLD.balance_due THEN
+                    SET audit_log = CONCAT(audit_log, "Balance Due:", OLD.balance_due, " -> ", NEW.balance_due, "<br/>");
+                END IF;
+
+                IF NEW.ordered_at <> OLD.ordered_at THEN
+                    SET audit_log = CONCAT(audit_log, "Order At:", OLD.ordered_at, " -> ", NEW.ordered_at, "<br/>");
+                END IF;
+
+                IF NEW.completed_at <> OLD.completed_at THEN
+                    SET audit_log = CONCAT(audit_log, "Completed At:", OLD.completed_at, " -> ", NEW.completed_at, "<br/>");
+                END IF;
+
+                IF NEW.cancelled_at <> OLD.cancelled_at THEN
+                    SET audit_log = CONCAT(audit_log, "Cancelled At:", OLD.cancelled_at, " -> ", NEW.cancelled_at, "<br/>");
+                END IF;
+
+                IF NEW.created_by_name <> OLD.created_by_name THEN
+                    SET audit_log = CONCAT(audit_log, "Created By:", OLD.created_by_name, " -> ", NEW.created_by_name, "<br/>");
+                END IF;
+
+                IF NEW.completed_by_name <> OLD.completed_by_name THEN
+                    SET audit_log = CONCAT(audit_log, "Completed By:", OLD.completed_by_name, " -> ", NEW.completed_by_name, "<br/>");
+                END IF;
+
+                IF NEW.cancelled_by_name <> OLD.cancelled_by_name THEN
+                    SET audit_log = CONCAT(audit_log, "Cancelled By:", OLD.cancelled_by_name, " -> ", NEW.cancelled_by_name, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Shop order changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('shop_order', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_shop_order_insert
+            AFTER INSERT ON shop_order
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Shop order created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('shop_order', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
+            END
+        SQL);
+
+        /* =============================================================================================
+            TABLE: SHOP ORDER ITEM
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_order_item_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_order_item_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_shop_order_item_update
+            AFTER UPDATE ON shop_order_item
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Shop order item changed.<br/><br/>';
+
+                IF NEW.product_name <> OLD.product_name THEN
+                    SET audit_log = CONCAT(audit_log, "Product Name:", OLD.product_name, " -> ", NEW.product_name, "<br/>");
+                END IF;
+
+                IF NEW.sku <> OLD.sku THEN
+                    SET audit_log = CONCAT(audit_log, "SKU:", OLD.sku, " -> ", NEW.sku, "<br/>");
+                END IF;
+
+                IF NEW.barcode <> OLD.barcode THEN
+                    SET audit_log = CONCAT(audit_log, "Barcode:", OLD.barcode, " -> ", NEW.barcode, "<br/>");
+                END IF;
+
+                IF NEW.product_type <> OLD.product_type THEN
+                    SET audit_log = CONCAT(audit_log, "Product Type:", OLD.product_type, " -> ", NEW.product_type, "<br/>");
+                END IF;
+
+                IF NEW.quantity <> OLD.quantity THEN
+                    SET audit_log = CONCAT(audit_log, "Quantity:", OLD.quantity, " -> ", NEW.quantity, "<br/>");
+                END IF;
+
+                IF NEW.original_unit_price <> OLD.original_unit_price THEN
+                    SET audit_log = CONCAT(audit_log, "Original Unit Price:", OLD.original_unit_price, " -> ", NEW.original_unit_price, "<br/>");
+                END IF;
+
+                IF NEW.unit_price <> OLD.unit_price THEN
+                    SET audit_log = CONCAT(audit_log, "Unit Price:", OLD.unit_price, " -> ", NEW.unit_price, "<br/>");
+                END IF;
+
+                IF NEW.line_subtotal <> OLD.line_subtotal THEN
+                    SET audit_log = CONCAT(audit_log, "Line Subtotal:", OLD.line_subtotal, " -> ", NEW.line_subtotal, "<br/>");
+                END IF;
+
+                IF NEW.tax_classification <> OLD.tax_classification THEN
+                    SET audit_log = CONCAT(audit_log, "Tax Classification:", OLD.tax_classification, " -> ", NEW.tax_classification, "<br/>");
+                END IF;
+
+                IF NEW.vatable_sales <> OLD.vatable_sales THEN
+                    SET audit_log = CONCAT(audit_log, "Vatable Sales:", OLD.vatable_sales, " -> ", NEW.vatable_sales, "<br/>");
+                END IF;
+
+                IF NEW.vat_exempt_sales <> OLD.vat_exempt_sales THEN
+                    SET audit_log = CONCAT(audit_log, "VAT Exempt Sales:", OLD.vat_exempt_sales, " -> ", NEW.vat_exempt_sales, "<br/>");
+                END IF;
+
+                IF NEW.zero_rated_sales <> OLD.zero_rated_sales THEN
+                    SET audit_log = CONCAT(audit_log, "Zero Rated Sales:", OLD.zero_rated_sales, " -> ", NEW.zero_rated_sales, "<br/>");
+                END IF;
+
+                IF NEW.vat_amount <> OLD.vat_amount THEN
+                    SET audit_log = CONCAT(audit_log, "VAT Amount:", OLD.vat_amount, " -> ", NEW.vat_amount, "<br/>");
+                END IF;
+
+                IF NEW.line_total <> OLD.line_total THEN
+                    SET audit_log = CONCAT(audit_log, "Line Total:", OLD.line_total, " -> ", NEW.line_total, "<br/>");
+                END IF;
+
+                IF NEW.order_note <> OLD.order_note THEN
+                    SET audit_log = CONCAT(audit_log, "Order Note:", OLD.order_note, " -> ", NEW.order_note, "<br/>");
+                END IF;
+
+                IF NEW.item_status <> OLD.item_status THEN
+                    SET audit_log = CONCAT(audit_log, "Item Status:", OLD.item_status, " -> ", NEW.item_status, "<br/>");
+                END IF;
+
+                IF NEW.queued_at <> OLD.queued_at THEN
+                    SET audit_log = CONCAT(audit_log, "Queued At:", OLD.queued_at, " -> ", NEW.queued_at, "<br/>");
+                END IF;
+
+                IF NEW.started_preparing_at <> OLD.started_preparing_at THEN
+                    SET audit_log = CONCAT(audit_log, "Started Preparing At:", OLD.started_preparing_at, " -> ", NEW.started_preparing_at, "<br/>");
+                END IF;
+
+                IF NEW.ready_at <> OLD.ready_at THEN
+                    SET audit_log = CONCAT(audit_log, "Ready At:", OLD.ready_at, " -> ", NEW.ready_at, "<br/>");
+                END IF;
+
+                IF NEW.served_at <> OLD.served_at THEN
+                    SET audit_log = CONCAT(audit_log, "Served At:", OLD.served_at, " -> ", NEW.served_at, "<br/>");
+                END IF;
+
+                IF NEW.completed_at <> OLD.completed_at THEN
+                    SET audit_log = CONCAT(audit_log, "Completed At:", OLD.completed_at, " -> ", NEW.completed_at, "<br/>");
+                END IF;
+
+                IF NEW.completed_at <> OLD.completed_at THEN
+                    SET audit_log = CONCAT(audit_log, "Completed At:", OLD.completed_at, " -> ", NEW.completed_at, "<br/>");
+                END IF;
+
+                IF NEW.cancelled_at <> OLD.cancelled_at THEN
+                    SET audit_log = CONCAT(audit_log, "Cancelled At:", OLD.cancelled_at, " -> ", NEW.cancelled_at, "<br/>");
+                END IF;
+
+                IF NEW.cancellation_reason <> OLD.cancellation_reason THEN
+                    SET audit_log = CONCAT(audit_log, "Cancellation Reason:", OLD.cancellation_reason, " -> ", NEW.cancellation_reason, "<br/>");
+                END IF;
+
+                IF NEW.cancelled_by_name <> OLD.cancelled_by_name THEN
+                    SET audit_log = CONCAT(audit_log, "Cancelled By:", OLD.cancelled_by_name, " -> ", NEW.cancelled_by_name, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Shop order item changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('shop_order_item', NEW.id, audit_log, NEW.last_log_by, NEW.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_shop_order_item_insert
+            AFTER INSERT ON shop_order_item
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Shop order item created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('shop_order_item', NEW.id, audit_log, NEW.last_log_by, NEW.updated_at);
+            END
+        SQL);
+
+
+        /* =============================================================================================
+            TABLE: SHOP ORDER APPLIED DISCOUNT
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_order_applied_discount_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_order_applied_discount_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_shop_order_applied_discount_update
+            AFTER UPDATE ON shop_order_applied_discount
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Shop order applied discount changed.<br/><br/>';
+
+                IF NEW.discount_type_name <> OLD.discount_type_name THEN
+                    SET audit_log = CONCAT(audit_log, "Discount Type:", OLD.discount_type_name, " -> ", NEW.discount_type_name, "<br/>");
+                END IF;
+
+                IF NEW.value_type <> OLD.value_type THEN
+                    SET audit_log = CONCAT(audit_log, "Value Type:", OLD.value_type, " -> ", NEW.value_type, "<br/>");
+                END IF;
+
+                IF NEW.discount_value <> OLD.discount_value THEN
+                    SET audit_log = CONCAT(audit_log, "Discount Value:", OLD.discount_value, " -> ", NEW.discount_value, "<br/>");
+                END IF;
+
+                IF NEW.application_order <> OLD.application_order THEN
+                    SET audit_log = CONCAT(audit_log, "Application Order:", OLD.application_order, " -> ", NEW.application_order, "<br/>");
+                END IF;
+
+                IF NEW.is_vat_exempt <> OLD.is_vat_exempt THEN
+                    SET audit_log = CONCAT(audit_log, "Is VAT Exempt:", OLD.is_vat_exempt, " -> ", NEW.is_vat_exempt, "<br/>");
+                END IF;
+
+                IF NEW.discount_rate <> OLD.discount_rate THEN
+                    SET audit_log = CONCAT(audit_log, "Discount Rate:", OLD.discount_rate, " -> ", NEW.discount_rate, "<br/>");
+                END IF;
+
+                IF NEW.discount_amount <> OLD.discount_amount THEN
+                    SET audit_log = CONCAT(audit_log, "Discount Amount:", OLD.discount_amount, " -> ", NEW.discount_amount, "<br/>");
+                END IF;
+
+                IF NEW.vat_exempt_amount <> OLD.vat_exempt_amount THEN
+                    SET audit_log = CONCAT(audit_log, "VAT Exempt Amount:", OLD.vat_exempt_amount, " -> ", NEW.vat_exempt_amount, "<br/>");
+                END IF;
+
+                IF NEW.reference_number <> OLD.reference_number THEN
+                    SET audit_log = CONCAT(audit_log, "Reference Number:", OLD.reference_number, " -> ", NEW.reference_number, "<br/>");
+                END IF;
+
+                IF NEW.reference_name <> OLD.reference_name THEN
+                    SET audit_log = CONCAT(audit_log, "Reference Name:", OLD.reference_name, " -> ", NEW.reference_name, "<br/>");
+                END IF;
+
+                IF NEW.remarks <> OLD.remarks THEN
+                    SET audit_log = CONCAT(audit_log, "Remarks:", OLD.remarks, " -> ", NEW.remarks, "<br/>");
+                END IF;
+
+                IF NEW.applied_by_name <> OLD.applied_by_name THEN
+                    SET audit_log = CONCAT(audit_log, "Applied By:", OLD.applied_by_name, " -> ", NEW.applied_by_name, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Shop order applied discount changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('shop_order_applied_discount', NEW.id, audit_log, NEW.last_log_by, NEW.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_shop_order_applied_discount_insert
+            AFTER INSERT ON shop_order_applied_discount
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Shop order applied discount created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('shop_order_applied_discount', NEW.id, audit_log, NEW.last_log_by, NEW.updated_at);
+            END
+        SQL);
+
+
+        /* =============================================================================================
+            TABLE: SHOP ORDER APPLIED CHARGE
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_order_applied_charge_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_order_applied_charge_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_shop_order_applied_charge_update
+            AFTER UPDATE ON shop_order_applied_charge
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Shop order applied charge changed.<br/><br/>';
+
+                IF NEW.charge_type_name <> OLD.charge_type_name THEN
+                    SET audit_log = CONCAT(audit_log, "Charge Type:", OLD.charge_type_name, " -> ", NEW.charge_type_name, "<br/>");
+                END IF;
+
+                IF NEW.value_type <> OLD.value_type THEN
+                    SET audit_log = CONCAT(audit_log, "Value Type:", OLD.value_type, " -> ", NEW.value_type, "<br/>");
+                END IF;
+
+                IF NEW.charge_value <> OLD.charge_value THEN
+                    SET audit_log = CONCAT(audit_log, "Charge Value:", OLD.charge_value, " -> ", NEW.charge_value, "<br/>");
+                END IF;
+
+                IF NEW.application_order <> OLD.application_order THEN
+                    SET audit_log = CONCAT(audit_log, "Application Order:", OLD.application_order, " -> ", NEW.application_order, "<br/>");
+                END IF;
+
+                IF NEW.tax_type <> OLD.tax_type THEN
+                    SET audit_log = CONCAT(audit_log, "Tax Type:", OLD.tax_type, " -> ", NEW.tax_type, "<br/>");
+                END IF;
+
+                IF NEW.charge_rate <> OLD.charge_rate THEN
+                    SET audit_log = CONCAT(audit_log, "Charge Rate:", OLD.charge_rate, " -> ", NEW.charge_rate, "<br/>");
+                END IF;
+
+                IF NEW.charge_amount <> OLD.charge_amount THEN
+                    SET audit_log = CONCAT(audit_log, "Charge Amount:", OLD.charge_amount, " -> ", NEW.charge_amount, "<br/>");
+                END IF;
+
+                IF NEW.vatable_amount <> OLD.vatable_amount THEN
+                    SET audit_log = CONCAT(audit_log, "Vatable Amount:", OLD.vatable_amount, " -> ", NEW.vatable_amount, "<br/>");
+                END IF;
+
+                IF NEW.vat_amount <> OLD.vat_amount THEN
+                    SET audit_log = CONCAT(audit_log, "VAT Amount:", OLD.vat_amount, " -> ", NEW.vat_amount, "<br/>");
+                END IF;
+
+                IF NEW.remarks <> OLD.remarks THEN
+                    SET audit_log = CONCAT(audit_log, "Remarks:", OLD.remarks, " -> ", NEW.remarks, "<br/>");
+                END IF;
+
+                IF NEW.applied_by_name <> OLD.applied_by_name THEN
+                    SET audit_log = CONCAT(audit_log, "Applied By:", OLD.applied_by_name, " -> ", NEW.applied_by_name, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Shop order applied charge changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('shop_order_applied_charge', NEW.id, audit_log, NEW.last_log_by, NEW.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_shop_order_applied_charge_insert
+            AFTER INSERT ON shop_order_applied_charge
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Shop order applied charge created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('shop_order_applied_charge', NEW.id, audit_log, NEW.last_log_by, NEW.updated_at);
+            END
+        SQL);
+
+
+        /* =============================================================================================
+            TABLE: SHOP ORDER PAYMENT
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_order_payment_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_order_payment_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_shop_order_payment_update
+            AFTER UPDATE ON shop_order_payment
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Shop order payment changed.<br/><br/>';
+
+                IF NEW.payment_method_name <> OLD.payment_method_name THEN
+                    SET audit_log = CONCAT(audit_log, "Payment Method:", OLD.payment_method_name, " -> ", NEW.payment_method_name, "<br/>");
+                END IF;
+
+                IF NEW.payment_amount <> OLD.payment_amount THEN
+                    SET audit_log = CONCAT(audit_log, "Payment Amount:", OLD.payment_amount, " -> ", NEW.payment_amount, "<br/>");
+                END IF;
+
+                IF NEW.tendered_amount <> OLD.tendered_amount THEN
+                    SET audit_log = CONCAT(audit_log, "Tendered Amount:", OLD.tendered_amount, " -> ", NEW.tendered_amount, "<br/>");
+                END IF;
+
+                IF NEW.change_amount <> OLD.change_amount THEN
+                    SET audit_log = CONCAT(audit_log, "Change Amount:", OLD.change_amount, " -> ", NEW.change_amount, "<br/>");
+                END IF;
+
+                IF NEW.reference_number <> OLD.reference_number THEN
+                    SET audit_log = CONCAT(audit_log, "Reference Number:", OLD.reference_number, " -> ", NEW.reference_number, "<br/>");
+                END IF;
+
+                IF NEW.reference_name <> OLD.reference_name THEN
+                    SET audit_log = CONCAT(audit_log, "Reference Name:", OLD.reference_name, " -> ", NEW.reference_name, "<br/>");
+                END IF;
+
+                IF NEW.payment_status <> OLD.payment_status THEN
+                    SET audit_log = CONCAT(audit_log, "Payment Status:", OLD.payment_status, " -> ", NEW.payment_status, "<br/>");
+                END IF;
+
+                IF NEW.paid_at <> OLD.paid_at THEN
+                    SET audit_log = CONCAT(audit_log, "Paid At:", OLD.paid_at, " -> ", NEW.paid_at, "<br/>");
+                END IF;
+
+                IF NEW.voided_at <> OLD.voided_at THEN
+                    SET audit_log = CONCAT(audit_log, "Voided At:", OLD.voided_at, " -> ", NEW.voided_at, "<br/>");
+                END IF;
+
+                IF NEW.refunded_at <> OLD.refunded_at THEN
+                    SET audit_log = CONCAT(audit_log, "Refunded At:", OLD.refunded_at, " -> ", NEW.refunded_at, "<br/>");
+                END IF;
+
+                IF NEW.void_reason <> OLD.void_reason THEN
+                    SET audit_log = CONCAT(audit_log, "Void Reason:", OLD.void_reason, " -> ", NEW.void_reason, "<br/>");
+                END IF;
+
+                IF NEW.refund_reason <> OLD.refund_reason THEN
+                    SET audit_log = CONCAT(audit_log, "Refund Reason:", OLD.refund_reason, " -> ", NEW.refund_reason, "<br/>");
+                END IF;
+
+                IF NEW.voided_by_name <> OLD.voided_by_name THEN
+                    SET audit_log = CONCAT(audit_log, "Voided By:", OLD.voided_by_name, " -> ", NEW.voided_by_name, "<br/>");
+                END IF;
+
+                IF NEW.refunded_by_name <> OLD.refunded_by_name THEN
+                    SET audit_log = CONCAT(audit_log, "Refunded By:", OLD.refunded_by_name, " -> ", NEW.refunded_by_name, "<br/>");
+                END IF;
+
+                IF NEW.remarks <> OLD.remarks THEN
+                    SET audit_log = CONCAT(audit_log, "Remarks:", OLD.remarks, " -> ", NEW.remarks, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Shop order payment changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('shop_order_payment', NEW.id, audit_log, NEW.last_log_by, NEW.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_shop_order_payment_insert
+            AFTER INSERT ON shop_order_payment
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Shop order payment created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('shop_order_payment', NEW.id, audit_log, NEW.last_log_by, NEW.updated_at);
+            END
+        SQL);
     }
 
     /**
@@ -3620,5 +4152,40 @@ return new class extends Migration
 
         DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_register_charge_update');
         DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_register_charge_insert');
+        
+        /* =============================================================================================
+            TABLE: SHOP ORDER
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_order_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_order_insert');
+        
+        /* =============================================================================================
+            TABLE: SHOP ORDER ITEM
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_order_item_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_order_item_insert');
+        
+        /* =============================================================================================
+            TABLE: SHOP ORDER APPLIED DISCOUNT
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_order_applied_discount_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_order_applied_discount_insert');
+        
+        /* =============================================================================================
+            TABLE: SHOP ORDER APPLIED CHARGE
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_order_applied_charge_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_order_applied_charge_insert');
+        
+        /* =============================================================================================
+            TABLE: SHOP ORDER PAYMENT
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_order_payment_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_order_payment_insert');
     }
 };

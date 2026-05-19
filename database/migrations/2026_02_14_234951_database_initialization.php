@@ -1924,9 +1924,6 @@ return new class extends Migration
             $table->string('customer_name')
                 ->nullable();
 
-            $table->string('customer_contact_number')
-                ->nullable();
-
             $table->enum('order_status', [
                 'Pending',
                 'Preparing',
@@ -1983,12 +1980,6 @@ return new class extends Migration
 
             $table->decimal('balance_due', 15, 2)
                 ->default(0);
-
-            $table->text('order_note')
-                ->nullable();
-
-            $table->text('internal_note')
-                ->nullable();
 
             $table->timestamp('ordered_at')
                 ->nullable();
@@ -2066,25 +2057,6 @@ return new class extends Migration
 
             $table->enum('product_type', ['Goods', 'Service']);
 
-            $table->foreignId('product_category_id')
-                ->nullable()
-                ->constrained('product_category')
-                ->nullOnDelete();
-
-            $table->string('product_category_name')
-                ->nullable();
-
-            $table->foreignId('unit_id')
-                ->nullable()
-                ->constrained('unit')
-                ->nullOnDelete();
-
-            $table->string('unit_name')
-                ->nullable();
-
-            $table->string('unit_abbreviation')
-                ->nullable();
-
             $table->decimal('quantity', 12, 2)
                 ->default(1);
 
@@ -2156,6 +2128,9 @@ return new class extends Migration
                 ->constrained('users')
                 ->nullOnDelete();
 
+            $table->string('cancelled_by_name')
+                ->nullable();
+
             $table->foreignId('last_log_by')
                 ->nullable()
                 ->default(1)
@@ -2166,7 +2141,6 @@ return new class extends Migration
 
             $table->index(['shop_order_id']);
             $table->index(['product_id']);
-            $table->index(['product_category_id']);
             $table->index(['item_status']);
             $table->index(['tax_classification']);
             $table->index(['queued_at']);
@@ -2296,6 +2270,9 @@ return new class extends Migration
                 ->nullable()
                 ->constrained('users')
                 ->nullOnDelete();
+
+            $table->string('applied_by_name')
+                ->nullable();
 
             $table->foreignId('last_log_by')
                 ->nullable()
@@ -2431,6 +2408,9 @@ return new class extends Migration
                 ->nullable()
                 ->constrained('users')
                 ->nullOnDelete();
+
+            $table->string('applied_by_name')
+                ->nullable();
 
             $table->foreignId('last_log_by')
                 ->nullable()
@@ -2576,10 +2556,16 @@ return new class extends Migration
                 ->constrained('users')
                 ->nullOnDelete();
 
+            $table->string('voided_by_name')
+                ->nullable();
+
             $table->foreignId('refunded_by')
                 ->nullable()
                 ->constrained('users')
                 ->nullOnDelete();
+
+            $table->string('refunded_by_name')
+                ->nullable();
 
             /*
             |--------------------------------------------------------------------------
@@ -2595,11 +2581,6 @@ return new class extends Migration
             | AUDIT
             |--------------------------------------------------------------------------
             */
-
-            $table->foreignId('received_by')
-                ->nullable()
-                ->constrained('users')
-                ->nullOnDelete();
 
             $table->foreignId('last_log_by')
                 ->nullable()
@@ -2697,6 +2678,10 @@ return new class extends Migration
         Schema::dropIfExists('shop_register_kitchen_route');
         Schema::dropIfExists('shop_register_session');
         Schema::dropIfExists('shop_session_denomination');
+        Schema::dropIfExists('shop_order_applied_discount');
+        Schema::dropIfExists('shop_order_applied_charge');
+        Schema::dropIfExists('shop_order_payment');
+        Schema::dropIfExists('shop_order_item');
         Schema::dropIfExists('shop_order');
         Schema::dropIfExists('shop_register');
         Schema::dropIfExists('nationality');
