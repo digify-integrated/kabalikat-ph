@@ -7,7 +7,9 @@ import { handleSystemError } from '../../util/system-errors.js';
 document.addEventListener('DOMContentLoaded', () => {
     let searchTimeout;
     let cartInitialized = false;
-
+    let selectedFloorPlanId = null;
+    let selectedTableId = null;
+    
     const config = {
         forms: [
             {
@@ -658,6 +660,331 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const loadFloorPlans = async (shopOrderId) => {
+
+        try {
+
+            const ctx = getPageContext();
+
+            const csrf = getCsrfToken();
+
+            const formData = new URLSearchParams();
+
+            formData.append('shop_order_id', shopOrderId);
+
+            formData.append('shop_register_id', ctx.detailId ?? '');
+
+            const response = await fetch(
+                '/shop-order/fetch-floor-plans',
+                {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                        Accept: 'application/json',
+                        ...(csrf
+                            ? { 'X-CSRF-TOKEN': csrf }
+                            : {}),
+                    },
+                }
+            );
+
+            if (!response.ok) {
+
+                throw new Error(
+                    `Failed to load floor plans: ${response.status}`
+                );
+            }
+
+            const data = await response.json();
+
+            if (!data.success) {
+
+                showNotification(data.message);
+
+                return;
+            }
+
+            renderFloorPlans(data.floorPlans);
+
+            /*
+            |--------------------------------------------------------------------------
+            | AUTO SELECT FIRST
+            |--------------------------------------------------------------------------
+            */
+
+            if (data.floorPlans.length > 0) {
+
+                selectedFloorPlanId =
+                    data.floorPlans[0].id;
+
+                await loadFloorTables(
+                    selectedFloorPlanId,
+                    shopOrderId
+                );
+            }
+
+        } catch (error) {
+
+            handleSystemError(
+                error,
+                'load_floor_plans_failed',
+                error.message
+            );
+        }
+    };
+
+    const loadFloorTables = async (
+        floorPlanId,
+        shopOrderId
+    ) => {
+
+        try {
+
+            $('#shop-floor-table-container').html(`
+            
+                <div class="col-12 text-center py-15">
+
+                    <div class="spinner-border text-success mb-3"></div>
+
+                    <div class="fw-semibold text-muted">
+                        Loading tables...
+                    </div>
+
+                </div>
+            `);
+
+            const csrf = getCsrfToken();
+
+            const formData = new URLSearchParams();
+
+            formData.append('floor_plan_id', floorPlanId);
+
+            formData.append('shop_order_id', shopOrderId);
+
+            const response = await fetch(
+                '/shop-order/fetch-floor-tables',
+                {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                        Accept: 'application/json',
+                        ...(csrf
+                            ? { 'X-CSRF-TOKEN': csrf }
+                            : {}),
+                    },
+                }
+            );
+
+            if (!response.ok) {
+
+                throw new Error(
+                    `Failed to load tables: ${response.status}`
+                );
+            }
+
+            const data = await response.json();
+
+            if (!data.success) {
+
+                showNotification(data.message);
+
+                return;
+            }
+
+            renderFloorTables(data.tables);
+
+        } catch (error) {
+
+            handleSystemError(
+                error,
+                'load_floor_tables_failed',
+                error.message
+            );
+        }
+    };
+
+    const assignTableToOrder = async (
+        floorPlanTableId
+    ) => {
+
+        try {
+
+            const shopOrderId =
+                sessionStorage.getItem('shop_order_id');
+
+            const csrf = getCsrfToken();
+
+            const formData = new URLSearchParams();
+
+            formData.append(
+                'shop_order_id',
+                shopOrderId
+            );
+
+            formData.append(
+                'floor_plan_table_id',
+                floorPlanTableId
+            );
+
+            const response = await fetch(
+                '/shop-order/save-table',
+                {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                        Accept: 'application/json',
+                        ...(csrf
+                            ? { 'X-CSRF-TOKEN': csrf }
+                            : {}),
+                    },
+                }
+            );
+
+            if (!response.ok) {
+
+                throw new Error(
+                    `Update table failed: ${response.status}`
+                );
+            }
+
+            const data = await response.json();
+
+            if (!data.success) {
+
+                showNotification(data.message);
+
+                return;
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | UPDATE BADGE
+            |--------------------------------------------------------------------------
+            */
+
+            $('#badge-table').text(
+                `${data.floor_plan_name} • Table ${data.table_number}`
+            );
+
+            /*
+            |--------------------------------------------------------------------------
+            | RELOAD TABLES ONLY
+            |--------------------------------------------------------------------------
+            */
+
+            await loadFloorTables(
+                selectedFloorPlanId,
+                shopOrderId
+            );
+
+        } catch (error) {
+
+            handleSystemError(
+                error,
+                'assign_table_failed',
+                error.message
+            );
+        }
+    };
+
+    const updateOrderItemQuantity = async ({
+        shopOrderItemId,
+        action,
+    }) => {
+
+        try {
+
+            const csrf = getCsrfToken();
+
+            const shopOrderId =
+                sessionStorage.getItem('shop_order_id');
+
+            const formData = new URLSearchParams();
+
+            formData.append(
+                'shop_order_item_id',
+                shopOrderItemId
+            );
+
+            formData.append(
+                'shop_order_id',
+                shopOrderId
+            );
+
+            formData.append(
+                'action',
+                action
+            );
+
+            const response = await fetch(
+                '/shop-order/save-item-quantity',
+                {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                        Accept: 'application/json',
+                        ...(csrf
+                            ? { 'X-CSRF-TOKEN': csrf }
+                            : {}),
+                    },
+                }
+            );
+
+            if (!response.ok) {
+
+                throw new Error(
+                    `Update failed: ${response.status}`
+                );
+            }
+
+            const data = await response.json();
+
+            if (!data.success) {
+
+                showNotification(data.message);
+
+                return;
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | EMPTY ORDER
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                !data.order ||
+                !data.order.items ||
+                data.order.items.length === 0
+            ) {
+
+                resetCartUI();
+
+                return;
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | REFRESH ONLY CART
+            |--------------------------------------------------------------------------
+            */
+
+            refreshCartContent(data.order);
+
+        } catch (error) {
+
+            handleSystemError(
+                error,
+                'update_order_item_failed',
+                error.message
+            );
+        }
+    };
+
     const showCartLoading = () => {
 
         /*
@@ -753,6 +1080,70 @@ document.addEventListener('DOMContentLoaded', () => {
         cartInitialized = false;
     };
 
+    const refreshCartContent = (order) => {
+
+        /*
+        |--------------------------------------------------------------------------
+        | HEADER
+        |--------------------------------------------------------------------------
+        */
+
+        $('#order-id').text(
+            order.order_number ?? '--'
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | BADGES
+        |--------------------------------------------------------------------------
+        */
+
+        $('#badge-order-type').text(
+            order.order_type ?? 'Walk-in'
+        );
+
+        $('#badge-payment-status').text(
+            order.payment_status ?? 'Unpaid'
+        );
+
+        $('#badge-table').text(
+            order.table_number
+                ? `${order.floor_plan_name} • Table ${order.table_number}`
+                : 'No Table'
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | ITEMS
+        |--------------------------------------------------------------------------
+        */
+
+        const itemsHtml = order.items
+            .map(renderOrderItem)
+            .join('');
+
+        $('#shop-order-list').html(itemsHtml);
+
+        /*
+        |--------------------------------------------------------------------------
+        | SUMMARY
+        |--------------------------------------------------------------------------
+        */
+
+        renderOrderSummary(order);
+
+        /*
+        |--------------------------------------------------------------------------
+        | REINIT COMPONENTS
+        |--------------------------------------------------------------------------
+        */
+
+        if (typeof KTComponents !== 'undefined') {
+
+            KTComponents.init();
+        }
+    };
+
     const populateCart = (order) => {
 
         /*
@@ -784,7 +1175,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         $('#badge-table').text(
             order.table_number
-                ? `Table ${order.table_number}`
+                ? `${order.floor_plan_name} • Table ${order.table_number}`
                 : 'No Table'
         );
 
@@ -963,32 +1354,65 @@ document.addEventListener('DOMContentLoaded', () => {
                 <!-- FOOTER -->
                 <div class="d-flex justify-content-between align-items-center">
 
-                    <!-- QUANTITY CONTROL (PILL STYLE) -->
+                   <!-- QUANTITY CONTROL -->
                     <div
-                        class="d-flex align-items-center bg-light rounded-pill px-2 py-1 gap-2 shadow-sm"
-                        data-kt-dialer="true"
-                        data-kt-dialer-min="1"
-                        data-kt-dialer-step="1">
+                        class="
+                            d-flex
+                            align-items-center
+                            bg-light
+                            rounded-pill
+                            px-2
+                            py-1
+                            gap-2
+                            shadow-sm
+                        ">
 
+                        <!-- DECREASE -->
                         <button
                             type="button"
-                            class="btn btn-icon btn-sm btn-light-primary rounded-circle"
-                            data-kt-dialer-control="decrease">
+                            class="
+                                btn
+                                btn-icon
+                                btn-sm
+                                btn-light-primary
+                                rounded-circle
+                                decrease-item-qty
+                            "
+                            data-shop-order-item-id="${item.id}">
 
                             <i class="ki-outline ki-minus fs-5"></i>
 
                         </button>
 
+                        <!-- QUANTITY -->
                         <input
                             type="text"
-                            class="form-control form-control-flush fw-bold text-center bg-transparent border-0 text-gray-900 w-40px px-0"
+                            class="
+                                form-control
+                                form-control-flush
+                                fw-bold
+                                text-center
+                                bg-transparent
+                                border-0
+                                text-gray-900
+                                w-40px
+                                px-0
+                            "
                             value="${item.quantity}"
                             readonly>
 
+                        <!-- INCREASE -->
                         <button
                             type="button"
-                            class="btn btn-icon btn-sm btn-light-primary rounded-circle"
-                            data-kt-dialer-control="increase">
+                            class="
+                                btn
+                                btn-icon
+                                btn-sm
+                                btn-light-primary
+                                rounded-circle
+                                increase-item-qty
+                            "
+                            data-shop-order-item-id="${item.id}">
 
                             <i class="ki-outline ki-plus fs-5"></i>
 
@@ -996,20 +1420,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     </div>
 
-                    <!-- ACTIONS -->
-                    <div class="d-flex align-items-center gap-2">
+                    <!-- DELETE -->
+                    <button
+                        type="button"
+                        class="
+                            btn
+                            btn-icon
+                            btn-sm
+                            btn-light-danger
+                            delete-order-item
+                        "
+                        data-shop-order-item-id="${item.id}"
+                        title="Remove item">
 
-                        <!-- DELETE (SAFER STYLE) -->
-                        <button
-                            type="button"
-                            class="btn btn-icon btn-sm btn-light-danger"
-                            title="Remove item">
+                        <i class="ki-outline ki-trash fs-4"></i>
 
-                            <i class="ki-outline ki-trash fs-4"></i>
-
-                        </button>
-
-                    </div>
+                    </button>
 
                 </div>
 
@@ -1030,14 +1456,16 @@ document.addEventListener('DOMContentLoaded', () => {
         */
 
         html += `
-            <div class="d-flex justify-content-between mb-3">
-                <span class="text-muted">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+
+                <span class="fw-semibold text-gray-700">
                     Subtotal
                 </span>
 
-                <span class="fw-semibold">
-                    ${formatPeso(order.subtotal)}
+                <span class="fw-bold text-gray-900">
+                    ${formatPeso(order.subtotal ?? 0)}
                 </span>
+
             </div>
         `;
 
@@ -1047,17 +1475,19 @@ document.addEventListener('DOMContentLoaded', () => {
         |--------------------------------------------------------------------------
         */
 
-        if (Number(order.vatable_sales) > 0) {
+        if ((order.vatable_sales ?? 0) > 0) {
 
             html += `
-                <div class="d-flex justify-content-between mb-3">
-                    <span class="text-muted">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+
+                    <span class="fw-semibold text-gray-700">
                         VATable Sales
                     </span>
 
-                    <span class="fw-semibold">
-                        ${formatPeso(order.vatable_sales)}
+                    <span class="fw-semibold text-gray-900">
+                        ${formatPeso(order.vatable_sales ?? 0)}
                     </span>
+
                 </div>
             `;
         }
@@ -1068,17 +1498,19 @@ document.addEventListener('DOMContentLoaded', () => {
         |--------------------------------------------------------------------------
         */
 
-        if (Number(order.vat_amount) > 0) {
+        if ((order.vat_amount ?? 0) > 0) {
 
             html += `
-                <div class="d-flex justify-content-between mb-3">
-                    <span class="text-muted">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+
+                    <span class="fw-semibold text-gray-700">
                         VAT (12%)
                     </span>
 
-                    <span class="fw-semibold">
-                        ${formatPeso(order.vat_amount)}
+                    <span class="fw-semibold text-gray-900">
+                        ${formatPeso(order.vat_amount ?? 0)}
                     </span>
+
                 </div>
             `;
         }
@@ -1090,21 +1522,26 @@ document.addEventListener('DOMContentLoaded', () => {
         */
 
         if (
-            order.applied_discounts &&
-            order.applied_discounts.length > 0
+            Array.isArray(order.discounts)
+            &&
+            order.discounts.length > 0
         ) {
 
-            order.applied_discounts.forEach(discount => {
+            order.discounts.forEach((discount) => {
 
                 html += `
-                    <div class="d-flex justify-content-between mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
 
-                        <span class="text-warning">
+                        <span class="fw-semibold text-danger">
+
                             ${discount.discount_type_name}
+
                         </span>
 
-                        <span class="fw-semibold text-warning">
-                            - ${formatPeso(discount.discount_amount)}
+                        <span class="fw-bold text-danger">
+
+                            - ${formatPeso(discount.discount_amount ?? 0)}
+
                         </span>
 
                     </div>
@@ -1119,21 +1556,26 @@ document.addEventListener('DOMContentLoaded', () => {
         */
 
         if (
-            order.applied_charges &&
-            order.applied_charges.length > 0
+            Array.isArray(order.charges)
+            &&
+            order.charges.length > 0
         ) {
 
-            order.applied_charges.forEach(charge => {
+            order.charges.forEach((charge) => {
 
                 html += `
-                    <div class="d-flex justify-content-between mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
 
-                        <span class="text-danger">
+                        <span class="fw-semibold text-primary">
+
                             ${charge.charge_type_name}
+
                         </span>
 
-                        <span class="fw-semibold text-danger">
-                            + ${formatPeso(charge.charge_amount)}
+                        <span class="fw-bold text-primary">
+
+                            + ${formatPeso(charge.charge_amount ?? 0)}
+
                         </span>
 
                     </div>
@@ -1143,35 +1585,586 @@ document.addEventListener('DOMContentLoaded', () => {
 
         /*
         |--------------------------------------------------------------------------
-        | SEPARATOR
-        |--------------------------------------------------------------------------
-        */
-
-        html += `
-            <div class="separator separator-dashed my-4"></div>
-        `;
-
-        /*
-        |--------------------------------------------------------------------------
         | TOTAL
         |--------------------------------------------------------------------------
         */
 
         html += `
+            <div class="separator separator-dashed my-4"></div>
+
             <div class="d-flex justify-content-between align-items-center">
 
-                <span class="fw-bold fs-3">
+                <span class="fw-bolder fs-3 text-gray-900">
                     Total
                 </span>
 
-                <span class="fw-bolder fs-1">
-                    ${formatPeso(order.net_total)}
+                <span class="fw-bolder fs-2 text-success">
+
+                    ${formatPeso(order.net_total ?? 0)}
+
                 </span>
 
             </div>
         `;
 
         $('#order-summary-list').html(html);
+    };
+
+    const renderFloorPlans = (floorPlans) => {
+
+        const html = floorPlans.map((plan, index) => {
+
+            return `
+            
+            <button
+                type="button"
+                class="
+                    btn
+                    floor-plan-filter
+                    rounded-pill
+                    px-6
+                    py-3
+                    fw-bold
+                    fs-6
+                    ${
+                        index === 0
+                        ? 'btn-success'
+                        : 'btn-light'
+                    }
+                "
+                data-floor-plan-id="${plan.id}">
+
+                ${plan.floor_plan_name}
+
+            </button>
+            `;
+        }).join('');
+
+        $('#shop-floor-plan-container').html(html);
+    };
+
+    const renderFloorTables = (tables) => {
+
+        const html = tables.map((table) => {
+
+            const isSelected =
+                table.is_selected;
+
+            const isOccupied =
+                table.is_occupied;
+
+            let cardClass =
+                'border-gray-200 border-hover-primary';
+
+            let badgeClass =
+                'badge-light-primary';
+
+            let badgeText =
+                'Available';
+
+            if (isSelected) {
+
+                cardClass =
+                    'border-success bg-success bg-opacity-10';
+
+                badgeClass =
+                    'badge-success';
+
+                badgeText =
+                    'Selected';
+            }
+
+            else if (isOccupied) {
+
+                cardClass =
+                    'bg-light opacity-75 border-gray-300';
+
+                badgeClass =
+                    'badge-light-danger';
+
+                badgeText =
+                    'Occupied';
+            }
+
+            return `
+            
+            <div class="col-6 col-md-4 col-xl-3">
+
+                <div
+                    class="
+                        table-card
+                        card
+                        shadow-sm
+                        rounded-4
+                        h-100
+                        ${cardClass}
+                        ${
+                            !isOccupied || isSelected
+                            ? 'cursor-pointer selectable-table'
+                            : ''
+                        }
+                    "
+                    data-floor-plan-table-id="${table.id}">
+
+                    <div class="card-body p-5">
+
+                        <div
+                            class="d-flex justify-content-between align-items-start mb-5">
+
+                            <div>
+
+                                <div class="
+                                    fw-bold
+                                    fs-2
+                                    ${
+                                        isSelected
+                                        ? 'text-success'
+                                        : 'text-gray-900'
+                                    }
+                                    mb-1
+                                ">
+
+                                    Table ${table.table_number}
+
+                                </div>
+
+                                <div class="text-muted fw-semibold fs-7">
+
+                                    ${table.seats} Seats
+
+                                </div>
+
+                            </div>
+
+                            <span class="badge ${badgeClass} fw-bold">
+
+                                ${badgeText}
+
+                            </span>
+
+                        </div>
+
+                        <div
+                            class="d-flex justify-content-between align-items-center">
+
+                            <div class="d-flex gap-1">
+
+                                ${Array(table.seats)
+                                    .fill('')
+                                    .map(() => `
+                                    
+                                        <i class="
+                                            ki-outline
+                                            ki-profile-user
+                                            fs-4
+                                            ${
+                                                isSelected
+                                                ? 'text-success'
+                                                : 'text-muted'
+                                            }
+                                        "></i>
+                                    `)
+                                    .join('')}
+
+                            </div>
+
+                            ${
+                                isSelected
+                                ? `
+                                    <i class="
+                                        ki-duotone
+                                        ki-check-circle
+                                        fs-1
+                                        text-success
+                                    ">
+                                        <span class="path1"></span>
+                                        <span class="path2"></span>
+                                    </i>
+                                `
+                                : `
+                                    <i class="
+                                        ki-outline
+                                        ki-arrow-right
+                                        fs-2
+                                        text-muted
+                                    "></i>
+                                `
+                            }
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+            `;
+        }).join('');
+
+        $('#shop-floor-table-container').html(html);
+    };
+
+    const renderAvailableDiscounts = (discounts) => {
+
+        if (!discounts.length) {
+            $('#available-discount-list').html(`
+                <div class="text-muted text-center py-10">
+                    No available discounts
+                </div>
+            `);
+            return;
+        }
+
+        const html = discounts.map(discount => {
+
+            const isVariable = discount.is_variable === 'Yes';
+
+            return `
+            <div class="card border-0 shadow-sm rounded-4 mb-3">
+                <div class="card-body p-4">
+
+                    <!-- HEADER -->
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="fw-bold fs-5 text-gray-900">
+                            ${discount.discount_type_name}
+                        </div>
+
+                        <div class="text-end fs-7 text-muted">
+                            ${
+                                isVariable
+                                    ? `<span class="badge bg-light text-dark">Variable</span>`
+                                    : (
+                                        discount.value_type === 'Percentage'
+                                            ? `<span class="text-primary fw-semibold">${discount.discount_value}%</span>`
+                                            : `<span class="text-primary fw-semibold">${formatPeso(discount.discount_value)}</span>`
+                                    )
+                            }
+                        </div>
+                    </div>
+
+                    <!-- VARIABLE INPUT -->
+                    ${
+                        isVariable
+                            ? `
+                            <div class="mb-3">
+                                <label class="form-label fs-8 text-muted mb-1">Value</label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    class="form-control form-control-sm variable-discount-value"
+                                    placeholder="Enter amount">
+                            </div>
+                            `
+                            : ''
+                    }
+
+                    <!-- REFERENCE DETAILS -->
+                    <div class="row g-2 mb-2">
+
+                        <div class="col-6">
+                            <label class="form-label fs-8 text-muted mb-1">Reference Name</label>
+                            <input
+                                type="text"
+                                class="form-control form-control-sm discount-reference-name"
+                                placeholder="e.g. Senior Citizen">
+                        </div>
+
+                        <div class="col-6">
+                            <label class="form-label fs-8 text-muted mb-1">Reference No.</label>
+                            <input
+                                type="text"
+                                class="form-control form-control-sm discount-reference-number"
+                                placeholder="ID / Number">
+                        </div>
+
+                    </div>
+
+                    <!-- REMARKS -->
+                    <div class="mb-3">
+                        <label class="form-label fs-8 text-muted mb-1">Remarks</label>
+                        <textarea
+                            class="form-control form-control-sm discount-remarks"
+                            rows="2"
+                            placeholder="Optional notes"></textarea>
+                    </div>
+
+                    <!-- ACTION -->
+                    <div class="d-flex justify-content-end">
+                        <button
+                            type="button"
+                            class="btn btn-success btn-sm px-4 apply-discount-button"
+                            data-discount-id="${discount.id}"
+                            data-variable="${discount.is_variable}"
+                            data-value-type="${discount.value_type}">
+                            Apply
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+            `;
+        }).join('');
+
+        $('#available-discount-list').html(html);
+    };
+
+    const renderAppliedDiscounts = (discounts) => {
+
+        if (!discounts.length) {
+            $('#applied-discount-list').html(`
+                <div class="text-muted text-center py-5">
+                    No applied discounts
+                </div>
+            `);
+            return;
+        }
+
+        const html = discounts.map(discount => {
+
+            return `
+            <div class="border-0 shadow-sm rounded-3 p-3 mb-3 bg-light">
+
+                <div class="d-flex justify-content-between align-items-start">
+
+                    <!-- LEFT -->
+                    <div class="me-3">
+
+                        <div class="fw-bold text-gray-900">
+                            ${discount.discount_type_name}
+                        </div>
+
+                        <div class="fs-7 text-muted">
+                            ${
+                                discount.value_type === 'Percentage'
+                                    ? `${discount.discount_value}%`
+                                    : formatPeso(discount.discount_value)
+                            }
+                        </div>
+
+                        <!-- REFERENCE INFO -->
+                        ${
+                            (discount.reference_name || discount.reference_number)
+                                ? `
+                                <div class="fs-8 text-muted mt-1">
+                                    ${discount.reference_name ? `<span>${discount.reference_name}</span>` : ''}
+                                    ${discount.reference_number ? `<span class="ms-1">• ${discount.reference_number}</span>` : ''}
+                                </div>
+                                `
+                                : ''
+                        }
+
+                        <!-- APPLIED BY -->
+                        ${
+                            discount.applied_by
+                                ? `
+                                <div class="fs-8 text-muted">
+                                    Applied by: <span class="fw-semibold">${discount.applied_by_name}</span>
+                                </div>
+                                `
+                                : ''
+                        }
+
+                        <!-- REMARKS -->
+                        ${
+                            discount.remarks
+                                ? `
+                                <div class="fs-8 text-gray-600 mt-1">
+                                    ${discount.remarks}
+                                </div>
+                                `
+                                : ''
+                        }
+
+                    </div>
+
+                    <!-- RIGHT -->
+                    <div class="text-end">
+
+                        <div class="fw-bold text-success fs-6 mb-2">
+                            - ${formatPeso(discount.discount_amount)}
+                        </div>
+
+                        <button
+                            type="button"
+                            class="btn btn-light-danger btn-sm remove-discount-button"
+                            data-applied-id="${discount.id}">
+                            Remove
+                        </button>
+
+                    </div>
+
+                </div>
+            </div>
+            `;
+        }).join('');
+
+        $('#applied-discount-list').html(html);
+    };
+
+    const renderAvailableCharges = (charges) => {
+
+        if (!charges.length) {
+            $('#available-charge-list').html(`
+                <div class="text-muted text-center py-10">
+                    No available charges
+                </div>
+            `);
+            return;
+        }
+
+        const html = charges.map(charge => {
+
+            const isVariable = charge.is_variable === 'Yes';
+
+            return `
+            <div class="card border-0 shadow-sm rounded-4 mb-3">
+                <div class="card-body p-4">
+
+                    <!-- HEADER -->
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="fw-bold fs-5 text-gray-900">
+                            ${charge.charge_type_name}
+                        </div>
+
+                        <div class="fs-7 text-muted text-end">
+                            ${
+                                isVariable
+                                    ? `<span class="badge bg-light text-dark">Variable</span>`
+                                    : (
+                                        charge.value_type === 'Percentage'
+                                            ? `<span class="text-danger fw-semibold">${charge.charge_value}%</span>`
+                                            : `<span class="text-danger fw-semibold">${formatPeso(charge.charge_value)}</span>`
+                                    )
+                            }
+                        </div>
+                    </div>
+
+                    <!-- VARIABLE INPUT -->
+                    ${
+                        isVariable
+                            ? `
+                            <div class="mb-3">
+                                <label class="form-label fs-8 text-muted mb-1">Value</label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    class="form-control form-control-sm variable-charge-value"
+                                    placeholder="Enter amount">
+                            </div>
+                            `
+                            : ''
+                    }
+
+                    <!-- REMARKS -->
+                    <div class="mb-3">
+                        <label class="form-label fs-8 text-muted mb-1">Remarks</label>
+                        <textarea
+                            class="form-control form-control-sm charge-remarks"
+                            rows="2"
+                            placeholder="Optional notes"></textarea>
+                    </div>
+
+                    <!-- ACTION -->
+                    <div class="d-flex justify-content-end">
+                        <button
+                            type="button"
+                            class="btn btn-danger btn-sm px-4 apply-charge-button"
+                            data-charge-id="${charge.id}"
+                            data-variable="${charge.is_variable}"
+                            data-value-type="${charge.value_type}">
+                            Apply
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+            `;
+        }).join('');
+
+        $('#available-charge-list').html(html);
+    };
+
+    const renderAppliedCharges = (charges) => {
+
+        if (!charges.length) {
+            $('#applied-charge-list').html(`
+                <div class="text-muted text-center py-5 fw-semibold">
+                    No applied charges
+                </div>
+            `);
+            return;
+        }
+
+        const html = charges.map(charge => {
+
+            return `
+            <div class="border-0 shadow-sm rounded-3 p-3 mb-3 bg-light">
+
+                <div class="d-flex justify-content-between align-items-start">
+
+                    <!-- LEFT -->
+                    <div class="me-3">
+
+                        <div class="fw-bold text-gray-900">
+                            ${charge.charge_type_name}
+                        </div>
+
+                        <div class="fs-7 text-muted">
+                            ${
+                                charge.value_type === 'Percentage'
+                                    ? `${charge.charge_value}%`
+                                    : formatPeso(charge.charge_value)
+                            }
+                        </div>
+
+                        <!-- APPLIED BY -->
+                        ${
+                            charge.applied_by
+                                ? `
+                                <div class="fs-8 text-muted">
+                                    Applied by: <span class="fw-semibold">${charge.applied_by_name}</span>
+                                </div>
+                                `
+                                : ''
+                        }
+
+                        <!-- REMARKS -->
+                        ${
+                            charge.remarks
+                                ? `
+                                <div class="fs-8 text-gray-600 mt-1">
+                                    ${charge.remarks}
+                                </div>
+                                `
+                                : ''
+                        }
+
+                    </div>
+
+                    <!-- RIGHT -->
+                    <div class="text-end">
+
+                        <div class="fw-bold text-danger fs-6 mb-2">
+                            + ${formatPeso(charge.charge_amount)}
+                        </div>
+
+                        <button
+                            type="button"
+                            class="btn btn-light-danger btn-sm remove-charge-button"
+                            data-applied-id="${charge.id}">
+                            Remove
+                        </button>
+
+                    </div>
+
+                </div>
+            </div>
+            `;
+        }).join('');
+
+        $('#applied-charge-list').html(html);
     };
 
     config.forms.map((cfg) => initValidation(cfg.selector, cfg.rules));
@@ -1209,11 +2202,42 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
             
             if (data.success) {
-                if(orderType === 'Dine-in'){
-                    $('#set-table-column').removeClass('d-none');
+
+                /*
+                |--------------------------------------------------------------------------
+                | SHOW/HIDE TABLE BUTTON
+                |--------------------------------------------------------------------------
+                */
+
+                if (orderType === 'Dine-in') {
+
+                    $('#set-table-column')
+                        .removeClass('d-none');
                 }
-                else{
-                    $('#set-table-column').addClass('d-none');
+
+                else {
+
+                    $('#set-table-column')
+                        .addClass('d-none');
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | UPDATE BADGE
+                |--------------------------------------------------------------------------
+                */
+
+                $('#badge-order-type').text(orderType);
+
+                /*
+                |--------------------------------------------------------------------------
+                | RELEASE TABLE UI
+                |--------------------------------------------------------------------------
+                */
+
+                if (data.table_removed) {
+
+                    $('#badge-table').text('No Table');
                 }
             }
             else {
@@ -1379,4 +2403,723 @@ document.addEventListener('DOMContentLoaded', () => {
             resetCartUI();
         }
     });
+
+    $(document).on('click', '#set-table', async function () {
+
+        const shopOrderId = sessionStorage.getItem('shop_order_id');
+
+        if (!shopOrderId) {
+
+            showNotification('Create an order first.');
+
+            return;
+        }
+
+        await loadFloorPlans(shopOrderId);
+    });
+
+    $(document).on(
+        'click',
+        '.floor-plan-filter',
+        async function () {
+
+            $('.floor-plan-filter')
+                .removeClass('btn-success')
+                .addClass('btn-light');
+
+            $(this)
+                .removeClass('btn-light')
+                .addClass('btn-success');
+
+            selectedFloorPlanId =
+                $(this).data('floor-plan-id');
+
+            const shopOrderId =
+                sessionStorage.getItem('shop_order_id');
+
+            await loadFloorTables(
+                selectedFloorPlanId,
+                shopOrderId
+            );
+        }
+    );
+
+    $(document).on(
+        'click',
+        '.selectable-table',
+        async function () {
+
+            const floorPlanTableId =
+                $(this).data('floor-plan-table-id');
+
+            await assignTableToOrder(
+                floorPlanTableId
+            );
+        }
+    );
+
+    $(document).on(
+        'click',
+        '.increase-item-qty',
+        async function () {
+
+            const shopOrderItemId =
+                $(this).data('shop-order-item-id');
+
+            await updateOrderItemQuantity({
+                shopOrderItemId,
+                action: 'increase',
+            });
+        }
+    );
+
+    $(document).on(
+        'click',
+        '.decrease-item-qty',
+        async function () {
+
+            const shopOrderItemId =
+                $(this).data('shop-order-item-id');
+
+            await updateOrderItemQuantity({
+                shopOrderItemId,
+                action: 'decrease',
+            });
+        }
+    );
+
+    $(document).on(
+        'click',
+        '.delete-order-item',
+        async function () {
+
+            const shopOrderItemId =
+                $(this).data('shop-order-item-id');
+
+            await updateOrderItemQuantity({
+                shopOrderItemId,
+                action: 'delete',
+            });
+        }
+    );
+
+    $(document).on('click', '#manage-discount-button', async function () {
+
+        try {
+
+            const shopOrderId =
+                sessionStorage.getItem('shop_order_id');
+
+            if (!shopOrderId) {
+                showNotification('No active order.');
+                return;
+            }
+
+            const csrf = getCsrfToken();
+
+            const response = await fetch(
+                '/shop-order/fetch-discounts',
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type':
+                            'application/x-www-form-urlencoded; charset=UTF-8',
+                        Accept: 'application/json',
+                        ...(csrf
+                            ? { 'X-CSRF-TOKEN': csrf }
+                            : {}),
+                    },
+                    body: new URLSearchParams({
+                        shop_order_id: shopOrderId,
+                    }),
+                }
+            );
+
+            const data = await response.json();
+
+            if (!data.success) {
+                showNotification(data.message);
+                return;
+            }
+
+            renderAvailableDiscounts(
+                data.available_discounts
+            );
+
+            renderAppliedDiscounts(
+                data.applied_discounts
+            );
+
+        } catch (error) {
+
+            handleSystemError(
+                error,
+                'fetch_failed',
+                error.message
+            );
+        }
+    });
+
+    $(document).on(
+        'click',
+        '.apply-discount-button',
+        async function () {
+
+            try {
+
+                const button = $(this);
+
+                const card =
+                    button.closest('.card');
+
+                const discountTypeId =
+                    button.data('discount-id');
+
+                const isVariable =
+                    button.data('variable');
+
+                const valueType =
+                    button.data('value-type');
+
+                let discountValue = null;
+
+                let referenceName = card
+                        .find('.discount-reference-name')
+                        .val();
+
+                let referenceNumber = card
+                        .find('.discount-reference-number')
+                        .val();
+
+                let remarks = card
+                        .find('.discount-remarks')
+                        .val();
+
+                /*
+                |--------------------------------------------------------------------------
+                | VARIABLE VALUE
+                |--------------------------------------------------------------------------
+                */
+
+                if (isVariable === 'Yes') {
+
+                    discountValue = card
+                        .find('.variable-discount-value')
+                        .val();
+
+                    if (
+                        discountValue === ''
+                        || discountValue === null
+                    ) {
+
+                        showNotification(
+                            'Enter a discount value.'
+                        );
+
+                        return;
+                    }
+
+                    discountValue =
+                        parseFloat(discountValue);
+
+                    if (
+                        isNaN(discountValue)
+                        || discountValue <= 0
+                    ) {
+
+                        showNotification(
+                            'Invalid discount value.'
+                        );
+
+                        return;
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | PERCENTAGE LIMIT
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (
+                        valueType === 'Percentage'
+                        && discountValue > 100
+                    ) {
+
+                        showNotification(
+                            'Percentage discount cannot exceed 100%.'
+                        );
+
+                        return;
+                    }
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | REQUEST
+                |--------------------------------------------------------------------------
+                */
+
+                const csrf = getCsrfToken();
+
+                const shopOrderId =
+                    sessionStorage.getItem(
+                        'shop_order_id'
+                    );
+
+                button.prop('disabled', true);
+
+                const response = await fetch(
+                    '/shop-order/save-discount',
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type':
+                                'application/x-www-form-urlencoded; charset=UTF-8',
+                            Accept: 'application/json',
+                            ...(csrf
+                                ? {
+                                    'X-CSRF-TOKEN': csrf
+                                }
+                                : {}),
+                        },
+                        body: new URLSearchParams({
+
+                            shop_order_id:
+                                shopOrderId,
+
+                            discount_type_id:
+                                discountTypeId,
+
+                            discount_value:
+                                discountValue ?? '',
+
+                            reference_name:
+                                referenceName ?? '',
+
+                            reference_number:
+                                referenceNumber ?? '',
+
+                            remarks:
+                                remarks ?? '',
+                        }),
+                    }
+                );
+
+                const data =
+                    await response.json();
+
+                button.prop('disabled', false);
+
+                /*
+                |--------------------------------------------------------------------------
+                | FAILED
+                |--------------------------------------------------------------------------
+                */
+
+                if (!data.success) {
+
+                    showNotification(
+                        data.message
+                    );
+
+                    return;
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | REFRESH
+                |--------------------------------------------------------------------------
+                */
+
+                populateCart(data.order);
+
+                renderAvailableDiscounts(
+                    data.available_discounts
+                );
+
+                renderAppliedDiscounts(
+                    data.applied_discounts
+                );
+
+                showNotification(
+                    data.message,
+                    'success'
+                );
+
+            } catch (error) {
+
+                $('.apply-discount-button')
+                    .prop('disabled', false);
+
+                handleSystemError(
+                    error,
+                    'save_failed',
+                    error.message
+                );
+            }
+        }
+    );
+
+    $(document).on(
+        'click',
+        '.remove-discount-button',
+        async function () {
+
+            try {
+
+                const appliedId =
+                    $(this).data('applied-id');
+
+                const csrf = getCsrfToken();
+
+                const response = await fetch(
+                    '/shop-order/delete-discount',
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type':
+                                'application/x-www-form-urlencoded; charset=UTF-8',
+                            Accept: 'application/json',
+                            ...(csrf
+                                ? { 'X-CSRF-TOKEN': csrf }
+                                : {}),
+                        },
+                        body: new URLSearchParams({
+                            applied_discount_id: appliedId,
+                        }),
+                    }
+                );
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    showNotification(data.message);
+                    return;
+                }
+
+                populateCart(data.order);
+
+                renderAvailableDiscounts(
+                    data.available_discounts
+                );
+
+                renderAppliedDiscounts(
+                    data.applied_discounts
+                );
+
+            } catch (error) {
+
+                handleSystemError(
+                    error,
+                    'delete_failed',
+                    error.message
+                );
+            }
+        }
+    );
+
+    $(document).on(
+        'click',
+        '#manage-charge-button',
+        async function () {
+
+            try {
+
+                const shopOrderId =
+                    sessionStorage.getItem(
+                        'shop_order_id'
+                    );
+
+                if (!shopOrderId) {
+
+                    showNotification(
+                        'No active order.'
+                    );
+
+                    return;
+                }
+
+                const csrf = getCsrfToken();
+
+                const response = await fetch(
+                    '/shop-order/fetch-charges',
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type':
+                                'application/x-www-form-urlencoded; charset=UTF-8',
+                            Accept: 'application/json',
+                            ...(csrf
+                                ? {
+                                    'X-CSRF-TOKEN': csrf
+                                }
+                                : {}),
+                        },
+                        body: new URLSearchParams({
+                            shop_order_id: shopOrderId,
+                        }),
+                    }
+                );
+
+                const data =
+                    await response.json();
+
+                if (!data.success) {
+
+                    showNotification(
+                        data.message
+                    );
+
+                    return;
+                }
+
+                renderAvailableCharges(
+                    data.available_charges
+                );
+
+                renderAppliedCharges(
+                    data.applied_charges
+                );
+
+            } catch (error) {
+
+                handleSystemError(
+                    error,
+                    'fetch_failed',
+                    error.message
+                );
+            }
+        }
+    );
+
+    $(document).on(
+        'click',
+        '.apply-charge-button',
+        async function () {
+
+            try {
+
+                const button = $(this);
+
+                const card =
+                    button.closest('.card');
+
+                const chargeTypeId =
+                    button.data('charge-id');
+
+                const isVariable =
+                    button.data('variable');
+
+                const valueType =
+                    button.data('value-type');
+
+                let chargeValue = null;
+
+                let remarks = card
+                        .find('.charge-remarks')
+                        .val();
+
+                /*
+                |--------------------------------------------------------------------------
+                | VARIABLE VALUE
+                |--------------------------------------------------------------------------
+                */
+
+                if (isVariable === 'Yes') {
+
+                    chargeValue = card
+                        .find('.variable-charge-value')
+                        .val();
+
+                    if (
+                        chargeValue === ''
+                        || chargeValue === null
+                    ) {
+
+                        showNotification(
+                            'Enter a charge value.'
+                        );
+
+                        return;
+                    }
+
+                    chargeValue =
+                        parseFloat(chargeValue);
+
+                    if (
+                        isNaN(chargeValue)
+                        || chargeValue <= 0
+                    ) {
+
+                        showNotification(
+                            'Invalid charge value.'
+                        );
+
+                        return;
+                    }
+
+                    if (
+                        valueType === 'Percentage'
+                        && chargeValue > 100
+                    ) {
+
+                        showNotification(
+                            'Percentage charge cannot exceed 100%.'
+                        );
+
+                        return;
+                    }
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | REQUEST
+                |--------------------------------------------------------------------------
+                */
+
+                const csrf = getCsrfToken();
+
+                const shopOrderId =
+                    sessionStorage.getItem(
+                        'shop_order_id'
+                    );
+
+                button.prop('disabled', true);
+
+                const response = await fetch(
+                    '/shop-order/save-charge',
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type':
+                                'application/x-www-form-urlencoded; charset=UTF-8',
+                            Accept: 'application/json',
+                            ...(csrf
+                                ? {
+                                    'X-CSRF-TOKEN': csrf
+                                }
+                                : {}),
+                        },
+                        body: new URLSearchParams({
+
+                            shop_order_id:
+                                shopOrderId,
+
+                            charge_type_id:
+                                chargeTypeId,
+
+                            charge_value:
+                                chargeValue ?? '',
+
+                            remarks:
+                                remarks ?? '',
+                        }),
+                    }
+                );
+
+                const data =
+                    await response.json();
+
+                button.prop('disabled', false);
+
+                if (!data.success) {
+
+                    showNotification(
+                        data.message
+                    );
+
+                    return;
+                }
+
+                populateCart(data.order);
+
+                renderAvailableCharges(
+                    data.available_charges
+                );
+
+                renderAppliedCharges(
+                    data.applied_charges
+                );
+
+                showNotification(
+                    data.message,
+                    'success'
+                );
+
+            } catch (error) {
+
+                $('.apply-charge-button')
+                    .prop('disabled', false);
+
+                handleSystemError(
+                    error,
+                    'save_failed',
+                    error.message
+                );
+            }
+        }
+    );
+
+    $(document).on(
+        'click',
+        '.remove-charge-button',
+        async function () {
+
+            try {
+
+                const chargeId =
+                    $(this).data(
+                        'applied-id'
+                    );
+
+                const csrf = getCsrfToken();
+
+                const response = await fetch(
+                    '/shop-order/delete-charge',
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type':
+                                'application/x-www-form-urlencoded; charset=UTF-8',
+                            Accept: 'application/json',
+                            ...(csrf
+                                ? { 'X-CSRF-TOKEN': csrf }
+                                : {}),
+                        },
+                        body: new URLSearchParams({
+                            shop_order_applied_charge_id:
+                                chargeId,
+                        }),
+                    }
+                );
+
+                const data = await response.json();
+
+                if (!data.success) {
+
+                    showNotification(data.message);
+                    return;
+                }
+
+                populateCart(data.order);
+
+                renderAvailableCharges(
+                    data.available_charges
+                );
+
+                renderAppliedCharges(
+                    data.applied_charges
+                );
+
+            } catch (error) {
+
+                handleSystemError(
+                    error,
+                    'delete_failed',
+                    error.message
+                );
+            }
+        }
+    );
+
 });

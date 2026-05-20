@@ -912,8 +912,18 @@ Route::middleware('auth')->group(function () {
         ->controller(ShopOrderController::class)
         ->group(function () {
             Route::post('/save', 'save')->name('save');
+            Route::post('/save-table', 'saveTable')->name('save.table');
             Route::post('/save-order-type', 'saveOrderType')->name('save.order.type');
+            Route::post('/save-item-quantity', 'saveItemQuantity')->name('save.item.quantity');
+            Route::post('/save-discount', 'saveDiscount')->name('save.discount');
+            Route::post('/save-charge', 'saveCharge')->name('save.charge');
+            Route::post('/fetch-floor-plans', 'fetchFloorPlans')->name('fetch.floor.plans');
+            Route::post('/fetch-floor-tables', 'fetchFloorTables')->name('fetch.floor.tables');
+            Route::post('/fetch-discounts', 'fetchDiscounts')->name('fetch.discounts');
+            Route::post('/fetch-charges', 'fetchCharges')->name('fetch.discounts');
             Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
+            Route::post('/delete-discount', 'deleteDiscount')->name('delete.discount');
+            Route::post('/delete-charge', 'deleteCharge')->name('delete.charge');
         });
 
     // Import

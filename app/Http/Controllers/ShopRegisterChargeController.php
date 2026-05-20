@@ -43,7 +43,7 @@ class ShopRegisterChargeController extends Controller
             ->value('charge_type_name');
 
         $payload = [
-            'shop_register_id' => $chargeTypeId,
+            'shop_register_id' => $shopRegisterId,
             'shop_register_name' => $shopRegisterName,
             'charge_type_id' => $chargeTypeId,
             'charge_type_name' => $chargeTypeName,

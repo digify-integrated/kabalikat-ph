@@ -43,7 +43,7 @@ class ShopRegisterDiscountController extends Controller
             ->value('discount_type_name');
 
         $payload = [
-            'shop_register_id' => $discountTypeId,
+            'shop_register_id' => $shopRegisterId,
             'shop_register_name' => $shopRegisterName,
             'discount_type_id' => $discountTypeId,
             'discount_type_name' => $discountTypeName,

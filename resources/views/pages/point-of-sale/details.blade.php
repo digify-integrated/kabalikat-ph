@@ -200,7 +200,7 @@
                 <div class="row g-3 mb-3 register-action d-none">
 
                     <div class="col">
-                        <button class="btn btn-light w-100 py-3 fw-semibold">
+                        <button class="btn btn-light w-100 py-3 fw-semibold" id="print-bill">
                             Print Bill
                         </button>
                     </div>
@@ -209,7 +209,8 @@
                         <button
                             class="btn btn-light-success w-100 py-3 fw-semibold"
                             data-bs-toggle="modal"
-                            data-bs-target="#discount-modal">
+                            data-bs-target="#discount-modal"
+                             id="manage-discount-button">
 
                             Discounts
 
@@ -220,7 +221,8 @@
                         <button
                             class="btn btn-light-danger w-100 py-3 fw-semibold"
                             data-bs-toggle="modal"
-                            data-bs-target="#charges-modal">
+                            data-bs-target="#charges-modal"
+                            id="manage-charge-button">
 
                             Charges
 
@@ -392,277 +394,46 @@
     </div>
 
     <div
-    id="table-modal"
-    class="modal fade"
-    tabindex="-1"
-    aria-labelledby="table-modal"
-    aria-hidden="true">
+        id="table-modal"
+        class="modal fade"
+        tabindex="-1"
+        aria-labelledby="table-modal"
+        aria-hidden="true">
 
-    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
 
-        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
 
-            <!-- HEADER -->
-            <div class="modal-header border-0 px-6 py-5 bg-light">
+                <!-- HEADER -->
+                <div class="modal-header border-0 px-6 py-5 bg-light">
 
-                <div>
+                    <div>
 
-                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <div class="d-flex align-items-center gap-2 mb-1">
 
-                        <div
-                            class="symbol symbol-40px bg-success bg-opacity-10">
+                            <div
+                                class="symbol symbol-40px bg-success bg-opacity-10">
 
-                            <span class="symbol-label">
+                                <span class="symbol-label">
 
-                                <i class="ki-duotone ki-element-11 fs-2 text-success">
-                                    <span class="path1"></span>
-                                    <span class="path2"></span>
-                                    <span class="path3"></span>
-                                </i>
-
-                            </span>
-
-                        </div>
-
-                        <div>
-
-                            <h2 class="fw-bold text-gray-900 mb-0">
-                                Select Table
-                            </h2>
-
-                            <div class="text-muted fs-7 fw-semibold">
-                                Assign this order to a dining table
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <button
-                    type="button"
-                    class="btn btn-icon btn-sm btn-light rounded-circle"
-                    data-bs-dismiss="modal">
-
-                    <i class="ki-outline ki-cross fs-2"></i>
-
-                </button>
-
-            </div>
-
-            <!-- BODY -->
-            <div class="modal-body px-6 py-5">
-
-                <!-- TOP BAR -->
-                <div
-                    class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-4 mb-6">
-
-                    <!-- FLOOR FILTERS -->
-                    <div
-                        class="d-flex flex-wrap gap-2"
-                        id="shop-floor-plan-container">
-
-                        <button
-                            type="button"
-                            class="btn btn-sm btn-success floor-plan-filter active rounded-pill px-5">
-
-                            Mezzanine
-
-                        </button>
-
-                        <button
-                            type="button"
-                            class="btn btn-sm btn-light floor-plan-filter rounded-pill px-5">
-
-                            Main Dining
-
-                        </button>
-
-                        <button
-                            type="button"
-                            class="btn btn-sm btn-light floor-plan-filter rounded-pill px-5">
-
-                            Alfresco
-
-                        </button>
-
-                    </div>
-
-                    <!-- LEGEND -->
-                    <div class="d-flex flex-wrap align-items-center gap-5">
-
-                        <div class="d-flex align-items-center gap-2">
-
-                            <span
-                                class="w-12px h-12px rounded-circle bg-success">
-                            </span>
-
-                            <span class="fs-7 fw-semibold text-muted">
-                                Selected
-                            </span>
-
-                        </div>
-
-                        <div class="d-flex align-items-center gap-2">
-
-                            <span
-                                class="w-12px h-12px rounded-circle border border-gray-400 bg-white">
-                            </span>
-
-                            <span class="fs-7 fw-semibold text-muted">
-                                Available
-                            </span>
-
-                        </div>
-
-                        <div class="d-flex align-items-center gap-2">
-
-                            <span
-                                class="w-12px h-12px rounded-circle bg-light-secondary">
-                            </span>
-
-                            <span class="fs-7 fw-semibold text-muted">
-                                Occupied
-                            </span>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <!-- TABLE GRID -->
-                <div
-                    class="row g-4"
-                    id="shop-floor-table-container">
-
-                    <!-- AVAILABLE -->
-                    <div class="col-6 col-md-4 col-xl-3">
-
-                        <div
-                            class="table-card card border border-gray-200 border-hover-primary shadow-sm h-100 cursor-pointer rounded-4">
-
-                            <div class="card-body p-5">
-
-                                <div
-                                    class="d-flex justify-content-between align-items-start mb-4">
-
-                                    <div>
-
-                                        <div
-                                            class="fw-bold fs-3 text-gray-900 mb-1">
-
-                                            Table 01
-
-                                        </div>
-
-                                        <div
-                                            class="text-muted fw-semibold fs-7">
-
-                                            2 Seats
-
-                                        </div>
-
-                                    </div>
-
-                                    <span
-                                        class="badge badge-light-primary fw-bold">
-
-                                        Available
-
-                                    </span>
-
-                                </div>
-
-                                <div
-                                    class="d-flex align-items-center justify-content-between">
-
-                                    <div
-                                        class="symbol-group symbol-hover">
-
-                                        <div class="symbol symbol-30px">
-                                            <span class="symbol-label bg-light">
-                                                <i class="ki-outline ki-profile-user fs-5"></i>
-                                            </span>
-                                        </div>
-
-                                        <div class="symbol symbol-30px">
-                                            <span class="symbol-label bg-light">
-                                                <i class="ki-outline ki-profile-user fs-5"></i>
-                                            </span>
-                                        </div>
-
-                                    </div>
-
-                                    <i
-                                        class="ki-outline ki-arrow-right fs-2 text-muted">
-                                    </i>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                    <!-- SELECTED -->
-                    <div class="col-6 col-md-4 col-xl-3">
-
-                        <div
-                            class="table-card selected card border border-success shadow-sm bg-success bg-opacity-10 h-100 cursor-pointer rounded-4">
-
-                            <div class="card-body p-5">
-
-                                <div
-                                    class="d-flex justify-content-between align-items-start mb-4">
-
-                                    <div>
-
-                                        <div
-                                            class="fw-bold fs-3 text-success mb-1">
-
-                                            Table 02
-
-                                        </div>
-
-                                        <div
-                                            class="text-success fw-semibold fs-7">
-
-                                            4 Seats
-
-                                        </div>
-
-                                    </div>
-
-                                    <span
-                                        class="badge badge-success fw-bold">
-
-                                        Selected
-
-                                    </span>
-
-                                </div>
-
-                                <div
-                                    class="d-flex justify-content-between align-items-center">
-
-                                    <div class="d-flex gap-1">
-
-                                        <i class="ki-outline ki-profile-user fs-3 text-success"></i>
-                                        <i class="ki-outline ki-profile-user fs-3 text-success"></i>
-                                        <i class="ki-outline ki-profile-user fs-3 text-success"></i>
-                                        <i class="ki-outline ki-profile-user fs-3 text-success"></i>
-
-                                    </div>
-
-                                    <i
-                                        class="ki-duotone ki-check-circle fs-1 text-success">
+                                    <i class="ki-duotone ki-element-11 fs-2 text-success">
                                         <span class="path1"></span>
                                         <span class="path2"></span>
+                                        <span class="path3"></span>
                                     </i>
 
+                                </span>
+
+                            </div>
+
+                            <div>
+
+                                <h2 class="fw-bold text-gray-900 mb-0">
+                                    Select Table
+                                </h2>
+
+                                <div class="text-muted fs-7 fw-semibold">
+                                    Assign this order to a dining table
                                 </div>
 
                             </div>
@@ -671,80 +442,82 @@
 
                     </div>
 
-                    <!-- OCCUPIED -->
-                    <div class="col-6 col-md-4 col-xl-3">
+                    <button
+                        type="button"
+                        class="btn btn-icon btn-sm btn-light rounded-circle"
+                        data-bs-dismiss="modal">
 
+                        <i class="ki-outline ki-cross fs-2"></i>
+
+                    </button>
+
+                </div>
+
+                <!-- BODY -->
+                <div class="modal-body px-6 py-5">
+
+                    <!-- TOP BAR -->
+                    <div
+                        class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-4 mb-6">
+
+                        <!-- FLOOR FILTERS -->
                         <div
-                            class="table-card disabled card border border-gray-200 bg-light h-100 rounded-4 opacity-75">
+                            class="d-flex flex-wrap gap-3"
+                            id="shop-floor-plan-container">
 
-                            <div class="card-body p-5">
+                        </div>
 
-                                <div
-                                    class="d-flex justify-content-between align-items-start mb-4">
+                        <!-- LEGEND -->
+                        <div class="d-flex flex-wrap align-items-center gap-5">
 
-                                    <div>
+                            <div class="d-flex align-items-center gap-2">
 
-                                        <div
-                                            class="fw-bold fs-3 text-gray-700 mb-1">
+                                <span
+                                    class="w-12px h-12px rounded-circle bg-success">
+                                </span>
 
-                                            Table 04
+                                <span class="fs-7 fw-semibold text-muted">
+                                    Selected
+                                </span>
 
-                                        </div>
+                            </div>
 
-                                        <div
-                                            class="text-muted fw-semibold fs-7">
+                            <div class="d-flex align-items-center gap-2">
 
-                                            Currently Occupied
+                                <span
+                                    class="w-12px h-12px rounded-circle border border-gray-400 bg-white">
+                                </span>
 
-                                        </div>
+                                <span class="fs-7 fw-semibold text-muted">
+                                    Available
+                                </span>
 
-                                    </div>
+                            </div>
 
-                                    <span
-                                        class="badge badge-light-danger fw-bold">
+                            <div class="d-flex align-items-center gap-2">
 
-                                        Occupied
+                                <span
+                                    class="w-12px h-12px rounded-circle bg-light-secondary">
+                                </span>
 
-                                    </span>
-
-                                </div>
-
-                                <div
-                                    class="d-flex justify-content-between align-items-center">
-
-                                    <div class="text-muted fs-7 fw-semibold">
-
-                                        Ongoing Order
-
-                                    </div>
-
-                                    <i
-                                        class="ki-outline ki-lock-2 fs-2 text-muted">
-                                    </i>
-
-                                </div>
+                                <span class="fs-7 fw-semibold text-muted">
+                                    Occupied
+                                </span>
 
                             </div>
 
                         </div>
+
+                    </div>
+
+                    <!-- TABLE GRID -->
+                    <div
+                        class="row g-4"
+                        id="shop-floor-table-container">
 
                     </div>
 
                 </div>
-
-            </div>
-
-            <!-- FOOTER -->
-            <div class="modal-footer border-0 px-6 py-5 bg-light">
-
-                <button
-                    type="button"
-                    class="btn btn-light px-6"
-                    data-bs-dismiss="modal">
-
-                    Cancel
-
-                </button>
 
             </div>
 
@@ -752,7 +525,159 @@
 
     </div>
 
-</div>
+    <div
+        class="modal fade"
+        id="discount-modal"
+        tabindex="-1"
+        aria-hidden="true">
+
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+
+            <div class="modal-content border-0 shadow rounded-4 overflow-hidden">
+
+                <!-- HEADER -->
+                <div class="modal-header border-0 bg-light px-6 py-5">
+
+                    <div>
+
+                        <h2 class="fw-bold mb-1">
+                            Manage Discounts
+                        </h2>
+
+                        <div class="text-muted fw-semibold fs-7">
+                            Apply or remove discounts for this order
+                        </div>
+
+                    </div>
+
+                    <button
+                        type="button"
+                        class="btn btn-icon btn-sm btn-light rounded-circle"
+                        data-bs-dismiss="modal">
+
+                        <i class="ki-outline ki-cross fs-2"></i>
+
+                    </button>
+
+                </div>
+
+                <!-- BODY -->
+                <div class="modal-body px-6 py-5">
+
+                    <!-- AVAILABLE DISCOUNTS -->
+                    <div class="mb-6">
+
+                        <label class="fw-bold fs-6 mb-3 d-block">
+                            Available Discounts
+                        </label>
+
+                        <div
+                            id="available-discount-list"
+                            class="d-flex flex-column gap-3">
+
+                        </div>
+
+                    </div>
+
+                    <!-- APPLIED -->
+                    <div>
+
+                        <label class="fw-bold fs-6 mb-3 d-block">
+                            Applied Discounts
+                        </label>
+
+                        <div
+                            id="applied-discount-list"
+                            class="d-flex flex-column gap-3">
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div
+        class="modal fade"
+        id="charges-modal"
+        tabindex="-1"
+        aria-hidden="true">
+
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+
+            <div class="modal-content border-0 shadow rounded-4 overflow-hidden">
+
+                <!-- HEADER -->
+                <div class="modal-header border-0 bg-light px-6 py-5">
+
+                    <div>
+
+                        <h2 class="fw-bold mb-1">
+                            Manage Charges
+                        </h2>
+
+                        <div class="text-muted fw-semibold fs-7">
+                            Apply or remove charges for this order
+                        </div>
+
+                    </div>
+
+                    <button
+                        type="button"
+                        class="btn btn-icon btn-sm btn-light rounded-circle"
+                        data-bs-dismiss="modal">
+
+                        <i class="ki-outline ki-cross fs-2"></i>
+
+                    </button>
+
+                </div>
+
+                <!-- BODY -->
+                <div class="modal-body px-6 py-5">
+
+                    <!-- AVAILABLE -->
+                    <div class="mb-6">
+
+                        <label class="fw-bold fs-6 mb-3 d-block">
+                            Available Charges
+                        </label>
+
+                        <div
+                            id="available-charge-list"
+                            class="d-flex flex-column gap-3">
+
+                        </div>
+
+                    </div>
+
+                    <!-- APPLIED -->
+                    <div>
+
+                        <label class="fw-bold fs-6 mb-3 d-block">
+                            Applied Charges
+                        </label>
+
+                        <div
+                            id="applied-charge-list"
+                            class="d-flex flex-column gap-3">
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
 @endsection
 
 @push('scripts')
