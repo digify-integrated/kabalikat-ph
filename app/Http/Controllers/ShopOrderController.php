@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\FloorPlanTable;
 use App\Models\Product;
 use App\Models\ShopOrder;
+use App\Models\ShopOrderAppliedCharge;
+use App\Models\ShopOrderAppliedDiscount;
 use App\Models\ShopOrderItem;
 use App\Models\ShopRegister;
 use App\Models\ShopRegisterSession;
@@ -21,23 +23,11 @@ class ShopOrderController extends Controller
     {
         $validator = Validator::make($request->all(), [
 
-            /*
-            |--------------------------------------------------------------------------
-            | REGISTER
-            |--------------------------------------------------------------------------
-            */
-
             'shop_register_id' => [
                 'required',
                 'integer',
                 Rule::exists('shop_register', 'id'),
             ],
-
-            /*
-            |--------------------------------------------------------------------------
-            | PRODUCT
-            |--------------------------------------------------------------------------
-            */
 
             'modal_product_id' => [
                 'required',
@@ -45,38 +35,20 @@ class ShopOrderController extends Controller
                 Rule::exists('product', 'id'),
             ],
 
-            /*
-            |--------------------------------------------------------------------------
-            | QUANTITY
-            |--------------------------------------------------------------------------
-            */
-
             'order_qty_input' => [
                 'required',
                 'numeric',
                 'min:0.01',
             ],
 
-            /*
-            |--------------------------------------------------------------------------
-            | NOTE
-            |--------------------------------------------------------------------------
-            */
-
             'order_note' => [
                 'nullable',
                 'string',
             ],
 
-            /*
-            |--------------------------------------------------------------------------
-            | EXISTING ORDER
-            |--------------------------------------------------------------------------
-            */
-
             'shop_order_id' => [
                 'nullable',
-                'integer'
+                'integer',
             ],
         ]);
 
@@ -100,9 +72,9 @@ class ShopOrderController extends Controller
             |--------------------------------------------------------------------------
             */
 
-            $shopRegister = ShopRegister::query()
-                ->whereKey($validated['shop_register_id'])
-                ->first();
+            $shopRegister = ShopRegister::find(
+                $validated['shop_register_id']
+            );
 
             if (!$shopRegister) {
 
@@ -114,19 +86,13 @@ class ShopOrderController extends Controller
 
             /*
             |--------------------------------------------------------------------------
-            | OPEN REGISTER SESSION
+            | OPEN SESSION
             |--------------------------------------------------------------------------
             */
 
             $shopRegisterSession = ShopRegisterSession::query()
 
                 ->where('shop_register_id', $shopRegister->id)
-
-                /*
-                |--------------------------------------------------------------------------
-                | OPEN SESSION
-                |--------------------------------------------------------------------------
-                */
 
                 ->whereNull('close_time')
 
@@ -148,9 +114,9 @@ class ShopOrderController extends Controller
             |--------------------------------------------------------------------------
             */
 
-            $product = Product::query()
-                ->whereKey($validated['modal_product_id'])
-                ->first();
+            $product = Product::find(
+                $validated['modal_product_id']
+            );
 
             if (!$product) {
 
@@ -162,7 +128,7 @@ class ShopOrderController extends Controller
 
             /*
             |--------------------------------------------------------------------------
-            | QUANTITY
+            | COMPUTATION
             |--------------------------------------------------------------------------
             */
 
@@ -170,12 +136,6 @@ class ShopOrderController extends Controller
                 (float) $validated['order_qty_input'],
                 2
             );
-
-            /*
-            |--------------------------------------------------------------------------
-            | PRICING
-            |--------------------------------------------------------------------------
-            */
 
             $originalUnitPrice = round(
                 (float) $product->base_price,
@@ -189,22 +149,10 @@ class ShopOrderController extends Controller
                 2
             );
 
-            /*
-            |--------------------------------------------------------------------------
-            | TAX
-            |--------------------------------------------------------------------------
-            */
-
             $vatableSales = 0;
             $vatExemptSales = 0;
             $zeroRatedSales = 0;
             $vatAmount = 0;
-
-            /*
-            |--------------------------------------------------------------------------
-            | VATABLE
-            |--------------------------------------------------------------------------
-            */
 
             if ($product->tax_classification === 'Vatable') {
 
@@ -219,22 +167,10 @@ class ShopOrderController extends Controller
                 );
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | VAT EXEMPT
-            |--------------------------------------------------------------------------
-            */
-
             elseif ($product->tax_classification === 'VAT Exempt') {
 
                 $vatExemptSales = $lineSubtotal;
             }
-
-            /*
-            |--------------------------------------------------------------------------
-            | ZERO RATED
-            |--------------------------------------------------------------------------
-            */
 
             elseif ($product->tax_classification === 'Zero Rated') {
 
@@ -243,17 +179,11 @@ class ShopOrderController extends Controller
 
             /*
             |--------------------------------------------------------------------------
-            | ORDER
+            | EXISTING ORDER
             |--------------------------------------------------------------------------
             */
 
             $shopOrder = null;
-
-            /*
-            |--------------------------------------------------------------------------
-            | EXISTING ORDER
-            |--------------------------------------------------------------------------
-            */
 
             if (!empty($validated['shop_order_id'])) {
 
@@ -278,7 +208,11 @@ class ShopOrderController extends Controller
             |--------------------------------------------------------------------------
             */
 
+            $isNewOrder = false;
+
             if (!$shopOrder) {
+
+                $isNewOrder = true;
 
                 $orderNumber =
                     'SO-' .
@@ -288,19 +222,7 @@ class ShopOrderController extends Controller
 
                 $shopOrder = ShopOrder::create([
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | ORDER
-                    |--------------------------------------------------------------------------
-                    */
-
                     'order_number' => $orderNumber,
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | REGISTER
-                    |--------------------------------------------------------------------------
-                    */
 
                     'shop_register_id' =>
                         $shopRegister->id,
@@ -308,36 +230,12 @@ class ShopOrderController extends Controller
                     'shop_register_name' =>
                         $shopRegister->shop_register_name,
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | SESSION
-                    |--------------------------------------------------------------------------
-                    */
-
                     'shop_register_session_id' =>
                         $shopRegisterSession->id,
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | DEFAULTS
-                    |--------------------------------------------------------------------------
-                    */
-
                     'order_type' => 'Walk-in',
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | TIMESTAMP
-                    |--------------------------------------------------------------------------
-                    */
-
                     'ordered_at' => now(),
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | USER
-                    |--------------------------------------------------------------------------
-                    */
 
                     'created_by' => Auth::id(),
 
@@ -351,11 +249,6 @@ class ShopOrderController extends Controller
             |--------------------------------------------------------------------------
             | EXISTING ITEM
             |--------------------------------------------------------------------------
-            |
-            | MERGE:
-            | - SAME PRODUCT
-            | - SAME NOTE
-            |
             */
 
             $existingItem = ShopOrderItem::query()
@@ -369,15 +262,13 @@ class ShopOrderController extends Controller
                     $validated['order_note'] ?? null
                 )
 
-                ->whereNotIn('item_status', [
-                    'Cancelled',
-                ])
+                ->where('item_status', '!=', 'Cancelled')
 
                 ->first();
 
             /*
             |--------------------------------------------------------------------------
-            | UPDATE EXISTING ITEM
+            | UPDATE ITEM
             |--------------------------------------------------------------------------
             */
 
@@ -394,22 +285,10 @@ class ShopOrderController extends Controller
                     2
                 );
 
-                /*
-                |--------------------------------------------------------------------------
-                | RESET TAX
-                |--------------------------------------------------------------------------
-                */
-
                 $existingItem->vatable_sales = 0;
                 $existingItem->vat_exempt_sales = 0;
                 $existingItem->zero_rated_sales = 0;
                 $existingItem->vat_amount = 0;
-
-                /*
-                |--------------------------------------------------------------------------
-                | VATABLE
-                |--------------------------------------------------------------------------
-                */
 
                 if (
                     $existingItem->tax_classification === 'Vatable'
@@ -427,12 +306,6 @@ class ShopOrderController extends Controller
                     );
                 }
 
-                /*
-                |--------------------------------------------------------------------------
-                | VAT EXEMPT
-                |--------------------------------------------------------------------------
-                */
-
                 elseif (
                     $existingItem->tax_classification === 'VAT Exempt'
                 ) {
@@ -441,12 +314,6 @@ class ShopOrderController extends Controller
                         $existingItem->line_subtotal;
                 }
 
-                /*
-                |--------------------------------------------------------------------------
-                | ZERO RATED
-                |--------------------------------------------------------------------------
-                */
-
                 elseif (
                     $existingItem->tax_classification === 'Zero Rated'
                 ) {
@@ -454,12 +321,6 @@ class ShopOrderController extends Controller
                     $existingItem->zero_rated_sales =
                         $existingItem->line_subtotal;
                 }
-
-                /*
-                |--------------------------------------------------------------------------
-                | TOTAL
-                |--------------------------------------------------------------------------
-                */
 
                 $existingItem->line_total =
                     $existingItem->line_subtotal;
@@ -477,20 +338,8 @@ class ShopOrderController extends Controller
 
                 ShopOrderItem::create([
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | ORDER
-                    |--------------------------------------------------------------------------
-                    */
-
                     'shop_order_id' =>
                         $shopOrder->id,
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | PRODUCT
-                    |--------------------------------------------------------------------------
-                    */
 
                     'product_id' =>
                         $product->id,
@@ -507,20 +356,8 @@ class ShopOrderController extends Controller
                     'product_type' =>
                         $product->product_type,
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | QUANTITY
-                    |--------------------------------------------------------------------------
-                    */
-
                     'quantity' =>
                         $quantity,
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | PRICE
-                    |--------------------------------------------------------------------------
-                    */
 
                     'original_unit_price' =>
                         $originalUnitPrice,
@@ -528,23 +365,11 @@ class ShopOrderController extends Controller
                     'unit_price' =>
                         $unitPrice,
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | TOTALS
-                    |--------------------------------------------------------------------------
-                    */
-
                     'line_subtotal' =>
                         $lineSubtotal,
 
                     'line_total' =>
                         $lineSubtotal,
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | TAX
-                    |--------------------------------------------------------------------------
-                    */
 
                     'tax_classification' =>
                         $product->tax_classification,
@@ -561,30 +386,10 @@ class ShopOrderController extends Controller
                     'vat_amount' =>
                         $vatAmount,
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | NOTES
-                    |--------------------------------------------------------------------------
-                    */
-
                     'order_note' =>
                         $validated['order_note'] ?? null,
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | STATUS
-                    |--------------------------------------------------------------------------
-                    */
-
-                    'item_status' => 'Pending',
-
                     'queued_at' => now(),
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | USER
-                    |--------------------------------------------------------------------------
-                    */
 
                     'last_log_by' =>
                         Auth::id(),
@@ -593,7 +398,124 @@ class ShopOrderController extends Controller
 
             /*
             |--------------------------------------------------------------------------
-            | RECOMPUTE ORDER TOTALS
+            | AUTO APPLY DISCOUNTS
+            |--------------------------------------------------------------------------
+            */
+
+            if ($isNewOrder) {
+
+                $discounts = DB::table('shop_register_discount')
+
+                    ->join(
+                        'discount_type',
+                        'discount_type.id',
+                        '=',
+                        'shop_register_discount.discount_type_id'
+                    )
+
+                    ->where(
+                        'shop_register_discount.shop_register_id',
+                        $shopRegister->id
+                    )
+
+                    ->where(
+                        'shop_register_discount.automatic_application',
+                        'Yes'
+                    )
+
+                    ->get();
+
+                foreach ($discounts as $discount) {
+
+                    ShopOrderAppliedDiscount::create([
+
+                        'shop_order_id' =>
+                            $shopOrder->id,
+
+                        'discount_type_id' =>
+                            $discount->discount_type_id,
+
+                        'discount_type_name' =>
+                            $discount->discount_type_name,
+
+                        'value_type' =>
+                            $discount->value_type,
+
+                        'discount_value' =>
+                            $discount->discount_value,
+
+                        'application_order' =>
+                            $discount->application_order,
+
+                        'is_vat_exempt' =>
+                            $discount->is_vat_exempt,
+
+                        'last_log_by' =>
+                            Auth::id(),
+                    ]);
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | AUTO APPLY CHARGES
+                |--------------------------------------------------------------------------
+                */
+
+                $charges = DB::table('shop_register_charge')
+
+                    ->join(
+                        'charge_type',
+                        'charge_type.id',
+                        '=',
+                        'shop_register_charge.charge_type_id'
+                    )
+
+                    ->where(
+                        'shop_register_charge.shop_register_id',
+                        $shopRegister->id
+                    )
+
+                    ->where(
+                        'shop_register_charge.automatic_application',
+                        'Yes'
+                    )
+
+                    ->get();
+
+                foreach ($charges as $charge) {
+
+                    ShopOrderAppliedCharge::create([
+
+                        'shop_order_id' =>
+                            $shopOrder->id,
+
+                        'charge_type_id' =>
+                            $charge->charge_type_id,
+
+                        'charge_type_name' =>
+                            $charge->charge_type_name,
+
+                        'value_type' =>
+                            $charge->value_type,
+
+                        'charge_value' =>
+                            $charge->charge_value,
+
+                        'application_order' =>
+                            $charge->application_order,
+
+                        'tax_type' =>
+                            $charge->tax_type,
+
+                        'last_log_by' =>
+                            Auth::id(),
+                    ]);
+                }
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | RECOMPUTE ITEMS
             |--------------------------------------------------------------------------
             */
 
@@ -616,14 +538,223 @@ class ShopOrderController extends Controller
 
                 ->first();
 
+            $subtotal = round($totals->subtotal ?? 0, 2);
+
             /*
             |--------------------------------------------------------------------------
-            | NET TOTAL
+            | DISCOUNT TOTAL
             |--------------------------------------------------------------------------
             */
 
+            $discountTotal = 0;
+
+            $discounts = ShopOrderAppliedDiscount::query()
+
+                ->where('shop_order_id', $shopOrder->id)
+
+                ->get();
+
+            foreach ($discounts as $discount) {
+
+                /*
+                |--------------------------------------------------------------------------
+                | BASE AMOUNT
+                |--------------------------------------------------------------------------
+                */
+
+                $baseAmount = $subtotal;
+
+                /*
+                |--------------------------------------------------------------------------
+                | COMPUTE DISCOUNT
+                |--------------------------------------------------------------------------
+                */
+
+                $discountAmount = 0;
+
+                if ($discount->value_type === 'Percentage') {
+
+                    $discountAmount = round(
+                        ($baseAmount * $discount->discount_value) / 100,
+                        2
+                    );
+
+                    $discount->discount_rate =
+                        $discount->discount_value;
+                }
+
+                else {
+
+                    $discountAmount = round(
+                        $discount->discount_value,
+                        2
+                    );
+
+                    $discount->discount_rate = 0;
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | VAT EXEMPT
+                |--------------------------------------------------------------------------
+                */
+
+                if ($discount->is_vat_exempt === 'Yes') {
+
+                    $discount->vat_exempt_amount =
+                        $discountAmount;
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | SAVE COMPUTED VALUES
+                |--------------------------------------------------------------------------
+                */
+
+                $discount->discount_amount =
+                    $discountAmount;
+
+                $discount->save();
+
+                /*
+                |--------------------------------------------------------------------------
+                | RUNNING TOTAL
+                |--------------------------------------------------------------------------
+                */
+
+                $discountTotal += $discountAmount;
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | CHARGE TOTAL
+            |--------------------------------------------------------------------------
+            */
+
+            $chargeTotal = 0;
+
+            $charges = ShopOrderAppliedCharge::query()
+
+                ->where('shop_order_id', $shopOrder->id)
+
+                ->get();
+
+            foreach ($charges as $charge) {
+
+                /*
+                |--------------------------------------------------------------------------
+                | BASE AMOUNT
+                |--------------------------------------------------------------------------
+                */
+
+                $baseAmount = $subtotal;
+
+                /*
+                |--------------------------------------------------------------------------
+                | COMPUTE CHARGE
+                |--------------------------------------------------------------------------
+                */
+
+                $chargeAmount = 0;
+
+                if ($charge->value_type === 'Percentage') {
+
+                    $chargeAmount = round(
+                        ($baseAmount * $charge->charge_value) / 100,
+                        2
+                    );
+
+                    $charge->charge_rate =
+                        $charge->charge_value;
+                }
+
+                else {
+
+                    $chargeAmount = round(
+                        $charge->charge_value,
+                        2
+                    );
+
+                    $charge->charge_rate = 0;
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | VATABLE CHARGE
+                |--------------------------------------------------------------------------
+                */
+
+                if ($charge->tax_type === 'Vatable') {
+
+                    $charge->vatable_amount = round(
+                        $chargeAmount / 1.12,
+                        2
+                    );
+
+                    $charge->vat_amount = round(
+                        $chargeAmount -
+                        $charge->vatable_amount,
+                        2
+                    );
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | NON VATABLE
+                |--------------------------------------------------------------------------
+                */
+
+                else {
+
+                    $charge->vatable_amount = 0;
+
+                    $charge->vat_amount = 0;
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | SAVE COMPUTED VALUES
+                |--------------------------------------------------------------------------
+                */
+
+                $charge->charge_amount =
+                    $chargeAmount;
+
+                $charge->save();
+
+                /*
+                |--------------------------------------------------------------------------
+                | RUNNING TOTAL
+                |--------------------------------------------------------------------------
+                */
+
+                $chargeTotal += $chargeAmount;
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | ROUND TOTALS
+            |--------------------------------------------------------------------------
+            */
+
+            $discountTotal = round($discountTotal, 2);
+
+            $chargeTotal = round($chargeTotal, 2);
+
+            /*
+            |--------------------------------------------------------------------------
+            | FINAL TOTALS
+            |--------------------------------------------------------------------------
+            */
+
+            $grossTotal = round(
+                $subtotal + $chargeTotal,
+                2
+            );
+
             $netTotal = round(
-                ($totals->gross_total ?? 0),
+                $grossTotal - $discountTotal,
                 2
             );
 
@@ -642,7 +773,13 @@ class ShopOrderController extends Controller
                     round($totals->total_quantity ?? 0, 2),
 
                 'subtotal' =>
-                    round($totals->subtotal ?? 0, 2),
+                    $subtotal,
+
+                'discount_total' =>
+                    $discountTotal,
+
+                'charge_total' =>
+                    $chargeTotal,
 
                 'vatable_sales' =>
                     round($totals->vatable_sales ?? 0, 2),
@@ -657,7 +794,7 @@ class ShopOrderController extends Controller
                     round($totals->vat_amount ?? 0, 2),
 
                 'gross_total' =>
-                    round($totals->gross_total ?? 0, 2),
+                    $grossTotal,
 
                 'net_total' =>
                     $netTotal,
@@ -674,11 +811,9 @@ class ShopOrderController extends Controller
 
                 'message' => 'Order saved successfully.',
 
-                'shop_order_id' =>
-                    $shopOrder->id,
+                'shop_order_id' => $shopOrder->id,
 
-                'order_number' =>
-                    $shopOrder->order_number,
+                'order_number' => $shopOrder->order_number,
             ]);
 
         } catch (\Throwable $e) {
@@ -694,5 +829,344 @@ class ShopOrderController extends Controller
                 'message' => $e->getMessage(),
             ]);
         }
+    }
+
+    public function saveOrderType(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'shop_order_id' => ['required', 'integer', Rule::exists('shop_order', 'id')],
+            'shop_register_id' => ['required', 'integer', Rule::exists('shop_register', 'id')],
+            'order_type' => ['required', 'string'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ]);
+        }
+
+        $validated = $validator->validated();
+
+        $payload = [
+            'order_type' => $validated['order_type'],
+            'last_log_by' => Auth::id(),
+        ];
+
+        $shopOrderId = $validated['shop_order_id'] ?? null;
+
+        $shopOrder = ShopOrder::query()->findOrFail($shopOrderId);
+        $shopOrder->update($payload);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'The order preset has been saved successfully',
+        ]);
+    }
+
+    public function fetchDetails(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+
+            /*
+            |--------------------------------------------------------------------------
+            | SHOP ORDER
+            |--------------------------------------------------------------------------
+            */
+
+            'shop_order_id' => [
+                'required',
+                'integer',
+                'min:1',
+                Rule::exists('shop_order', 'id'),
+            ],
+        ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | PAGE CONTEXT
+        |--------------------------------------------------------------------------
+        */
+
+        $pageAppId = (int) $request->input('appId');
+
+        $pageNavigationMenuId = (int) $request->input('navigationMenuId');
+
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDATION
+        |--------------------------------------------------------------------------
+        */
+
+        if ($validator->fails()) {
+
+            return response()->json([
+                'success' => false,
+                'notExist' => false,
+                'message' =>
+                    $validator->errors()->first('shop_order_id')
+                    ?? 'Validation failed',
+            ]);
+        }
+
+        $validated = $validator->validated();
+
+        /*
+        |--------------------------------------------------------------------------
+        | ORDER
+        |--------------------------------------------------------------------------
+        */
+
+        $shopOrder = ShopOrder::query()
+
+            ->whereKey($validated['shop_order_id'])
+
+            ->first();
+
+        /*
+        |--------------------------------------------------------------------------
+        | ORDER NOT FOUND
+        |--------------------------------------------------------------------------
+        */
+
+        if (!$shopOrder) {
+
+            $link = route('apps.base', [
+                'appId' => $pageAppId,
+                'navigationMenuId' => $pageNavigationMenuId,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'notExist' => true,
+                'redirect_link' => $link,
+                'message' => 'Order not found.',
+            ]);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | ORDER ITEMS
+        |--------------------------------------------------------------------------
+        */
+
+        $items = ShopOrderItem::query()
+
+            ->where('shop_order_id', $shopOrder->id)
+
+            ->orderBy('id')
+
+            ->get([
+                'id',
+
+                'product_id',
+
+                'product_name',
+
+                'sku',
+
+                'barcode',
+
+                'quantity',
+
+                'unit_price',
+
+                'original_unit_price',
+
+                'line_subtotal',
+
+                'line_total',
+
+                'tax_classification',
+
+                'vatable_sales',
+
+                'vat_exempt_sales',
+
+                'zero_rated_sales',
+
+                'vat_amount',
+
+                'order_note',
+
+                'item_status',
+            ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | APPLIED DISCOUNTS
+        |--------------------------------------------------------------------------
+        */
+
+        $appliedDiscounts = ShopOrderAppliedDiscount::query()
+
+            ->where('shop_order_id', $shopOrder->id)
+
+            ->get([
+                'id',
+                'discount_type_id',
+                'discount_type_name',
+                'discount_amount',
+            ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | APPLIED CHARGES
+        |--------------------------------------------------------------------------
+        */
+
+        $appliedCharges = ShopOrderAppliedCharge::query()
+
+            ->where('shop_order_id', $shopOrder->id)
+
+            ->get([
+                'id',
+                'charge_type_id',
+                'charge_type_name',
+                'charge_amount',
+            ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | RESPONSE
+        |--------------------------------------------------------------------------
+        */
+
+        return response()->json([
+
+            'success' => true,
+
+            'notExist' => false,
+
+            'order' => [
+
+                /*
+                |--------------------------------------------------------------------------
+                | ORDER
+                |--------------------------------------------------------------------------
+                */
+
+                'id' => $shopOrder->id,
+
+                'order_number' => $shopOrder->order_number,
+
+                'order_type' => $shopOrder->order_type,
+
+                'order_status' => $shopOrder->order_status,
+
+                'payment_status' => $shopOrder->payment_status,
+
+                /*
+                |--------------------------------------------------------------------------
+                | REGISTER
+                |--------------------------------------------------------------------------
+                */
+
+                'shop_register_id' =>
+                    $shopOrder->shop_register_id,
+
+                'shop_register_name' =>
+                    $shopOrder->shop_register_name,
+
+                /*
+                |--------------------------------------------------------------------------
+                | TABLE
+                |--------------------------------------------------------------------------
+                */
+
+                'floor_plan_id' =>
+                    $shopOrder->floor_plan_id,
+
+                'floor_plan_name' =>
+                    $shopOrder->floor_plan_name,
+
+                'floor_plan_table_id' =>
+                    $shopOrder->floor_plan_table_id,
+
+                'table_number' =>
+                    $shopOrder->table_number,
+
+                /*
+                |--------------------------------------------------------------------------
+                | CUSTOMER
+                |--------------------------------------------------------------------------
+                */
+
+                'customer_name' =>
+                    $shopOrder->customer_name,
+
+                /*
+                |--------------------------------------------------------------------------
+                | DISCOUNTS
+                |--------------------------------------------------------------------------
+                */
+
+                'applied_discounts' => $appliedDiscounts,
+
+                /*
+                |--------------------------------------------------------------------------
+                | CHARGES
+                |--------------------------------------------------------------------------
+                */
+
+                'applied_charges' => $appliedCharges,
+
+                /*
+                |--------------------------------------------------------------------------
+                | TOTALS
+                |--------------------------------------------------------------------------
+                */
+
+                'total_items' =>
+                    (int) $shopOrder->total_items,
+
+                'total_quantity' =>
+                    (float) $shopOrder->total_quantity,
+
+                'subtotal' =>
+                    (float) $shopOrder->subtotal,
+
+                'discount_total' =>
+                    (float) $shopOrder->discount_total,
+
+                'charge_total' =>
+                    (float) $shopOrder->charge_total,
+
+                'vatable_sales' =>
+                    (float) $shopOrder->vatable_sales,
+
+                'vat_exempt_sales' =>
+                    (float) $shopOrder->vat_exempt_sales,
+
+                'zero_rated_sales' =>
+                    (float) $shopOrder->zero_rated_sales,
+
+                'vat_amount' =>
+                    (float) $shopOrder->vat_amount,
+
+                'gross_total' =>
+                    (float) $shopOrder->gross_total,
+
+                'net_total' =>
+                    (float) $shopOrder->net_total,
+
+                'paid_amount' =>
+                    (float) $shopOrder->paid_amount,
+
+                'change_amount' =>
+                    (float) $shopOrder->change_amount,
+
+                'balance_due' =>
+                    (float) $shopOrder->balance_due,
+
+                /*
+                |--------------------------------------------------------------------------
+                | ITEMS
+                |--------------------------------------------------------------------------
+                */
+
+                'items' => $items,
+            ],
+        ]);
     }
 }

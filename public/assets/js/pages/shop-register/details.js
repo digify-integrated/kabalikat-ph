@@ -604,12 +604,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     $('#kitchen_route_id').on('change', async function () {
         try {
-            const userAccountId = $(this).val();
+            const kitchenRouteId = $(this).val();
             const csrf = getCsrfToken();
             const ctx = getPageContext();
             
             const formData = new URLSearchParams();
-            formData.append('kitchen_route_id', userAccountId);
+            formData.append('kitchen_route_id', kitchenRouteId);
             formData.append('shop_register_id', ctx.detailId ?? '');
             formData.append('appId', ctx.appId ?? '');
             formData.append('navigationMenuId', ctx.navigationMenuId ?? '');

@@ -1889,8 +1889,8 @@ return new class extends Migration
 
             $table->enum('order_type', [
                 'Walk-in',
-                'Dine In',
-                'Take Out',
+                'Dine-in',
+                'Take-out',
                 'Delivery',
             ])->default('Walk-in');
 

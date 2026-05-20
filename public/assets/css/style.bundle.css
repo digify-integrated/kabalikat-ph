@@ -53805,3 +53805,19 @@ body {
     transform: none;
     box-shadow: 0 .125rem .25rem rgba(0,0,0,.075)!important;
 }
+
+.table-card {
+    transition: all 0.18s ease;
+}
+
+.table-card:hover:not(.disabled) {
+    transform: translateY(-2px);
+}
+
+.table-card.selected {
+    border-width: 2px !important;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}

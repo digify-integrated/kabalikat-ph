@@ -912,6 +912,8 @@ Route::middleware('auth')->group(function () {
         ->controller(ShopOrderController::class)
         ->group(function () {
             Route::post('/save', 'save')->name('save');
+            Route::post('/save-order-type', 'saveOrderType')->name('save.order.type');
+            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
         });
 
     // Import

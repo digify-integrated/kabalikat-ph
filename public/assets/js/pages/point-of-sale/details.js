@@ -6,6 +6,7 @@ import { handleSystemError } from '../../util/system-errors.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     let searchTimeout;
+    let cartInitialized = false;
 
     const config = {
         forms: [
@@ -38,6 +39,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             if (data.success) {
                                 sessionStorage.setItem('shop_order_id', data.shop_order_id);
                                 $('#shop-register-order-modal').modal('hide');
+                                loadCart(data.shop_order_id, {
+                                    silent: true
+                                });
                             } else {
                                 showNotification(data.message);
                             }
@@ -530,39 +534,87 @@ document.addEventListener('DOMContentLoaded', () => {
         await loadCart(shopOrderId);
     };
 
-    const loadCart = async (shopOrderId) => {
+    const loadCart = async (
+        shopOrderId,
+        options = {}
+    ) => {
+
+        const {
+            silent = false
+        } = options;
+
         try {
 
-            showCartLoading();
+            /*
+            |--------------------------------------------------------------------------
+            | LOADING
+            |--------------------------------------------------------------------------
+            */
+
+            if (!silent) {
+
+                showCartLoading();
+            }
 
             const ctx = getPageContext();
 
+            const csrf = getCsrfToken();
+
             const formData = new URLSearchParams();
 
-            formData.append('shop_order_id', shopOrderId);
-            formData.append('appId', ctx.appId ?? '');
-            formData.append('navigationMenuId', ctx.navigationMenuId ?? '');
+            formData.append(
+                'shop_order_id',
+                shopOrderId
+            );
 
-            const response = await fetch('/shop-order/details', {
-                method: 'POST',
-                body: formData,
-            });
+            formData.append(
+                'appId',
+                ctx.appId ?? ''
+            );
+
+            formData.append(
+                'navigationMenuId',
+                ctx.navigationMenuId ?? ''
+            );
+
+            const response = await fetch(
+                '/shop-order/fetch-details',
+                {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Content-Type':
+                            'application/x-www-form-urlencoded; charset=UTF-8',
+
+                        Accept: 'application/json',
+
+                        ...(csrf
+                            ? { 'X-CSRF-TOKEN': csrf }
+                            : {}),
+                    },
+                }
+            );
 
             if (!response.ok) {
-                throw new Error(`Load cart failed: ${response.status}`);
+
+                throw new Error(
+                    `Load cart failed: ${response.status}`
+                );
             }
 
             const data = await response.json();
 
             /*
             |--------------------------------------------------------------------------
-            | INVALID ORDER
+            | INVALID
             |--------------------------------------------------------------------------
             */
 
             if (!data.success) {
 
-                sessionStorage.removeItem('shop_order_id');
+                sessionStorage.removeItem(
+                    'shop_order_id'
+                );
 
                 resetCartUI();
 
@@ -573,7 +625,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             /*
             |--------------------------------------------------------------------------
-            | EMPTY ORDER
+            | EMPTY
             |--------------------------------------------------------------------------
             */
 
@@ -590,7 +642,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             /*
             |--------------------------------------------------------------------------
-            | POPULATE CART
+            | POPULATE
             |--------------------------------------------------------------------------
             */
 
@@ -603,27 +655,49 @@ document.addEventListener('DOMContentLoaded', () => {
                 'load_cart_failed',
                 error.message
             );
-
-            resetCartUI();
         }
     };
 
     const showCartLoading = () => {
 
-        $('#shop-order-loading').removeClass('d-none');
+        /*
+        |--------------------------------------------------------------------------
+        | LOADING
+        |--------------------------------------------------------------------------
+        */
 
-        $('#shop-order-empty').addClass('d-none');
+        $('#shop-order-loading')
+            .removeClass('d-none');
 
-        $('#shop-order-items').html('');
+        /*
+        |--------------------------------------------------------------------------
+        | HIDE EMPTY
+        |--------------------------------------------------------------------------
+        */
 
-        toggleDetailedOrder(false);
+        $('#shop-order-empty')
+            .addClass('d-none');
+
+        /*
+        |--------------------------------------------------------------------------
+        | KEEP CURRENT CONTENT
+        |--------------------------------------------------------------------------
+        |
+        | DO NOT HIDE:
+        | - register-action
+        | - order summary
+        | - existing cart
+        |
+        | Prevents annoying flicker
+        |
+        */
     };
 
     const resetCartUI = () => {
 
         /*
         |--------------------------------------------------------------------------
-        | HEADER
+        | RESET HEADER
         |--------------------------------------------------------------------------
         */
 
@@ -631,49 +705,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
         /*
         |--------------------------------------------------------------------------
+        | CLEAR ITEMS
+        |--------------------------------------------------------------------------
+        */
+
+        $('#shop-order-list')
+            .html('')
+            .addClass('d-none');
+
+        /*
+        |--------------------------------------------------------------------------
+        | CLEAR SUMMARY
+        |--------------------------------------------------------------------------
+        */
+
+        $('#order-summary-list').html('');
+
+        $('#shop-order-summary-card')
+            .addClass('d-none');
+
+        /*
+        |--------------------------------------------------------------------------
         | STATES
         |--------------------------------------------------------------------------
         */
 
-        $('#shop-order-loading').addClass('d-none');
+        $('#shop-order-loading')
+            .addClass('d-none');
 
-        $('#shop-order-empty').removeClass('d-none');
-
-        $('#shop-order-items').html('');
-
-        /*
-        |--------------------------------------------------------------------------
-        | TOTALS
-        |--------------------------------------------------------------------------
-        */
-
-        $('#summary-subtotal').text('₱ 0.00');
-
-        $('#summary-discount').text('₱ 0.00');
-
-        $('#summary-charge').text('₱ 0.00');
-
-        $('#summary-vatable-sales').text('₱ 0.00');
-
-        $('#summary-vat').text('₱ 0.00');
-
-        $('#summary-vat-exempt').text('₱ 0.00');
-
-        $('#summary-zero-rated').text('₱ 0.00');
-
-        $('#shop-order-total').text('₱ 0.00');
-
-        /*
-        |--------------------------------------------------------------------------
-        | BADGES
-        |--------------------------------------------------------------------------
-        */
-
-        $('#badge-order-type').text('Walk-in');
-
-        $('#badge-table').text('No Table');
-
-        $('#badge-payment-status').text('Unpaid');
+        $('#shop-order-empty')
+            .removeClass('d-none');
 
         /*
         |--------------------------------------------------------------------------
@@ -681,7 +742,15 @@ document.addEventListener('DOMContentLoaded', () => {
         |--------------------------------------------------------------------------
         */
 
-        toggleDetailedOrder(false);
+        toggleRegisterAction(false);
+
+        /*
+        |--------------------------------------------------------------------------
+        | RESET STATE
+        |--------------------------------------------------------------------------
+        */
+
+        cartInitialized = false;
     };
 
     const populateCart = (order) => {
@@ -692,27 +761,26 @@ document.addEventListener('DOMContentLoaded', () => {
         |--------------------------------------------------------------------------
         */
 
-        $('#order-id').text(order.order_number ?? '--');
+        $('#order-id').text(
+            order.order_number ?? '--'
+        );
 
-        /*
-        |--------------------------------------------------------------------------
-        | STATES
-        |--------------------------------------------------------------------------
-        */
+        $('#order-type').val(
+            order.order_type ?? 'Walk-in'
+        );
 
-        $('#shop-order-loading').addClass('d-none');
-
-        $('#shop-order-empty').addClass('d-none');
+        if(order.order_type === 'Dine-in'){
+            $('#set-table-column').removeClass('d-none');
+        }
+        else{
+            $('#set-table-column').addClass('d-none');
+        }
 
         /*
         |--------------------------------------------------------------------------
         | BADGES
         |--------------------------------------------------------------------------
         */
-
-        $('#badge-order-type').text(
-            order.order_type ?? 'Walk-in'
-        );
 
         $('#badge-table').text(
             order.table_number
@@ -726,41 +794,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
         /*
         |--------------------------------------------------------------------------
-        | TOTALS
+        | HIDE STATES
         |--------------------------------------------------------------------------
         */
 
-        $('#summary-subtotal').text(
-            formatPeso(order.subtotal)
-        );
+        $('#shop-order-loading').addClass('d-none');
 
-        $('#summary-discount').text(
-            formatPeso(order.discount_total)
-        );
+        $('#shop-order-empty').addClass('d-none');
 
-        $('#summary-charge').text(
-            formatPeso(order.charge_total)
-        );
+        /*
+        |--------------------------------------------------------------------------
+        | SHOW LIST
+        |--------------------------------------------------------------------------
+        */
 
-        $('#summary-vatable-sales').text(
-            formatPeso(order.vatable_sales)
-        );
+        $('#shop-order-list')
+            .removeClass('d-none');
 
-        $('#summary-vat').text(
-            formatPeso(order.vat_amount)
-        );
+        $('#shop-order-summary-card')
+            .removeClass('d-none');
 
-        $('#summary-vat-exempt').text(
-            formatPeso(order.vat_exempt_sales)
-        );
+        /*
+        |--------------------------------------------------------------------------
+        | SUMMARY
+        |--------------------------------------------------------------------------
+        */
 
-        $('#summary-zero-rated').text(
-            formatPeso(order.zero_rated_sales)
-        );
-
-        $('#shop-order-total').text(
-            formatPeso(order.net_total)
-        );
+        renderOrderSummary(order);
 
         /*
         |--------------------------------------------------------------------------
@@ -768,37 +828,51 @@ document.addEventListener('DOMContentLoaded', () => {
         |--------------------------------------------------------------------------
         */
 
-        const html = order.items
+        const html = (order.items ?? [])
             .map(renderOrderItem)
             .join('');
 
-        $('#shop-order-items').html(html);
+        $('#shop-order-list').html(html);
 
         /*
         |--------------------------------------------------------------------------
-        | SHOW ACTIONS
+        | REGISTER ACTIONS
         |--------------------------------------------------------------------------
+        |
+        | ONLY INITIALIZE ONCE
+        |
         */
 
-        toggleDetailedOrder(true);
+        if (!cartInitialized) {
+
+            toggleRegisterAction(true);
+
+            cartInitialized = true;
+        }
 
         /*
         |--------------------------------------------------------------------------
-        | REINITIALIZE KT COMPONENTS
+        | KT COMPONENTS
         |--------------------------------------------------------------------------
         */
 
         if (typeof KTComponents !== 'undefined') {
+
             KTComponents.init();
         }
     };
 
-    const toggleDetailedOrder = (show = false) => {
-
+    const toggleRegisterAction = (show = false) => {
         if (show) {
-            $('.detailed-order').removeClass('d-none');
-        } else {
-            $('.detailed-order').addClass('d-none');
+
+            $('.register-action')
+                .removeClass('d-none');
+        }
+
+        else {
+
+            $('.register-action')
+                .addClass('d-none');
         }
     };
 
@@ -813,83 +887,129 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderOrderItem = (item) => {
 
         return `
-        
-        <div class="card border-0 bg-light mb-3 order-item-card">
+
+        <div class="card border-0 shadow-sm mb-3 order-item-card rounded-3">
 
             <div class="card-body p-4">
 
+                <!-- HEADER -->
                 <div class="d-flex justify-content-between align-items-start mb-3">
 
-                    <div class="me-3">
+                    <!-- PRODUCT INFO -->
+                    <div class="flex-grow-1 pe-3">
 
-                        <div class="fw-bold fs-4 text-gray-900 mb-1">
+                        <div class="fw-bold fs-5 text-gray-900 mb-1 text-truncate">
+
                             ${item.product_name}
+
                         </div>
 
-                        <div class="text-muted fs-7">
-                            ${formatPeso(item.unit_price)}
-                            ×
-                            ${item.quantity}
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+
+                            <span class="badge badge-light-dark fw-semibold">
+
+                                ${formatPeso(item.unit_price)} / item
+
+                            </span>
+
+                            <span class="text-muted fs-8">
+
+                                Qty <span class="fw-bold text-gray-800">
+                                    ${item.quantity}
+                                </span>
+
+                            </span>
+
                         </div>
 
                     </div>
 
-                    <div class="fw-bolder fs-3 text-primary">
-                        ${formatPeso(item.line_total)}
+                    <!-- PRICE -->
+                    <div class="text-end">
+
+                        <div class="fw-bolder fs-2 text-primary lh-1">
+
+                            ${formatPeso(item.line_total)}
+
+                        </div>
+
+                        <div class="text-muted fs-8 mt-1">
+                            Total
+                        </div>
+
                     </div>
 
                 </div>
 
+                <!-- NOTE -->
                 ${
                     item.order_note
-                    ? `
-                        <div class="bg-light-warning rounded p-3 fs-7 text-gray-700 mb-4">
-                            ${item.order_note}
+                        ? `
+                        <div class="d-flex align-items-start gap-2 bg-light-warning border border-warning border-dashed rounded-3 p-3 mb-4">
+
+                            <i class="ki-outline ki-notepad fs-4 text-warning mt-1"></i>
+
+                            <div class="fs-7 fw-semibold text-gray-700">
+
+                                ${item.order_note}
+
+                            </div>
+
                         </div>
                     `
-                    : ''
+                        : ''
                 }
 
+                <!-- FOOTER -->
                 <div class="d-flex justify-content-between align-items-center">
 
+                    <!-- QUANTITY CONTROL (PILL STYLE) -->
                     <div
-                        class="d-flex align-items-center gap-2"
+                        class="d-flex align-items-center bg-light rounded-pill px-2 py-1 gap-2 shadow-sm"
                         data-kt-dialer="true"
                         data-kt-dialer-min="1"
                         data-kt-dialer-step="1">
 
                         <button
                             type="button"
-                            class="btn btn-icon btn-light btn-sm"
+                            class="btn btn-icon btn-sm btn-light-primary rounded-circle"
                             data-kt-dialer-control="decrease">
 
-                            <i class="ki-outline ki-minus fs-3"></i>
+                            <i class="ki-outline ki-minus fs-5"></i>
 
                         </button>
 
                         <input
                             type="text"
-                            class="form-control border-0 bg-white text-center fw-bold w-60px"
+                            class="form-control form-control-flush fw-bold text-center bg-transparent border-0 text-gray-900 w-40px px-0"
                             value="${item.quantity}"
                             readonly>
 
                         <button
                             type="button"
-                            class="btn btn-icon btn-light btn-sm"
+                            class="btn btn-icon btn-sm btn-light-primary rounded-circle"
                             data-kt-dialer-control="increase">
 
-                            <i class="ki-outline ki-plus fs-3"></i>
+                            <i class="ki-outline ki-plus fs-5"></i>
 
                         </button>
 
                     </div>
 
-                    <button
-                        class="btn btn-icon btn-light-danger btn-sm">
+                    <!-- ACTIONS -->
+                    <div class="d-flex align-items-center gap-2">
 
-                        <i class="ki-outline ki-trash fs-3"></i>
+                        <!-- DELETE (SAFER STYLE) -->
+                        <button
+                            type="button"
+                            class="btn btn-icon btn-sm btn-light-danger"
+                            title="Remove item">
 
-                    </button>
+                            <i class="ki-outline ki-trash fs-4"></i>
+
+                        </button>
+
+                    </div>
 
                 </div>
 
@@ -899,11 +1019,210 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     };
 
+    const renderOrderSummary = (order) => {
+
+        let html = '';
+
+        /*
+        |--------------------------------------------------------------------------
+        | SUBTOTAL
+        |--------------------------------------------------------------------------
+        */
+
+        html += `
+            <div class="d-flex justify-content-between mb-3">
+                <span class="text-muted">
+                    Subtotal
+                </span>
+
+                <span class="fw-semibold">
+                    ${formatPeso(order.subtotal)}
+                </span>
+            </div>
+        `;
+
+        /*
+        |--------------------------------------------------------------------------
+        | VATABLE SALES
+        |--------------------------------------------------------------------------
+        */
+
+        if (Number(order.vatable_sales) > 0) {
+
+            html += `
+                <div class="d-flex justify-content-between mb-3">
+                    <span class="text-muted">
+                        VATable Sales
+                    </span>
+
+                    <span class="fw-semibold">
+                        ${formatPeso(order.vatable_sales)}
+                    </span>
+                </div>
+            `;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | VAT AMOUNT
+        |--------------------------------------------------------------------------
+        */
+
+        if (Number(order.vat_amount) > 0) {
+
+            html += `
+                <div class="d-flex justify-content-between mb-3">
+                    <span class="text-muted">
+                        VAT (12%)
+                    </span>
+
+                    <span class="fw-semibold">
+                        ${formatPeso(order.vat_amount)}
+                    </span>
+                </div>
+            `;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | DISCOUNTS
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            order.applied_discounts &&
+            order.applied_discounts.length > 0
+        ) {
+
+            order.applied_discounts.forEach(discount => {
+
+                html += `
+                    <div class="d-flex justify-content-between mb-3">
+
+                        <span class="text-warning">
+                            ${discount.discount_type_name}
+                        </span>
+
+                        <span class="fw-semibold text-warning">
+                            - ${formatPeso(discount.discount_amount)}
+                        </span>
+
+                    </div>
+                `;
+            });
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | CHARGES
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            order.applied_charges &&
+            order.applied_charges.length > 0
+        ) {
+
+            order.applied_charges.forEach(charge => {
+
+                html += `
+                    <div class="d-flex justify-content-between mb-3">
+
+                        <span class="text-danger">
+                            ${charge.charge_type_name}
+                        </span>
+
+                        <span class="fw-semibold text-danger">
+                            + ${formatPeso(charge.charge_amount)}
+                        </span>
+
+                    </div>
+                `;
+            });
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | SEPARATOR
+        |--------------------------------------------------------------------------
+        */
+
+        html += `
+            <div class="separator separator-dashed my-4"></div>
+        `;
+
+        /*
+        |--------------------------------------------------------------------------
+        | TOTAL
+        |--------------------------------------------------------------------------
+        */
+
+        html += `
+            <div class="d-flex justify-content-between align-items-center">
+
+                <span class="fw-bold fs-3">
+                    Total
+                </span>
+
+                <span class="fw-bolder fs-1">
+                    ${formatPeso(order.net_total)}
+                </span>
+
+            </div>
+        `;
+
+        $('#order-summary-list').html(html);
+    };
+
     config.forms.map((cfg) => initValidation(cfg.selector, cfg.rules));
     config.posCategory.map((cfg) => generatePOSCategory(cfg.url));
     config.posProduct.map((cfg) => generatePOSProduct(cfg.url));
 
     initializeCart();
+
+    $('#order-type').on('change', async function () {
+        try {
+            const orderType = $(this).val();
+            const csrf = getCsrfToken();
+            const ctx = getPageContext();
+            const shopOrderId = sessionStorage.getItem('shop_order_id');
+            
+            const formData = new URLSearchParams();
+            formData.append('order_type', orderType);
+            formData.append('shop_order_id', shopOrderId ?? '');
+            formData.append('shop_register_id', ctx.detailId ?? '');
+            formData.append('appId', ctx.appId ?? '');
+            formData.append('navigationMenuId', ctx.navigationMenuId ?? '');
+            
+            const response = await fetch('/shop-order/save-order-type', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    Accept: 'application/json',
+                    ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+                },
+            });
+            
+            if (!response.ok) throw new Error(`Request failed with status: ${response.status}`);
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                if(orderType === 'Dine-in'){
+                    $('#set-table-column').removeClass('d-none');
+                }
+                else{
+                    $('#set-table-column').addClass('d-none');
+                }
+            }
+            else {
+                showNotification(data.message);
+            }
+        } catch (error) {
+            handleSystemError(error, 'fetch_failed', `Failed to settings: ${error.message}`);
+        }
+    });
 
     document.addEventListener('input', (event) => {
 
@@ -1050,6 +1369,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target.closest('[data-kt-dialer-control="increase"], [data-kt-dialer-control="decrease"]')) {
 
             setTimeout(updateModalTotal, 10);
+        }
+    });
+
+    document.addEventListener('click', function (e) {
+        if (e.target.closest('#new-order')) {
+
+            sessionStorage.removeItem('shop_order_id');
+            resetCartUI();
         }
     });
 });
