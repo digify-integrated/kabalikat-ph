@@ -87,4 +87,29 @@ class ShopOrder extends Model
     {
         return $this->belongsTo(User::class, 'cancelled_by', 'id');
     }
+
+    public function items()
+    {
+        return $this->hasMany(
+            ShopOrderItem::class,
+            'shop_order_id'
+        );
+    }
+
+    public function appliedDiscounts()
+    {
+        return $this->hasMany(
+            ShopOrderAppliedDiscount::class,
+            'shop_order_id'
+        );
+    }
+
+    public function appliedCharges()
+    {
+        return $this->hasMany(
+            ShopOrderAppliedCharge::class,
+            'shop_order_id'
+        );
+    }
+
 }

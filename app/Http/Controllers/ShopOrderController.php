@@ -5,19 +5,26 @@ namespace App\Http\Controllers;
 use App\Models\ChargeType;
 use App\Models\DiscountType;
 use App\Models\FloorPlanTable;
+use App\Models\PaymentMethod;
 use App\Models\Product;
+use App\Models\ProductBOM;
 use App\Models\ShopOrder;
 use App\Models\ShopOrderAppliedCharge;
 use App\Models\ShopOrderAppliedDiscount;
 use App\Models\ShopOrderItem;
+use App\Models\ShopOrderPayment;
 use App\Models\ShopRegister;
 use App\Models\ShopRegisterSession;
+use App\Models\ShopRegisterWarehouse;
+use App\Models\StockLevel;
+use App\Models\StockMovement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class ShopOrderController extends Controller
 {
@@ -1692,6 +1699,301 @@ class ShopOrderController extends Controller
         }
     }
 
+    public function savePayment(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+
+            'shop_order_id' => [
+                'required',
+                'integer',
+                Rule::exists('shop_order', 'id'),
+            ],
+
+            'payments' => [
+                'required',
+                'array',
+                'min:1',
+            ],
+
+            'payments.*.payment_method_id' => [
+                'required',
+                'integer',
+                Rule::exists('payment_method', 'id'),
+            ],
+
+            'payments.*.payment_amount' => [
+                'required',
+                'numeric',
+                'min:0.01',
+            ],
+
+            'payments.*.tendered_amount' => [
+                'nullable',
+                'numeric',
+                'min:0',
+            ],
+
+            'payments.*.reference_number' => ['nullable', 'string', 'max:255'],
+            'payments.*.reference_name' => ['nullable', 'string', 'max:255'],
+            'payments.*.remarks' => ['nullable', 'string'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ]);
+        }
+
+        $validated = $validator->validated();
+
+        DB::beginTransaction();
+
+        try {
+
+            $shopOrder = ShopOrder::query()
+                ->with([
+                    'items',
+                    'shopRegister',
+                    'shopRegister.warehouses', // IMPORTANT FIX
+                ])
+                ->lockForUpdate()
+                ->find($validated['shop_order_id']);
+
+            if (!$shopOrder) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Order not found.',
+                ]);
+            }
+
+            if ($shopOrder->payment_status === 'Paid') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Order already paid.',
+                ]);
+            }
+
+            [$totalPayment, $totalTendered] =
+                $this->calculatePaymentTotals($validated['payments']);
+
+            if (round($totalPayment, 2) < round($shopOrder->balance_due, 2)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Payment amount is insufficient.',
+                ]);
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | SAVE PAYMENTS
+            |--------------------------------------------------------------------------
+            */
+
+            foreach ($validated['payments'] as $payment) {
+
+                $paymentMethod = PaymentMethod::find($payment['payment_method_id']);
+
+                if (!$paymentMethod) {
+                    continue;
+                }
+
+                $amount = (float) $payment['payment_amount'];
+
+                $tendered = (float) ($payment['tendered_amount'] ?? $amount);
+
+                ShopOrderPayment::create([
+                    'shop_order_id' => $shopOrder->id,
+                    'payment_method_id' => $paymentMethod->id,
+                    'payment_method_name' => $paymentMethod->payment_method_name,
+                    'payment_amount' => $amount,
+                    'tendered_amount' => $tendered,
+                    'change_amount' => max(0, $tendered - $amount),
+                    'reference_number' => $payment['reference_number'] ?? null,
+                    'reference_name' => $payment['reference_name'] ?? null,
+                    'remarks' => $payment['remarks'] ?? null,
+                    'payment_status' => 'Paid',
+                    'paid_at' => now(),
+                    'last_log_by' => Auth::id(),
+                ]);
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | UPDATE ORDER
+            |--------------------------------------------------------------------------
+            */
+
+            $shopOrder->update([
+                'payment_status' => 'Paid',
+                'paid_amount' => $totalPayment,
+                'change_amount' => max(0, $totalTendered - $shopOrder->net_total),
+                'balance_due' => 0,
+                'completed_at' => now(),
+                'completed_by' => Auth::id(),
+                'completed_by_name' => Auth::user()?->name,
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | INVENTORY DEDUCTION
+            |--------------------------------------------------------------------------
+            */
+
+            if ($shopOrder->shopRegister?->is_restaurant === 'No') {
+
+                foreach ($shopOrder->items as $item) {
+
+                    $product = Product::find($item->product_id);
+
+                    if (!$product || $product->track_inventory === 'No') {
+                        continue;
+                    }
+
+                    $bomItems = ProductBom::where('product_id', $product->id)->get();
+
+                    if ($bomItems->isEmpty()) {
+
+                        $this->deductInventory(
+                            product: $product,
+                            quantity: $item->quantity,
+                            referenceNumber: $shopOrder->order_number,
+                            warehouseIds: $shopOrder->shopRegister->warehouses->pluck('warehouse_id')->toArray()
+                        );
+
+                        continue;
+                    }
+
+                    foreach ($bomItems as $bom) {
+
+                        $bomProduct = Product::find($bom->bom_product_id);
+
+                        if (!$bomProduct || $bomProduct->track_inventory === 'No') {
+                            continue;
+                        }
+
+                        $this->deductInventory(
+                            product: $bomProduct,
+                            quantity: $bom->quantity * $item->quantity,
+                            referenceNumber: $shopOrder->order_number,
+                            warehouseIds: $shopOrder->shopRegister->warehouses->pluck('warehouse_id')->toArray()
+                        );
+                    }
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Payment successfully completed.',
+            ]);
+
+        } catch (\Throwable $e) {
+
+            DB::rollBack();
+
+            report($e);
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(), // IMPORTANT DEBUG FIX
+            ]);
+        }
+    }
+
+    private function calculatePaymentTotals(array $payments): array
+    {
+        $totalPayment = 0;
+        $totalTendered = 0;
+
+        foreach ($payments as $payment) {
+
+            $amount = (float) ($payment['payment_amount'] ?? 0);
+
+            $tendered = (float) (
+                $payment['tendered_amount']
+                ?? $amount
+            );
+
+            $totalPayment += $amount;
+            $totalTendered += $tendered;
+        }
+
+        return [$totalPayment, $totalTendered];
+    }
+
+    private function deductInventory(
+        Product $product,
+        float $quantity,
+        string $referenceNumber,
+        array $warehouseIds
+    ): void {
+
+        if (empty($warehouseIds)) {
+            throw new \Exception("No warehouse assigned to register.");
+        }
+
+        $stocks = StockLevel::query()
+            ->with('inventoryLot')
+            ->where('product_id', $product->id)
+            ->whereIn('warehouse_id', $warehouseIds)
+            ->where('quantity', '>', 0)
+            ->orderBy('id')
+            ->get();
+
+        if ($stocks->isEmpty()) {
+            throw new \Exception("No stock found for: {$product->product_name}");
+        }
+
+        $remaining = $quantity;
+
+        foreach ($stocks as $stock) {
+
+            if ($remaining <= 0) {
+                break;
+            }
+
+            $deduct = min($remaining, $stock->quantity);
+
+            if ($deduct <= 0) {
+                continue;
+            }
+
+            $stock->decrement('quantity', $deduct);
+
+            $stock->refresh();
+
+            $stock->update([
+                'stock_status' => match (true) {
+                    $stock->quantity <= 0 => 'Out of Stock',
+                    $stock->quantity <= $product->reorder_level => 'Low Stock',
+                    default => 'In Stock',
+                },
+            ]);
+
+            StockMovement::create([
+                'product_id' => $product->id,
+                'product_name' => $product->product_name,
+                'warehouse_id' => $stock->warehouse_id,
+                'warehouse_name' => $stock->warehouse_name,
+                'inventory_lot_id' => $stock->inventory_lot_id,
+                'movement_type' => 'SALE',
+                'quantity' => $deduct,
+                'reference_type' => 'Shop Order',
+                'reference_number' => $referenceNumber,
+                'remarks' => 'POS payment deduction',
+                'last_log_by' => Auth::id(),
+            ]);
+
+            $remaining -= $deduct;
+        }
+
+        if ($remaining > 0) {
+            throw new \Exception("Insufficient stock for {$product->product_name}");
+        }
+    }
+
     public function deleteDiscount(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -2129,30 +2431,24 @@ class ShopOrderController extends Controller
         */
 
         $appliedChargeIds = ShopOrderAppliedCharge::query()
-
             ->where('shop_order_id', $shopOrder->id)
-
             ->pluck('charge_type_id');
 
         $availableCharges = DB::table('shop_register_charge')
-
             ->join(
                 'charge_type',
                 'charge_type.id',
                 '=',
                 'shop_register_charge.charge_type_id'
             )
-
             ->where(
                 'shop_register_charge.shop_register_id',
                 $shopOrder->shop_register_id
             )
-
             ->whereNotIn(
                 'shop_register_charge.charge_type_id',
                 $appliedChargeIds
             )
-
             ->select([
                 'charge_type.id',
                 'charge_type.charge_type_name',
@@ -2162,9 +2458,7 @@ class ShopOrderController extends Controller
                 'charge_type.application_order',
                 'charge_type.tax_type',
             ])
-
             ->orderBy('charge_type.charge_type_name')
-
             ->get();
 
         /*
@@ -2174,11 +2468,8 @@ class ShopOrderController extends Controller
         */
 
         $appliedCharges = ShopOrderAppliedCharge::query()
-
             ->where('shop_order_id', $shopOrder->id)
-
             ->orderBy('id')
-
             ->get([
                 'id',
                 'charge_type_id',
@@ -2189,6 +2480,11 @@ class ShopOrderController extends Controller
                 'tax_type',
                 'charge_rate',
                 'charge_amount',
+
+                // ✅ ADDED FIELDS
+                'remarks',
+                'applied_by_name',
+                'applied_by',
             ]);
 
         return response()->json([
@@ -2197,6 +2493,75 @@ class ShopOrderController extends Controller
             'available_charges' => $availableCharges,
 
             'applied_charges' => $appliedCharges,
+        ]);
+    }
+
+    public function fetchPaymentMethods(
+        Request $request
+    )
+    {
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'shop_order_id' => [
+                    'required',
+                    'integer',
+                    Rule::exists(
+                        'shop_order',
+                        'id'
+                    ),
+                ],
+            ]
+        );
+
+        if ($validator->fails()) {
+
+            return response()->json([
+                'success' => false,
+                'message'
+                    => $validator
+                        ->errors()
+                        ->first(),
+            ]);
+        }
+
+        $validated =
+            $validator->validated();
+
+        $shopOrder = ShopOrder::query()
+            ->find(
+                $validated['shop_order_id']
+            );
+
+        $paymentMethods = DB::table(
+            'shop_register_payment_method'
+        )
+
+        ->where(
+            'shop_register_id',
+            $shopOrder->shop_register_id
+        )
+
+        ->orderBy(
+            'payment_method_name'
+        )
+
+        ->get([
+            'payment_method_id',
+            'payment_method_name',
+        ]);
+
+        return response()->json([
+            'success' => true,
+
+            'order_number'
+                => $shopOrder->order_number,
+
+            'balance_due'
+                => $shopOrder->balance_due,
+
+            'payment_methods'
+                => $paymentMethods,
         ]);
     }
 

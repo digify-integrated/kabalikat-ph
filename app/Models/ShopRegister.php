@@ -25,6 +25,11 @@ class ShopRegister extends Model
         return $this->belongsTo(Company::class, 'company_id');
     }
 
+    public function warehouses()
+    {
+        return $this->hasMany(ShopRegisterWarehouse::class, 'shop_register_id', 'id');
+    }
+
     public function shopRegisterAccess(): HasMany
     {
         return $this->hasMany(ShopRegisterAccess::class, 'shop_register_id', 'id');

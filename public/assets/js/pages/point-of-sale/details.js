@@ -244,6 +244,63 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const calculatePayments = () => {
+
+        let totalPayment = 0;
+
+        $('.payment-amount').each(function () {
+
+            totalPayment +=
+                parseFloat($(this).val()) || 0;
+        });
+
+        const outstandingBalance =
+            parseFloat(
+                $('#payment-balance-display')
+                    .data('balance')
+            ) || 0;
+
+        const change =
+            Math.max(
+                totalPayment - outstandingBalance,
+                0
+            );
+
+        $('#total-payment-display').text(
+            formatPeso(totalPayment)
+        );
+
+        $('#payment-change-display').text(
+            formatPeso(change)
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDATION
+        |--------------------------------------------------------------------------
+        */
+
+        if (totalPayment < outstandingBalance) {
+
+            $('#payment-validation-message')
+                .removeClass('d-none')
+                .text(
+                    'Total payment is less than outstanding balance.'
+                );
+
+            $('#complete-payment-button')
+                .prop('disabled', true);
+
+        } else {
+
+            $('#payment-validation-message')
+                .addClass('d-none');
+
+            $('#complete-payment-button')
+                .prop('disabled', false);
+        }
+    };
+
     const renderCategoryTab = (category) => {
 
         return `
@@ -1807,101 +1864,154 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderAvailableDiscounts = (discounts) => {
 
         if (!discounts.length) {
+
             $('#available-discount-list').html(`
-                <div class="text-muted text-center py-10">
+                <div class="text-center py-10 text-muted">
                     No available discounts
                 </div>
             `);
+
             return;
         }
 
         const html = discounts.map(discount => {
 
-            const isVariable = discount.is_variable === 'Yes';
+            const isVariable =
+                discount.is_variable === 'Yes';
 
             return `
-            <div class="card border-0 shadow-sm rounded-4 mb-3">
-                <div class="card-body p-4">
 
-                    <!-- HEADER -->
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <div class="fw-bold fs-5 text-gray-900">
-                            ${discount.discount_type_name}
-                        </div>
+            <div
+                class="card border-0 shadow-sm rounded-4 mb-3 overflow-hidden">
 
-                        <div class="text-end fs-7 text-muted">
-                            ${
-                                isVariable
-                                    ? `<span class="badge bg-light text-dark">Variable</span>`
-                                    : (
-                                        discount.value_type === 'Percentage'
-                                            ? `<span class="text-primary fw-semibold">${discount.discount_value}%</span>`
-                                            : `<span class="text-primary fw-semibold">${formatPeso(discount.discount_value)}</span>`
-                                    )
-                            }
-                        </div>
-                    </div>
+                <div class="card-body p-3">
 
-                    <!-- VARIABLE INPUT -->
-                    ${
-                        isVariable
-                            ? `
-                            <div class="mb-3">
-                                <label class="form-label fs-8 text-muted mb-1">Value</label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    class="form-control form-control-sm variable-discount-value"
-                                    placeholder="Enter amount">
+                    <!-- TOP -->
+                    <div
+                        class="d-flex justify-content-between align-items-start gap-3">
+
+                        <div class="flex-grow-1">
+
+                            <div
+                                class="fw-bold text-gray-900 fs-5 mb-1">
+
+                                ${discount.discount_type_name}
+
                             </div>
-                            `
-                            : ''
-                    }
 
-                    <!-- REFERENCE DETAILS -->
-                    <div class="row g-2 mb-2">
+                            <div
+                                class="d-flex align-items-center flex-wrap gap-2">
 
-                        <div class="col-6">
-                            <label class="form-label fs-8 text-muted mb-1">Reference Name</label>
-                            <input
-                                type="text"
-                                class="form-control form-control-sm discount-reference-name"
-                                placeholder="e.g. Senior Citizen">
+                                <span
+                                    class="badge badge-light-success">
+
+                                    ${discount.value_type}
+
+                                </span>
+
+                                ${
+                                    isVariable
+                                        ? `
+                                            <span class="badge badge-light-warning">
+                                                Variable
+                                            </span>
+                                        `
+                                        : `
+                                            <span class="fw-semibold text-success fs-7">
+                                                ${
+                                                    discount.value_type === 'Percentage'
+                                                        ? `${discount.discount_value}%`
+                                                        : formatPeso(discount.discount_value)
+                                                }
+                                            </span>
+                                        `
+                                }
+
+                                ${
+                                    discount.is_vat_exempt === 'Yes'
+                                        ? `
+                                            <span class="badge badge-light-info">
+                                                VAT Exempt
+                                            </span>
+                                        `
+                                        : ''
+                                }
+
+                            </div>
+
                         </div>
 
-                        <div class="col-6">
-                            <label class="form-label fs-8 text-muted mb-1">Reference No.</label>
-                            <input
-                                type="text"
-                                class="form-control form-control-sm discount-reference-number"
-                                placeholder="ID / Number">
-                        </div>
-
-                    </div>
-
-                    <!-- REMARKS -->
-                    <div class="mb-3">
-                        <label class="form-label fs-8 text-muted mb-1">Remarks</label>
-                        <textarea
-                            class="form-control form-control-sm discount-remarks"
-                            rows="2"
-                            placeholder="Optional notes"></textarea>
-                    </div>
-
-                    <!-- ACTION -->
-                    <div class="d-flex justify-content-end">
                         <button
                             type="button"
                             class="btn btn-success btn-sm px-4 apply-discount-button"
+
                             data-discount-id="${discount.id}"
+
                             data-variable="${discount.is_variable}"
+
                             data-value-type="${discount.value_type}">
+
                             Apply
+
                         </button>
+
+                    </div>
+
+                    <!-- QUICK INPUTS -->
+                    <div class="row g-2 mt-2">
+
+                        ${
+                            isVariable
+                                ? `
+                                <div class="col-md-3">
+
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        class="form-control form-control-sm variable-discount-value"
+                                        placeholder="${
+                                            discount.value_type === 'Percentage'
+                                                ? 'Discount %'
+                                                : 'Discount Amount'
+                                        }">
+
+                                </div>
+                                `
+                                : ''
+                        }
+
+                        <div class="${isVariable ? 'col-md-3' : 'col-md-4'}">
+
+                            <input
+                                type="text"
+                                class="form-control form-control-sm discount-reference-name"
+                                placeholder="Reference Name">
+
+                        </div>
+
+                        <div class="${isVariable ? 'col-md-3' : 'col-md-4'}">
+
+                            <input
+                                type="text"
+                                class="form-control form-control-sm discount-reference-number"
+                                placeholder="Reference No.">
+
+                        </div>
+
+                        <div class="${isVariable ? 'col-md-3' : 'col-md-4'}">
+
+                            <input
+                                type="text"
+                                class="form-control form-control-sm discount-remarks"
+                                placeholder="Remarks">
+
+                        </div>
+
                     </div>
 
                 </div>
+
             </div>
             `;
         }).join('');
@@ -1912,89 +2022,125 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderAppliedDiscounts = (discounts) => {
 
         if (!discounts.length) {
+
             $('#applied-discount-list').html(`
-                <div class="text-muted text-center py-5">
+                <div class="text-center py-5 text-muted">
                     No applied discounts
                 </div>
             `);
+
             return;
         }
 
         const html = discounts.map(discount => {
 
             return `
-            <div class="border-0 shadow-sm rounded-3 p-3 mb-3 bg-light">
 
-                <div class="d-flex justify-content-between align-items-start">
+            <div
+                class="card border-0 shadow-sm rounded-4 mb-2">
 
-                    <!-- LEFT -->
-                    <div class="me-3">
+                <div class="card-body p-3">
 
-                        <div class="fw-bold text-gray-900">
-                            ${discount.discount_type_name}
-                        </div>
+                    <div
+                        class="d-flex justify-content-between align-items-start gap-3">
 
-                        <div class="fs-7 text-muted">
+                        <!-- LEFT -->
+                        <div class="flex-grow-1">
+
+                            <div
+                                class="d-flex align-items-center flex-wrap gap-2 mb-1">
+
+                                <div class="fw-bold text-gray-900">
+                                    ${discount.discount_type_name}
+                                </div>
+
+                                <span
+                                    class="badge badge-light-success">
+
+                                    ${
+                                        discount.value_type === 'Percentage'
+                                            ? `${discount.discount_value}%`
+                                            : formatPeso(discount.discount_value)
+                                    }
+
+                                </span>
+
+                            </div>
+
                             ${
-                                discount.value_type === 'Percentage'
-                                    ? `${discount.discount_value}%`
-                                    : formatPeso(discount.discount_value)
+                                (
+                                    discount.reference_name
+                                    || discount.reference_number
+                                )
+                                    ? `
+                                    <div class="fs-8 text-muted">
+
+                                        ${
+                                            discount.reference_name
+                                                ? discount.reference_name
+                                                : ''
+                                        }
+
+                                        ${
+                                            discount.reference_number
+                                                ? `
+                                                    • ${discount.reference_number}
+                                                `
+                                                : ''
+                                        }
+
+                                    </div>
+                                    `
+                                    : ''
                             }
+
+                            ${
+                                discount.remarks
+                                    ? `
+                                    <div class="fs-8 text-gray-700 mt-1">
+                                        ${discount.remarks}
+                                    </div>
+                                    `
+                                    : ''
+                            }
+
+                            ${
+                                discount.applied_by_name
+                                    ? `
+                                    <div class="fs-8 text-muted mt-1">
+                                        Applied by ${discount.applied_by_name}
+                                    </div>
+                                    `
+                                    : ''
+                            }
+
                         </div>
 
-                        <!-- REFERENCE INFO -->
-                        ${
-                            (discount.reference_name || discount.reference_number)
-                                ? `
-                                <div class="fs-8 text-muted mt-1">
-                                    ${discount.reference_name ? `<span>${discount.reference_name}</span>` : ''}
-                                    ${discount.reference_number ? `<span class="ms-1">• ${discount.reference_number}</span>` : ''}
-                                </div>
-                                `
-                                : ''
-                        }
+                        <!-- RIGHT -->
+                        <div class="text-end">
 
-                        <!-- APPLIED BY -->
-                        ${
-                            discount.applied_by
-                                ? `
-                                <div class="fs-8 text-muted">
-                                    Applied by: <span class="fw-semibold">${discount.applied_by_name}</span>
-                                </div>
-                                `
-                                : ''
-                        }
+                            <div
+                                class="fw-bolder text-success fs-5 mb-2">
 
-                        <!-- REMARKS -->
-                        ${
-                            discount.remarks
-                                ? `
-                                <div class="fs-8 text-gray-600 mt-1">
-                                    ${discount.remarks}
-                                </div>
-                                `
-                                : ''
-                        }
+                                - ${formatPeso(discount.discount_amount)}
 
-                    </div>
+                            </div>
 
-                    <!-- RIGHT -->
-                    <div class="text-end">
+                            <button
+                                type="button"
+                                class="btn btn-light-danger btn-sm remove-discount-button"
+                                data-applied-id="${discount.id}">
 
-                        <div class="fw-bold text-success fs-6 mb-2">
-                            - ${formatPeso(discount.discount_amount)}
+                                Remove
+
+                            </button>
+
                         </div>
-
-                        <button
-                            type="button"
-                            class="btn btn-light-danger btn-sm remove-discount-button"
-                            data-applied-id="${discount.id}">
-                            Remove
-                        </button>
 
                     </div>
 
                 </div>
+
             </div>
             `;
         }).join('');
@@ -2005,80 +2151,133 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderAvailableCharges = (charges) => {
 
         if (!charges.length) {
+
             $('#available-charge-list').html(`
-                <div class="text-muted text-center py-10">
+                <div class="text-center py-10 text-muted">
                     No available charges
                 </div>
             `);
+
             return;
         }
 
         const html = charges.map(charge => {
 
-            const isVariable = charge.is_variable === 'Yes';
+            const isVariable =
+                charge.is_variable === 'Yes';
 
             return `
-            <div class="card border-0 shadow-sm rounded-4 mb-3">
-                <div class="card-body p-4">
 
-                    <!-- HEADER -->
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <div class="fw-bold fs-5 text-gray-900">
-                            ${charge.charge_type_name}
-                        </div>
+            <div
+                class="card border-0 shadow-sm rounded-4 mb-3 overflow-hidden">
 
-                        <div class="fs-7 text-muted text-end">
-                            ${
-                                isVariable
-                                    ? `<span class="badge bg-light text-dark">Variable</span>`
-                                    : (
-                                        charge.value_type === 'Percentage'
-                                            ? `<span class="text-danger fw-semibold">${charge.charge_value}%</span>`
-                                            : `<span class="text-danger fw-semibold">${formatPeso(charge.charge_value)}</span>`
-                                    )
-                            }
-                        </div>
-                    </div>
+                <div class="card-body p-3">
 
-                    <!-- VARIABLE INPUT -->
-                    ${
-                        isVariable
-                            ? `
-                            <div class="mb-3">
-                                <label class="form-label fs-8 text-muted mb-1">Value</label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    class="form-control form-control-sm variable-charge-value"
-                                    placeholder="Enter amount">
+                    <!-- TOP -->
+                    <div
+                        class="d-flex justify-content-between align-items-start gap-3">
+
+                        <div class="flex-grow-1">
+
+                            <div
+                                class="fw-bold text-gray-900 fs-5 mb-1">
+
+                                ${charge.charge_type_name}
+
                             </div>
-                            `
-                            : ''
-                    }
 
-                    <!-- REMARKS -->
-                    <div class="mb-3">
-                        <label class="form-label fs-8 text-muted mb-1">Remarks</label>
-                        <textarea
-                            class="form-control form-control-sm charge-remarks"
-                            rows="2"
-                            placeholder="Optional notes"></textarea>
-                    </div>
+                            <div
+                                class="d-flex align-items-center flex-wrap gap-2">
 
-                    <!-- ACTION -->
-                    <div class="d-flex justify-content-end">
+                                <span
+                                    class="badge badge-light-danger">
+
+                                    ${charge.value_type}
+
+                                </span>
+
+                                ${
+                                    isVariable
+                                        ? `
+                                            <span class="badge badge-light-warning">
+                                                Variable
+                                            </span>
+                                        `
+                                        : `
+                                            <span class="fw-semibold text-danger fs-7">
+                                                ${
+                                                    charge.value_type === 'Percentage'
+                                                        ? `${charge.charge_value}%`
+                                                        : formatPeso(charge.charge_value)
+                                                }
+                                            </span>
+                                        `
+                                }
+
+                                <span
+                                    class="badge badge-light-secondary">
+
+                                    ${charge.application_order}
+
+                                </span>
+
+                            </div>
+
+                        </div>
+
                         <button
                             type="button"
                             class="btn btn-danger btn-sm px-4 apply-charge-button"
+
                             data-charge-id="${charge.id}"
+
                             data-variable="${charge.is_variable}"
+
                             data-value-type="${charge.value_type}">
+
                             Apply
+
                         </button>
+
+                    </div>
+
+                    <!-- QUICK INPUTS -->
+                    <div class="row g-2 mt-2">
+
+                        ${
+                            isVariable
+                                ? `
+                                <div class="col-md-4">
+
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        class="form-control form-control-sm variable-charge-value"
+                                        placeholder="${
+                                            charge.value_type === 'Percentage'
+                                                ? 'Charge %'
+                                                : 'Charge Amount'
+                                        }">
+
+                                </div>
+                                `
+                                : ''
+                        }
+
+                        <div class="${isVariable ? 'col-md-8' : 'col-md-12'}">
+
+                            <input
+                                type="text"
+                                class="form-control form-control-sm charge-remarks"
+                                placeholder="Remarks">
+
+                        </div>
+
                     </div>
 
                 </div>
+
             </div>
             `;
         }).join('');
@@ -2089,82 +2288,423 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderAppliedCharges = (charges) => {
 
         if (!charges.length) {
+
             $('#applied-charge-list').html(`
-                <div class="text-muted text-center py-5 fw-semibold">
+                <div class="text-center py-5 text-muted">
                     No applied charges
                 </div>
             `);
+
             return;
         }
 
         const html = charges.map(charge => {
 
             return `
-            <div class="border-0 shadow-sm rounded-3 p-3 mb-3 bg-light">
 
-                <div class="d-flex justify-content-between align-items-start">
+            <div
+                class="card border-0 shadow-sm rounded-4 mb-2">
 
-                    <!-- LEFT -->
-                    <div class="me-3">
+                <div class="card-body p-3">
 
-                        <div class="fw-bold text-gray-900">
-                            ${charge.charge_type_name}
-                        </div>
+                    <div
+                        class="d-flex justify-content-between align-items-start gap-3">
 
-                        <div class="fs-7 text-muted">
+                        <!-- LEFT -->
+                        <div class="flex-grow-1">
+
+                            <div
+                                class="d-flex align-items-center flex-wrap gap-2 mb-1">
+
+                                <div class="fw-bold text-gray-900">
+                                    ${charge.charge_type_name}
+                                </div>
+
+                                <span
+                                    class="badge badge-light-danger">
+
+                                    ${
+                                        charge.value_type === 'Percentage'
+                                            ? `${charge.charge_value}%`
+                                            : formatPeso(charge.charge_value)
+                                    }
+
+                                </span>
+
+                            </div>
+
                             ${
-                                charge.value_type === 'Percentage'
-                                    ? `${charge.charge_value}%`
-                                    : formatPeso(charge.charge_value)
+                                charge.remarks
+                                    ? `
+                                    <div class="fs-8 text-gray-700">
+                                        ${charge.remarks}
+                                    </div>
+                                    `
+                                    : ''
                             }
+
+                            ${
+                                charge.applied_by_name
+                                    ? `
+                                    <div class="fs-8 text-muted mt-1">
+                                        Applied by ${charge.applied_by_name}
+                                    </div>
+                                    `
+                                    : ''
+                            }
+
                         </div>
 
-                        <!-- APPLIED BY -->
-                        ${
-                            charge.applied_by
-                                ? `
-                                <div class="fs-8 text-muted">
-                                    Applied by: <span class="fw-semibold">${charge.applied_by_name}</span>
-                                </div>
-                                `
-                                : ''
-                        }
+                        <!-- RIGHT -->
+                        <div class="text-end">
 
-                        <!-- REMARKS -->
-                        ${
-                            charge.remarks
-                                ? `
-                                <div class="fs-8 text-gray-600 mt-1">
-                                    ${charge.remarks}
-                                </div>
-                                `
-                                : ''
-                        }
+                            <div
+                                class="fw-bolder text-danger fs-5 mb-2">
 
-                    </div>
+                                + ${formatPeso(charge.charge_amount)}
 
-                    <!-- RIGHT -->
-                    <div class="text-end">
+                            </div>
 
-                        <div class="fw-bold text-danger fs-6 mb-2">
-                            + ${formatPeso(charge.charge_amount)}
+                            <button
+                                type="button"
+                                class="btn btn-light-danger btn-sm remove-charge-button"
+                                data-applied-id="${charge.id}">
+
+                                Remove
+
+                            </button>
+
                         </div>
-
-                        <button
-                            type="button"
-                            class="btn btn-light-danger btn-sm remove-charge-button"
-                            data-applied-id="${charge.id}">
-                            Remove
-                        </button>
 
                     </div>
 
                 </div>
+
             </div>
             `;
         }).join('');
 
         $('#applied-charge-list').html(html);
+    };
+
+    const renderPaymentMethods = (
+        paymentMethods
+    ) => {
+
+        if (!paymentMethods.length) {
+
+            $('#payment-method-list').html(`
+                <div class="text-center py-5 text-muted">
+                    No payment methods assigned
+                </div>
+            `);
+
+            return;
+        }
+
+        const html = paymentMethods.map(method => {
+
+            return `
+            <div
+                class="card border-0 shadow-sm rounded-4 mb-3 payment-method-card"
+                data-payment-method-id="${method.payment_method_id}">
+
+                <div class="card-body p-3">
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+
+                        <div class="fw-bold fs-5">
+                            ${method.payment_method_name}
+                        </div>
+
+                        <button
+                            type="button"
+                            class="btn btn-light-success btn-sm add-payment-row"
+                            data-payment-method-id="${method.payment_method_id}"
+                            data-payment-method-name="${method.payment_method_name}">
+
+                            Add
+
+                        </button>
+
+                    </div>
+
+                    <div
+                        class="payment-row-container"
+                        id="payment-row-container-${method.payment_method_id}">
+                    </div>
+
+                </div>
+
+            </div>
+            `;
+        }).join('');
+
+        $('#payment-method-list').html(html);
+    };
+
+    const createPaymentRow = ({
+        paymentMethodId,
+        paymentMethodName
+    }) => {
+
+        return `
+        <div class="border rounded-4 p-3 mb-3 payment-row">
+
+            <div class="row g-2">
+
+                <div class="col-md-4">
+
+                    <label class="form-label small text-muted">
+                        Amount
+                    </label>
+
+                    <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        class="form-control payment-amount"
+                        placeholder="0.00">
+
+                </div>
+
+                <div class="col-md-4">
+
+                    <label class="form-label small text-muted">
+                        Reference Number
+                    </label>
+
+                    <input
+                        type="text"
+                        class="form-control payment-reference-number"
+                        placeholder="Optional">
+
+                </div>
+
+                <div class="col-md-4">
+
+                    <label class="form-label small text-muted">
+                        Reference Name
+                    </label>
+
+                    <input
+                        type="text"
+                        class="form-control payment-reference-name"
+                        placeholder="Optional">
+
+                </div>
+
+                <div class="col-12">
+
+                    <label class="form-label small text-muted">
+                        Remarks
+                    </label>
+
+                    <textarea
+                        class="form-control payment-remarks"
+                        rows="2"
+                        placeholder="Optional remarks"></textarea>
+
+                </div>
+
+            </div>
+
+            <input
+                type="hidden"
+                class="payment-method-id"
+                value="${paymentMethodId}">
+
+            <input
+                type="hidden"
+                class="payment-method-name"
+                value="${paymentMethodName}">
+
+            <div class="text-end mt-3">
+
+                <button
+                    type="button"
+                    class="btn btn-light-danger btn-sm remove-payment-row">
+
+                    Remove
+
+                </button>
+
+            </div>
+
+        </div>
+        `;
+    };
+
+    const discountLoadingState = () => {
+
+        $('#available-discount-list').html(`
+
+            <div class="d-flex flex-column gap-3">
+
+                ${Array.from({ length: 3 }).map(() => `
+
+                    <div class="card border-0 shadow-sm rounded-4">
+
+                        <div class="card-body p-4">
+
+                            <div class="placeholder-glow">
+
+                                <div
+                                    class="placeholder col-4 mb-3 rounded">
+                                </div>
+
+                                <div
+                                    class="placeholder col-2 mb-4 rounded">
+                                </div>
+
+                                <div class="row g-2">
+
+                                    <div class="col-md-4">
+                                        <div
+                                            class="placeholder col-12 rounded">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div
+                                            class="placeholder col-12 rounded">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div
+                                            class="placeholder col-12 rounded">
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                `).join('')}
+
+            </div>
+
+        `);
+
+        $('#applied-discount-list').html(`
+
+            <div class="d-flex flex-column gap-2">
+
+                ${Array.from({ length: 2 }).map(() => `
+
+                    <div class="card border-0 shadow-sm rounded-4">
+
+                        <div class="card-body p-3">
+
+                            <div class="placeholder-glow">
+
+                                <div
+                                    class="placeholder col-5 mb-2 rounded">
+                                </div>
+
+                                <div
+                                    class="placeholder col-3 rounded">
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                `).join('')}
+
+            </div>
+
+        `);
+    };
+
+    const chargeLoadingState = () => {
+
+        $('#available-charge-list').html(`
+
+            <div class="d-flex flex-column gap-3">
+
+                ${Array.from({ length: 3 }).map(() => `
+
+                    <div class="card border-0 shadow-sm rounded-4">
+
+                        <div class="card-body p-4">
+
+                            <div class="placeholder-glow">
+
+                                <div
+                                    class="placeholder col-4 mb-3 rounded">
+                                </div>
+
+                                <div
+                                    class="placeholder col-2 mb-4 rounded">
+                                </div>
+
+                                <div class="row g-2">
+
+                                    <div class="col-md-4">
+                                        <div
+                                            class="placeholder col-12 rounded">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-8">
+                                        <div
+                                            class="placeholder col-12 rounded">
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                `).join('')}
+
+            </div>
+
+        `);
+
+        $('#applied-charge-list').html(`
+
+            <div class="d-flex flex-column gap-2">
+
+                ${Array.from({ length: 2 }).map(() => `
+
+                    <div class="card border-0 shadow-sm rounded-4">
+
+                        <div class="card-body p-3">
+
+                            <div class="placeholder-glow">
+
+                                <div
+                                    class="placeholder col-5 mb-2 rounded">
+                                </div>
+
+                                <div
+                                    class="placeholder col-3 rounded">
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                `).join('')}
+
+            </div>
+
+        `);
     };
 
     config.forms.map((cfg) => initValidation(cfg.selector, cfg.rules));
@@ -2503,62 +3043,78 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     );
 
-    $(document).on('click', '#manage-discount-button', async function () {
+    $(document).on(
+        'click',
+        '#manage-discount-button',
+        async function () {
 
-        try {
+            try {
 
-            const shopOrderId =
-                sessionStorage.getItem('shop_order_id');
+                const shopOrderId =
+                    sessionStorage.getItem('shop_order_id');
 
-            if (!shopOrderId) {
-                showNotification('No active order.');
-                return;
-            }
+                if (!shopOrderId) {
 
-            const csrf = getCsrfToken();
+                    showNotification('No active order.');
 
-            const response = await fetch(
-                '/shop-order/fetch-discounts',
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type':
-                            'application/x-www-form-urlencoded; charset=UTF-8',
-                        Accept: 'application/json',
-                        ...(csrf
-                            ? { 'X-CSRF-TOKEN': csrf }
-                            : {}),
-                    },
-                    body: new URLSearchParams({
-                        shop_order_id: shopOrderId,
-                    }),
+                    return;
                 }
-            );
 
-            const data = await response.json();
+                /*
+                |--------------------------------------------------------------------------
+                | LOADING STATE
+                |--------------------------------------------------------------------------
+                */
 
-            if (!data.success) {
-                showNotification(data.message);
-                return;
+                discountLoadingState();
+
+                const csrf = getCsrfToken();
+
+                const response = await fetch(
+                    '/shop-order/fetch-discounts',
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type':
+                                'application/x-www-form-urlencoded; charset=UTF-8',
+                            Accept: 'application/json',
+                            ...(csrf
+                                ? { 'X-CSRF-TOKEN': csrf }
+                                : {}),
+                        },
+                        body: new URLSearchParams({
+                            shop_order_id: shopOrderId,
+                        }),
+                    }
+                );
+
+                const data = await response.json();
+
+                if (!data.success) {
+
+                    showNotification(data.message);
+
+                    return;
+                }
+
+                renderAvailableDiscounts(
+                    data.available_discounts
+                );
+
+                renderAppliedDiscounts(
+                    data.applied_discounts
+                );
+
+            } catch (error) {
+
+                handleSystemError(
+                    error,
+                    'fetch_failed',
+                    error.message
+                );
             }
-
-            renderAvailableDiscounts(
-                data.available_discounts
-            );
-
-            renderAppliedDiscounts(
-                data.applied_discounts
-            );
-
-        } catch (error) {
-
-            handleSystemError(
-                error,
-                'fetch_failed',
-                error.message
-            );
         }
-    });
+    );
 
     $(document).on(
         'click',
@@ -2838,6 +3394,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     return;
                 }
+
+                /*
+                |--------------------------------------------------------------------------
+                | LOADING STATE
+                |--------------------------------------------------------------------------
+                */
+
+                chargeLoadingState();
 
                 const csrf = getCsrfToken();
 
@@ -3122,4 +3686,627 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     );
 
+    $(document).on(
+        'click',
+        '#print-bill',
+        function () {
+
+            const shopOrderId =
+                sessionStorage.getItem(
+                    'shop_order_id'
+                );
+
+            if (!shopOrderId) {
+
+                showNotification(
+                    'No active order.'
+                );
+
+                return;
+            }
+
+            const width = 900;
+
+            const height = 700;
+
+            const left =
+                (screen.width - width) / 2;
+
+            const top =
+                (screen.height - height) / 2;
+
+            const url =
+                `/shop-order/${shopOrderId}/print-bill`;
+
+            window.open(
+                url,
+                '_blank',
+                `
+                    width=${width},
+                    height=${height},
+                    top=${top},
+                    left=${left}
+                `
+            );
+        }
+    );
+
+    $(document).on(
+        'click',
+        '#manage-charge-button',
+        async function () {
+
+            try {
+
+                const shopOrderId =
+                    sessionStorage.getItem(
+                        'shop_order_id'
+                    );
+
+                if (!shopOrderId) {
+
+                    showNotification(
+                        'No active order.'
+                    );
+
+                    return;
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | LOADING STATE
+                |--------------------------------------------------------------------------
+                */
+
+                chargeLoadingState();
+
+                const csrf = getCsrfToken();
+
+                const response = await fetch(
+                    '/shop-order/fetch-charges',
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type':
+                                'application/x-www-form-urlencoded; charset=UTF-8',
+                            Accept: 'application/json',
+                            ...(csrf
+                                ? {
+                                    'X-CSRF-TOKEN': csrf
+                                }
+                                : {}),
+                        },
+                        body: new URLSearchParams({
+                            shop_order_id: shopOrderId,
+                        }),
+                    }
+                );
+
+                const data =
+                    await response.json();
+
+                if (!data.success) {
+
+                    showNotification(
+                        data.message
+                    );
+
+                    return;
+                }
+
+                renderAvailableCharges(
+                    data.available_charges
+                );
+
+                renderAppliedCharges(
+                    data.applied_charges
+                );
+
+            } catch (error) {
+
+                handleSystemError(
+                    error,
+                    'fetch_failed',
+                    error.message
+                );
+            }
+        }
+    );
+
+    $(document).on(
+        'click',
+        '#manage-payment-button',
+        async function () {
+
+            try {
+
+                const shopOrderId =
+                    sessionStorage.getItem(
+                        'shop_order_id'
+                    );
+
+                if (!shopOrderId) {
+
+                    showNotification(
+                        'No active order.'
+                    );
+
+                    return;
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | LOADING STATE
+                |--------------------------------------------------------------------------
+                */
+
+                $('#payment-method-list').html(`
+                    <div class="text-center py-5">
+
+                        <div
+                            class="spinner-border text-success mb-3"
+                            role="status">
+                        </div>
+
+                        <div class="text-muted">
+                            Loading payment methods...
+                        </div>
+
+                    </div>
+                `);
+
+                $('#payment-balance-display')
+                    .text('₱ 0.00');
+
+                $('#payment-order-number')
+                    .text('');
+
+                $('#total-payment-display')
+                    .text('₱ 0.00');
+
+                $('#payment-change-display')
+                    .text('₱ 0.00');
+
+                $('#payment-validation-message')
+                    .addClass('d-none');
+
+                /*
+                |--------------------------------------------------------------------------
+                | REQUEST
+                |--------------------------------------------------------------------------
+                */
+
+                const csrf = getCsrfToken();
+
+                const response = await fetch(
+                    '/shop-order/fetch-payment-methods',
+                    {
+                        method: 'POST',
+
+                        headers: {
+
+                            'Content-Type':
+                                'application/x-www-form-urlencoded; charset=UTF-8',
+
+                            Accept: 'application/json',
+
+                            ...(csrf
+                                ? {
+                                    'X-CSRF-TOKEN': csrf
+                                }
+                                : {}),
+                        },
+
+                        body: new URLSearchParams({
+                            shop_order_id: shopOrderId,
+                        }),
+                    }
+                );
+
+                const data =
+                    await response.json();
+
+                /*
+                |--------------------------------------------------------------------------
+                | VALIDATION
+                |--------------------------------------------------------------------------
+                */
+
+                if (!data.success) {
+
+                    showNotification(
+                        data.message
+                    );
+
+                    return;
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | ORDER SUMMARY
+                |--------------------------------------------------------------------------
+                */
+
+                $('#payment-order-number')
+                    .text(data.order_number);
+
+                $('#payment-balance-display')
+
+                    .text(
+                        formatPeso(
+                            data.balance_due
+                        )
+                    )
+
+                    .attr(
+                        'data-balance',
+                        data.balance_due
+                    );
+
+                /*
+                |--------------------------------------------------------------------------
+                | RENDER PAYMENT METHODS
+                |--------------------------------------------------------------------------
+                */
+
+                renderPaymentMethods(
+                    data.payment_methods
+                );
+
+                /*
+                |--------------------------------------------------------------------------
+                | RESET TOTALS
+                |--------------------------------------------------------------------------
+                */
+
+                calculatePayments();
+
+            } catch (error) {
+
+                handleSystemError(
+                    error,
+                    'fetch_failed',
+                    error.message
+                );
+            }
+        }
+    );
+
+    $(document).on(
+        'click',
+        '.add-payment-row',
+        function () {
+
+            const paymentMethodId =
+                $(this).data('payment-method-id');
+
+            const paymentMethodName =
+                $(this).data('payment-method-name');
+
+            $(
+                `#payment-row-container-${paymentMethodId}`
+            ).append(
+                createPaymentRow({
+                    paymentMethodId,
+                    paymentMethodName
+                })
+            );
+
+            calculatePayments();
+        }
+    );
+
+    $(document).on(
+        'click',
+        '.remove-payment-row',
+        function () {
+
+            $(this)
+                .closest('.payment-row')
+                .remove();
+
+            calculatePayments();
+        }
+    );
+
+    $(document).on(
+        'input',
+        '.payment-amount',
+        function () {
+
+            calculatePayments();
+        }
+    );
+
+    $(document).on(
+        'click',
+        '#complete-payment-button',
+        async function () {
+
+            try {
+
+                const button = $(this);
+
+                /*
+                |--------------------------------------------------------------------------
+                | ORDER
+                |--------------------------------------------------------------------------
+                */
+
+                const shopOrderId =
+                    sessionStorage.getItem(
+                        'shop_order_id'
+                    );
+
+                if (!shopOrderId) {
+
+                    showNotification(
+                        'No active order.'
+                    );
+
+                    return;
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | PAYMENTS
+                |--------------------------------------------------------------------------
+                */
+
+                const payments = [];
+
+                let totalPayment = 0;
+
+                $('.payment-method-card').each(
+                    function () {
+
+                        const card = $(this);
+
+                        const paymentAmount =
+                            parseFloat(
+                                card.find(
+                                    '.payment-amount'
+                                ).val()
+                            ) || 0;
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | SKIP EMPTY
+                        |--------------------------------------------------------------------------
+                        */
+
+                        if (paymentAmount <= 0) {
+                            return;
+                        }
+
+                        const tenderedAmount =
+                            parseFloat(
+                                card.find(
+                                    '.tendered-amount'
+                                ).val()
+                            ) || paymentAmount;
+
+                        payments.push({
+
+                            payment_method_id:
+                                card.data(
+                                    'payment-method-id'
+                                ),
+
+                            payment_amount:
+                                paymentAmount,
+
+                            tendered_amount:
+                                tenderedAmount,
+
+                            reference_number:
+                                card.find(
+                                    '.reference-number'
+                                ).val(),
+
+                            reference_name:
+                                card.find(
+                                    '.reference-name'
+                                ).val(),
+
+                            remarks:
+                                card.find(
+                                    '.payment-remarks'
+                                ).val(),
+                        });
+
+                        totalPayment +=
+                            paymentAmount;
+                    }
+                );
+
+                /*
+                |--------------------------------------------------------------------------
+                | VALIDATION
+                |--------------------------------------------------------------------------
+                */
+
+                if (!payments.length) {
+
+                    showNotification(
+                        'Please enter payment.'
+                    );
+
+                    return;
+                }
+
+                const outstandingBalance =
+                    parseFloat(
+                        $('#payment-outstanding-balance')
+                            .data('amount')
+                    ) || 0;
+
+                if (
+                    totalPayment < outstandingBalance
+                ) {
+
+                    showNotification(
+                        'Total payment cannot be less than outstanding balance.'
+                    );
+
+                    return;
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | LOADING
+                |--------------------------------------------------------------------------
+                */
+
+                button
+                    .prop('disabled', true)
+                    .html(`
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                        Processing Payment...
+                    `);
+
+                /*
+                |--------------------------------------------------------------------------
+                | REQUEST
+                |--------------------------------------------------------------------------
+                */
+
+                const csrf = getCsrfToken();
+
+                const response = await fetch(
+                    '/shop-order/save-payment',
+                    {
+                        method: 'POST',
+
+                        headers: {
+
+                            'Content-Type':
+                                'application/json',
+
+                            Accept:
+                                'application/json',
+
+                            ...(csrf
+                                ? {
+                                    'X-CSRF-TOKEN':
+                                        csrf
+                                }
+                                : {}),
+                        },
+
+                        body: JSON.stringify({
+
+                            shop_order_id:
+                                shopOrderId,
+
+                            payments:
+                                payments,
+                        }),
+                    }
+                );
+
+                const data =
+                    await response.json();
+
+                /*
+                |--------------------------------------------------------------------------
+                | FAILED
+                |--------------------------------------------------------------------------
+                */
+
+                if (!data.success) {
+
+                    showNotification(
+                        data.message
+                    );
+
+                    return;
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | SUCCESS
+                |--------------------------------------------------------------------------
+                */
+
+                showNotification(
+                    data.message,
+                    'success'
+                );
+
+                /*
+                |--------------------------------------------------------------------------
+                | CLOSE MODAL
+                |--------------------------------------------------------------------------
+                */
+
+                $('#payment-modal')
+                    .modal('hide');
+
+                /*
+                |--------------------------------------------------------------------------
+                | OPTIONAL REFRESH
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                    typeof fetchCartSummary
+                    === 'function'
+                ) {
+
+                    fetchCartSummary();
+                }
+
+                if (
+                    typeof fetchOrders
+                    === 'function'
+                ) {
+
+                    fetchOrders();
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | PRINT BILL
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                    typeof bill
+                    === 'function'
+                ) {
+
+                    bill(shopOrderId);
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | CLEAR ACTIVE ORDER
+                |--------------------------------------------------------------------------
+                */
+
+                sessionStorage.removeItem(
+                    'shop_order_id'
+                );
+
+            } catch (error) {
+
+                handleSystemError(
+                    error,
+                    'payment_failed',
+                    error.message
+                );
+
+            } finally {
+
+                $('#complete-payment-button')
+
+                    .prop('disabled', false)
+
+                    .html(`
+                        Complete Payment
+                    `);
+            }
+        }
+    );
 });

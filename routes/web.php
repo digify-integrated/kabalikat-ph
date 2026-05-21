@@ -35,6 +35,7 @@ use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\RoleSystemActionPermissionController;
 use App\Http\Controllers\RoleUserAccountController;
 use App\Http\Controllers\ShopOrderController;
+use App\Http\Controllers\ShopOrderPrintController;
 use App\Http\Controllers\ShopRegisterAccessController;
 use App\Http\Controllers\ShopRegisterChargeController;
 use App\Http\Controllers\ShopRegisterController;
@@ -917,14 +918,21 @@ Route::middleware('auth')->group(function () {
             Route::post('/save-item-quantity', 'saveItemQuantity')->name('save.item.quantity');
             Route::post('/save-discount', 'saveDiscount')->name('save.discount');
             Route::post('/save-charge', 'saveCharge')->name('save.charge');
+            Route::post('/save-payment', 'savePayment')->name('save.payment');
             Route::post('/fetch-floor-plans', 'fetchFloorPlans')->name('fetch.floor.plans');
             Route::post('/fetch-floor-tables', 'fetchFloorTables')->name('fetch.floor.tables');
             Route::post('/fetch-discounts', 'fetchDiscounts')->name('fetch.discounts');
             Route::post('/fetch-charges', 'fetchCharges')->name('fetch.discounts');
+            Route::post('/fetch-payment-methods', 'fetchPaymentMethods')->name('fetch.payment.methods');
             Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
             Route::post('/delete-discount', 'deleteDiscount')->name('delete.discount');
             Route::post('/delete-charge', 'deleteCharge')->name('delete.charge');
         });
+    
+    Route::get(
+        '/shop-order/{shopOrder}/print-bill',
+        [ShopOrderPrintController::class, 'printBill']
+    )->name('shop-order.print-bill');
 
     // Import
     Route::prefix('import')

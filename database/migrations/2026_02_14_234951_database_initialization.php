@@ -1267,6 +1267,7 @@ return new class extends Migration
                 'TRANSFER_IN',
                 'TRANSFER_OUT',
                 'ADJUSTMENT',
+                'CONSUMPTION',
                 'SALE',
                 'RETURN'
             ]);
