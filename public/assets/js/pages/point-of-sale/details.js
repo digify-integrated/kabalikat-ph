@@ -248,23 +248,69 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let totalPayment = 0;
 
-        $('.payment-amount').each(function () {
+        let totalTendered = 0;
 
-            totalPayment +=
-                parseFloat($(this).val()) || 0;
+        /*
+        |--------------------------------------------------------------------------
+        | PAYMENT ROWS
+        |--------------------------------------------------------------------------
+        */
+
+        $('.payment-row').each(function () {
+
+            const paymentAmount =
+                parseMoney(
+                    $(this)
+                        .find('.payment-amount')
+                        .val()
+                );
+
+            let tenderedAmount =
+                parseMoney(
+                    $(this)
+                        .find('.tendered-amount')
+                        .val()
+                );
+
+            if (tenderedAmount <= 0) {
+
+                tenderedAmount = paymentAmount;
+            }
+
+            totalPayment += paymentAmount;
+
+            totalTendered += tenderedAmount;
         });
 
+        /*
+        |--------------------------------------------------------------------------
+        | OUTSTANDING BALANCE
+        |--------------------------------------------------------------------------
+        */
+
         const outstandingBalance =
-            parseFloat(
+            parseMoney(
                 $('#payment-balance-display')
-                    .data('balance')
-            ) || 0;
+                    .attr('data-balance')
+            );
+
+        /*
+        |--------------------------------------------------------------------------
+        | CHANGE
+        |--------------------------------------------------------------------------
+        */
 
         const change =
             Math.max(
-                totalPayment - outstandingBalance,
+                totalTendered - outstandingBalance,
                 0
             );
+
+        /*
+        |--------------------------------------------------------------------------
+        | DISPLAY
+        |--------------------------------------------------------------------------
+        */
 
         $('#total-payment-display').text(
             formatPeso(totalPayment)
@@ -299,6 +345,13 @@ document.addEventListener('DOMContentLoaded', () => {
             $('#complete-payment-button')
                 .prop('disabled', false);
         }
+
+        console.log({
+            outstandingBalance,
+            totalPayment,
+            totalTendered,
+            change,
+        });
     };
 
     const renderCategoryTab = (category) => {
@@ -1330,6 +1383,23 @@ document.addEventListener('DOMContentLoaded', () => {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         })}`;
+    };
+
+    const parseMoney = (value) => {
+
+        if (
+            value === null
+            || value === undefined
+        ) {
+            return 0;
+        }
+
+        return parseFloat(
+            String(value)
+                .replace(/₱/g, '')
+                .replace(/,/g, '')
+                .trim()
+        ) || 0;
     };
 
     const renderOrderItem = (item) => {
@@ -2448,67 +2518,185 @@ document.addEventListener('DOMContentLoaded', () => {
         paymentMethodName
     }) => {
 
+        const isCash =
+            paymentMethodName
+                .toLowerCase()
+                .includes('cash');
+
         return `
-        <div class="border rounded-4 p-3 mb-3 payment-row">
+        <div class="payment-row card border-0 shadow-sm rounded-4 mb-3">
 
-            <div class="row g-2">
+            <!-- TOP -->
+            <div class="card-body p-0">
 
-                <div class="col-md-4">
+                <!-- HEADER -->
+                <div class="d-flex justify-content-between align-items-center px-4 py-3 border-bottom bg-light rounded-top-4">
 
-                    <label class="form-label small text-muted">
-                        Amount
-                    </label>
+                    <div class="d-flex align-items-center gap-3">
 
-                    <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        class="form-control payment-amount"
-                        placeholder="0.00">
+                        <div
+                            class="rounded-circle d-flex align-items-center justify-content-center bg-success text-white"
+                            style="
+                                width: 45px;
+                                height: 45px;
+                                font-size: 18px;
+                                font-weight: 700;
+                            ">
+
+                            ${isCash ? '<i class="ki-outline ki-bill text-white"></i>' : '<i class="ki-outline ki-credit-cart text-white"></i>'}
+
+                        </div>
+
+                        <div>
+
+                            <div class="fw-bold fs-5">
+                                ${paymentMethodName}
+                            </div>
+
+                            <div class="text-muted small">
+
+                                ${
+                                    isCash
+                                        ? 'Enter the cash received from customer'
+                                        : 'Enter payment details'
+                                }
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                        <button type="button" class="btn btn-light-danger btn-sm remove-payment-row">
+
+                                    Remove
+
+                                </button>
 
                 </div>
 
-                <div class="col-md-4">
+                <!-- CONTENT -->
+                <div class="p-4">
 
-                    <label class="form-label small text-muted">
-                        Reference Number
-                    </label>
+                    <!-- CASH LAYOUT -->
+                    ${
+                        isCash
+                        ? `
+                        <div class="row g-3">
 
-                    <input
-                        type="text"
-                        class="form-control payment-reference-number"
-                        placeholder="Optional">
+                            <div class="col-md-6">
 
-                </div>
+                                <label class="form-label fw-semibold fs-6">
+                                    Amount Received
+                                </label>
 
-                <div class="col-md-4">
+                                <div class="input-group input-group-lg">
 
-                    <label class="form-label small text-muted">
-                        Reference Name
-                    </label>
+                                    <span class="input-group-text">
+                                        ₱
+                                    </span>
 
-                    <input
-                        type="text"
-                        class="form-control payment-reference-name"
-                        placeholder="Optional">
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        class="form-control payment-amount"
+                                        placeholder="0.00">
 
-                </div>
+                                </div>
 
-                <div class="col-12">
+                            </div>
 
-                    <label class="form-label small text-muted">
-                        Remarks
-                    </label>
+                            <div class="col-md-6">
 
-                    <textarea
-                        class="form-control payment-remarks"
-                        rows="2"
-                        placeholder="Optional remarks"></textarea>
+                                <label class="form-label fw-semibold fs-6">
+                                    Notes
+                                </label>
+
+                                <input
+                                    type="text"
+                                    class="form-control form-control-lg payment-remarks"
+                                    placeholder="Optional note">
+
+                            </div>
+
+                        </div>
+                        `
+                        : `
+                        <!-- DIGITAL / CARD LAYOUT -->
+                        <div class="row g-3">
+
+                            <div class="col-md-4">
+
+                                <label class="form-label fw-semibold">
+                                    Payment Amount
+                                </label>
+
+                                <div class="input-group">
+
+                                    <span class="input-group-text">
+                                        ₱
+                                    </span>
+
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        class="form-control payment-amount"
+                                        placeholder="0.00">
+
+                                </div>
+
+                            </div>
+
+                            <div class="col-md-4">
+
+                                <label class="form-label fw-semibold">
+                                    Reference Number
+                                </label>
+
+                                <input
+                                    type="text"
+                                    class="form-control payment-reference-number"
+                                    placeholder="Transaction ID">
+
+                            </div>
+
+                            <div class="col-md-4">
+
+                                <label class="form-label fw-semibold">
+                                    Account / Name
+                                </label>
+
+                                <input
+                                    type="text"
+                                    class="form-control payment-reference-name"
+                                    placeholder="GCash / Card holder">
+
+                            </div>
+
+                            <div class="col-12">
+
+                                <label class="form-label fw-semibold">
+                                    Notes
+                                </label>
+
+                                <textarea
+                                    rows="2"
+                                    class="form-control payment-remarks"
+                                    placeholder="Optional note"></textarea>
+
+                            </div>
+
+                        </div>
+                        `
+                    }
 
                 </div>
 
             </div>
 
+            <!-- HIDDEN -->
             <input
                 type="hidden"
                 class="payment-method-id"
@@ -2518,19 +2706,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 type="hidden"
                 class="payment-method-name"
                 value="${paymentMethodName}">
-
-            <div class="text-end mt-3">
-
-                <button
-                    type="button"
-                    class="btn btn-light-danger btn-sm remove-payment-row">
-
-                    Remove
-
-                </button>
-
-            </div>
-
         </div>
         `;
     };
@@ -4288,6 +4463,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 sessionStorage.removeItem(
                     'shop_order_id'
                 );
+
+                resetCartUI();
 
             } catch (error) {
 

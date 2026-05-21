@@ -680,156 +680,93 @@
 
     </div>
 
-    <div
-        class="modal fade"
-        id="payment-modal"
-        tabindex="-1"
-        aria-hidden="true">
+    <div class="modal fade" id="payment-modal" tabindex="-1" aria-hidden="true">
 
         <div class="modal-dialog modal-dialog-centered modal-lg">
 
             <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
 
                 <!-- HEADER -->
-                <div class="modal-header border-0 bg-success text-white py-3">
+                <div class="modal-header py-3">
 
                     <div>
                         <h5 class="modal-title fw-bold mb-0">
                             Complete Payment
                         </h5>
-
                         <div class="small opacity-75">
                             Split payments supported
                         </div>
                     </div>
 
-                    <button
-                        type="button"
-                        class="btn-close btn-close-white"
-                        data-bs-dismiss="modal">
-                    </button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
 
                 </div>
 
                 <!-- BODY -->
                 <div class="modal-body p-4">
 
-                    <!-- ORDER SUMMARY -->
-                    <div class="card border-0 bg-light rounded-4 mb-4">
+                    <!-- TOP SUMMARY BAR -->
+                    <div class="row g-3 mb-4">
 
-                        <div class="card-body p-4">
-
-                            <div class="d-flex justify-content-between align-items-center">
-
-                                <div>
-
-                                    <div class="text-muted small">
-                                        Outstanding Balance
-                                    </div>
-
-                                    <div
-                                        class="fw-bold fs-1 text-success"
-                                        id="payment-balance-display">
-
-                                        ₱ 0.00
-
-                                    </div>
-
+                        <!-- DUE -->
+                        <div class="col-md-4">
+                            <div class="card border-0 bg-light rounded-4">
+                                <div class="card-body text-center">
+                                    <div class="text-muted small">Amount Due</div>
+                                    <div class="fs-1 fw-bold text-danger" id="payment-balance-display">₱ 0.00</div>
                                 </div>
-
-                                <div class="text-end">
-
-                                    <div class="small text-muted">
-                                        Order No.
-                                    </div>
-
-                                    <div
-                                        class="fw-semibold"
-                                        id="payment-order-number">
-                                    </div>
-
-                                </div>
-
                             </div>
+                        </div>
 
+                        <!-- PAID -->
+                        <div class="col-md-4">
+                            <div class="card border-0 bg-light rounded-4">
+                                <div class="card-body text-center">
+                                    <div class="text-muted small">Total Paid</div>
+                                    <div class="fs-1 fw-bold text-dark" id="total-payment-display">₱ 0.00</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CHANGE -->
+                        <div class="col-md-4">
+                            <div class="card border-0 bg-light rounded-4">
+                                <div class="card-body text-center">
+                                    <div class="text-muted small">Change</div>
+                                    <div class="fs-1 fw-bold text-success" id="payment-change-display">₱ 0.00</div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- ORDER INFO -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+
+                        <div class="text-muted small">
+                            Order No:
+                            <span class="fw-bold text-dark" id="payment-order-number"></span>
                         </div>
 
                     </div>
 
                     <!-- PAYMENT METHODS -->
-                    <div id="payment-method-list">
+                    <div id="payment-method-list"></div>
 
-                        <!-- Dynamic -->
-
-                    </div>
-
-                    <!-- TOTAL SECTION -->
-                    <div class="card border-0 bg-light rounded-4 mt-4">
-
-                        <div class="card-body p-4">
-
-                            <div class="d-flex justify-content-between mb-2">
-
-                                <span class="text-muted">
-                                    Total Payment
-                                </span>
-
-                                <span
-                                    class="fw-bold"
-                                    id="total-payment-display">
-
-                                    ₱ 0.00
-
-                                </span>
-
-                            </div>
-
-                            <div class="d-flex justify-content-between mb-2">
-
-                                <span class="text-muted">
-                                    Change
-                                </span>
-
-                                <span
-                                    class="fw-bold text-primary"
-                                    id="payment-change-display">
-
-                                    ₱ 0.00
-
-                                </span>
-
-                            </div>
-
-                            <div
-                                class="alert alert-danger py-2 px-3 mb-0 d-none"
-                                id="payment-validation-message">
-                            </div>
-
-                        </div>
-
-                    </div>
+                    <!-- VALIDATION -->
+                    <div class="alert alert-danger d-none mt-3" id="payment-validation-message"></div>
 
                 </div>
 
                 <!-- FOOTER -->
-                <div class="modal-footer border-0 p-4">
+                <div class="modal-footer border-0 p-4 d-flex justify-content-between">
 
-                    <button
-                        type="button"
-                        class="btn btn-light px-4"
-                        data-bs-dismiss="modal">
-
+                    <button class="btn btn-light px-4" data-bs-dismiss="modal">
                         Cancel
-
                     </button>
 
-                    <button
-                        type="button"
-                        class="btn btn-success px-5 fw-bold"
-                        id="complete-payment-button">
-
+                    <button class="btn btn-success px-5 fw-bold" id="complete-payment-button">
                         Complete Payment
-
                     </button>
 
                 </div>

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use TCPDF;
-use App\Models\Company;
 use App\Models\ShopOrder;
 use Illuminate\Support\Facades\Auth;
 

@@ -459,6 +459,9 @@ class ShopOrderController extends Controller
                         'is_vat_exempt' =>
                             $discount->is_vat_exempt,
 
+                        'applied_by' => Auth::id(),
+                        'applied_by_name' => Auth::user()->name,
+
                         'last_log_by' =>
                             Auth::id(),
                     ]);
@@ -515,6 +518,9 @@ class ShopOrderController extends Controller
 
                         'tax_type' =>
                             $charge->tax_type,
+
+                        'applied_by' => Auth::id(),
+                        'applied_by_name' => Auth::user()->name,
 
                         'last_log_by' =>
                             Auth::id(),
@@ -1842,41 +1848,104 @@ class ShopOrderController extends Controller
 
             if ($shopOrder->shopRegister?->is_restaurant === 'No') {
 
+                $warehouseIds = ShopRegisterWarehouse::query()
+
+                    ->where(
+                        'shop_register_id',
+                        $shopOrder->shop_register_id
+                    )
+
+                    ->pluck('warehouse_id')
+                    ->toArray();
+
+                if (empty($warehouseIds)) {
+
+                    throw new \Exception(
+                        'No warehouse assigned to register.'
+                    );
+                }
+
                 foreach ($shopOrder->items as $item) {
 
-                    $product = Product::find($item->product_id);
+                    $product = Product::query()
+                        ->find($item->product_id);
 
-                    if (!$product || $product->track_inventory === 'No') {
+                    if (!$product) {
                         continue;
                     }
 
-                    $bomItems = ProductBom::where('product_id', $product->id)->get();
+                    /*
+                    |--------------------------------------------------------------------------
+                    | CHECK BOM FIRST
+                    |--------------------------------------------------------------------------
+                    */
 
-                    if ($bomItems->isEmpty()) {
+                    $bomItems = ProductBom::query()
+
+                        ->where(
+                            'product_id',
+                            $product->id
+                        )
+
+                        ->get();
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | CASE 1:
+                    | PRODUCT HAS BOM
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if ($bomItems->isNotEmpty()) {
+
+                        foreach ($bomItems as $bom) {
+
+                            $bomProduct = Product::query()
+                                ->find($bom->bom_product_id);
+
+                            if (
+                                !$bomProduct
+                                || $bomProduct->track_inventory === 'No'
+                            ) {
+                                continue;
+                            }
+
+                            $requiredQuantity =
+                                $bom->quantity
+                                * $item->quantity;
+
+                            $this->deductInventory(
+                                product: $bomProduct,
+                                quantity: $requiredQuantity,
+                                referenceNumber: $shopOrder->order_number,
+                                warehouseIds: $warehouseIds
+                            );
+                        }
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | IMPORTANT:
+                        | DO NOT DEDUCT PARENT PRODUCT
+                        |--------------------------------------------------------------------------
+                        */
+
+                        continue;
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | CASE 2:
+                    | STANDALONE INVENTORY PRODUCT
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if ($product->track_inventory === 'Yes') {
 
                         $this->deductInventory(
                             product: $product,
                             quantity: $item->quantity,
                             referenceNumber: $shopOrder->order_number,
-                            warehouseIds: $shopOrder->shopRegister->warehouses->pluck('warehouse_id')->toArray()
-                        );
-
-                        continue;
-                    }
-
-                    foreach ($bomItems as $bom) {
-
-                        $bomProduct = Product::find($bom->bom_product_id);
-
-                        if (!$bomProduct || $bomProduct->track_inventory === 'No') {
-                            continue;
-                        }
-
-                        $this->deductInventory(
-                            product: $bomProduct,
-                            quantity: $bom->quantity * $item->quantity,
-                            referenceNumber: $shopOrder->order_number,
-                            warehouseIds: $shopOrder->shopRegister->warehouses->pluck('warehouse_id')->toArray()
+                            warehouseIds: $warehouseIds
                         );
                     }
                 }
