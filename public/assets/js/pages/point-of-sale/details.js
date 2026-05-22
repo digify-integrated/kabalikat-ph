@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let cartInitialized = false;
     let selectedFloorPlanId = null;
     let selectedTableId = null;
+    let cachedOrders = [];
     
     const config = {
         forms: [
@@ -242,6 +243,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
             throw error;
         }
+    };
+
+    const getOrderStatusClass = (paymentStatus, orderStatus) => {
+
+        if (orderStatus === 'Cancelled') return 'badge-light-warning';
+
+        if (orderStatus === 'Voided') return 'badge-light-danger';
+
+        if (paymentStatus === 'Refunded') return 'badge-light-danger';
+
+        if (paymentStatus === 'Paid') return 'badge-light-success';
+
+        if (paymentStatus === 'Unpaid') return 'badge-light-warning';
+
+        return 'badge-light-primary';
+    };
+
+    const getOrderStatusColor = (paymentStatus, orderStatus) => {
+
+        if (orderStatus === 'Cancelled') return '#dc3545'; // red
+        if (orderStatus === 'Voided') return '#6c757d'; // gray
+        if (paymentStatus === 'Refunded') return '#0d6efd'; // blue
+        if (paymentStatus === 'Paid') return '#198754'; // green
+
+        return '#ffc107'; // unpaid = yellow
     };
 
     const calculatePayments = () => {
@@ -620,6 +646,138 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     };
 
+    const renderOrderHistoryGrid = (orders) => {
+
+        const html = orders.map(order => {
+
+            const statusClass = getOrderStatusClass(
+                order.payment_status,
+                order.order_status
+            );
+
+            const statusColor = getOrderStatusColor(
+                order.payment_status,
+                order.order_status
+            );
+
+            const tableInfo =
+                order.table_number
+                    ? `${order.floor_plan_name ?? ''} • Table ${order.table_number}`
+                    : null;
+
+            return `
+            <div class="col-12 col-md-6 col-xl-4">
+
+                <div
+                    class="card border-0 shadow-sm rounded-4 order-history-card cursor-pointer h-100 position-relative overflow-hidden"
+                    data-order-id="${order.id}">
+
+                    <!-- STATUS STRIP -->
+                    <div
+                        class="position-absolute top-0 start-0 h-100"
+                        style="width: 5px; background: ${statusColor};">
+                    </div>
+
+                    <div class="card-body p-4">
+
+                        <!-- TOP ROW -->
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+
+                            <div>
+
+                                <div class="fw-bold fs-6 text-gray-900">
+                                    ${order.order_number}
+                                </div>
+
+                                <div class="text-muted small">
+                                    ${order.customer_name ?? 'Walk-in Customer'}
+                                </div>
+
+                            </div>
+
+                            <span class="badge ${statusClass} fw-bold">
+                                ${order.payment_status}
+                            </span>
+
+                        </div>
+
+                        <!-- MIDDLE -->
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+
+                            <!-- LEFT SIDE -->
+                            <div class="d-flex align-items-center flex-wrap gap-2">
+
+                                <!-- ORDER TYPE -->
+                                <span class="badge badge-light-primary fw-semibold px-3 py-2">
+                                    ${order.order_type}
+                                </span>
+
+                                <!-- TABLE INFO -->
+                                ${tableInfo ? `
+                                    <span class="badge badge-light-info fw-semibold px-3 py-2">
+                                        ${tableInfo}
+                                    </span>
+                                ` : ''}
+
+                            </div>
+
+                            <!-- RIGHT SIDE -->
+                            <div class="fw-bolder fs-5 text-dark text-nowrap">
+
+                                ₱ ${Number(order.net_total).toLocaleString(undefined, {
+                                    minimumFractionDigits: 2
+                                })}
+
+                            </div>
+
+                        </div>
+
+                        <!-- BOTTOM META -->
+                        <div class="text-muted small d-flex justify-content-between">
+
+                            <span>
+                                # ${order.id}
+                            </span>
+
+                            <span>
+                                ${formatOrderTime(order.created_at)}
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+            `;
+        }).join('');
+
+        $('#order-history-grid').html(html);
+
+        if (!orders.length) {
+            $('#order-history-empty').removeClass('d-none');
+        } else {
+            $('#order-history-empty').addClass('d-none');
+        }
+    };
+
+    const renderOrderHeader = (order) => {
+
+        activeOrder.id = order?.id ?? activeOrder.id;
+        activeOrder.orderNumber = order?.order_number ?? activeOrder.orderNumber;
+        activeOrder.status = order?.order_status ?? activeOrder.status;
+        activeOrder.paymentStatus = order?.payment_status ?? activeOrder.paymentStatus;
+
+        $('#order-id').text(activeOrder.orderNumber ?? '--');
+
+        $('#badge-payment-status')
+            .text(activeOrder.paymentStatus ?? 'Unpaid');
+
+        $('#badge-order-type')
+            .text(order?.order_type ?? $('#badge-order-type').text());
+    };
+
     const initializeCart = async () => {
 
         const shopOrderId = sessionStorage.getItem('shop_order_id');
@@ -915,6 +1073,51 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const loadOrderHistory = async () => {
+
+        try {
+
+            $('#order-history-loading').removeClass('d-none');
+            $('#order-history-empty').addClass('d-none');
+            $('#order-history-grid').html('');
+
+            const csrf = getCsrfToken();
+            const ctx = getPageContext();
+
+            const formData = new URLSearchParams();
+            formData.append('shop_register_id', ctx.detailId ?? '');
+
+            const response = await fetch('/shop-order/fetch-history', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    Accept: 'application/json',
+                    ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+                },
+            });
+
+            const data = await response.json();
+
+            $('#order-history-loading').addClass('d-none');
+
+            if (!data.success) {
+                showNotification(data.message);
+                return;
+            }
+
+            cachedOrders = data.orders || [];
+
+            renderOrderHistoryGrid(cachedOrders);
+
+        } catch (error) {
+
+            $('#order-history-loading').addClass('d-none');
+
+            handleSystemError(error, 'load_order_history_failed', error.message);
+        }
+    };
+
     const assignTableToOrder = async (
         floorPlanTableId
     ) => {
@@ -1132,13 +1335,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const resetCartUI = () => {
 
-        /*
-        |--------------------------------------------------------------------------
-        | RESET HEADER
-        |--------------------------------------------------------------------------
-        */
+        const currentOrderId = sessionStorage.getItem('shop_order_number');
 
-        $('#order-id').text('--');
+        if (currentOrderId) {
+
+            $('#order-id')
+                .text(currentOrderId);
+
+        } else {
+
+            $('#order-id')
+                .text('No Active Order');
+        }
 
         /*
         |--------------------------------------------------------------------------
@@ -1175,15 +1383,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         /*
         |--------------------------------------------------------------------------
-        | HIDE ACTIONS
+        | ACTIONS (IMPORTANT: keep visible state consistent)
         |--------------------------------------------------------------------------
         */
 
-        toggleRegisterAction(false);
+        toggleCartActions(false);
 
         /*
         |--------------------------------------------------------------------------
-        | RESET STATE
+        | RESET STATE FLAG ONLY (NOT ORDER CONTEXT)
         |--------------------------------------------------------------------------
         */
 
@@ -1258,9 +1466,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         /*
         |--------------------------------------------------------------------------
-        | HEADER
+        | YOUR ORIGINAL FUNCTION (UNCHANGED)
         |--------------------------------------------------------------------------
         */
+
+        sessionStorage.setItem('shop_order_number', order.shop_order_number);
 
         $('#order-id').text(
             order.order_number ?? '--'
@@ -1270,18 +1480,11 @@ document.addEventListener('DOMContentLoaded', () => {
             order.order_type ?? 'Walk-in'
         );
 
-        if(order.order_type === 'Dine-in'){
+        if (order.order_type === 'Dine-in') {
             $('#set-table-column').removeClass('d-none');
-        }
-        else{
+        } else {
             $('#set-table-column').addClass('d-none');
         }
-
-        /*
-        |--------------------------------------------------------------------------
-        | BADGES
-        |--------------------------------------------------------------------------
-        */
 
         $('#badge-table').text(
             order.table_number
@@ -1289,25 +1492,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 : 'No Table'
         );
 
+        $('#badge-order-type').text(order.order_type);
+
         $('#badge-payment-status').text(
             order.payment_status ?? 'Unpaid'
         );
 
-        /*
-        |--------------------------------------------------------------------------
-        | HIDE STATES
-        |--------------------------------------------------------------------------
-        */
+        $('#badge-customer-name').text(
+            order.customer_name || 'Walk-in Customer'
+        );
 
         $('#shop-order-loading').addClass('d-none');
-
         $('#shop-order-empty').addClass('d-none');
-
-        /*
-        |--------------------------------------------------------------------------
-        | SHOW LIST
-        |--------------------------------------------------------------------------
-        */
 
         $('#shop-order-list')
             .removeClass('d-none');
@@ -1315,19 +1511,7 @@ document.addEventListener('DOMContentLoaded', () => {
         $('#shop-order-summary-card')
             .removeClass('d-none');
 
-        /*
-        |--------------------------------------------------------------------------
-        | SUMMARY
-        |--------------------------------------------------------------------------
-        */
-
         renderOrderSummary(order);
-
-        /*
-        |--------------------------------------------------------------------------
-        | ITEMS
-        |--------------------------------------------------------------------------
-        */
 
         const html = (order.items ?? [])
             .map(renderOrderItem)
@@ -1335,46 +1519,198 @@ document.addEventListener('DOMContentLoaded', () => {
 
         $('#shop-order-list').html(html);
 
-        /*
-        |--------------------------------------------------------------------------
-        | REGISTER ACTIONS
-        |--------------------------------------------------------------------------
-        |
-        | ONLY INITIALIZE ONCE
-        |
-        */
-
         if (!cartInitialized) {
-
-            toggleRegisterAction(true);
-
+            toggleCartActions(true);
             cartInitialized = true;
         }
 
+        if (typeof KTComponents !== 'undefined') {
+            KTComponents.init();
+        }
+
         /*
         |--------------------------------------------------------------------------
-        | KT COMPONENTS
+        | ONLY ADD THIS NEW PART (SAFE EXTENSION)
         |--------------------------------------------------------------------------
         */
 
-        if (typeof KTComponents !== 'undefined') {
+        applyCartState(order);
+    };
 
-            KTComponents.init();
+    const applyCartState = (order) => {
+
+        const isPaid =
+            order.payment_status === 'Paid';
+
+        const isRefunded =
+            order.payment_status === 'Refunded';
+
+        const isCancelled =
+            order.order_status === 'Cancelled';
+
+        const isVoided =
+            order.order_status === 'Voided';
+
+        const isLocked =
+            isPaid ||
+            isRefunded ||
+            isCancelled ||
+            isVoided;
+
+        /*
+        |--------------------------------------------------------------------------
+        | STATUS BADGE
+        |--------------------------------------------------------------------------
+        */
+
+        $('#badge-payment-status')
+            .removeClass()
+            .addClass(
+                `badge ${getOrderStatusClass(
+                    order.payment_status,
+                    order.order_status
+                )} px-4 py-3 fw-bold fs-8`
+            )
+            .text(order.payment_status ?? 'Unpaid');
+
+        /*
+        |--------------------------------------------------------------------------
+        | VOID + REFUND VISIBILITY
+        |--------------------------------------------------------------------------
+        */
+
+        if (isPaid && !isVoided) {
+
+            $('#void-order-column')
+                .removeClass('d-none');
+
+            $('#refund-order-column')
+                .removeClass('d-none');
+
+        }
+        else {
+
+            $('#void-order-column')
+                .addClass('d-none');
+
+            $('#refund-order-column')
+                .addClass('d-none');
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | LOCK ORDER
+        |--------------------------------------------------------------------------
+        */
+
+        if (isLocked) {
+
+            /*
+            |--------------------------------------------------------------------------
+            | DISABLE CART MODIFICATION
+            |--------------------------------------------------------------------------
+            */
+
+            $('#shop-order-list')
+                .find(
+                    'input, select, textarea, button'
+                )
+                .prop('disabled', true);
+
+            /*
+            |--------------------------------------------------------------------------
+            | DISABLE TRANSACTION ACTIONS
+            |--------------------------------------------------------------------------
+            */
+
+            $('#manage-payment-button').prop('disabled', true);
+
+            $('#kitchen-button').prop('disabled', true);
+
+            $('#cancel-button').prop('disabled', true);
+
+            $('#manage-discount-button').prop('disabled', true);
+
+            $('#manage-charge-button').prop('disabled', true);
+
+            $('#customer-button').prop('disabled', true);
+
+            $('#submit-product').prop('disabled', true);
+
+            $('#order-type').prop('disabled', true);
+
+            $('#set-table').prop('disabled', true);
+
+            /*
+            |--------------------------------------------------------------------------
+            | KEEP SAFE ACTIONS AVAILABLE
+            |--------------------------------------------------------------------------
+            */
+
+            $('#print-bill').prop('disabled', false);
+
+            $('#new-order').prop('disabled', false);
+
+            $('#order-history-button').prop('disabled', false);
+
+            $('#void-order-button').prop(
+                'disabled',
+                !isPaid
+            );
+
+            $('#refund-order-button').prop(
+                'disabled',
+                !isPaid
+            );
+
+        }
+        else {
+
+            /*
+            |--------------------------------------------------------------------------
+            | RESTORE EDIT MODE
+            |--------------------------------------------------------------------------
+            */
+
+            $('#shop-order-list')
+                .find(
+                    'input, select, textarea, button'
+                )
+                .prop('disabled', false);
+
+            $('#manage-payment-button').prop('disabled', false);
+
+            $('#kitchen-button').prop('disabled', false);
+
+            $('#cancel-button').prop('disabled', false);
+
+            $('#manage-discount-button').prop('disabled', false);
+
+            $('#manage-charge-button').prop('disabled', false);
+
+            $('#customer-button').prop('disabled', false);
+
+            $('#submit-product').prop('disabled', false);
+
+            $('#order-type').prop('disabled', false);
+
+            $('#set-table').prop('disabled', false);
+
+            $('#print-bill').prop('disabled', false);
         }
     };
 
-    const toggleRegisterAction = (show = false) => {
+    const toggleCartActions = (show = false) => {
         if (show) {
 
-            $('.register-action')
+            $('.cart-action')
                 .removeClass('d-none');
+
+            return;
         }
 
-        else {
-
-            $('.register-action')
-                .addClass('d-none');
-        }
+        $('.cart-action')
+            .addClass('d-none');
     };
 
     const formatPeso = (value = 0) => {
@@ -1383,6 +1719,13 @@ document.addEventListener('DOMContentLoaded', () => {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         })}`;
+    };
+
+    const formatOrderTime = (datetime) => {
+
+        if (!datetime) return '--';
+
+        return moment(datetime).format('MMM D, hh:mm A');
     };
 
     const parseMoney = (value) => {
@@ -2882,6 +3225,162 @@ document.addEventListener('DOMContentLoaded', () => {
         `);
     };
 
+    const filterOrderHistory = () => {
+
+        const search = $('#order-history-search')
+            .val()
+            .toLowerCase()
+            .trim();
+
+        const filter = $('#order-history-filter')
+            .val();
+
+        let filtered = [...cachedOrders];
+
+        /*
+        |--------------------------------------------------------------------------
+        | SEARCH FILTER
+        |--------------------------------------------------------------------------
+        */
+
+        if (search) {
+            filtered = filtered.filter(order => {
+
+                return (
+                    order.order_number?.toLowerCase().includes(search) ||
+                    order.customer_name?.toLowerCase().includes(search)
+                );
+            });
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | STATUS FILTER
+        |--------------------------------------------------------------------------
+        */
+
+        if (filter && filter !== 'all') {
+
+            filtered = filtered.filter(order => {
+
+                return (
+                    order.payment_status === filter ||
+                    order.order_status === filter
+                );
+            });
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | RENDER RESULT
+        |--------------------------------------------------------------------------
+        */
+
+        renderOrderHistoryGrid(filtered);
+    };
+
+    const saveCustomer = async () => {
+
+        try {
+
+            const shopOrderId =
+                sessionStorage.getItem('shop_order_id');
+
+            if (!shopOrderId) {
+
+                showNotification(
+                    'No active order found.'
+                );
+
+                return;
+            }
+
+            const customerName =
+                $('#customer-name-input')
+                    .val()
+                    .trim();
+
+            const csrf = getCsrfToken();
+
+            const formData = new URLSearchParams();
+
+            formData.append(
+                'shop_order_id',
+                shopOrderId
+            );
+
+            formData.append(
+                'customer_name',
+                customerName
+            );
+
+            const response = await fetch(
+                '/shop-order/save-customer',
+                {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Content-Type':
+                            'application/x-www-form-urlencoded; charset=UTF-8',
+
+                        Accept: 'application/json',
+
+                        ...(csrf
+                            ? { 'X-CSRF-TOKEN': csrf }
+                            : {}),
+                    },
+                }
+            );
+
+            if (!response.ok) {
+
+                throw new Error(
+                    `Update customer failed: ${response.status}`
+                );
+            }
+
+            const data = await response.json();
+
+            if (!data.success) {
+
+                showNotification(data.message);
+
+                return;
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | UPDATE BADGE
+            |--------------------------------------------------------------------------
+            */
+
+            $('#badge-customer-name').text(
+                data.customer_name || 'Walk-in Customer'
+            );
+
+            /*
+            |--------------------------------------------------------------------------
+            | CLOSE MODAL
+            |--------------------------------------------------------------------------
+            */
+
+            $('#customer-modal').modal('hide');
+
+            showNotification(
+                'Customer updated successfully.',
+                'success'
+            );
+
+        } catch (error) {
+
+            handleSystemError(
+                error,
+                'save_customer_failed',
+                error.message
+            );
+        }
+    };
+
     config.forms.map((cfg) => initValidation(cfg.selector, cfg.rules));
     config.posCategory.map((cfg) => generatePOSCategory(cfg.url));
     config.posProduct.map((cfg) => generatePOSProduct(cfg.url));
@@ -3115,6 +3614,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target.closest('#new-order')) {
 
             sessionStorage.removeItem('shop_order_id');
+            sessionStorage.removeItem('shop_order_number');
             resetCartUI();
         }
     });
@@ -4484,6 +4984,89 @@ document.addEventListener('DOMContentLoaded', () => {
                         Complete Payment
                     `);
             }
+        }
+    );
+
+    $(document).on(
+        'click',
+        '#order-history-button',
+        function () {
+            loadOrderHistory();
+        }
+    );
+
+    $(document).on('click', '.order-history-card', function () {
+
+        const orderId = $(this).data('order-id');
+        
+        sessionStorage.setItem('shop_order_id', orderId);
+
+        loadCart(orderId, {
+            silent: false
+        });
+
+        $('#order-history-modal').modal('hide');
+    });
+
+    $(document).on('input', '#order-history-search', function () {
+        filterOrderHistory();
+    });
+
+    $(document).on('change', '#order-history-filter', function () {
+        filterOrderHistory();
+    });
+
+    $(document).on(
+        'click',
+        '#customer-button',
+        function () {
+
+            const currentCustomer =
+                $('#badge-customer-name').text().trim();
+
+            $('#customer-name-input').val(
+                currentCustomer === 'Walk-in Customer'
+                    ? ''
+                    : currentCustomer
+            );
+
+            $('#current-customer-name').text(
+                currentCustomer
+            );
+        }
+    );
+
+    $(document).on(
+        'click',
+        '.customer-quick-select',
+        function () {
+
+            const customerName =
+                $(this).data('customer-name');
+
+            $('#customer-name-input').val(
+                customerName
+            );
+        }
+    );
+
+    $(document).on(
+        'click',
+        '#save-customer-button',
+        function () {
+
+            saveCustomer();
+        }
+    );
+
+    $(document).on(
+    'click',
+        '#remove-customer-button',
+        function () {
+
+            $('#customer-name-input').val('');
+
+            saveCustomer();
         }
     );
 });

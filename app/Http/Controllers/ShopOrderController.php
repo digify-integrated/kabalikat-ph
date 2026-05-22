@@ -1971,6 +1971,91 @@ class ShopOrderController extends Controller
         }
     }
 
+    public function saveCustomer(Request $request)
+    {
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'shop_order_id' => [
+                    'required',
+                    'integer',
+                    Rule::exists(
+                        'shop_order',
+                        'id'
+                    ),
+                ],
+
+                'customer_name' => [
+                    'nullable',
+                    'string',
+                    'max:255',
+                ],
+            ]
+        );
+
+        if ($validator->fails()) {
+
+            return response()->json([
+                'success' => false,
+                'message'
+                    => $validator
+                        ->errors()
+                        ->first(),
+            ]);
+        }
+
+        $validated =
+            $validator->validated();
+
+        $shopOrder = ShopOrder::query()
+            ->find(
+                $validated['shop_order_id']
+            );
+
+        /*
+        |--------------------------------------------------------------------------
+        | LOCKED ORDERS
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            in_array(
+                $shopOrder->payment_status,
+                ['Paid', 'Refunded']
+            )
+            ||
+            in_array(
+                $shopOrder->order_status,
+                ['Cancelled', 'Voided']
+            )
+        ) {
+
+            return response()->json([
+                'success' => false,
+                'message'
+                    => 'Customer can no longer be modified.',
+            ]);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | UPDATE
+        |--------------------------------------------------------------------------
+        */
+
+        $shopOrder->update([
+            'customer_name'
+                => $validated['customer_name'] ?: null,
+        ]);
+
+        return response()->json([
+            'success' => true,
+
+            'customer_name'
+                => $shopOrder->customer_name,
+        ]);
+    }
+
     private function calculatePaymentTotals(array $payments): array
     {
         $totalPayment = 0;
@@ -2565,9 +2650,7 @@ class ShopOrderController extends Controller
         ]);
     }
 
-    public function fetchPaymentMethods(
-        Request $request
-    )
+    public function fetchPaymentMethods(Request $request)
     {
         $validator = Validator::make(
             $request->all(),
@@ -2632,6 +2715,131 @@ class ShopOrderController extends Controller
             'payment_methods'
                 => $paymentMethods,
         ]);
+    }
+
+    public function fetchHistory(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'shop_register_id' => [
+                'required',
+                'integer',
+                Rule::exists('shop_register', 'id'),
+            ],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ]);
+        }
+
+        $validated = $validator->validated();
+
+        $session = ShopRegisterSession::query()
+            ->where('shop_register_id', $validated['shop_register_id'])
+            ->whereNull('close_time')
+            ->latest()
+            ->first();
+
+        if (!$session) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No active session found.',
+            ]);
+        }
+
+        $orders = ShopOrder::query()
+            ->where('shop_register_session_id', $session->id)
+            ->latest()
+            ->limit(200)
+            ->get([
+                'id',
+                'order_number',
+                'customer_name',
+                'order_type',
+                'order_status',
+                'payment_status',
+                'net_total',
+                'floor_plan_name',
+                'table_number',
+                'created_at',
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'session_id' => $session->id,
+            'orders' => $orders,
+        ]);
+    }
+
+    public function fetchOrder(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'shop_order_id' => [
+                'required',
+                'integer',
+                Rule::exists('shop_order', 'id'),
+            ],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ]);
+        }
+
+        $order = ShopOrder::query()
+            ->with(['items'])
+            ->find($request->shop_order_id);
+
+        if (!$order) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Order not found.',
+            ]);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | ORDER LOCK LOGIC
+        |--------------------------------------------------------------------------
+        */
+
+        $isLocked =
+            $order->payment_status === 'Paid'
+            || $order->order_status === 'Cancelled'
+            || $order->order_status === 'Voided'
+            || $order->payment_status === 'Refunded';
+
+        return response()->json([
+            'success' => true,
+            'order' => $order,
+            'is_locked' => $isLocked,
+            'lock_reason' => $this->getOrderLockReason($order),
+        ]);
+    }
+
+    private function getOrderLockReason($order): ?string
+    {
+        if ($order->order_status === 'Cancelled') {
+            return 'This order has been cancelled.';
+        }
+
+        if ($order->order_status === 'Voided') {
+            return 'This order has been voided.';
+        }
+
+        if ($order->payment_status === 'Refunded') {
+            return 'This order has been refunded.';
+        }
+
+        if ($order->payment_status === 'Paid') {
+            return 'This order has already been paid.';
+        }
+
+        return null;
     }
 
     public function fetchDetails(Request $request)

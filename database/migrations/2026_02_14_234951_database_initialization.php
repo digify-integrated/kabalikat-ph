@@ -2015,6 +2015,28 @@ return new class extends Migration
             $table->string('cancelled_by_name')
                 ->nullable();
 
+            $table->foreignId('voided_by')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
+
+            $table->string('voided_by_name')
+                ->nullable();
+
+            $table->string('void_reason')
+                ->nullable();
+
+            $table->foreignId('refund_by')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
+
+            $table->string('refund_by_name')
+                ->nullable();
+
+            $table->string('refund_reason')
+                ->nullable();
+
             $table->foreignId('last_log_by')
                 ->nullable()
                 ->default(1)

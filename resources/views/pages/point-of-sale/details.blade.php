@@ -34,232 +34,473 @@
         </div>
     
         <div class="col-lg-4">
-            <div class="card border-0 shadow-sm bg-body">
 
-            <!-- HEADER -->
-            <div class="card-header border-0 pt-6 px-6">
-                <div class="d-flex flex-column">
-                    <h2 class="fw-bold mb-1 text-primary" id="order-details-title">
-                        <i class="ki-duotone text-primary ki-handcart fs-3 me-2"></i>
-                        Cart
-                    </h2>
-                    <div class="text-muted fw-semibold">
-                        Order ID # <span id="order-id">--</span>
-                    </div>
-                </div>
+            <div class="card border-0 shadow-sm h-100 overflow-hidden">
 
-                <!-- ACTIONS -->
-                <div class="card-toolbar register-action d-none">
-                    <button
-                        class="btn btn-icon btn-light btn-sm"
-                        data-kt-menu-trigger="click"
-                        data-kt-menu-placement="bottom-end">
+                <!-- ===================================================== -->
+                <!-- STICKY TOP HEADER -->
+                <!-- ===================================================== -->
+                <div class="border-bottom px-5 py-4">
 
-                        <i class="ki-outline ki-dots-vertical fs-2"></i>
-                    </button>
+                    <div class="d-flex justify-content-between align-items-start">
 
-                    <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg-light-primary fw-semibold w-200px py-3"
-                        data-kt-menu="true">
+                        <!-- LEFT -->
+                        <div>
 
-                        <div class="menu-item px-3">
-                            <a href="javascript:void(0)"
-                                class="menu-link px-3 text-danger"
-                                data-bs-toggle="modal"
-                                data-bs-target="#cancel-order-modal">
-                                Cancel Order
-                            </a>
-                        </div>
+                            <div class="d-flex align-items-center gap-2 mb-1">
 
-                        <div class="menu-item px-3">
-                            <a href="javascript:void(0)"
-                                class="menu-link px-3" id="new-order">
-                                New Order
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                                <div class="symbol symbol-40px">
 
-            <!-- BODY -->
-            <div class="card-body px-6 pb-6">
+                                    <div class="symbol-label">
 
-                <!-- ORDER SETTINGS -->
-                <div class="row g-3 mb-5 register-action d-none">
-                    <div class="col">
-                        <select
-                            class="form-select form-select-solid fw-semibold"
-                            id="order-type">
+                                        <i class="ki-duotone ki-handcart fs-2 text-primary">
+                                            <span class="path1"></span>
+                                            <span class="path2"></span>
+                                        </i>
 
-                            <option value="Walk-in">Walk-in</option>
-                            @if($shopRegister->is_restaurant === 'Yes')
-                                <option value="Dine-in">Dine-in</option>
-                                <option value="Take-out">Take-out</option>
-                            @endif
-                            <option value="Delivery">Delivery</option>
+                                    </div>
 
-                        </select>
-                    </div>
-                    @if($shopRegister->is_restaurant === 'Yes')
-                        <div class="col d-none" id="set-table-column">
-                            <button class="btn btn-light-success w-100 fw-bold" id="set-table" data-bs-toggle="modal" data-bs-target="#table-modal">
-                                Table
-                            </button>
-                        </div>
-                    @endif
-                    <div class="col">
-                       <button
-                            class="btn btn-light-warning w-100 fw-bold"
-                            data-bs-toggle="modal"
-                            data-bs-target="#customer-modal">
-                            Customer
-                        </button>
-                    </div>
-                </div>
+                                </div>
 
-                <!-- ORDER BADGES -->
-                <div class="d-flex flex-wrap gap-2 mb-5 register-action d-none">
-                    @if($shopRegister->is_restaurant === 'Yes')
-                        <span
-                            class="badge badge-light-primary fw-bold"
-                            id="badge-table">
-                            No Table
-                        </span>
-                    @endif
+                                <div>
 
-                    <span
-                        class="badge badge-light-warning fw-bold"
-                        id="badge-payment-status">
+                                    <div class="fw-bold fs-3 text-gray-900">
+                                        Cart
+                                    </div>
 
-                        Unpaid
+                                    <div class="text-muted fw-semibold small">
+                                        Order No: <span class="text-danger" id="order-id">No Active Order</span>
+                                    </div>
 
-                    </span>
+                                </div>
 
-                </div>
-
-                <!-- LOADING -->
-                <div
-                    id="shop-order-loading"
-                    class="d-none text-center py-10">
-
-                    <div class="spinner-border text-primary mb-3"></div>
-
-                    <div class="fw-semibold text-muted">
-                        Loading cart...
-                    </div>
-
-                </div>
-
-                <!-- EMPTY -->
-                <div
-                    id="shop-order-empty"
-                    class="text-center py-10">
-
-                    <div class="mb-4">
-                        <i class="ki-duotone ki-handcart fs-5x text-muted">
-                            <span class="path1"></span>
-                            <span class="path2"></span>
-                        </i>
-                    </div>
-
-                    <div class="fw-bold fs-3 text-gray-700 mb-2">
-                        Empty Cart
-                    </div>
-
-                    <div class="text-muted fw-semibold">
-                        Add products to start a new order.
-                    </div>
-
-                </div>
-
-                <!-- ORDER ITEMS -->
-                <div
-                    class="pe-2 mb-5 d-none"
-                    style="max-height: 420px; overflow-y: auto;"
-                    id="shop-order-list">
-
-                </div>
-
-                <!-- SUMMARY -->
-                <div
-                    class="card border-0 bg-light mb-5 d-none"
-                    id="shop-order-summary-card">
-
-                    <div class="card-body p-5">
-
-                        <div id="order-summary-list">
-
-                            <!-- Dynamic summary -->
+                            </div>
 
                         </div>
 
-                    </div>
+                        <!-- RIGHT -->
+                        <div class="dropdown always-visible-action">
 
-                </div>
-
-                <!-- SECONDARY ACTIONS -->
-                <div class="row g-3 mb-3 register-action d-none">
-
-                    <div class="col">
-                        <button class="btn btn-light w-100 py-3 fw-semibold" id="print-bill">
-                            Print Bill
-                        </button>
-                    </div>
-
-                    <div class="col">
-                        <button
-                            class="btn btn-light-success w-100 py-3 fw-semibold"
-                            data-bs-toggle="modal"
-                            data-bs-target="#discount-modal"
-                             id="manage-discount-button">
-
-                            Discounts
-
-                        </button>
-                    </div>
-
-                    <div class="col">
-                        <button
-                            class="btn btn-light-danger w-100 py-3 fw-semibold"
-                            data-bs-toggle="modal"
-                            data-bs-target="#charges-modal"
-                            id="manage-charge-button">
-
-                            Charges
-
-                        </button>
-                    </div>
-
-                </div>
-
-                <!-- PRIMARY ACTIONS -->
-                <div class="row g-3 register-action d-none">
-                    @if($shopRegister->is_restaurant === 'Yes')
-                        <div class="col">
                             <button
-                                class="btn btn-warning w-100 py-4 fw-bold fs-5">
+                                class="btn btn-icon btn-light btn-sm"
+                                data-bs-toggle="dropdown">
 
-                                Send To Kitchen
+                                <i class="ki-outline ki-dots-vertical fs-2"></i>
 
                             </button>
+
+                            <div class="dropdown-menu dropdown-menu-end rounded-4 shadow-sm border-0 p-2 w-225px">
+
+                                <button
+                                    class="dropdown-item rounded-3 py-3 fw-semibold"
+                                    id="new-order">
+
+                                    <i class="ki-outline ki-plus fs-4 me-2 text-primary"></i>
+                                    New Order
+
+                                </button>
+
+                                <button
+                                    class="dropdown-item rounded-3 py-3 fw-semibold"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#order-history-modal"
+                                    id="order-history-button">
+
+                                    <i class="ki-outline ki-time fs-4 me-2 text-dark"></i>
+                                    Order History
+
+                                </button>
+
+                                <div class="separator my-2"></div>
+
+                                <button
+                                    class="dropdown-item rounded-3 py-3 text-danger fw-bold"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#cancel-order-modal"
+                                    id="cancel-button">
+
+                                    <i class="ki-outline ki-cross-circle fs-4 me-2 text-danger"></i>
+                                    Cancel Order
+
+                                </button>
+
+                            </div>
+
                         </div>
-                    @endif
-                    
 
-                    <div class="col">
-                        <button
-                            class="btn btn-success w-100 py-4 fw-bold fs-5"
-                            data-bs-toggle="modal"
-                            data-bs-target="#payment-modal"
-                            id="manage-payment-button">
+                    </div>
 
-                            Payment
+                    <!-- QUICK STATUS -->
+                    <div class="d-flex gap-2 flex-wrap mt-4 cart-action d-none">
 
-                        </button>
+                        <span
+                            class="badge badge-light-success px-4 py-3 fw-bold fs-8"
+                            id="badge-payment-status">
+
+                            --
+
+                        </span>
+
+                        <span
+                            class="badge badge-light-primary px-4 py-3 fw-bold fs-8"
+                            id="badge-order-type">
+                            Walk-in
+                        </span>
+
+                        <span
+                            class="badge badge-light-warning px-4 py-3 fw-bold fs-8"
+                            id="badge-customer-name">
+
+                            Walk-in Customer
+
+                        </span>
+
+                        @if($shopRegister->is_restaurant === 'Yes')
+
+                            <span
+                                class="badge badge-light-info px-4 py-3 fw-bold fs-8"
+                                id="badge-table">
+
+                                No Table
+
+                            </span>
+
+                        @endif
+
+                    </div>
+
+                </div>
+
+                <!-- ===================================================== -->
+                <!-- MAIN BODY -->
+                <!-- ===================================================== -->
+                <div class="card-body p-0 d-flex flex-column">
+
+                    <!-- ===================================================== -->
+                    <!-- QUICK ACTION STRIP -->
+                    <!-- ===================================================== -->
+                    <div class="border-bottom px-4 py-3 cart-action d-none bg-light">
+
+                        <div class="row g-2">
+
+                            <div class="col-4">
+
+                                <button
+                                    class="btn btn-light-primary w-100 h-100 fw-bold py-3"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#customer-modal"
+                                    id="customer-button">
+
+                                    <i class="ki-outline ki-user fs-2 d-block mb-1"></i>
+
+                                    <span class="small">
+                                        Customer
+                                    </span>
+
+                                </button>
+
+                            </div>
+
+                            <div class="col-4">
+
+                                <button
+                                    class="btn btn-light-warning w-100 h-100 fw-bold py-3"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#discount-modal"
+                                    id="manage-discount-button">
+
+                                    <i class="ki-outline ki-discount fs-2 d-block mb-1"></i>
+
+                                    <span class="small">
+                                        Discount
+                                    </span>
+
+                                </button>
+
+                            </div>
+
+                            <div class="col-4">
+
+                                <button
+                                    class="btn btn-light-danger w-100 h-100 fw-bold py-3"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#charges-modal"
+                                    id="manage-charge-button">
+
+                                    <i class="ki-outline ki-dollar fs-2 d-block mb-1"></i>
+
+                                    <span class="small">
+                                        Charges
+                                    </span>
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- ===================================================== -->
+                    <!-- ORDER TYPE + TABLE -->
+                    <!-- ===================================================== -->
+                    <div class="px-5 pt-4 cart-action d-none">
+
+                        <div class="row g-3">
+
+                            <!-- ORDER TYPE -->
+                            <div class="col">
+
+                                <select
+                                    class="form-select form-select-solid fw-bold fs-6 rounded-4"
+                                    id="order-type">
+
+                                    <option value="Walk-in">
+                                        Walk-in
+                                    </option>
+
+                                    @if($shopRegister->is_restaurant === 'Yes')
+
+                                        <option value="Dine-in">
+                                            Dine-in
+                                        </option>
+
+                                        <option value="Take-out">
+                                            Take-out
+                                        </option>
+
+                                    @endif
+
+                                    <option value="Delivery">
+                                        Delivery
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                            @if($shopRegister->is_restaurant === 'Yes')
+
+                                <!-- TABLE -->
+                                <div
+                                    class="col d-none"
+                                    id="set-table-column">
+
+                                    <button
+                                        class="btn btn-light-warning w-100 fw-bolder py-3 rounded-4 d-flex align-items-center justify-content-center gap-2"
+                                        id="set-table"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#table-modal">
+
+                                        <i class="ki-outline ki-element-11 fs-3"></i>
+
+                                        <span id="selected-table-label">
+                                            Select Table
+                                        </span>
+
+                                    </button>
+
+                                </div>
+
+                            @endif
+
+                        </div>
+
+                    </div>
+
+                    <!-- ===================================================== -->
+                    <!-- EMPTY -->
+                    <!-- ===================================================== -->
+                    <div
+                        id="shop-order-empty"
+                        class="flex-grow-1 d-flex flex-column justify-content-center align-items-center text-center px-5 py-10">
+
+                        <div class="mb-5">
+
+                            <div class="symbol symbol-100px">
+
+                                <div class="symbol-label bg-light-primary rounded-circle">
+
+                                    <i class="ki-duotone ki-handcart fs-5x text-primary">
+                                        <span class="path1"></span>
+                                        <span class="path2"></span>
+                                    </i>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="fw-bold fs-2 text-gray-800 mb-2">
+                            Cart is Empty
+                        </div>
+
+                        <div class="text-muted fs-6 fw-semibold">
+                            Scan or select products to begin.
+                        </div>
+
+                    </div>
+
+                    <!-- ===================================================== -->
+                    <!-- CART LIST -->
+                    <!-- ===================================================== -->
+                    <div
+                        id="shop-order-list"
+                        class="d-none flex-grow-1 px-5 py-4"
+                        style="overflow-y:auto; max-height: 420px;">
+
+                    </div>
+
+                    <!-- ===================================================== -->
+                    <!-- SUMMARY -->
+                    <!-- ===================================================== -->
+                    <div
+                        id="shop-order-summary-card"
+                        class="border-top bg-light d-none">
+
+                        <div class="p-5">
+
+                            <div id="order-summary-list">
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- ===================================================== -->
+                <!-- STICKY BOTTOM ACTION BAR -->
+                <!-- ===================================================== -->
+                <div class="border-top p-4 cart-action d-none">
+
+                    <!-- ===================================================== -->
+                    <!-- ORDER UTILITIES -->
+                    <!-- ===================================================== -->
+                    <div class="row g-2 mb-3">
+                        <div class="col-12 mb-2">
+
+                            <button
+                                class="btn btn-light w-100 fw-bold py-3 rounded-4"
+                                id="print-bill">
+
+                                <div class="d-flex align-items-center justify-content-center gap-2">
+
+                                    <i class="ki-outline ki-cheque fs-2"></i>
+
+                                    <span>
+                                        Print Bill
+                                    </span>
+
+                                </div>
+
+                            </button>
+
+                        </div>
+
+                        <!-- VOID -->
+                        <div
+                            class="col-6 d-none"
+                            id="void-order-column">
+
+                           <button
+                                class="btn btn-danger w-100 py-4 fs-4 rounded-4"
+                                id="void-order-button"
+                                data-bs-toggle="modal"
+                                data-bs-target="#void-order-modal">
+
+                                <i class="ki-outline ki-cross-circle fs-2 me-2"></i>
+
+                                Void
+
+                            </button>
+
+                        </div>
+
+                        <!-- REFUND -->
+                        <div
+                            class="col-6 d-none"
+                            id="refund-order-column">
+
+                            <button
+                                class="btn btn-warning w-100 py-4 fs-4 rounded-4"
+                                id="refund-order-button"
+                                data-bs-toggle="modal"
+                                data-bs-target="#refund-order-modal">
+
+                                <i class="ki-outline ki-arrow-circle-left fs-2 me-2"></i>
+
+                                Refund
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                    <!-- MAIN ACTIONS -->
+                    <div class="row g-3">
+
+                        @if($shopRegister->is_restaurant === 'Yes')
+
+                            <div class="col">
+
+                                <button
+                                    class="btn btn-warning w-100 py-4 fs-4 rounded-4"
+                                    id="kitchen-button">
+
+                                    <i class="ki-outline ki-entrance-left fs-2 me-2"></i>
+
+                                    Kitchen
+
+                                </button>
+
+                            </div>
+
+                            <div class="col">
+
+                                <button
+                                    class="btn btn-success w-100 py-4 fs-4 rounded-4"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#payment-modal"
+                                    id="manage-payment-button">
+
+                                    <i class="ki-outline ki-wallet fs-2 me-2"></i>
+
+                                    Payment
+
+                                </button>
+
+                            </div>
+
+                        @else
+
+                            <div class="col-12">
+
+                                <button
+                                    class="btn btn-success w-100 py-4 fs-2 rounded-4 shadow-sm"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#payment-modal"
+                                    id="manage-payment-button">
+
+                                    <i class="ki-outline ki-wallet fs-1 me-3"></i>
+
+                                    Payment
+
+                                </button>
+
+                            </div>
+
+                        @endif
+
                     </div>
 
                 </div>
 
             </div>
+
         </div>
     </div>
 
@@ -465,47 +706,6 @@
                         <div
                             class="d-flex flex-wrap gap-3"
                             id="shop-floor-plan-container">
-
-                        </div>
-
-                        <!-- LEGEND -->
-                        <div class="d-flex flex-wrap align-items-center gap-5">
-
-                            <div class="d-flex align-items-center gap-2">
-
-                                <span
-                                    class="w-12px h-12px rounded-circle bg-success">
-                                </span>
-
-                                <span class="fs-7 fw-semibold text-muted">
-                                    Selected
-                                </span>
-
-                            </div>
-
-                            <div class="d-flex align-items-center gap-2">
-
-                                <span
-                                    class="w-12px h-12px rounded-circle border border-gray-400 bg-white">
-                                </span>
-
-                                <span class="fs-7 fw-semibold text-muted">
-                                    Available
-                                </span>
-
-                            </div>
-
-                            <div class="d-flex align-items-center gap-2">
-
-                                <span
-                                    class="w-12px h-12px rounded-circle bg-light-secondary">
-                                </span>
-
-                                <span class="fs-7 fw-semibold text-muted">
-                                    Occupied
-                                </span>
-
-                            </div>
 
                         </div>
 
@@ -767,6 +967,402 @@
 
                     <button class="btn btn-success px-5 fw-bold" id="complete-payment-button">
                         Complete Payment
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div
+        class="modal fade"
+        id="order-history-modal"
+        tabindex="-1"
+        aria-hidden="true">
+
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+
+            <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
+
+                <!-- HEADER -->
+                <div class="modal-header border-0 py-4 px-5">
+
+                    <div>
+
+                        <h2 class="fw-bold mb-1">
+                            Order History
+                        </h2>
+
+                        <div class="text-muted fw-semibold">
+                            Current register session orders
+                        </div>
+
+                    </div>
+
+                    <button
+                        type="button"
+                        class="btn btn-icon btn-sm btn-light"
+                        data-bs-dismiss="modal">
+
+                        <i class="ki-outline ki-cross fs-2"></i>
+
+                    </button>
+
+                </div>
+
+                <div class="p-4">
+
+                    <!-- SEARCH + FILTER -->
+                    <div class="row g-2 mb-3">
+
+                        <div class="col-8">
+                            <input type="text"
+                                class="form-control form-control-solid"
+                                id="order-history-search"
+                                placeholder="Search order number or customer...">
+                        </div>
+
+                        <div class="col-4">
+                            <select class="form-select form-select-solid"
+                                id="order-history-filter">
+
+                                <option value="all">All</option>
+                                <option value="Unpaid">Unpaid</option>
+                                <option value="Paid">Paid</option>
+                                <option value="Cancelled">Cancelled</option>
+                                <option value="Voided">Voided</option>
+                                <option value="Refunded">Refunded</option>
+
+                            </select>
+                        </div>
+
+                    </div>
+
+                    <!-- GRID -->
+                    <div id="order-history-grid"
+                        class="row g-3">
+
+                    </div>
+
+                    <!-- EMPTY -->
+                    <div id="order-history-empty"
+                        class="text-center text-muted py-10 d-none">
+                        No orders found
+                    </div>
+
+                    <!-- LOADING -->
+                    <div
+                        id="order-history-loading"
+                        class="text-center py-10 d-none">
+
+                        <div class="spinner-border text-primary mb-3" role="status"></div>
+
+                        <div class="fw-semibold text-muted">
+                            Loading orders...
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div
+        class="modal fade"
+        id="customer-modal"
+        tabindex="-1"
+        aria-hidden="true">
+
+        <div class="modal-dialog modal-dialog-centered">
+
+            <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
+
+                <!-- HEADER -->
+                <div class="modal-header border-0 px-5 py-4">
+
+                    <div>
+
+                        <h2 class="fw-bold mb-1">
+                            Customer
+                        </h2>
+
+                        <div class="text-muted fw-semibold">
+                            Assign customer to this order
+                        </div>
+
+                    </div>
+
+                    <button
+                        type="button"
+                        class="btn btn-icon btn-sm btn-light"
+                        data-bs-dismiss="modal">
+
+                        <i class="ki-outline ki-cross fs-2"></i>
+
+                    </button>
+
+                </div>
+
+                <!-- BODY -->
+                <div class="modal-body px-5 pb-5">
+
+                    <!-- QUICK BUTTONS -->
+                    <div class="mb-4">
+
+                        <div class="fw-bold text-gray-700 mb-3">
+                            Quick Select
+                        </div>
+
+                        <div class="d-flex flex-wrap gap-2">
+
+                            <button
+                                class="btn btn-light-primary rounded-pill customer-quick-select"
+                                data-customer-name="Walk-in Customer">
+
+                                Walk-in
+
+                            </button>
+
+                            <button
+                                class="btn btn-light-info rounded-pill customer-quick-select"
+                                data-customer-name="Guest">
+
+                                Guest
+
+                            </button>
+
+                            <button
+                                class="btn btn-light-success rounded-pill customer-quick-select"
+                                data-customer-name="VIP Customer">
+
+                                VIP
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                    <!-- INPUT -->
+                    <div class="mb-4">
+
+                        <label class="form-label fw-bold text-gray-700">
+                            Customer Name
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control form-control-solid form-control-lg"
+                            id="customer-name-input"
+                            placeholder="Enter customer name">
+
+                    </div>
+
+                    <!-- CURRENT -->
+                    <div
+                        class="alert alert-light-primary border border-primary border-dashed rounded-4"
+                        id="current-customer-container">
+
+                        <div class="fw-bold mb-1">
+                            Current Customer
+                        </div>
+
+                        <div
+                            class="text-gray-700"
+                            id="current-customer-name">
+
+                            Walk-in Customer
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- FOOTER -->
+                <div class="modal-footer border-0 px-5 pb-5 pt-0">
+
+                    <button
+                        type="button"
+                        class="btn btn-light-danger fw-bold"
+                        id="remove-customer-button">
+
+                        Remove Customer
+
+                    </button>
+
+                    <button
+                        type="button"
+                        class="btn btn-primary fw-bolder px-5"
+                        id="save-customer-button">
+
+                        Save Customer
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div
+        class="modal fade"
+        id="void-order-modal"
+        tabindex="-1"
+        aria-hidden="true">
+
+        <div class="modal-dialog modal-dialog-centered">
+
+            <div class="modal-content rounded-4 border-0 shadow-sm">
+
+                <div class="modal-header border-0">
+
+                    <div>
+
+                        <h2 class="fw-bold mb-1">
+                            Void Request
+                        </h2>
+
+                        <div class="text-muted small">
+                            Submit request for manager approval
+                        </div>
+
+                    </div>
+
+                    <button
+                        type="button"
+                        class="btn btn-icon btn-sm btn-light"
+                        data-bs-dismiss="modal">
+
+                        <i class="ki-outline ki-cross fs-2"></i>
+
+                    </button>
+
+                </div>
+
+                <div class="modal-body pt-0">
+
+                    <div class="mb-5">
+
+                        <label class="form-label fw-bold required">
+                            Reason for Void
+                        </label>
+
+                        <textarea
+                            class="form-control form-control-solid"
+                            id="void-reason"
+                            rows="5"
+                            placeholder="Enter reason"></textarea>
+
+                    </div>
+
+                </div>
+
+                <div class="modal-footer border-0">
+
+                    <button
+                        class="btn btn-light"
+                        data-bs-dismiss="modal">
+
+                        Close
+
+                    </button>
+
+                    <button
+                        class="btn btn-danger fw-bold"
+                        id="submit-void-request">
+
+                        Submit Void Request
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div
+        class="modal fade"
+        id="refund-order-modal"
+        tabindex="-1"
+        aria-hidden="true">
+
+        <div class="modal-dialog modal-dialog-centered">
+
+            <div class="modal-content rounded-4 border-0 shadow-sm">
+
+                <div class="modal-header border-0">
+
+                    <div>
+
+                        <h2 class="fw-bold mb-1">
+                            Refund Request
+                        </h2>
+
+                        <div class="text-muted small">
+                            Submit request for manager approval
+                        </div>
+
+                    </div>
+
+                    <button
+                        type="button"
+                        class="btn btn-icon btn-sm btn-light"
+                        data-bs-dismiss="modal">
+
+                        <i class="ki-outline ki-cross fs-2"></i>
+
+                    </button>
+
+                </div>
+
+                <div class="modal-body pt-0">
+
+                    <div class="mb-5">
+
+                        <label class="form-label fw-bold required">
+                            Reason for Refund
+                        </label>
+
+                        <textarea
+                            class="form-control form-control-solid"
+                            id="refund-reason"
+                            rows="5"
+                            placeholder="Enter reason"></textarea>
+
+                    </div>
+
+                </div>
+
+                <div class="modal-footer border-0">
+
+                    <button
+                        class="btn btn-light"
+                        data-bs-dismiss="modal">
+
+                        Close
+
+                    </button>
+
+                    <button
+                        class="btn btn-warning fw-bold"
+                        id="submit-refund-request">
+
+                        Submit Refund Request
+
                     </button>
 
                 </div>

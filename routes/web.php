@@ -907,7 +907,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/save', 'save')->name('save');
         });
     
-    // Shop Order Kitchen Route
+    // Shop Order
     Route::prefix('shop-order')
         ->name('shop.order.')
         ->controller(ShopOrderController::class)
@@ -919,11 +919,14 @@ Route::middleware('auth')->group(function () {
             Route::post('/save-discount', 'saveDiscount')->name('save.discount');
             Route::post('/save-charge', 'saveCharge')->name('save.charge');
             Route::post('/save-payment', 'savePayment')->name('save.payment');
+            Route::post('/save-customer', 'saveCustomer')->name('save.customer');
             Route::post('/fetch-floor-plans', 'fetchFloorPlans')->name('fetch.floor.plans');
             Route::post('/fetch-floor-tables', 'fetchFloorTables')->name('fetch.floor.tables');
             Route::post('/fetch-discounts', 'fetchDiscounts')->name('fetch.discounts');
             Route::post('/fetch-charges', 'fetchCharges')->name('fetch.discounts');
             Route::post('/fetch-payment-methods', 'fetchPaymentMethods')->name('fetch.payment.methods');
+            Route::post('/fetch-history', 'fetchHistory')->name('fetch.history');
+            Route::post('/fetch-order', 'fetchOrder')->name('fetch.order');
             Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
             Route::post('/delete-discount', 'deleteDiscount')->name('delete.discount');
             Route::post('/delete-charge', 'deleteCharge')->name('delete.charge');
