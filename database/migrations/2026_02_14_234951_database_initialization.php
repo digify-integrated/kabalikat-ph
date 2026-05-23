@@ -2624,6 +2624,156 @@ return new class extends Migration
             $table->index(['payment_status']);
             $table->index(['paid_at']);
         });
+        
+                
+        /* =============================================================================================
+            TABLE: Shop Order Request
+        ============================================================================================= */
+        
+        Schema::create('shop_order_request', function (Blueprint $table) {
+
+            $table->id();
+
+            /*
+            |--------------------------------------------------------------------------
+            | ORDER
+            |--------------------------------------------------------------------------
+            */
+
+            $table->foreignId('shop_order_id')
+                ->constrained('shop_order')
+                ->cascadeOnDelete();
+
+            $table->string('order_number');
+
+            /*
+            |--------------------------------------------------------------------------
+            | REQUEST TYPE
+            |--------------------------------------------------------------------------
+            */
+
+            $table->enum('request_type', [
+                'Void',
+                'Refund',
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | REQUEST STATUS
+            |--------------------------------------------------------------------------
+            */
+
+            $table->enum('request_status', [
+                'Pending',
+                'Approved',
+                'Rejected',
+                'Cancelled',
+            ])->default('Pending');
+
+            /*
+            |--------------------------------------------------------------------------
+            | REQUEST DETAILS
+            |--------------------------------------------------------------------------
+            */
+
+            $table->text('request_reason');
+
+            /*
+            |--------------------------------------------------------------------------
+            | REQUESTED BY
+            |--------------------------------------------------------------------------
+            */
+
+            $table->foreignId('requested_by')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
+
+            $table->string('requested_by_name')
+                ->nullable();
+
+            $table->timestamp('requested_at')
+                ->nullable();
+
+            /*
+            |--------------------------------------------------------------------------
+            | APPROVAL
+            |--------------------------------------------------------------------------
+            */
+
+            $table->foreignId('approved_by')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
+
+            $table->string('approved_by_name')
+                ->nullable();
+
+            $table->timestamp('approved_at')
+                ->nullable();
+
+            /*
+            |--------------------------------------------------------------------------
+            | REJECTION
+            |--------------------------------------------------------------------------
+            */
+
+            $table->foreignId('rejected_by')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
+
+            $table->string('rejected_by_name')
+                ->nullable();
+
+            $table->timestamp('rejected_at')
+                ->nullable();
+
+            $table->text('rejection_reason')
+                ->nullable();
+
+            /*
+            |--------------------------------------------------------------------------
+            | CANCELLATION
+            |--------------------------------------------------------------------------
+            */
+
+            $table->foreignId('cancelled_by')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
+
+            $table->string('cancelled_by_name')
+                ->nullable();
+
+            $table->timestamp('cancelled_at')
+                ->nullable();
+
+            /*
+            |--------------------------------------------------------------------------
+            | AUDIT
+            |--------------------------------------------------------------------------
+            */
+
+            $table->foreignId('last_log_by')
+                ->nullable()
+                ->default(1)
+                ->constrained('users')
+                ->nullOnDelete();
+
+            $table->timestamps();
+
+            /*
+            |--------------------------------------------------------------------------
+            | INDEXES
+            |--------------------------------------------------------------------------
+            */
+
+            $table->index(['shop_order_id']);
+            $table->index(['request_type']);
+            $table->index(['request_status']);
+            $table->index(['requested_at']);
+        });
                 
         /* =============================================================================================
             TABLE: 
@@ -2705,6 +2855,7 @@ return new class extends Migration
         Schema::dropIfExists('shop_order_applied_charge');
         Schema::dropIfExists('shop_order_payment');
         Schema::dropIfExists('shop_order_item');
+        Schema::dropIfExists('shop_order_request');
         Schema::dropIfExists('shop_order');
         Schema::dropIfExists('shop_register');
         Schema::dropIfExists('nationality');

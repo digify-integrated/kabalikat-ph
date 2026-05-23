@@ -2056,6 +2056,222 @@ class ShopOrderController extends Controller
         ]);
     }
 
+    public function saveVoidRequest(Request $request)
+    {
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'shop_order_id' => [
+                    'required',
+                    'integer',
+                    Rule::exists('shop_order', 'id'),
+                ],
+
+                'request_reason' => [
+                    'required',
+                    'string',
+                    'max:1000',
+                ],
+            ]
+        );
+
+        if ($validator->fails()) {
+
+            return response()->json([
+                'success' => false,
+                'message'
+                    => $validator
+                        ->errors()
+                        ->first(),
+            ]);
+        }
+
+        $validated =
+            $validator->validated();
+
+        $shopOrder = ShopOrder::query()
+            ->find(
+                $validated['shop_order_id']
+            );
+
+        /*
+        |--------------------------------------------------------------------------
+        | PREVENT DUPLICATE PENDING REQUEST
+        |--------------------------------------------------------------------------
+        */
+
+        $existingRequest = DB::table(
+            'shop_order_request'
+        )
+
+        ->where(
+            'shop_order_id',
+            $shopOrder->id
+        )
+
+        ->where(
+            'request_type',
+            'Void'
+        )
+
+        ->where(
+            'request_status',
+            'Pending'
+        )
+
+        ->exists();
+
+        if ($existingRequest) {
+
+            return response()->json([
+                'success' => false,
+                'message'
+                    => 'There is already a pending void request.',
+            ]);
+        }
+
+        DB::table('shop_order_request')
+            ->insert([
+                'shop_order_id'
+                    => $shopOrder->id,
+
+                'order_number'
+                    => $shopOrder->order_number,
+
+                'request_type'
+                    => 'Void',
+
+                'request_reason'
+                    => $validated['request_reason'],
+
+                'requested_by'
+                    => auth()->id(),
+
+                'requested_by_name'
+                    => auth()->user()->name,
+
+                'requested_at'
+                    => now(),
+
+                'created_at'
+                    => now(),
+
+                'updated_at'
+                    => now(),
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'message'
+                => 'Void request submitted successfully.',
+        ]);
+    }
+
+    public function saveRefundRequest(Request $request)
+    {
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'shop_order_id' => [
+                    'required',
+                    'integer',
+                    Rule::exists('shop_order', 'id'),
+                ],
+
+                'request_reason' => [
+                    'required',
+                    'string',
+                    'max:1000',
+                ],
+            ]
+        );
+
+        if ($validator->fails()) {
+
+            return response()->json([
+                'success' => false,
+                'message'
+                    => $validator
+                        ->errors()
+                        ->first(),
+            ]);
+        }
+
+        $validated =
+            $validator->validated();
+
+        $shopOrder = ShopOrder::query()
+            ->find(
+                $validated['shop_order_id']
+            );
+
+        $existingRequest = DB::table(
+            'shop_order_request'
+        )
+
+        ->where(
+            'shop_order_id',
+            $shopOrder->id
+        )
+
+        ->where(
+            'request_type',
+            'Refund'
+        )
+
+        ->where(
+            'request_status',
+            'Pending'
+        )
+
+        ->exists();
+
+        if ($existingRequest) {
+
+            return response()->json([
+                'success' => false,
+                'message'
+                    => 'There is already a pending refund request.',
+            ]);
+        }
+
+        DB::table('shop_order_request')
+            ->insert([
+                'shop_order_id'
+                    => $shopOrder->id,
+
+                'order_number'
+                    => $shopOrder->order_number,
+
+                'request_type'
+                    => 'Refund',
+
+                'request_reason'
+                    => $validated['request_reason'],
+
+                'requested_by'
+                    => auth()->id(),
+
+                'requested_by_name'
+                    => auth()->user()->name,
+
+                'requested_at'
+                    => now(),
+
+                'created_at'
+                    => now(),
+
+                'updated_at'
+                    => now(),
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'message'
+                => 'Refund request submitted successfully.',
+        ]);
+    }
+
     private function calculatePaymentTotals(array $payments): array
     {
         $totalPayment = 0;

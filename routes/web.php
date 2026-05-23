@@ -920,6 +920,8 @@ Route::middleware('auth')->group(function () {
             Route::post('/save-charge', 'saveCharge')->name('save.charge');
             Route::post('/save-payment', 'savePayment')->name('save.payment');
             Route::post('/save-customer', 'saveCustomer')->name('save.customer');
+            Route::post('/save-void-request', 'saveVoidRequest')->name('save.void.request');
+            Route::post('/save-refund-request', 'saveRefundRequest')->name('save.refund.request');
             Route::post('/fetch-floor-plans', 'fetchFloorPlans')->name('fetch.floor.plans');
             Route::post('/fetch-floor-tables', 'fetchFloorTables')->name('fetch.floor.tables');
             Route::post('/fetch-discounts', 'fetchDiscounts')->name('fetch.discounts');

@@ -8,7 +8,7 @@
 @section('content')
     @php
         $approvePurchaseOrder = app(\App\Http\Controllers\SystemActionController::class)
-            ->userHasRoleAccessForAction(6, Auth::id());
+            ->userHasRoleAccessForAction(9, Auth::id());
     @endphp
 
     <div class="card">

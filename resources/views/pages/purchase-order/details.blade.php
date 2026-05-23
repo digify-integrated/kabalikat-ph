@@ -10,7 +10,7 @@
         $canDelete = ($deletePermission ?? 0) > 0;
         
         $approvePurchaseOrder = app(\App\Http\Controllers\SystemActionController::class)
-            ->userHasRoleAccessForAction(6, Auth::id());
+            ->userHasRoleAccessForAction(9, Auth::id());
 
         $purchaseOrder = DB::table('purchase_order')
             ->where('id', $detailsId)

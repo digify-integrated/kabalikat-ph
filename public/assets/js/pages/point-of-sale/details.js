@@ -670,7 +670,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 <div
                     class="card border-0 shadow-sm rounded-4 order-history-card cursor-pointer h-100 position-relative overflow-hidden"
-                    data-order-id="${order.id}">
+                    data-order-id="${order.id ?? 'No Active Order'}">
 
                     <!-- STATUS STRIP -->
                     <div
@@ -1383,7 +1383,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         /*
         |--------------------------------------------------------------------------
-        | ACTIONS (IMPORTANT: keep visible state consistent)
+        | RESET INTERACTION STATE
+        |--------------------------------------------------------------------------
+        */
+
+        restoreCartInteraction();
+
+        /*
+        |--------------------------------------------------------------------------
+        | HIDE CART ACTIONS
         |--------------------------------------------------------------------------
         */
 
@@ -1396,6 +1404,49 @@ document.addEventListener('DOMContentLoaded', () => {
         */
 
         cartInitialized = false;
+    };
+
+    const restoreCartInteraction = () => {
+
+        /*
+        |--------------------------------------------------------------------------
+        | ENABLE ALL INTERACTIVE ELEMENTS
+        |--------------------------------------------------------------------------
+        */
+
+        $('#shop-order-list')
+            .find('input, select, textarea, button')
+            .prop('disabled', false);
+
+        /*
+        |--------------------------------------------------------------------------
+        | RESTORE ACTION BUTTONS
+        |--------------------------------------------------------------------------
+        */
+
+        $('#manage-payment-button').prop('disabled', false);
+
+        $('#kitchen-button').prop('disabled', false);
+
+        $('#cancel-button').prop('disabled', false);
+
+        $('#manage-discount-button').prop('disabled', false);
+
+        $('#manage-charge-button').prop('disabled', false);
+
+        $('#customer-button').prop('disabled', false);
+
+        $('#submit-product').prop('disabled', false);
+
+        $('#order-type').prop('disabled', false);
+
+        $('#set-table').prop('disabled', false);
+
+        $('#print-bill').prop('disabled', false);
+
+        $('#void-order-button').prop('disabled', false);
+
+        $('#refund-order-button').prop('disabled', false);
     };
 
     const refreshCartContent = (order) => {
@@ -4960,9 +5011,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 |--------------------------------------------------------------------------
                 */
 
-                sessionStorage.removeItem(
-                    'shop_order_id'
-                );
+                sessionStorage.removeItem('shop_order_id');
+                sessionStorage.removeItem('shop_order_number');
 
                 resetCartUI();
 
@@ -5067,6 +5117,166 @@ document.addEventListener('DOMContentLoaded', () => {
             $('#customer-name-input').val('');
 
             saveCustomer();
+        }
+    );
+
+    $(document).on(
+        'click',
+        '#submit-void-request',
+        async function () {
+
+            try {
+
+                const shopOrderId =
+                    sessionStorage.getItem('shop_order_id');
+
+                const reason =
+                    $('#void-reason').val().trim();
+
+                if (!reason) {
+
+                    showNotification(
+                        'Void reason is required.'
+                    );
+
+                    return;
+                }
+
+                const csrf = getCsrfToken();
+
+                const formData = new URLSearchParams();
+
+                formData.append(
+                    'shop_order_id',
+                    shopOrderId
+                );
+
+                formData.append(
+                    'request_reason',
+                    reason
+                );
+
+                const response = await fetch(
+                    '/shop-order/save-void-request',
+                    {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'Content-Type':
+                                'application/x-www-form-urlencoded; charset=UTF-8',
+
+                            Accept: 'application/json',
+
+                            ...(csrf
+                                ? { 'X-CSRF-TOKEN': csrf }
+                                : {}),
+                        },
+                    }
+                );
+
+                const data = await response.json();
+
+                if (!data.success) {
+
+                    showNotification(data.message);
+
+                    return;
+                }
+
+                $('#void-order-modal').modal('hide');
+
+                $('#void-reason').val('');
+
+                toastr.success(data.message);
+
+            } catch (error) {
+
+                handleSystemError(
+                    error,
+                    'submit_void_request_failed',
+                    error.message
+                );
+            }
+        }
+    );
+
+    $(document).on(
+        'click',
+        '#submit-refund-request',
+        async function () {
+
+            try {
+
+                const shopOrderId =
+                    sessionStorage.getItem('shop_order_id');
+
+                const reason =
+                    $('#refund-reason').val().trim();
+
+                if (!reason) {
+
+                    showNotification(
+                        'Refund reason is required.'
+                    );
+
+                    return;
+                }
+
+                const csrf = getCsrfToken();
+
+                const formData = new URLSearchParams();
+
+                formData.append(
+                    'shop_order_id',
+                    shopOrderId
+                );
+
+                formData.append(
+                    'request_reason',
+                    reason
+                );
+
+                const response = await fetch(
+                    '/shop-order/save-refund-request',
+                    {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'Content-Type':
+                                'application/x-www-form-urlencoded; charset=UTF-8',
+
+                            Accept: 'application/json',
+
+                            ...(csrf
+                                ? { 'X-CSRF-TOKEN': csrf }
+                                : {}),
+                        },
+                    }
+                );
+
+                const data = await response.json();
+
+                if (!data.success) {
+
+                    showNotification(data.message);
+
+                    return;
+                }
+
+                $('#refund-order-modal').modal('hide');
+
+                $('#refund-reason').val('');
+
+                toastr.success(data.message);
+
+            } catch (error) {
+
+                handleSystemError(
+                    error,
+                    'submit_refund_request_failed',
+                    error.message
+                );
+            }
         }
     );
 });

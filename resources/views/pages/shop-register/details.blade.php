@@ -440,7 +440,7 @@
                                         Product
                                     </label>
 
-                                    <select id="product_id" name="product_id" class="form-select" multiple data-control="select2" data-allow-clear="false"></select>
+                                    <select id="product_id" name="product_id[]" class="form-select" multiple data-control="select2" data-allow-clear="false"></select>
                                 </div>
                             </div>
                         </div>

@@ -163,36 +163,54 @@ document.addEventListener('DOMContentLoaded', () => {
                         product_id: { required: 'Choose the product' },
                     },
                     submitHandler: async (form) => {
-                        const formData = new URLSearchParams(new FormData(form));
+
+                        const formData = new FormData(form);
+
                         formData.append('shop_register_id', ctx.detailId ?? '');
                         formData.append('appId', ctx.appId ?? '');
                         formData.append('navigationMenuId', ctx.navigationMenuId ?? '');
-            
+
                         disableButton('submit-product');
-            
+
                         try {
+
                             const response = await fetch('/shop-register-product/save', {
                                 method: 'POST',
                                 body: formData,
                             });
-            
+
                             if (!response.ok) {
                                 throw new Error(`Save product failed with status: ${response.status}`);
                             }
-            
+
                             const data = await response.json();
-            
+
                             if (data.success) {
+
                                 reloadDatatable('#product-table');
+
                                 $('#product-modal').modal('hide');
+
                                 showNotification(data.message, 'success');
+
                             } else {
+
                                 showNotification(data.message);
+
                             }
+
                         } catch (error) {
-                            handleSystemError(error, 'fetch_failed', `Fetch request failed: ${error.message}`);
+
+                            handleSystemError(
+                                error,
+                                'fetch_failed',
+                                `Fetch request failed: ${error.message}`
+                            );
+
                         } finally {
+
                             enableButton('submit-product');
+
                         }
                     },
                 }

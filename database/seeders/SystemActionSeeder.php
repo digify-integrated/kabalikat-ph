@@ -57,12 +57,8 @@ class SystemActionSeeder extends Seeder
                 'system_action_description' => 'Access to approve purchase order requests.',
             ],
             [
-                'system_action_name' => 'Void Shop Order',
-                'system_action_description' => 'Access to void shop order requests.',
-            ],
-            [
-                'system_action_name' => 'Refund Shop Order',
-                'system_action_description' => 'Access to refund shop order requests.',
+                'system_action_name' => 'Approve/Reject Shop Order Request',
+                'system_action_description' => 'Access to approve/reject shop order requests.',
             ],
         ];
 

@@ -575,6 +575,67 @@ class NavigationMenuSeeder extends Seeder
                 'database_table'                => 'payment_method',
                 'order_sequence'                => 16
             ],
+
+            // Shop Order Request ID: 48
+            [
+                'navigation_menu_name'          => 'Shop Order Request',
+                'navigation_menu_icon'          => 'ki-outline ki-tablet-text-up',
+                'app_id'                        => 3,
+                'app_name'                      => 'Point of Sale',
+                'parent_navigation_menu_id'     => null,
+                'parent_navigation_menu_name'   => null,
+                'database_table'                => 'shop_order_request',
+                'order_sequence'                => 3
+            ],
+
+            // Reports ID: 49
+            [
+                'navigation_menu_name'          => 'Reports',
+                'navigation_menu_icon'          => 'ki-outline ki-book',
+                'app_id'                        => 3,
+                'app_name'                      => 'Point of Sale',
+                'parent_navigation_menu_id'     => null,
+                'parent_navigation_menu_name'   => null,
+                'database_table'                => null,
+                'order_sequence'                => 4
+            ],
+            
+            // Reports -> Payment Summary ID: 50
+            [
+                'navigation_menu_name'          => 'Payment Summary',
+                'navigation_menu_icon'          => null,
+                'app_id'                        => 3,
+                'app_name'                      => 'Point of Sale',
+                'parent_navigation_menu_id'     => 49,
+                'parent_navigation_menu_name'   => 'Reports',
+                'database_table'                => null,
+                'order_sequence'                => 16
+            ],
+
+            
+            // Reports -> Sales Summary ID: 51
+            [
+                'navigation_menu_name'          => 'Sales Summary',
+                'navigation_menu_icon'          => null,
+                'app_id'                        => 3,
+                'app_name'                      => 'Point of Sale',
+                'parent_navigation_menu_id'     => 49,
+                'parent_navigation_menu_name'   => 'Reports',
+                'database_table'                => null,
+                'order_sequence'                => 19
+            ],
+            
+            // Reports -> Register Session ID: 52
+            [
+                'navigation_menu_name'          => 'Register Session',
+                'navigation_menu_icon'          => null,
+                'app_id'                        => 3,
+                'app_name'                      => 'Point of Sale',
+                'parent_navigation_menu_id'     => 49,
+                'parent_navigation_menu_name'   => 'Reports',
+                'database_table'                => null,
+                'order_sequence'                => 18
+            ],
         ];
 
         DB::table('navigation_menu')->insert(

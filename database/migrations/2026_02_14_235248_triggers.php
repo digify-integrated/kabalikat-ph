@@ -2677,63 +2677,6 @@ return new class extends Migration
         SQL);
 
         /* =============================================================================================
-            TABLE: SHOP REGISTER
-        ============================================================================================= */
-
-        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_register_update');
-        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_register_insert');
-
-        DB::unprepared(<<<SQL
-            CREATE TRIGGER trg_shop_register_update
-            AFTER UPDATE ON shop_register
-            FOR EACH ROW
-            BEGIN
-                DECLARE audit_log TEXT DEFAULT 'Shop register changed.<br/><br/>';
-
-                IF NEW.shop_register_name <> OLD.shop_register_name THEN
-                    SET audit_log = CONCAT(audit_log, "Shop Register:", OLD.shop_register_name, " -> ", NEW.shop_register_name, "<br/>");
-                END IF;
-
-                IF NEW.company_name <> OLD.company_name THEN
-                    SET audit_log = CONCAT(audit_log, "Company:", OLD.company_name, " -> ", NEW.company_name, "<br/>");
-                END IF;
-
-                IF NEW.is_restaurant <> OLD.is_restaurant THEN
-                    SET audit_log = CONCAT(audit_log, "Is Restaurant:", OLD.is_restaurant, " -> ", NEW.is_restaurant, "<br/>");
-                END IF;
-
-                IF NEW.shop_register_status <> OLD.shop_register_status THEN
-                    SET audit_log = CONCAT(audit_log, "Shop Register Status:", OLD.shop_register_status, " -> ", NEW.shop_register_status, "<br/>");
-                END IF;
-
-                IF NEW.register_status <> OLD.register_status THEN
-                    SET audit_log = CONCAT(audit_log, "Register Status:", OLD.register_status, " -> ", NEW.register_status, "<br/>");
-                END IF;
-
-                IF NEW.archived_date <> OLD.archived_date THEN
-                    SET audit_log = CONCAT(audit_log, "Archived Date:", OLD.archived_date, " -> ", NEW.archived_date, "<br/>");
-                END IF;
-                
-                IF audit_log <> 'Shop register changed.<br/><br/>' THEN
-                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
-                    VALUES ('shop_register', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
-                END IF;
-            END
-        SQL);
-
-        DB::unprepared(<<<SQL
-            CREATE TRIGGER trg_shop_register_insert
-            AFTER INSERT ON shop_register
-            FOR EACH ROW
-            BEGIN
-                DECLARE audit_log TEXT DEFAULT 'Shop register created.';
-
-                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
-                VALUES ('shop_register', NEW.id, audit_log, NEW.last_log_by, new.updated_at);
-            END
-        SQL);
-
-        /* =============================================================================================
             TABLE: SHOP REGISTER ACCESS
         ============================================================================================= */
 
@@ -3718,6 +3661,91 @@ return new class extends Migration
                 VALUES ('shop_order_payment', NEW.id, audit_log, NEW.last_log_by, NEW.updated_at);
             END
         SQL);
+
+        /* =============================================================================================
+            TABLE: SHOP ORDER REQUEST
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_order_request_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_order_request_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_shop_order_request_update
+            AFTER UPDATE ON shop_order_request
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Shop order request changed.<br/><br/>';
+
+                IF NEW.order_number <> OLD.order_number THEN
+                    SET audit_log = CONCAT(audit_log, "Order Number:", OLD.order_number, " -> ", NEW.order_number, "<br/>");
+                END IF;
+
+                IF NEW.request_type <> OLD.request_type THEN
+                    SET audit_log = CONCAT(audit_log, "Request Type:", OLD.request_type, " -> ", NEW.request_type, "<br/>");
+                END IF;
+
+                IF NEW.request_status <> OLD.request_status THEN
+                    SET audit_log = CONCAT(audit_log, "Request Status:", OLD.request_status, " -> ", NEW.request_status, "<br/>");
+                END IF;
+
+                IF NEW.request_reason <> OLD.request_reason THEN
+                    SET audit_log = CONCAT(audit_log, "Request Reason:", OLD.request_reason, " -> ", NEW.request_reason, "<br/>");
+                END IF;
+
+                IF NEW.requested_by_name <> OLD.requested_by_name THEN
+                    SET audit_log = CONCAT(audit_log, "Request By:", OLD.requested_by_name, " -> ", NEW.requested_by_name, "<br/>");
+                END IF;
+
+                IF NEW.requested_at <> OLD.requested_at THEN
+                    SET audit_log = CONCAT(audit_log, "Requested At:", OLD.requested_at, " -> ", NEW.requested_at, "<br/>");
+                END IF;
+
+                IF NEW.approved_by_name <> OLD.approved_by_name THEN
+                    SET audit_log = CONCAT(audit_log, "Approved By:", OLD.approved_by_name, " -> ", NEW.approved_by_name, "<br/>");
+                END IF;
+
+                IF NEW.approved_at <> OLD.approved_at THEN
+                    SET audit_log = CONCAT(audit_log, "Approved At:", OLD.approved_at, " -> ", NEW.approved_at, "<br/>");
+                END IF;
+
+                IF NEW.rejected_by_name <> OLD.rejected_by_name THEN
+                    SET audit_log = CONCAT(audit_log, "Rejected By:", OLD.rejected_by_name, " -> ", NEW.rejected_by_name, "<br/>");
+                END IF;
+
+                IF NEW.rejected_at <> OLD.rejected_at THEN
+                    SET audit_log = CONCAT(audit_log, "Rejected At:", OLD.rejected_at, " -> ", NEW.rejected_at, "<br/>");
+                END IF;
+
+                IF NEW.rejection_reason <> OLD.rejection_reason THEN
+                    SET audit_log = CONCAT(audit_log, "Rejected Reason:", OLD.rejection_reason, " -> ", NEW.rejection_reason, "<br/>");
+                END IF;
+
+                IF NEW.cancelled_by_name <> OLD.cancelled_by_name THEN
+                    SET audit_log = CONCAT(audit_log, "Cancelled By:", OLD.cancelled_by_name, " -> ", NEW.cancelled_by_name, "<br/>");
+                END IF;
+
+                IF NEW.cancelled_at <> OLD.cancelled_at THEN
+                    SET audit_log = CONCAT(audit_log, "Cancelled At:", OLD.cancelled_at, " -> ", NEW.cancelled_at, "<br/>");
+                END IF;
+                
+                IF audit_log <> 'Shop order request changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('shop_order_request', NEW.id, audit_log, NEW.last_log_by, NEW.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_shop_order_request_insert
+            AFTER INSERT ON shop_order_request
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Shop order request created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('shop_order_request', NEW.id, audit_log, NEW.last_log_by, NEW.updated_at);
+            END
+        SQL);
     }
 
     /**
@@ -4187,5 +4215,12 @@ return new class extends Migration
 
         DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_order_payment_update');
         DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_order_payment_insert');
+        
+        /* =============================================================================================
+            TABLE: SHOP ORDER REQUEST
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_order_request_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_order_request_insert');
     }
 };
