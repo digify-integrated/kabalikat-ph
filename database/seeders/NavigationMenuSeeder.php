@@ -600,7 +600,19 @@ class NavigationMenuSeeder extends Seeder
                 'order_sequence'                => 4
             ],
             
-            // Reports -> Payment Summary ID: 50
+            // Reports -> Cash Count ID: 50
+            [
+                'navigation_menu_name'          => 'Cash Count',
+                'navigation_menu_icon'          => null,
+                'app_id'                        => 3,
+                'app_name'                      => 'Point of Sale',
+                'parent_navigation_menu_id'     => 49,
+                'parent_navigation_menu_name'   => 'Reports',
+                'database_table'                => null,
+                'order_sequence'                => 3
+            ],
+            
+            // Reports -> Payment Summary ID: 51
             [
                 'navigation_menu_name'          => 'Payment Summary',
                 'navigation_menu_icon'          => null,
@@ -613,28 +625,16 @@ class NavigationMenuSeeder extends Seeder
             ],
 
             
-            // Reports -> Sales Summary ID: 51
+            // Reports -> Transaction Summary ID: 52
             [
-                'navigation_menu_name'          => 'Sales Summary',
+                'navigation_menu_name'          => 'Transaction Summary',
                 'navigation_menu_icon'          => null,
                 'app_id'                        => 3,
                 'app_name'                      => 'Point of Sale',
                 'parent_navigation_menu_id'     => 49,
                 'parent_navigation_menu_name'   => 'Reports',
                 'database_table'                => null,
-                'order_sequence'                => 19
-            ],
-            
-            // Reports -> Register Session ID: 52
-            [
-                'navigation_menu_name'          => 'Register Session',
-                'navigation_menu_icon'          => null,
-                'app_id'                        => 3,
-                'app_name'                      => 'Point of Sale',
-                'parent_navigation_menu_id'     => 49,
-                'parent_navigation_menu_name'   => 'Reports',
-                'database_table'                => null,
-                'order_sequence'                => 18
+                'order_sequence'                => 10
             ],
         ];
 

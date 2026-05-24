@@ -101,23 +101,19 @@
 
         <div class="card-body pt-9">
             <div class="table-responsive">
-                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5" id="stock-movement-table">
+                <table class="table align-middle fs-6 gy-5" id="payment-summary-table">
                     <thead>
-                        <tr class="text-start text-gray-800 fw-bold fs-7 text-uppercase gs-0">
-                            <th>
-                                <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                                    <input class="form-check-input" id="datatable-checkbox" type="checkbox">
-                                </div>
-                            </th>
-                            <th>Product</th>
-                            <th>Movement Type</th>
-                            <th>Qty</th>
-                            <th>Reference No</th>
-                            <th>Movement Date</th>
-                            <th>Remarks</th>
+                        <tr class="text-start text-gray-800 fw-bold fs-7 text-uppercase">
+                            <th>Order No</th>
+                            <th>Payment Method</th>
+                            <th>Amount</th>
+                            <th>Tendered</th>
+                            <th>Change</th>
+                            <th>Status</th>
+                            <th>Paid At</th>
                         </tr>
                     </thead>
-                    <tbody class="fw-semibold text-gray-800"></tbody>
+                    <tbody></tbody>
                 </table>
             </div>
         </div>

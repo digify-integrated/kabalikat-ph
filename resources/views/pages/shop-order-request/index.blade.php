@@ -6,6 +6,7 @@
 @endpush
 
 @section('content')
+
     <div class="card">
         <div class="card-header border-0 pt-6">
             <div class="card-title">
@@ -48,11 +49,8 @@
                                     </a>
                                 </div>
                             @endif
-
                         </div>
                     @endif
-                    
-                    @include('partials.datatable-buttons')
                 </div>
                 <div>
                     <button type="button" class="btn btn-light-primary me-3" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end"><i class="ki-outline ki-filter fs-2"></i> Filter</button>
@@ -63,30 +61,23 @@
                         <div class="separator border-gray-200"></div>
                         <div class="px-7 py-5">
                             <div class="mb-5">
-                                <label class="form-label fs-6 fw-semibold" for="filter_by_movement_date">Filter By Movement Date:</label>
-                                 <input type="text" class="form-control" id="filter_by_movement_date" autocomplete="off">
+                                <label class="form-label fs-6 fw-semibold" for="filter_by_request_date">Filter By Request Date:</label>
+                                 <input type="text" class="form-control" id="filter_by_request_date" autocomplete="off">
                             </div>
                             <div class="mb-5">
-                                <label class="form-label fs-6 fw-semibold" for="filter_by_product">Filter By Product:</label>
-                                <select id="filter_by_product" name="filter_by_product" multiple="multiple" class="form-select" data-control="select2" data-allow-clear="false"></select>
+                                <label class="form-label fs-6 fw-semibold" for="filter_by_request_type">Filter By Request Type:</label>
+                                <select id="filter_by_request_type" multiple="multiple" class="form-select" data-control="select2" data-allow-clear="false">
+                                    <option value="Void">Void</option>
+                                    <option value="Refund">Refund</option>
+                                </select>
                             </div>
                             <div class="mb-5">
-                                <label class="form-label fs-6 fw-semibold" for="filter_by_warehouse">Filter By Warehouse:</label>
-                                <select id="filter_by_warehouse" name="filter_by_warehouse" multiple="multiple" class="form-select" data-control="select2" data-allow-clear="false"></select>
-                            </div>
-                            <div class="mb-5">
-                                <label class="form-label fs-6 fw-semibold" for="filter_by_movement_type">Filter By Movement Type:</label>
-                                <select id="filter_by_movement_type" multiple="multiple" class="form-select" data-control="select2" data-allow-clear="false">
-                                    <option value="IN">Stock In</option>
-                                    <option value="OUT">Stock Out</option>
-                                    <option value="TRANSFER_IN">Transfer In</option>
-                                    <option value="TRANSFER_OUT">Transfer Out</option>
-                                    <option value="ADJUSTMENT">Adjustment</option>
-                                    <option value="CONSUMPTION">Consumption</option>
-                                    <option value="SALE">Sale</option>
-                                    <option value="RETURN">Return</option>
-                                    <option value="VOID">Void</option>
-                                    <option value="REFUND">Refund</option>
+                                <label class="form-label fs-6 fw-semibold" for="filter_by_status">Filter By Status:</label>
+                                <select id="filter_by_status" multiple="multiple" class="form-select" data-control="select2" data-allow-clear="false">
+                                    <option value="Pending" selected>Pending</option>
+                                    <option value="Approved">Approved</option>
+                                    <option value="Rejected">Rejected</option>
+                                    <option value="Cancelled">Cancelled</option>
                                 </select>
                             </div>
                             <div class="d-flex justify-content-end">
@@ -101,7 +92,7 @@
 
         <div class="card-body pt-9">
             <div class="table-responsive">
-                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5" id="stock-movement-table">
+                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5" id="shop-order-request-table">
                     <thead>
                         <tr class="text-start text-gray-800 fw-bold fs-7 text-uppercase gs-0">
                             <th>
@@ -109,12 +100,12 @@
                                     <input class="form-check-input" id="datatable-checkbox" type="checkbox">
                                 </div>
                             </th>
-                            <th>Product</th>
-                            <th>Movement Type</th>
-                            <th>Qty</th>
-                            <th>Reference No</th>
-                            <th>Movement Date</th>
-                            <th>Remarks</th>
+                            <th>Order No.</th>
+                            <th>Request Type</th>
+                            <th>Request Reason</th>
+                            <th>Status</th>
+                            <th>Requested By</th>
+                            <th>Request Date</th>
                         </tr>
                     </thead>
                     <tbody class="fw-semibold text-gray-800"></tbody>

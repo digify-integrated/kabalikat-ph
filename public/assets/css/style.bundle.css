@@ -53782,6 +53782,48 @@ body {
     box-shadow: 0 4px 10px rgba(0,0,0,0.12);
 }
 
+.denomination-card{
+    transition: all .15s ease;
+}
+
+.denomination-card:hover{
+    transform: translateY(-2px);
+}
+
+.denomination-card:focus-within{
+    border-color: #009ef7 !important;
+    background: #ffffff !important;
+    box-shadow: 0 0 0 4px rgba(0,158,247,.12);
+}
+
+.qty-input{
+    font-size: 20px;
+    font-weight: 700;
+    height: 52px;
+}
+
+#open_total{
+    transition: all .2s ease;
+}
+
+.subtotal{
+    white-space: nowrap;
+}
+
+@media (max-width: 991px){
+
+    .position-sticky{
+        position: relative !important;
+        top: unset !important;
+    }
+
+    .qty-input{
+        height: 48px;
+        font-size: 18px;
+    }
+
+}
+
 .product-card {
     border-radius: 18px;
     transition: all .15s ease;

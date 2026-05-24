@@ -5157,7 +5157,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 );
 
                 const response = await fetch(
-                    '/shop-order/save-void-request',
+                    '/shop-order-request/save-void-request',
                     {
                         method: 'POST',
                         body: formData,
@@ -5237,7 +5237,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 );
 
                 const response = await fetch(
-                    '/shop-order/save-refund-request',
+                    '/shop-order-request/save-refund-request',
                     {
                         method: 'POST',
                         body: formData,

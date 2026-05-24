@@ -3708,6 +3708,10 @@ return new class extends Migration
                     SET audit_log = CONCAT(audit_log, "Approved At:", OLD.approved_at, " -> ", NEW.approved_at, "<br/>");
                 END IF;
 
+                IF NEW.approval_remarks <> OLD.approval_remarks THEN
+                    SET audit_log = CONCAT(audit_log, "Approval Remarks:", OLD.approval_remarks, " -> ", NEW.approval_remarks, "<br/>");
+                END IF;
+
                 IF NEW.rejected_by_name <> OLD.rejected_by_name THEN
                     SET audit_log = CONCAT(audit_log, "Rejected By:", OLD.rejected_by_name, " -> ", NEW.rejected_by_name, "<br/>");
                 END IF;
@@ -3726,6 +3730,10 @@ return new class extends Migration
 
                 IF NEW.cancelled_at <> OLD.cancelled_at THEN
                     SET audit_log = CONCAT(audit_log, "Cancelled At:", OLD.cancelled_at, " -> ", NEW.cancelled_at, "<br/>");
+                END IF;
+
+                IF NEW.cancellation_reason <> OLD.cancellation_reason THEN
+                    SET audit_log = CONCAT(audit_log, "Cancellation Reason:", OLD.cancellation_reason, " -> ", NEW.cancellation_reason, "<br/>");
                 END IF;
                 
                 IF audit_log <> 'Shop order request changed.<br/><br/>' THEN

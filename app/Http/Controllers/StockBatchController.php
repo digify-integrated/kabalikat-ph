@@ -107,7 +107,8 @@ class StockBatchController extends Controller
 
             $stockBatch->update([
                 'stock_batch_status' => 'For Approval',
-                'for_approval_date' => Carbon::now()
+                'for_approval_date' => Carbon::now(),
+                'last_log_by' => Auth::id()
             ]);
         });        
 
@@ -155,7 +156,8 @@ class StockBatchController extends Controller
 
             $stockBatch->update([
                 'stock_batch_status' => 'Cancelled',
-                'cancellation_date' => Carbon::now()
+                'cancellation_date' => Carbon::now(),
+                'last_log_by' => Auth::id()
             ]);
         });        
 
@@ -203,7 +205,8 @@ class StockBatchController extends Controller
 
             $stockBatch->update([
                 'stock_batch_status' => 'Draft',
-                'set_to_draft_date' => Carbon::now()
+                'set_to_draft_date' => Carbon::now(),
+                'last_log_by' => Auth::id()
             ]);
         });        
 

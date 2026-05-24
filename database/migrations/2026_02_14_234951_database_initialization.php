@@ -1269,7 +1269,9 @@ return new class extends Migration
                 'ADJUSTMENT',
                 'CONSUMPTION',
                 'SALE',
-                'RETURN'
+                'RETURN',
+                'VOID',                
+                'REFUND',                
             ]);
 
             $table->decimal('quantity', 10, 2);
@@ -2712,6 +2714,9 @@ return new class extends Migration
             $table->timestamp('approved_at')
                 ->nullable();
 
+            $table->text('approval_remarks')
+                ->nullable();
+
             /*
             |--------------------------------------------------------------------------
             | REJECTION
@@ -2747,6 +2752,9 @@ return new class extends Migration
                 ->nullable();
 
             $table->timestamp('cancelled_at')
+                ->nullable();
+
+            $table->text('cancellation_reason')
                 ->nullable();
 
             /*

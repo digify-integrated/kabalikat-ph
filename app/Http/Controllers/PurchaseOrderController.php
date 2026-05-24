@@ -125,7 +125,8 @@ class PurchaseOrderController extends Controller
 
             $purchaseOrder->update([
                 'po_status' => 'For Approval',
-                'for_approval_date' => Carbon::now()
+                'for_approval_date' => Carbon::now(),
+                'last_log_by' => Auth::id()
             ]);
         });        
 
@@ -173,7 +174,8 @@ class PurchaseOrderController extends Controller
 
             $purchaseOrder->update([
                 'po_status' => 'Cancelled',
-                'cancellation_date' => Carbon::now()
+                'cancellation_date' => Carbon::now(),
+                'last_log_by' => Auth::id()
             ]);
         });        
 
@@ -221,7 +223,8 @@ class PurchaseOrderController extends Controller
 
             $purchaseOrder->update([
                 'po_status' => 'Draft',
-                'set_to_draft_date' => Carbon::now()
+                'set_to_draft_date' => Carbon::now(),
+                'last_log_by' => Auth::id()
             ]);
         });        
 
@@ -269,7 +272,8 @@ class PurchaseOrderController extends Controller
 
             $purchaseOrder->update([
                 'po_status' => 'Approved',
-                'approved_date' => Carbon::now()
+                'approved_date' => Carbon::now(),
+                'last_log_by' => Auth::id()
             ]);
         });        
 
@@ -302,7 +306,8 @@ class PurchaseOrderController extends Controller
             if ($purchaseOrder->po_status === 'For Approval') {
                 $purchaseOrder->update([
                     'po_status' => 'Approved',
-                    'approved_date' => Carbon::now()
+                    'approved_date' => Carbon::now(),
+                    'last_log_by' => Auth::id()
                 ]);
             }
         });
@@ -345,7 +350,8 @@ class PurchaseOrderController extends Controller
 
             $purchaseOrder->update([
                 'po_status' => 'On-Process',
-                'on_process_date' => Carbon::now()
+                'on_process_date' => Carbon::now(),
+                'last_log_by' => Auth::id()
             ]);
         });        
 
@@ -496,7 +502,7 @@ class PurchaseOrderController extends Controller
         $orderRange = $parseRange($filterByOrderDate);
         $deliveryRange = $parseRange($filterByExpectedDeliveryDate);
 
-        $stockLevels = DB::table('purchase_order')
+        $purchaseOrders = DB::table('purchase_order')
             ->when(!empty($filterByProduct), fn($q) =>
                 $q->whereIn('supplier_id', (array) $filterBySupplier)
             )
@@ -515,7 +521,7 @@ class PurchaseOrderController extends Controller
             ->orderBy('reference_number')
             ->get();
 
-        $response = $stockLevels->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
+        $response = $purchaseOrders->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
             $stockLevelId = $row->id;
             $referenceNumber = $row->reference_number;
             $supplierName = $row->supplier_name;

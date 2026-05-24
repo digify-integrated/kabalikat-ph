@@ -61,8 +61,6 @@ class StockMovementController extends Controller
             $remarks = $row->remarks;
 
             $movementDate = Carbon::parse($createdAt);
-
-            $formattedDate = $movementDate->format('M d, Y H:i:s a');
            
             $link = route('apps.details', [
                 'appId' => $pageAppId,
@@ -106,8 +104,11 @@ class StockMovementController extends Controller
             'TRANSFER_IN' => ['class' => 'badge-light-primary', 'icon' => 'ki-arrow-circle-left', 'label' => 'Transfer In'],
             'TRANSFER_OUT' => ['class' => 'badge-light-warning', 'icon' => 'ki-arrow-circle-right', 'label' => 'Transfer Out'],
             'ADJUSTMENT' => ['class' => 'badge-light-info', 'icon' => 'ki-setting-4', 'label' => 'Adjustment'],
+            'CONSUMPTION' => ['class' => 'badge-light-success', 'icon' => 'ki-handcart', 'label' => 'Consumption'],
             'SALE' => ['class' => 'badge-light-danger', 'icon' => 'ki-handcart', 'label' => 'Sale'],
             'RETURN' => ['class' => 'badge-light-success', 'icon' => 'ki-arrows-circle', 'label' => 'Return'],
+            'VOID' => ['class' => 'badge-light-danger', 'icon' => 'ki-cross-square', 'label' => 'Void'],
+            'REFUND' => ['class' => 'badge-light-danger', 'icon' => 'ki-arrow-circle-left', 'label' => 'Return'],
         ];
 
         $item = $map[$type] ?? ['class' => 'badge-light-secondary', 'icon' => 'bi-question', 'label' => $type];

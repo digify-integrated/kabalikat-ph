@@ -36,6 +36,7 @@ use App\Http\Controllers\RoleSystemActionPermissionController;
 use App\Http\Controllers\RoleUserAccountController;
 use App\Http\Controllers\ShopOrderController;
 use App\Http\Controllers\ShopOrderPrintController;
+use App\Http\Controllers\ShopOrderRequestController;
 use App\Http\Controllers\ShopRegisterAccessController;
 use App\Http\Controllers\ShopRegisterChargeController;
 use App\Http\Controllers\ShopRegisterController;
@@ -920,8 +921,6 @@ Route::middleware('auth')->group(function () {
             Route::post('/save-charge', 'saveCharge')->name('save.charge');
             Route::post('/save-payment', 'savePayment')->name('save.payment');
             Route::post('/save-customer', 'saveCustomer')->name('save.customer');
-            Route::post('/save-void-request', 'saveVoidRequest')->name('save.void.request');
-            Route::post('/save-refund-request', 'saveRefundRequest')->name('save.refund.request');
             Route::post('/fetch-floor-plans', 'fetchFloorPlans')->name('fetch.floor.plans');
             Route::post('/fetch-floor-tables', 'fetchFloorTables')->name('fetch.floor.tables');
             Route::post('/fetch-discounts', 'fetchDiscounts')->name('fetch.discounts');
@@ -932,6 +931,23 @@ Route::middleware('auth')->group(function () {
             Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
             Route::post('/delete-discount', 'deleteDiscount')->name('delete.discount');
             Route::post('/delete-charge', 'deleteCharge')->name('delete.charge');
+        });
+
+    
+    // Shop Order Request
+    Route::prefix('shop-order-request')
+        ->name('shop.order.request.')
+        ->controller(ShopOrderRequestController::class)
+        ->group(function () {
+            Route::post('/save-void-request', 'saveVoidRequest')->name('save.void.request');
+            Route::post('/save-refund-request', 'saveRefundRequest')->name('save.refund.request');
+            Route::post('/cancel', 'cancel')->name('cancel');
+            Route::post('/approve', 'approve')->name('approve');
+            Route::post('/reject', 'reject')->name('reject');
+            Route::post('/delete', 'delete')->name('delete');
+            Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
+            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
+            Route::post('/generate-table', 'generateTable')->name('generate.table');
         });
     
     Route::get(

@@ -48,9 +48,9 @@ class ShopOrder extends Model
         'last_log_by'
     ];
 
-    public function shopRegister(): BelongsTo
+    public function shopOrder(): BelongsTo
     {
-        return $this->belongsTo(ShopRegister::class, 'shop_register_id', 'id');
+        return $this->belongsTo(ShopOrder::class, 'shop_order_id');
     }
 
     public function shopRegisterSession(): BelongsTo
@@ -110,6 +110,27 @@ class ShopOrder extends Model
             ShopOrderAppliedCharge::class,
             'shop_order_id'
         );
+    }
+
+    public function shopOrderRequest()
+    {
+        return $this->hasMany(
+            ShopOrderRequest::class,
+            'shop_order_id'
+        );
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(
+            ShopOrderPayment::class,
+            'shop_order_id'
+        );
+    }
+
+    public function request()
+    {
+        return $this->hasMany(ShopOrderRequest::class, 'shop_order_id');
     }
 
 }

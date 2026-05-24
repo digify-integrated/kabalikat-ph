@@ -81,6 +81,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     container.insertAdjacentHTML('beforeend', html);
                 });
+
+                $('#register-modal').modal('hide');
             }
 
         } catch (error) {
@@ -502,7 +504,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const subtotalEl = document.getElementById(`subtotal_${id}`);
 
             if (subtotalEl) {
-                subtotalEl.innerText = `₱ ${formatMoney(subtotal)}`;
+                subtotalEl.innerText = ` ${formatMoney(subtotal)}`;
             }
 
             grandTotal += subtotal;
@@ -510,6 +512,33 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         document.getElementById('open_total').innerText = formatMoney(grandTotal);
+    };
+
+    const resetRegisterModal = () => {
+        // RESET ALL NUMBER INPUTS
+        document.querySelectorAll('.qty-input').forEach(input => {
+            input.value = '';
+        });
+
+        // RESET SUBTOTALS
+        document.querySelectorAll('.subtotal').forEach(subtotal => {
+            subtotal.innerText = '0.00';
+        });
+
+        // RESET GRAND TOTAL
+        const total = document.getElementById('open_total');
+
+        if (total) {
+            total.innerText = '0.00';
+        }
+
+        // RESET HIDDEN FIELDS
+        $('#shop_register_id').val('');
+        $('#session').val('');
+
+        // RESET REMARKS
+        $('#remarks').val('');
+
     };
 
     const config = {
@@ -539,7 +568,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
                             if (data.success) {
                                 showNotification(data.message, 'success');
-                                $('#register-modal').modal('hide');
                                 generateShopRegister('/shop-register/generate-register');
                                 enableButton('submit-data');
                                 resetForm('register_form');
@@ -568,6 +596,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const trigger = target.closest('.shop-register');
         if (!trigger) return;
+
+        resetRegisterModal();
 
         const shopRegisterId = trigger.dataset.shopRegisterId;
         const session = trigger.dataset.session;

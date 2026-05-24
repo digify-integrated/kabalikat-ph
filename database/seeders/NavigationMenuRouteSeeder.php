@@ -1021,82 +1021,27 @@ class NavigationMenuRouteSeeder extends Seeder
                 'js_file'               => 'import/import',
             ],
             
-            // Payment Summary
+            // Cash Count
             [
                 'navigation_menu_id'    => 50,
+                'route_type'            => 'index',
+                'view_file'             => 'pages.cash-count.index',
+            ],
+            
+            // Payment Summary
+            [
+                'navigation_menu_id'    => 51,
                 'route_type'            => 'index',
                 'view_file'             => 'pages.payment-summary.index',
                 'js_file'               => 'payment-summary/index',
             ],
-            [
-                'navigation_menu_id'    => 50,
-                'route_type'            => 'new',
-                'view_file'             => 'pages.payment-summary.new',
-                'js_file'               => 'payment-summary/new',
-            ],
-            [
-                'navigation_menu_id'    => 50,
-                'route_type'            => 'details',
-                'view_file'             => 'pages.payment-summary.details',
-                'js_file'               => 'payment-summary/details',
-            ],
-            [
-                'navigation_menu_id'    => 50,
-                'route_type'            => 'import',
-                'view_file'             => 'pages.import.index',
-                'js_file'               => 'import/import',
-            ],
             
-            // Payment Summary
+            // Transaction Summary
             [
-                'navigation_menu_id'    => 51,
+                'navigation_menu_id'    => 52,
                 'route_type'            => 'index',
                 'view_file'             => 'pages.sales-summary.index',
                 'js_file'               => 'sales-summary/index',
-            ],
-            [
-                'navigation_menu_id'    => 51,
-                'route_type'            => 'new',
-                'view_file'             => 'pages.sales-summary.new',
-                'js_file'               => 'sales-summary/new',
-            ],
-            [
-                'navigation_menu_id'    => 51,
-                'route_type'            => 'details',
-                'view_file'             => 'pages.sales-summary.details',
-                'js_file'               => 'sales-summary/details',
-            ],
-            [
-                'navigation_menu_id'    => 51,
-                'route_type'            => 'import',
-                'view_file'             => 'pages.import.index',
-                'js_file'               => 'import/import',
-            ],
-            
-            // Register Session
-            [
-                'navigation_menu_id'    => 52,
-                'route_type'            => 'index',
-                'view_file'             => 'pages.register-session.index',
-                'js_file'               => 'register-session/index',
-            ],
-            [
-                'navigation_menu_id'    => 52,
-                'route_type'            => 'new',
-                'view_file'             => 'pages.register-session.new',
-                'js_file'               => 'register-session/new',
-            ],
-            [
-                'navigation_menu_id'    => 52,
-                'route_type'            => 'details',
-                'view_file'             => 'pages.register-session.details',
-                'js_file'               => 'register-session/details',
-            ],
-            [
-                'navigation_menu_id'    => 52,
-                'route_type'            => 'import',
-                'view_file'             => 'pages.import.index',
-                'js_file'               => 'import/import',
             ],
         ];
 

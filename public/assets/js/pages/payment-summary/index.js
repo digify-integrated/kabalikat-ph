@@ -1,0 +1,85 @@
+import { initializeDatatable } from '../../util/datatable.js';
+import { multipleActionButton } from '../../form/button.js';
+import { checkNotification } from '../../util/notifications.js';
+import { generateDropdownOptions, initializeDateRangePicker } from '../../form/field.js';
+
+document.addEventListener('DOMContentLoaded', () => {
+    const config = {
+        table: {
+            url: '/stock-movement/generate-table',
+            selector: '#stock-movement-table',
+            serverSide: false,
+            ajaxData: () => ({
+                filter_by_product: $('#filter_by_product').val(),
+                filter_by_warehouse: $('#filter_by_warehouse').val(),
+                filter_by_movement_date: $('#filter_by_movement_date').val(),
+                filter_by_movement_type: $('#filter_by_movement_type').val(),
+            }),
+            columns: [
+                { data: 'CHECK_BOX' },
+                { data: 'PRODUCT' },
+                { data: 'MOVEMENT_TYPE' },
+                { data: 'QUANTITY' },
+                { data: 'REFERENCE_NO' },
+                { data: 'MOVEMENT_DATE' },
+                { data: 'REMARKS' },
+            ],
+            columnDefs: [
+                { width: '5%', bSortable: false, targets: 0, responsivePriority: 1 },
+                { width: 'auto', targets: 1, responsivePriority: 2 },
+                { width: 'auto', targets: 2, responsivePriority: 3 },
+                { width: 'auto', targets: 3, responsivePriority: 4 },
+                { width: 'auto', targets: 4, responsivePriority: 5 },
+                { width: 'auto', targets: 5, responsivePriority: 6 },
+                { width: 'auto', targets: 6, responsivePriority: 7 },
+            ],
+            onRowClick: (rowData) => {
+                //if (rowData?.LINK) window.open(rowData.LINK, '_blank');
+            },
+            addons: {
+                controls: true,
+                export: 'stock_movement',
+            }
+        },
+        delete: {
+            trigger : '#delete-data',
+            url : '/stock-movement/delete-multiple',
+            swalTitle : 'Confirm Multiple Stock Movement Deletion',
+            swalText : 'Are you sure you want to delete these stock movement?',
+            confirmButtonText : 'Delete',
+            validationMessage : 'Please select the stock movement you want to delete',
+            table : '#stock-movement-table'
+        },
+        dropdown: [
+            { url: '/products/generate-active-product-options', dropdownSelector: '#filter_by_product', data: { multiple : true } },
+            { url: '/warehouse/generate-options', dropdownSelector: '#filter_by_warehouse', data: { multiple : true } },
+        ],
+        datepickers: [
+            { selector: '#filter_by_movement_date' },
+        ]
+    }
+    
+    checkNotification();
+
+    initializeDatatable(config.table);
+
+    config.dropdown.map((cfg) => generateDropdownOptions(cfg));
+    config.datepickers.map(({ selector }) => initializeDateRangePicker(selector));
+
+    multipleActionButton(config.delete);
+
+    document.addEventListener('click', async (event) => {
+        if (event.target.closest('#apply-filter')) {
+            initializeDatatable(config.table);
+        }
+
+        if (event.target.closest('#reset-filter')) {
+            $('#filter_by_product').val(null).trigger('change');
+            $('#filter_by_warehouse').val(null).trigger('change');
+            $('#filter_by_movement_date').val(null);
+            $('#filter_by_movement_type').val(null).trigger('change');
+
+            initializeDatatable(config.table);
+        }
+    });
+});
