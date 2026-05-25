@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedFloorPlanId = null;
     let selectedTableId = null;
     let cachedOrders = [];
+    let kitchenItemsCache = [];
     
     const config = {
         forms: [
@@ -1116,6 +1117,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
             handleSystemError(error, 'load_order_history_failed', error.message);
         }
+    };
+
+    const loadKitchenItems = async (shopOrderId) => {
+
+        const csrf = getCsrfToken();
+        const ctx = getPageContext();
+
+        const params = new URLSearchParams();
+        params.append('shop_order_id', shopOrderId);
+
+        params.append('appId', ctx.appId ?? '');
+        params.append('navigationMenuId', ctx.navigationMenuId ?? '');
+
+        const response = await fetch('/shop-order/kitchen-items', {
+            method: 'POST',
+            body: params,
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                Accept: 'application/json',
+                ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+            },
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+            showNotification(data.message);
+            return;
+        }
+
+        kitchenItemsCache = data.data || [];
+
+        renderKitchenItems(kitchenItemsCache);
     };
 
     const assignTableToOrder = async (
@@ -2907,6 +2941,95 @@ document.addEventListener('DOMContentLoaded', () => {
         $('#payment-method-list').html(html);
     };
 
+    const renderKitchenItems = (items) => {
+
+        const tbody = $('#kitchen-send-table-body');
+        tbody.html('');
+
+        if (!items.length) {
+            tbody.html(`
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-10">
+                        No items found
+                    </td>
+                </tr>
+            `);
+            return;
+        }
+
+        items.forEach(item => {
+
+            const html = `
+            <tr data-id="${item.id}">
+
+                <!-- CHECKBOX -->
+                <td>
+                    <div class="form-check form-check-sm form-check-custom form-check-solid">
+                        <input class="form-check-input kitchen-item-checkbox"
+                            type="checkbox"
+                            data-id="${item.id}">
+                    </div>
+                </td>
+
+                <!-- PRODUCT -->
+                <td>
+                    <div class="d-flex flex-column">
+                        <span class="fw-bold fs-6">${item.product_name}</span>
+                        <span class="text-muted fs-7">${item.order_note ?? ''}</span>
+                    </div>
+                </td>
+
+                <!-- QTY -->
+                <td>
+                    <input type="number"
+                        class="form-control form-control-solid kitchen-qty"
+                        value="${item.quantity ?? 1}"
+                        min="0.01"
+                        step="0.01"
+                        data-id="${item.id}">
+                </td>
+
+                <!-- ROUTE -->
+                <td>
+                    <select class="form-select form-select-solid kitchen-route"
+                            data-control="select2"
+                            data-hide-search="true"
+                            data-id="${item.id}">
+                        ${renderKitchenRoutesOptions(item.kitchen_routes || [])}
+                    </select>
+                </td>
+
+                <!-- ACTION -->
+                <td>
+                    <select class="form-select form-select-solid kitchen-action"
+                            data-control="select2"
+                            data-hide-search="true"
+                            data-id="${item.id}">
+                        <option value="New">New</option>
+                        <option value="Add">Add</option>
+                        <option value="Reduce">Reduce</option>
+                        <option value="Cancel">Cancel</option>
+                        <option value="Refire">Refire</option>
+                    </select>
+                </td>
+
+                <!-- NOTE -->
+                <td>
+                    <input type="text"
+                        class="form-control form-control-solid kitchen-note"
+                        placeholder="Note"
+                        data-id="${item.id}">
+                </td>
+
+            </tr>
+            `;
+
+            tbody.append(html);
+        });
+
+        initKitchenUI();
+    };
+
     const createPaymentRow = ({
         paymentMethodId,
         paymentMethodName
@@ -3102,6 +3225,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 value="${paymentMethodName}">
         </div>
         `;
+    };
+
+    const renderKitchenRoutesOptions = (routes) => {
+
+        if (!routes.length) {
+            return `<option value="">No route</option>`;
+        }
+
+        return routes.map(route => `
+            <option value="${route.kitchen_route_id}">
+                ${route.kitchen_route_name}
+            </option>
+        `).join('');
+    };
+
+    const initKitchenUI = () => {
+
+        $('[data-control="select2"]').select2({
+            dropdownParent: $('#kitchen-send-modal')
+        });
+
+        updateSelectedCount();
     };
 
     const discountLoadingState = () => {
@@ -3431,6 +3576,14 @@ document.addEventListener('DOMContentLoaded', () => {
             );
         }
     };
+
+    const updateSelectedCount = () => {
+
+        const count = $('.kitchen-item-checkbox:checked').length;
+
+        $('#selected-kitchen-items-count').text(`${count} Item(s) Selected`);
+    };
+
 
     config.forms.map((cfg) => initValidation(cfg.selector, cfg.rules));
     config.posCategory.map((cfg) => generatePOSCategory(cfg.url));
@@ -5287,4 +5440,115 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     );
+
+    $(document).on('click', '#send-kitchen-ticket', async function () {
+        try {
+
+            const shopOrderId = sessionStorage.getItem('shop_order_id');
+
+            if (!shopOrderId) {
+                showNotification('No active order selected.');
+                return;
+            }
+
+            await loadKitchenItems(shopOrderId);
+
+        } catch (error) {
+            handleSystemError(error, 'kitchen_load_failed', error.message);
+        }
+    });
+
+    $(document).on('click', '#select-all-kitchen-items', function () {
+
+        $('.kitchen-item-checkbox').prop('checked', true);
+
+        updateSelectedCount();
+    });
+
+
+    $(document).on('click', '#unselect-all-kitchen-items', function () {
+
+        $('.kitchen-item-checkbox').prop('checked', false);
+
+        updateSelectedCount();
+    });
+
+
+    $(document).on('change', '.kitchen-item-checkbox', function () {
+        updateSelectedCount();
+    });
+
+    $(document).on('change', '#check-all-kitchen-items', function () {
+
+        const checked = $(this).is(':checked');
+
+        $('.kitchen-item-checkbox').prop('checked', checked);
+
+        updateSelectedCount();
+    });
+
+    $(document).on('click', '#confirm-send-kitchen-ticket', async function () {
+
+        try {
+
+            const shopOrderId = sessionStorage.getItem('shop_order_id');
+
+            const selectedRows = [];
+
+            $('.kitchen-item-checkbox:checked').each(function () {
+
+                const id = $(this).data('id');
+
+                const row = $(`tr[data-id="${id}"]`);
+
+                selectedRows.push({
+                    shop_order_item_id: id,
+                    quantity: row.find('.kitchen-qty').val(),
+                    kitchen_route_id: row.find('.kitchen-route').val(),
+                    action_type: row.find('.kitchen-action').val(),
+                    note: row.find('.kitchen-note').val(),
+                });
+            });
+
+            if (!selectedRows.length) {
+                showNotification('Please select at least one item.');
+                return;
+            }
+
+            const csrf = getCsrfToken();
+            const ctx = getPageContext();
+
+            const params = new URLSearchParams();
+            params.append('shop_order_id', shopOrderId);
+            params.append('items', JSON.stringify(selectedRows));
+
+            params.append('appId', ctx.appId ?? '');
+            params.append('navigationMenuId', ctx.navigationMenuId ?? '');
+
+            const response = await fetch('/kitchen-ticket/send', {
+                method: 'POST',
+                body: params,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    Accept: 'application/json',
+                    ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+                },
+            });
+
+            const data = await response.json();
+
+            if (!data.success) {
+                showNotification(data.message);
+                return;
+            }
+
+            $('#kitchen-send-modal').modal('hide');
+
+            showNotification('Sent to kitchen successfully.');
+
+        } catch (error) {
+            handleSystemError(error, 'kitchen_send_failed', error.message);
+        }
+    });
+
 });

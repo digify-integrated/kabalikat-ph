@@ -449,7 +449,9 @@
 
                                 <button
                                     class="btn btn-warning w-100 py-4 fs-4 rounded-4"
-                                    id="kitchen-button">
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#kitchen-send-modal"
+                                    id="send-kitchen-ticket">
 
                                     <i class="ki-outline ki-entrance-left fs-2 me-2"></i>
 
@@ -1372,6 +1374,269 @@
         </div>
 
     </div>
+
+    <!--begin::Kitchen Send Modal-->
+    <div class="modal fade"
+        id="kitchen-send-modal"
+        tabindex="-1"
+        aria-hidden="true">
+
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+
+            <div class="modal-content rounded-4 border-0 shadow-sm">
+
+                <!--begin::Header-->
+                <div class="modal-header border-0 pb-0">
+
+                    <div class="d-flex flex-column">
+
+                        <h2 class="fw-bold mb-1">
+                            Send Orders To Kitchen
+                        </h2>
+
+                        <span class="text-muted fs-6">
+                            Select items and send them to their kitchen stations
+                        </span>
+
+                    </div>
+
+                    <button type="button"
+                            class="btn btn-sm btn-icon btn-light"
+                            data-bs-dismiss="modal">
+
+                        <i class="ki-outline ki-cross fs-2"></i>
+
+                    </button>
+
+                </div>
+                <!--end::Header-->
+
+                <!--begin::Body-->
+                <div class="modal-body pt-5">
+
+                    <!--begin::Quick Actions-->
+                    <div class="d-flex flex-wrap gap-3 mb-7">
+
+                        <button type="button"
+                                class="btn btn-light-primary"
+                                id="select-all-kitchen-items">
+
+                            Select All
+
+                        </button>
+
+                        <button type="button"
+                                class="btn btn-light-danger"
+                                id="unselect-all-kitchen-items">
+
+                            Clear Selection
+
+                        </button>
+
+                        <div class="ms-auto">
+
+                            <span class="badge badge-light-warning fs-6 px-4 py-3"
+                                id="selected-kitchen-items-count">
+
+                                0 Item(s) Selected
+
+                            </span>
+
+                        </div>
+
+                    </div>
+                    <!--end::Quick Actions-->
+
+                    <!--begin::Kitchen Items-->
+                    <div class="table-responsive">
+
+                        <table class="table align-middle table-row-dashed fs-6 gy-5"
+                            id="kitchen-send-table">
+
+                            <thead>
+
+                                <tr class="fw-bold text-gray-800 text-uppercase fs-7">
+
+                                    <th class="w-40px">
+                                        <div class="form-check form-check-sm form-check-custom form-check-solid">
+                                            <input class="form-check-input"
+                                                type="checkbox"
+                                                id="check-all-kitchen-items">
+                                        </div>
+                                    </th>
+
+                                    <th class="min-w-250px">
+                                        Product
+                                    </th>
+
+                                    <th class="min-w-100px">
+                                        Qty
+                                    </th>
+
+                                    <th class="min-w-180px">
+                                        Kitchen Route
+                                    </th>
+
+                                    <th class="min-w-140px">
+                                        Action
+                                    </th>
+
+                                    <th class="min-w-200px">
+                                        Notes
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody id="kitchen-send-table-body">
+
+                                <!-- SAMPLE ROW -->
+
+                                <tr>
+
+                                    <!-- CHECKBOX -->
+                                    <td>
+                                        <div class="form-check form-check-sm form-check-custom form-check-solid">
+
+                                            <input class="form-check-input kitchen-item-checkbox"
+                                                type="checkbox">
+
+                                        </div>
+                                    </td>
+
+                                    <!-- PRODUCT -->
+                                    <td>
+
+                                        <div class="d-flex flex-column">
+
+                                            <span class="fw-bold fs-5">
+                                                Ribeye Steak
+                                            </span>
+
+                                            <span class="text-muted fs-7">
+                                                Medium Rare
+                                            </span>
+
+                                        </div>
+
+                                    </td>
+
+                                    <!-- QUANTITY -->
+                                    <td>
+
+                                        <div class="w-100px">
+
+                                            <input type="number"
+                                                class="form-control form-control-solid kitchen-qty"
+                                                value="1"
+                                                min="1">
+
+                                        </div>
+
+                                    </td>
+
+                                    <!-- ROUTE -->
+                                    <td>
+
+                                        <select class="form-select form-select-solid kitchen-route"
+                                                data-control="select2"
+                                                data-hide-search="true">
+
+                                            <option value="1">
+                                                Grill Station
+                                            </option>
+
+                                            <option value="2">
+                                                Main Kitchen
+                                            </option>
+
+                                        </select>
+
+                                    </td>
+
+                                    <!-- ACTION -->
+                                    <td>
+
+                                        <select class="form-select form-select-solid kitchen-action"
+                                                data-control="select2"
+                                                data-hide-search="true">
+
+                                            <option value="New">
+                                                New
+                                            </option>
+
+                                            <option value="Add">
+                                                Add
+                                            </option>
+
+                                            <option value="Reduce">
+                                                Reduce
+                                            </option>
+
+                                            <option value="Cancel">
+                                                Cancel
+                                            </option>
+
+                                            <option value="Refire">
+                                                Refire
+                                            </option>
+
+                                        </select>
+
+                                    </td>
+
+                                    <!-- NOTE -->
+                                    <td>
+
+                                        <input type="text"
+                                            class="form-control form-control-solid kitchen-note"
+                                            placeholder="Optional note">
+
+                                    </td>
+
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+                    <!--end::Kitchen Items-->
+
+                </div>
+                <!--end::Body-->
+
+                <!--begin::Footer-->
+                <div class="modal-footer border-0 pt-0">
+
+                    <button type="button"
+                            class="btn btn-light"
+                            data-bs-dismiss="modal">
+
+                        Close
+
+                    </button>
+
+                    <button type="button"
+                            class="btn btn-warning fw-bold px-10"
+                            id="confirm-send-kitchen-ticket">
+
+                        <i class="ki-outline ki-entrance-left fs-2"></i>
+
+                        Send To Kitchen
+
+                    </button>
+
+                </div>
+                <!--end::Footer-->
+
+            </div>
+
+        </div>
+
+    </div>
+    <!--end::Kitchen Send Modal-->
 @endsection
 
 @push('scripts')

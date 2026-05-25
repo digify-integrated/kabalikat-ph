@@ -2127,6 +2127,32 @@ return new class extends Migration
                 'Cancelled',
             ])->default('Pending');
 
+            $table->decimal('sent_to_kitchen_quantity', 12, 2)
+                ->default(0)
+                ->after('quantity');
+
+            $table->decimal('prepared_quantity', 12, 2)
+                ->default(0)
+                ->after('sent_to_kitchen_quantity');
+
+            $table->decimal('served_quantity', 12, 2)
+                ->default(0)
+                ->after('prepared_quantity');
+
+            $table->decimal('cancelled_quantity', 12, 2)
+                ->default(0)
+                ->after('served_quantity');
+
+            $table->foreignId('kitchen_route_id')
+                ->nullable()
+                ->after('product_id')
+                ->constrained('kitchen_route')
+                ->nullOnDelete();
+
+            $table->string('kitchen_route_name')
+                ->nullable()
+                ->after('kitchen_route_id');
+
             $table->datetime('queued_at')
                 ->nullable();
 
@@ -2836,6 +2862,84 @@ return new class extends Migration
                 'Cancelled',
             ])->default('Queued');
 
+            /*
+            |--------------------------------------------------------------------------
+            | SHOP REGISTER
+            |--------------------------------------------------------------------------
+            */
+
+            $table->foreignId('shop_register_id')
+                ->after('shop_order_id')
+                ->constrained('shop_register')
+                ->cascadeOnDelete();
+
+            $table->string('shop_register_name')
+                ->after('shop_register_id');
+
+            /*
+            |--------------------------------------------------------------------------
+            | SESSION
+            |--------------------------------------------------------------------------
+            */
+
+            $table->foreignId('shop_register_session_id')
+                ->nullable()
+                ->after('shop_register_name')
+                ->constrained('shop_register_session')
+                ->nullOnDelete();
+
+            /*
+            |--------------------------------------------------------------------------
+            | TABLE INFO SNAPSHOT
+            |--------------------------------------------------------------------------
+            */
+
+            $table->string('table_number')
+                ->nullable()
+                ->after('kitchen_route_name');
+
+            $table->string('customer_name')
+                ->nullable()
+                ->after('table_number');
+
+            /*
+            |--------------------------------------------------------------------------
+            | TICKET TYPE
+            |--------------------------------------------------------------------------
+            */
+
+            $table->enum('ticket_type', [
+                'Initial',
+                'Additional',
+                'Modification',
+                'Cancellation',
+                'Refire',
+            ])->default('Initial');
+
+            /*
+            |--------------------------------------------------------------------------
+            | KITCHEN FLAGS
+            |--------------------------------------------------------------------------
+            */
+
+            $table->enum('is_acknowledged', ['Yes', 'No'])
+                ->default('No');
+
+            $table->timestamp('acknowledged_at')
+                ->nullable();
+
+            /*
+            |--------------------------------------------------------------------------
+            | PRINT TRACKING
+            |--------------------------------------------------------------------------
+            */
+
+            $table->integer('print_count')
+                ->default(0);
+
+            $table->timestamp('last_printed_at')
+                ->nullable();
+
             $table->timestamp('queued_at')->nullable();
             $table->timestamp('started_at')->nullable();
             $table->timestamp('ready_at')->nullable();
@@ -2911,6 +3015,64 @@ return new class extends Migration
 
             $table->text('order_note')->nullable();
 
+             /*
+            |--------------------------------------------------------------------------
+            | ORIGINAL ORDER QUANTITY
+            |--------------------------------------------------------------------------
+            */
+
+            $table->decimal('original_quantity', 12, 2)
+                ->default(0)
+                ->after('quantity');
+
+            /*
+            |--------------------------------------------------------------------------
+            | PRODUCTION TRACKING
+            |--------------------------------------------------------------------------
+            */
+
+            $table->decimal('prepared_quantity', 12, 2)
+                ->default(0)
+                ->after('original_quantity');
+
+            $table->decimal('served_quantity', 12, 2)
+                ->default(0)
+                ->after('prepared_quantity');
+
+            /*
+            |--------------------------------------------------------------------------
+            | MODIFICATION REASON
+            |--------------------------------------------------------------------------
+            */
+
+            $table->text('action_reason')
+                ->nullable()
+                ->after('action_type');
+
+            /*
+            |--------------------------------------------------------------------------
+            | ACKNOWLEDGEMENT
+            |--------------------------------------------------------------------------
+            */
+
+            $table->enum('is_seen', ['Yes', 'No'])
+                ->default('No');
+
+            $table->timestamp('seen_at')
+                ->nullable();
+
+            /*
+            |--------------------------------------------------------------------------
+            | PRIORITY
+            |--------------------------------------------------------------------------
+            */
+
+            $table->enum('priority_level', [
+                'Normal',
+                'Rush',
+                'Urgent',
+            ])->default('Normal');
+
             /*
             |--------------------------------------------------------------------------
             | KITCHEN STATUS
@@ -2953,6 +3115,41 @@ return new class extends Migration
             $table->index(['shop_order_item_id']);
             $table->index(['action_type']);
             $table->index(['item_status']);
+        });
+
+        /* =============================================================================================
+            TABLE: Kitchen Ticket History
+        ============================================================================================= */
+
+        Schema::create('kitchen_ticket_history', function (Blueprint $table) {
+
+            $table->id();
+
+            $table->foreignId('kitchen_ticket_id')
+                ->constrained('kitchen_ticket')
+                ->cascadeOnDelete();
+
+            $table->foreignId('kitchen_ticket_item_id')
+                ->nullable()
+                ->constrained('kitchen_ticket_item')
+                ->nullOnDelete();
+
+            $table->string('activity');
+
+            $table->text('remarks')
+                ->nullable();
+
+            $table->foreignId('created_by')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
+
+            $table->string('created_by_name')
+                ->nullable();
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+
+            $table->timestamps();
         });
 
         /* =============================================================================================
