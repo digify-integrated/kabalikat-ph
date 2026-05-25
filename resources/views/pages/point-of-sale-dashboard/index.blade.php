@@ -20,7 +20,7 @@
                         <span class="fs-4hx text-white fw-bold me-6" id="out-of-stock-count">0</span>
 
                         <div class="fw-bold fs-6 text-white">
-                            <span class="d-block fs-2">Out of Stock</span>
+                            <span class="d-block fs-2">Gross Sales</span>
                             <span class="">Requires restock</span>
                         </div>            
                     </div>
@@ -40,7 +40,7 @@
                         <span class="fs-4hx text-white fw-bold me-6" id="expired-items-count">0</span>
 
                         <div class="fw-bold fs-6 text-white">
-                            <span class="d-block fs-2">Expired Items</span>
+                            <span class="d-block fs-2">Net Sales</span>
                             <span class="">Remove from shelf</span>
                         </div>            
                     </div>
@@ -60,7 +60,7 @@
                         <span class="fs-4hx text-white fw-bold me-6" id="low-stock-count">0</span>
 
                         <div class="fw-bold fs-6 text-white">
-                            <span class="d-block fs-2">Low Stock</span>
+                            <span class="d-block fs-2">Total Orders</span>
                             <span class="">Below threshold</span>
                         </div>            
                     </div>
@@ -80,7 +80,7 @@
                         <span class="fs-4hx text-white fw-bold me-6" id="expiring-soon-count">0</span>
 
                         <div class="fw-bold fs-6 text-white">
-                            <span class="d-block fs-2">Expiring Soon</span>
+                            <span class="d-block fs-2">Average Order Value</span>
                             <span class="">Next 30 days</span>
                         </div>            
                     </div>
@@ -95,7 +95,7 @@
                 <div class="card-header border-0 pt-5">
                     <h3 class="card-title align-items-start flex-column">
                         <span class="card-label fw-bold fs-3 mb-1">
-                            Out of stock products
+                            Recent Transactions
                         </span>
                         <span class="text-muted mt-1 fw-semibold fs-7">
                             These products are at zero and cannot be sold.
@@ -134,70 +134,6 @@
                 <div class="card-body py-3">
                     <div class="table-responsive">
                         <table class="table align-middle table-row-dashed fs-6 gy-3" id="expired-stock-table">
-                            <thead>
-                                <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
-                                    <th class="min-w-100px">Product</th>
-                                    <th class="min-w-100px">Batch Number</th>
-                                    <th class="min-w-100px">Qty</th>
-                                    <th class="min-w-100px">Expiration Date</th>
-                                </tr>
-                            </thead>
-                                
-                            <tbody class="fw-bold text-gray-600"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-xl-6">
-            <div class="card mb-5">
-                <div class="card-header border-0 pt-5">
-                    <h3 class="card-title align-items-start flex-column">
-                        <span class="card-label fw-bold fs-3 mb-1">
-                            Low Inventory
-                        </span>
-                        <span class="text-muted mt-1 fw-semibold fs-7">
-                            Items that will run out if not replenished soon
-                        </span>
-                    </h3>
-                </div>
-
-                <div class="card-body py-3">
-                    <div class="table-responsive">
-                        <table class="table align-middle table-row-dashed fs-6 gy-3" id="low-stock-table">
-                            <thead>
-                                <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
-                                    <th class="min-w-100px">Product</th>
-                                    <th class="min-w-100px">Current Qty</th>
-                                    <th class="min-w-100px">Reorder At</th>
-                                </tr>
-                            </thead>
-                                
-                            <tbody class="fw-bold text-gray-600"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-6">
-            <div class="card mb-5">
-                <div class="card-header border-0 pt-5">
-                    <h3 class="card-title align-items-start flex-column">
-                        <span class="card-label fw-bold fs-3 mb-1">
-                            Near Expiry
-                        </span>
-                        <span class="text-muted mt-1 fw-semibold fs-7">
-                            Items approaching their expiration date
-                        </span>
-                    </h3>
-                </div>
-
-                <div class="card-body py-3">
-                    <div class="table-responsive">
-                        <table class="table align-middle table-row-dashed fs-6 gy-3" id="near-expiry-table">
                             <thead>
                                 <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
                                     <th class="min-w-100px">Product</th>

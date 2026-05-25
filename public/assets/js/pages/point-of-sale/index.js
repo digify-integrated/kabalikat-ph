@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderInitialRegister = (register) => {
 
         return `
-        <div class="col-md-6">
+        <div class="col-md-4">
             <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100">
                 <div class="h-5px bg-warning"></div>
                 <div class="card-header border-0 pt-6 pb-3">
@@ -163,7 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderOpenRegister = (register) => {
 
         return `        
-        <div class="col-md-6">
+        <div class="col-md-4">
             <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100">
                 <div class="h-5px bg-success"></div>
                 <div class="card-header border-0 pt-6 pb-4">
@@ -191,7 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div class="px-6 mb-5">
                     <div class="row g-3">
-                        <div class="col-4">
+                        <div class="col">
                             <div class="bg-light-success rounded-4 px-3 py-3 text-center">
                                 <div class="text-muted fs-8 mb-1">Cash</div>
                                 <div class="fw-bold fs-4">
@@ -199,15 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </div>
                             </div>
                         </div>
-                        <div class="col-4">
-                            <div class="bg-light-primary rounded-4 px-3 py-3 text-center">
-                                <div class="text-muted fs-8 mb-1">Sales</div>
-                                <div class="fw-bold fs-4">
-                                    ${register.sales_count}
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-4">
+                        <div class="col">
                             <div class="bg-light-info rounded-4 px-3 py-3 text-center">
                                 <div class="text-muted fs-8 mb-1">Duration</div>
                                 <div class="fw-bold fs-6">
@@ -291,7 +283,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderClosedRegister = (register) => {
 
         return `        
-        <div class="col-md-6">
+        <div class="col-md-4">
             <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100">
                 <div class="h-5px bg-danger"></div>
                 <div class="card-header border-0 pt-6 pb-4">
@@ -320,7 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 <div class="px-6 mb-5">
                     <div class="row g-3">
-                        <div class="col-4">
+                        <div class="col">
                             <div class="bg-light-danger rounded-4 px-3 py-3 text-center">
                                 <div class="text-muted fs-8 mb-1">
                                     Closing
@@ -330,17 +322,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </div>
                             </div>
                         </div>
-                        <div class="col-4">
-                            <div class="bg-light-warning rounded-4 px-3 py-3 text-center">
-                                <div class="text-muted fs-8 mb-1">
-                                    Sales
-                                </div>
-                                <div class="fw-bold fs-4">
-                                    ${register.sales_count}
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-4">
+                        <div class="col">
                             <div class="bg-light-info rounded-4 px-3 py-3 text-center">
                                 <div class="text-muted fs-8 mb-1">
                                     Shift

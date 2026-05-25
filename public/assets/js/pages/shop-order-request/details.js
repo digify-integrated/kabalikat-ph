@@ -1,5 +1,5 @@
 import { initValidation } from '../../util/validation.js';
-import { showNotification } from '../../util/notifications.js';
+import { showNotification, setNotification } from '../../util/notifications.js';
 import { attachLogNotesHandler } from '../../util/log-notes.js';
 import { disableButton, enableButton, detailsDeleteButton } from '../../form/button.js';
 import { displayDetails, handleActionFetch, getPageContext, getCsrfToken, resetForm } from '../../form/form.js';
@@ -543,12 +543,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (!data.success) {
 
-                    showNotification(data.message);
+                    showNotification(data.message, 'danger');
 
                     return;
                 }
 
-                setNotification(data.message);
+                setNotification(data.message, 'success');
 
                 /*
                 |--------------------------------------------------------------------------
@@ -640,12 +640,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (!data.success) {
 
-                    showNotification(data.message);
+                    showNotification(data.message, 'danger');
 
                     return;
                 }
 
-                setNotification(data.message);
+                setNotification(data.message, 'success');
 
                 /*
                 |--------------------------------------------------------------------------

@@ -63,32 +63,81 @@
                         <div class="separator border-gray-200"></div>
                         <div class="px-7 py-5">
                             <div class="mb-5">
-                                <label class="form-label fs-6 fw-semibold" for="filter_by_movement_date">Filter By Movement Date:</label>
-                                 <input type="text" class="form-control" id="filter_by_movement_date" autocomplete="off">
-                            </div>
-                            <div class="mb-5">
-                                <label class="form-label fs-6 fw-semibold" for="filter_by_product">Filter By Product:</label>
-                                <select id="filter_by_product" name="filter_by_product" multiple="multiple" class="form-select" data-control="select2" data-allow-clear="false"></select>
-                            </div>
-                            <div class="mb-5">
-                                <label class="form-label fs-6 fw-semibold" for="filter_by_warehouse">Filter By Warehouse:</label>
-                                <select id="filter_by_warehouse" name="filter_by_warehouse" multiple="multiple" class="form-select" data-control="select2" data-allow-clear="false"></select>
-                            </div>
-                            <div class="mb-5">
-                                <label class="form-label fs-6 fw-semibold" for="filter_by_movement_type">Filter By Movement Type:</label>
-                                <select id="filter_by_movement_type" multiple="multiple" class="form-select" data-control="select2" data-allow-clear="false">
-                                    <option value="IN">Stock In</option>
-                                    <option value="OUT">Stock Out</option>
-                                    <option value="TRANSFER_IN">Transfer In</option>
-                                    <option value="TRANSFER_OUT">Transfer Out</option>
-                                    <option value="ADJUSTMENT">Adjustment</option>
-                                    <option value="CONSUMPTION">Consumption</option>
-                                    <option value="SALE">Sale</option>
-                                    <option value="RETURN">Return</option>
-                                    <option value="VOID">Void</option>
-                                    <option value="REFUND">Refund</option>
+                                <label class="form-label fw-semibold">
+                                    Order Type
+                                </label>
+
+                                <select id="filter_order_type"
+                                        class="form-select"
+                                        multiple
+                                        data-control="select2">
+
+                                    <option value="Walk-in">Walk-in</option>
+                                    <option value="Dine-in">Dine-in</option>
+                                    <option value="Take-out">Take-out</option>
+                                    <option value="Delivery">Delivery</option>
                                 </select>
                             </div>
+
+                            <div class="mb-5">
+                                <label class="form-label fw-semibold">
+                                    Order Status
+                                </label>
+
+                                <select id="filter_order_status"
+                                        class="form-select"
+                                        multiple
+                                        data-control="select2">
+
+                                    <option value="Pending">Pending</option>
+                                    <option value="Preparing">Preparing</option>
+                                    <option value="Ready">Ready</option>
+                                    <option value="Completed">Completed</option>
+                                    <option value="Cancelled">Cancelled</option>
+                                    <option value="Voided">Voided</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-5">
+                                <label class="form-label fw-semibold">
+                                    Payment Status
+                                </label>
+
+                                <select id="filter_payment_status"
+                                        class="form-select"
+                                        multiple
+                                        data-control="select2">
+
+                                    <option value="Unpaid">Unpaid</option>
+                                    <option value="Paid">Paid</option>
+                                    <option value="Refunded">Refunded</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-5">
+                                <label class="form-label fw-semibold">
+                                    Register
+                                </label>
+
+                                <select id="filter_register"
+                                        class="form-select"
+                                        multiple
+                                        data-control="select2">
+                                </select>
+                            </div>
+
+                            <div class="mb-5">
+                                <label class="form-label fw-semibold">
+                                    Cashier
+                                </label>
+
+                                <select id="filter_cashier"
+                                        class="form-select"
+                                        multiple
+                                        data-control="select2">
+                                </select>
+                            </div>
+
                             <div class="d-flex justify-content-end">
                                 <button type="reset" class="btn btn-light btn-active-light-primary fw-semibold me-2 px-6" id="reset-filter" data-kt-menu-dismiss="true">Reset</button>
                                 <button type="button" class="btn btn-primary fw-semibold px-6" id="apply-filter" data-kt-menu-dismiss="true">Apply</button>
@@ -101,19 +150,33 @@
 
         <div class="card-body pt-9">
             <div class="table-responsive">
-                <table class="table align-middle fs-6 gy-5" id="payment-summary-table">
+                <table class="table align-middle table-row-dashed text-wrap fs-6 gy-5"
+                    id="transaction-summary-table">
                     <thead>
-                        <tr class="text-start text-gray-800 fw-bold fs-7 text-uppercase">
-                            <th>Order No</th>
-                            <th>Payment Method</th>
-                            <th>Amount</th>
-                            <th>Tendered</th>
-                            <th>Change</th>
-                            <th>Status</th>
-                            <th>Paid At</th>
+                        <tr>
+                            <th class="min-w-200px">Order No</th>
+                            <th class="min-w-150px">Register</th>
+                            <th class="min-w-150px">Cashier</th>
+                            <th class="min-w-150px">Order Type</th>
+                            <th class="min-w-150px">Order Status</th>
+                            <th class="min-w-150px">Payment Status</th>
+                            <th class="min-w-100px">Items</th>
+                            <th class="min-w-100px">Gross</th>
+                            <th class="min-w-100px">Discount</th>
+                            <th class="min-w-100px">Charges</th>
+                            <th class="min-w-100px">Net</th>
+                            <th class="min-w-100px">VAT</th>
+                            <th class="min-w-100px">VATable</th>
+                            <th class="min-w-150px">VAT Exempt</th>
+                            <th class="min-w-150px">Zero Rated</th>
+                            <th class="min-w-100px">Paid</th>
+                            <th class="min-w-100px">Change</th>
+                            <th class="min-w-100px">Balance</th>
+                            <th class="min-w-200px">Transaction Date</th>
                         </tr>
-                    </thead>
-                    <tbody></tbody>
+                        </thead>
+
+                    <tbody class="fw-semibold text-gray-800"></tbody>
                 </table>
             </div>
         </div>

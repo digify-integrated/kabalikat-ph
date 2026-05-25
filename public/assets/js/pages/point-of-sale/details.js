@@ -5143,6 +5143,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 const csrf = getCsrfToken();
+                const ctx = getPageContext();
 
                 const formData = new URLSearchParams();
 
@@ -5155,6 +5156,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     'request_reason',
                     reason
                 );
+
+                formData.append('appId', ctx.appId ?? '');
+                formData.append('navigationMenuId', ctx .navigationMenuId ?? '');
 
                 const response = await fetch(
                     '/shop-order-request/save-void-request',
@@ -5187,7 +5191,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 $('#void-reason').val('');
 
-                toastr.success(data.message);
+                showNotification(data.message);
 
             } catch (error) {
 
@@ -5223,6 +5227,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 const csrf = getCsrfToken();
+                const ctx = getPageContext();
 
                 const formData = new URLSearchParams();
 
@@ -5235,6 +5240,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     'request_reason',
                     reason
                 );
+
+                formData.append('appId', ctx.appId ?? '');
+                formData.append('navigationMenuId', ctx .navigationMenuId ?? '');
 
                 const response = await fetch(
                     '/shop-order-request/save-refund-request',
@@ -5267,7 +5275,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 $('#refund-reason').val('');
 
-                toastr.success(data.message);
+                showNotification(data.message);
 
             } catch (error) {
 

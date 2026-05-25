@@ -544,6 +544,39 @@ class UserController extends Controller
         return response()->json($response);
     }
 
+    public function generateCashierOptions(Request $request)
+    {
+        $multiple = filter_var($request->input('multiple', false), FILTER_VALIDATE_BOOLEAN);
+
+        $response = collect();
+
+        if (!$multiple) {
+            $response->push([
+                'id'   => '',
+                'text' => '--',
+            ]);
+        }
+
+        $users = DB::table('users')
+            ->select(['id', 'name'])
+            ->whereIn('id', function ($query) {
+                $query->select('created_by')
+                    ->from('shop_order')
+                    ->whereNotNull('created_by');
+            })
+            ->orderBy('name')
+            ->get();
+
+        $response = $response->concat(
+            $users->map(fn ($row) => [
+                'id'   => $row->id,
+                'text' => $row->name,
+            ])
+        )->values();
+
+        return response()->json($response);
+    }
+
     public function accountSetting(
         int $userId,
     ) {

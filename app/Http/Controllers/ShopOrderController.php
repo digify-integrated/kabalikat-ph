@@ -1832,6 +1832,7 @@ class ShopOrderController extends Controller
 
             $shopOrder->update([
                 'payment_status' => 'Paid',
+                'order_status' => 'Completed',
                 'paid_amount' => $totalPayment,
                 'change_amount' => max(0, $totalTendered - $shopOrder->net_total),
                 'balance_due' => 0,
@@ -2077,12 +2078,7 @@ class ShopOrderController extends Controller
         return [$totalPayment, $totalTendered];
     }
 
-    private function deductInventory(
-        Product $product,
-        float $quantity,
-        string $referenceNumber,
-        array $warehouseIds
-    ): void {
+    private function deductInventory(Product $product, float $quantity, string $referenceNumber, array $warehouseIds) {
 
         if (empty($warehouseIds)) {
             throw new \Exception("No warehouse assigned to register.");
@@ -3649,5 +3645,34 @@ class ShopOrderController extends Controller
             'charges' =>
                 $charges,
         ];
+    }
+
+    public function generateOptions(Request $request)
+    {
+        $multiple = filter_var($request->input('multiple', false), FILTER_VALIDATE_BOOLEAN);
+
+        $response = collect();
+
+        if (!$multiple) {
+            $response->push([
+                'id'   => '',
+                'text' => '--',
+            ]);
+        }
+
+        $fileExtensions = DB::table('shop_order')
+            ->select(['id', 'order_number'])
+            ->where('payment_status', 'Paid')
+            ->orderBy('order_number')
+            ->get();
+
+        $response = $response->concat(
+            $fileExtensions->map(fn ($row) => [
+                'id'   => $row->id,
+                'text' => $row->order_number,
+            ])
+        )->values();
+
+        return response()->json($response);
     }
 }

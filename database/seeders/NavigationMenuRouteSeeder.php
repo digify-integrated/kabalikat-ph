@@ -1026,6 +1026,7 @@ class NavigationMenuRouteSeeder extends Seeder
                 'navigation_menu_id'    => 50,
                 'route_type'            => 'index',
                 'view_file'             => 'pages.cash-count.index',
+                'js_file'               => 'cash-count/index',
             ],
             
             // Payment Summary
@@ -1040,8 +1041,8 @@ class NavigationMenuRouteSeeder extends Seeder
             [
                 'navigation_menu_id'    => 52,
                 'route_type'            => 'index',
-                'view_file'             => 'pages.sales-summary.index',
-                'js_file'               => 'sales-summary/index',
+                'view_file'             => 'pages.transaction-summary.index',
+                'js_file'               => 'transaction-summary/index',
             ],
         ];
 

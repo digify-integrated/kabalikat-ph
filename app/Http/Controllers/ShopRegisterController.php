@@ -906,4 +906,32 @@ class ShopRegisterController extends Controller
             'data' => $response,
         ]);
     }
+
+    public function generateOptions(Request $request)
+    {
+        $multiple = filter_var($request->input('multiple', false), FILTER_VALIDATE_BOOLEAN);
+
+        $response = collect();
+
+        if (!$multiple) {
+            $response->push([
+                'id'   => '',
+                'text' => '--',
+            ]);
+        }
+
+        $countries = DB::table('shop_register')
+            ->select(['id', 'shop_register_name'])
+            ->orderBy('shop_register_name')
+            ->get();
+
+        $response = $response->concat(
+            $countries->map(fn ($row) => [
+                'id'   => $row->id,
+                'text' => $row->shop_register_name,
+            ])
+        )->values();
+
+        return response()->json($response);
+    }
 }

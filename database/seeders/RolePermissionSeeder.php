@@ -676,11 +676,11 @@ class RolePermissionSeeder extends Seeder
                 'navigation_menu_name' => 'Shop Order Request',
                 'read_access' => true,
                 'write_access' => false,
-                'create_access' => false,
-                'delete_access' => false,
+                'create_access' => true,
+                'delete_access' => true,
                 'import_access' => false,
                 'export_access' => false,
-                'logs_access' => false,
+                'logs_access' => true,
             ],
 
             [

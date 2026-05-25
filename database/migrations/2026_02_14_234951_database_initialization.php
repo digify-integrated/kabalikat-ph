@@ -112,8 +112,8 @@ return new class extends Migration
             $table->enum('route_type', ['index', 'details', 'new', 'import'])
             ->default('index');
             
-            $table->string('view_file');
-            $table->string('js_file');
+            $table->string('view_file')->nullable();
+            $table->string('js_file')->nullable();
             $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
             $table->timestamps();
 
@@ -2783,6 +2783,178 @@ return new class extends Migration
             $table->index(['requested_at']);
         });
                 
+        /* =============================================================================================
+            TABLE: Product Kitchen Route
+        ============================================================================================= */
+
+        Schema::create('product_kitchen_route', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('product_id')
+                ->constrained('product')
+                ->cascadeOnDelete();
+
+            $table->string('product_name');
+
+            $table->foreignId('kitchen_route_id')
+                ->constrained('kitchen_route')
+                ->cascadeOnDelete();
+
+            $table->string('kitchen_route_name');
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+
+            $table->timestamps();
+
+            $table->unique(['product_id']);
+        });
+                
+        /* =============================================================================================
+            TABLE: Kitchen Ticket
+        ============================================================================================= */
+
+        Schema::create('kitchen_ticket', function (Blueprint $table) {
+            $table->id();
+
+            $table->string('ticket_number')->unique();
+
+            $table->foreignId('shop_order_id')
+                ->constrained('shop_order')
+                ->cascadeOnDelete();
+
+            $table->foreignId('kitchen_route_id')
+                ->constrained('kitchen_route')
+                ->cascadeOnDelete();
+
+            $table->string('kitchen_route_name');
+
+            $table->enum('ticket_status', [
+                'Queued',
+                'Preparing',
+                'Ready',
+                'Completed',
+                'Cancelled',
+            ])->default('Queued');
+
+            $table->timestamp('queued_at')->nullable();
+            $table->timestamp('started_at')->nullable();
+            $table->timestamp('ready_at')->nullable();
+            $table->timestamp('completed_at')->nullable();
+            $table->timestamp('cancelled_at')->nullable();
+
+            $table->foreignId('created_by')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
+
+            $table->string('created_by_name')
+                ->nullable();
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+
+            $table->timestamps();
+
+            $table->index(['shop_order_id']);
+            $table->index(['kitchen_route_id']);
+            $table->index(['ticket_status']);
+        });
+                
+        /* =============================================================================================
+            TABLE: Kitchen Ticket Item
+        ============================================================================================= */
+        
+        Schema::create('kitchen_ticket_item', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('kitchen_ticket_id')
+                ->constrained('kitchen_ticket')
+                ->cascadeOnDelete();
+
+            $table->foreignId('shop_order_item_id')
+                ->constrained('shop_order_item')
+                ->cascadeOnDelete();
+
+            $table->foreignId('product_id')
+                ->nullable()
+                ->constrained('product')
+                ->nullOnDelete();
+
+            $table->string('product_name');
+
+            /*
+            |--------------------------------------------------------------------------
+            | PRODUCTION ACTION
+            |--------------------------------------------------------------------------
+            */
+
+            $table->enum('action_type', [
+                'New',
+                'Add',
+                'Reduce',
+                'Cancel',
+                'Refire',
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | QUANTITY SENT TO KITCHEN
+            |--------------------------------------------------------------------------
+            */
+
+            $table->decimal('quantity', 12, 2);
+
+            /*
+            |--------------------------------------------------------------------------
+            | SNAPSHOT NOTES
+            |--------------------------------------------------------------------------
+            */
+
+            $table->text('order_note')->nullable();
+
+            /*
+            |--------------------------------------------------------------------------
+            | KITCHEN STATUS
+            |--------------------------------------------------------------------------
+            */
+
+            $table->enum('item_status', [
+                'Queued',
+                'Preparing',
+                'Ready',
+                'Served',
+                'Cancelled',
+            ])->default('Queued');
+
+            $table->timestamp('queued_at')->nullable();
+            $table->timestamp('started_at')->nullable();
+            $table->timestamp('ready_at')->nullable();
+            $table->timestamp('served_at')->nullable();
+            $table->timestamp('cancelled_at')->nullable();
+
+            /*
+            |--------------------------------------------------------------------------
+            | AUDIT
+            |--------------------------------------------------------------------------
+            */
+
+            $table->foreignId('created_by')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
+
+            $table->string('created_by_name')
+                ->nullable();
+
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+
+            $table->timestamps();
+
+            $table->index(['kitchen_ticket_id']);
+            $table->index(['shop_order_item_id']);
+            $table->index(['action_type']);
+            $table->index(['item_status']);
+        });
+
         /* =============================================================================================
             TABLE: 
         ============================================================================================= */

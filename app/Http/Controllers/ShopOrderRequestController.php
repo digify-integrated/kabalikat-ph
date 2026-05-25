@@ -17,6 +17,14 @@ use Illuminate\Validation\Rule;
 
 class ShopOrderRequestController extends Controller
 {
+    public function save(Request $request)
+    {
+        return $this->saveOrderRequest(
+            request: $request,
+            requestType: $request->input('request_type') ?? 'Void'
+        );
+    }
+
     public function saveVoidRequest(Request $request)
     {
         return $this->saveOrderRequest(
@@ -35,12 +43,6 @@ class ShopOrderRequestController extends Controller
 
     private function saveOrderRequest(Request $request, string $requestType) 
     {
-        /*
-        |--------------------------------------------------------------------------
-        | VALIDATION
-        |--------------------------------------------------------------------------
-        */
-
         $validator = Validator::make(
             $request->all(),
             [
@@ -73,14 +75,10 @@ class ShopOrderRequestController extends Controller
             ]);
         }
 
-        $validated =
-            $validator->validated();
+        $validated = $validator->validated();
 
-        /*
-        |--------------------------------------------------------------------------
-        | ORDER
-        |--------------------------------------------------------------------------
-        */
+        $pageAppId = (int) $request->input('appId');
+        $pageNavigationMenuId = (int) $request->input('navigationMenuId');
 
         $shopOrder = ShopOrder::query()
             ->find(
@@ -95,12 +93,6 @@ class ShopOrderRequestController extends Controller
             ]);
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | BUSINESS RULES
-        |--------------------------------------------------------------------------
-        */
-
         if (
             $shopOrder->order_status === 'Cancelled'
         ) {
@@ -111,126 +103,76 @@ class ShopOrderRequestController extends Controller
             ]);
         }
 
-        if (
-            $shopOrder->order_status === 'Voided'
-        ) {
-
+        if ($shopOrder->order_status === 'Voided') {
             return response()->json([
                 'success' => false,
                 'message' => 'Order already voided.',
             ]);
         }
 
-        if (
-            $requestType === 'Refund' &&
-            $shopOrder->payment_status !== 'Paid'
-        ) {
-
+        if ($requestType === 'Refund' && $shopOrder->payment_status !== 'Paid') {
             return response()->json([
                 'success' => false,
                 'message' => 'Only paid orders can be refunded.',
             ]);
         }
 
-        if (
-            $requestType === 'Void' &&
-            $shopOrder->payment_status !== 'Paid'
-        ) {
-
+        if ($requestType === 'Void' && $shopOrder->payment_status !== 'Paid') {
             return response()->json([
                 'success' => false,
                 'message' => 'Only paid orders can be voided.',
             ]);
         }
 
-        if (
-            $shopOrder->payment_status === 'Refunded'
-        ) {
-
+        if ($shopOrder->payment_status === 'Refunded') {
             return response()->json([
                 'success' => false,
                 'message' => 'Order already refunded.',
             ]);
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | PREVENT MULTIPLE PENDING REQUESTS
-        |--------------------------------------------------------------------------
-        */
-
         $existingRequest = ShopOrderRequest::query()
-
             ->where(
                 'shop_order_id',
                 $shopOrder->id
             )
-
             ->where(
                 'request_status',
                 'Pending'
             )
-
             ->exists();
 
         if ($existingRequest) {
-
             return response()->json([
                 'success' => false,
-
                 'message'
                     => "There is already a pending request.",
             ]);
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | CREATE REQUEST
-        |--------------------------------------------------------------------------
-        */
-
-        ShopOrderRequest::query()
+        $shopOrderRequest = ShopOrderRequest::query()
             ->create([
-
-                'shop_order_id'
-                    => $shopOrder->id,
-
-                'order_number'
-                    => $shopOrder->order_number,
-
-                'request_type'
-                    => $requestType,
-
-                'request_status'
-                    => 'Pending',
-
-                'request_reason'
-                    => $validated['request_reason'],
-
-                'requested_by'
-                    => auth()->id(),
-
-                'requested_by_name'
-                    => auth()->user()->name,
-
-                'requested_at'
-                    => now(),
-
-                'last_log_by'
-                    => auth()->id(),
+                'shop_order_id' => $shopOrder->id,
+                'order_number' => $shopOrder->order_number,
+                'request_type' => $requestType,
+                'request_status' => 'Pending',
+                'request_reason' => $validated['request_reason'],
+                'requested_by' => auth()->id(),
+                'requested_by_name' => auth()->user()->name,
+                'requested_at' => now(),
+                'last_log_by' => auth()->id(),
             ]);
 
-        /*
-        |--------------------------------------------------------------------------
-        | RESPONSE
-        |--------------------------------------------------------------------------
-        */
+        $link = route('apps.details', [
+            'appId' => $pageAppId,
+            'navigationMenuId' => $pageNavigationMenuId,
+            'details_id' => $shopOrderRequest->id,
+        ]);
 
         return response()->json([
             'success' => true,
-
-            'message'
-                => "{$requestType} request submitted successfully.",
+            'message' => "{$requestType} request submitted successfully.",
+            'redirect_link' => $link,
         ]);
     }
 
@@ -355,6 +297,11 @@ class ShopOrderRequestController extends Controller
                 'min:1',
                 Rule::exists('shop_order_request', 'id'),
             ],
+            'approval_remarks' => [
+                'nullable',
+                'string',
+                'max:500',
+            ],
 
         ]);
 
@@ -461,6 +408,8 @@ class ShopOrderRequestController extends Controller
                     'approved_by_name' => Auth::user()?->name,
 
                     'approved_at' => now(),
+
+                    'approval_remarks' => $validator->validated()['approval_remarks'],
 
                     'last_log_by' => Auth::id(),
                 ]);

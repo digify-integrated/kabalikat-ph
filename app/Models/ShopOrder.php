@@ -48,6 +48,11 @@ class ShopOrder extends Model
         'last_log_by'
     ];
 
+    public function shopRegister(): BelongsTo
+    {
+        return $this->belongsTo(ShopRegister::class, 'shop_register_id');
+    }
+
     public function shopOrder(): BelongsTo
     {
         return $this->belongsTo(ShopOrder::class, 'shop_order_id');

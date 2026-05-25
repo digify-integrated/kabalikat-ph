@@ -101,7 +101,7 @@
 
         <div class="card-body pt-9">
             <div class="table-responsive">
-                <table class="table align-middle cursor-pointer table-row-dashed fs-6 gy-5" id="stock-movement-table">
+                <table class="table align-middle table-row-dashed fs-6 gy-5" id="stock-movement-table">
                     <thead>
                         <tr class="text-start text-gray-800 fw-bold fs-7 text-uppercase gs-0">
                             <th>

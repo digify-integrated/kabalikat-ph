@@ -36,6 +36,7 @@ use App\Http\Controllers\RoleSystemActionPermissionController;
 use App\Http\Controllers\RoleUserAccountController;
 use App\Http\Controllers\ShopOrderController;
 use App\Http\Controllers\ShopOrderPrintController;
+use App\Http\Controllers\ShopOrderReportController;
 use App\Http\Controllers\ShopOrderRequestController;
 use App\Http\Controllers\ShopRegisterAccessController;
 use App\Http\Controllers\ShopRegisterChargeController;
@@ -264,6 +265,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
             Route::post('/generate-table', 'generateTable')->name('generate.table');
             Route::post('/generate-options', 'generateOptions')->name('generate.options');
+            Route::post('/generate-cashier-options', 'generateCashierOptions')->name('generate.cashier.options');
         });
 
     // File Type
@@ -820,6 +822,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/generate-register', 'generateRegister')->name('generate.register');
             Route::post('/generate-category', 'generateCategory')->name('generate.category');
             Route::post('/generate-product', 'generateProduct')->name('generate.product');
+            Route::post('/generate-options', 'generateOptions')->name('generate.option');
         });
 
     // Shop Register Discount
@@ -864,8 +867,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/delete', 'delete')->name('delete');
             Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
 
-            Route::post('/generate-table', 'generateTable')
-                ->name('generate.table');
+            Route::post('/generate-table', 'generateTable')->name('generate.table');
         });
 
     // Shop Register Warehouse
@@ -924,13 +926,14 @@ Route::middleware('auth')->group(function () {
             Route::post('/fetch-floor-plans', 'fetchFloorPlans')->name('fetch.floor.plans');
             Route::post('/fetch-floor-tables', 'fetchFloorTables')->name('fetch.floor.tables');
             Route::post('/fetch-discounts', 'fetchDiscounts')->name('fetch.discounts');
-            Route::post('/fetch-charges', 'fetchCharges')->name('fetch.discounts');
+            Route::post('/fetch-charges', 'fetchCharges')->name('fetch.charges');
             Route::post('/fetch-payment-methods', 'fetchPaymentMethods')->name('fetch.payment.methods');
             Route::post('/fetch-history', 'fetchHistory')->name('fetch.history');
             Route::post('/fetch-order', 'fetchOrder')->name('fetch.order');
             Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
             Route::post('/delete-discount', 'deleteDiscount')->name('delete.discount');
             Route::post('/delete-charge', 'deleteCharge')->name('delete.charge');
+            Route::post('/generate-options', 'generateOptions')->name('generate.option');
         });
 
     
@@ -939,6 +942,7 @@ Route::middleware('auth')->group(function () {
         ->name('shop.order.request.')
         ->controller(ShopOrderRequestController::class)
         ->group(function () {
+            Route::post('/save', 'save')->name('save');
             Route::post('/save-void-request', 'saveVoidRequest')->name('save.void.request');
             Route::post('/save-refund-request', 'saveRefundRequest')->name('save.refund.request');
             Route::post('/cancel', 'cancel')->name('cancel');
@@ -948,6 +952,16 @@ Route::middleware('auth')->group(function () {
             Route::post('/delete-multiple', 'deleteMultiple')->name('delete.multiple');
             Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
             Route::post('/generate-table', 'generateTable')->name('generate.table');
+        });
+    
+    // Shop Order Report
+    Route::prefix('shop-order-report')
+        ->name('shop.order.report.')
+        ->controller(ShopOrderReportController::class)
+        ->group(function () {
+            Route::post('/generate-payment-summary-table', 'generatePaymentSummaryTable')->name('generate.payment.summary.table');
+            Route::post('/generate-transaction-summary-table', 'generateTransactionSummaryTable')->name('generate.transaction.summary.table');
+            Route::post('/generate-cash-count-table', 'generateCashCountReportTable')->name('generate.cash.count.table');
         });
     
     Route::get(

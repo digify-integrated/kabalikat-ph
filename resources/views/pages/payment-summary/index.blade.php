@@ -63,32 +63,40 @@
                         <div class="separator border-gray-200"></div>
                         <div class="px-7 py-5">
                             <div class="mb-5">
-                                <label class="form-label fs-6 fw-semibold" for="filter_by_movement_date">Filter By Movement Date:</label>
-                                 <input type="text" class="form-control" id="filter_by_movement_date" autocomplete="off">
-                            </div>
-                            <div class="mb-5">
-                                <label class="form-label fs-6 fw-semibold" for="filter_by_product">Filter By Product:</label>
-                                <select id="filter_by_product" name="filter_by_product" multiple="multiple" class="form-select" data-control="select2" data-allow-clear="false"></select>
-                            </div>
-                            <div class="mb-5">
-                                <label class="form-label fs-6 fw-semibold" for="filter_by_warehouse">Filter By Warehouse:</label>
-                                <select id="filter_by_warehouse" name="filter_by_warehouse" multiple="multiple" class="form-select" data-control="select2" data-allow-clear="false"></select>
-                            </div>
-                            <div class="mb-5">
-                                <label class="form-label fs-6 fw-semibold" for="filter_by_movement_type">Filter By Movement Type:</label>
-                                <select id="filter_by_movement_type" multiple="multiple" class="form-select" data-control="select2" data-allow-clear="false">
-                                    <option value="IN">Stock In</option>
-                                    <option value="OUT">Stock Out</option>
-                                    <option value="TRANSFER_IN">Transfer In</option>
-                                    <option value="TRANSFER_OUT">Transfer Out</option>
-                                    <option value="ADJUSTMENT">Adjustment</option>
-                                    <option value="CONSUMPTION">Consumption</option>
-                                    <option value="SALE">Sale</option>
-                                    <option value="RETURN">Return</option>
-                                    <option value="VOID">Void</option>
-                                    <option value="REFUND">Refund</option>
+                                <label class="form-label fs-6 fw-semibold">Payment Method:</label>
+                                <select id="filter_payment_method"
+                                        class="form-select"
+                                        multiple
+                                        data-control="select2">
                                 </select>
                             </div>
+
+                            <div class="mb-5">
+                                <label class="form-label fs-6 fw-semibold">Payment Status:</label>
+                                <select id="filter_payment_status"
+                                        class="form-select"
+                                        multiple
+                                        data-control="select2">
+                                    <option value="Paid">Paid</option>
+                                    <option value="Refunded">Refunded</option>
+                                    <option value="Voided">Voided</option>
+                                    <option value="Failed">Failed</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-5">
+                                <label class="form-label fs-6 fw-semibold">Cashier:</label>
+                                <select id="filter_cashier"
+                                        class="form-select"
+                                        data-control="select2">
+                                </select>
+                            </div>
+
+                            <div class="mb-5">
+                                <label class="form-label fs-6 fw-semibold">Date:</label>
+                                <input type="text" id="filter_payment_date" class="form-control"/>
+                            </div>
+
                             <div class="d-flex justify-content-end">
                                 <button type="reset" class="btn btn-light btn-active-light-primary fw-semibold me-2 px-6" id="reset-filter" data-kt-menu-dismiss="true">Reset</button>
                                 <button type="button" class="btn btn-primary fw-semibold px-6" id="apply-filter" data-kt-menu-dismiss="true">Apply</button>
@@ -101,19 +109,19 @@
 
         <div class="card-body pt-9">
             <div class="table-responsive">
-                <table class="table align-middle fs-6 gy-5" id="payment-summary-table">
+                <table class="table align-middle table-row-dashed fs-6 gy-5" id="payment-summary-table">
                     <thead>
-                        <tr class="text-start text-gray-800 fw-bold fs-7 text-uppercase">
-                            <th>Order No</th>
+                        <tr class="text-start text-gray-800 fw-bold fs-7 text-uppercase gs-0">
                             <th>Payment Method</th>
+                            <th>Order No</th>
                             <th>Amount</th>
-                            <th>Tendered</th>
-                            <th>Change</th>
                             <th>Status</th>
+                            <th>Cashier</th>
+                            <th>Reference</th>
                             <th>Paid At</th>
                         </tr>
                     </thead>
-                    <tbody></tbody>
+                    <tbody class="fw-semibold text-gray-800"></tbody>
                 </table>
             </div>
         </div>
