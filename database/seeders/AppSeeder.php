@@ -53,6 +53,15 @@ class AppSeeder extends Seeder
                 'navigation_menu_name'  => 'Dashboard',
                 'order_sequence'        => 5,
             ],
+            [
+                'app_name'              => 'Kitchen Display',
+                'app_description'       => 'Displays incoming orders from your Point of Sale (POS) system directly to your kitchen staff in real time.',
+                'app_version'           => '1.0.0',
+                'app_logo'              => 'app/5/kitchen-display.png',
+                'navigation_menu_id'    => 18,
+                'navigation_menu_name'  => 'Dashboard',
+                'order_sequence'        => 7,
+            ],
         ];
 
         DB::table('app')->insert(

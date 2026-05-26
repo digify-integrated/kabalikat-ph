@@ -1046,7 +1046,39 @@ class ShopOrderController extends Controller
                 $item->quantity <= 0
             ) {
 
-                $item->delete();
+                /*
+                |--------------------------------------------------------------------------
+                | SOFT CANCEL ITEM
+                |--------------------------------------------------------------------------
+                */
+
+                $item->quantity = 0;
+
+                $item->line_subtotal = 0;
+
+                $item->vatable_sales = 0;
+
+                $item->vat_exempt_sales = 0;
+
+                $item->zero_rated_sales = 0;
+
+                $item->vat_amount = 0;
+
+                $item->line_total = 0;
+
+                $item->item_status = 'Cancelled';
+
+                $item->cancelled_at = now();
+
+                $item->cancelled_by = auth()->id();
+
+                $item->cancelled_by_name =
+                    auth()->user()->name ?? 'System';
+
+                $item->cancellation_reason =
+                    'Cancelled by cashier';
+
+                $item->save();
             }
 
             /*

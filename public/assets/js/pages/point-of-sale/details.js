@@ -3,6 +3,7 @@ import { showNotification, setNotification } from '../../util/notifications.js';
 import { disableButton, enableButton } from '../../form/button.js';
 import { getPageContext, getCsrfToken, resetForm } from '../../form/form.js';
 import { handleSystemError } from '../../util/system-errors.js';
+import { generateDropdownOptions } from '../../form/field.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     let searchTimeout;
@@ -10,7 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedFloorPlanId = null;
     let selectedTableId = null;
     let cachedOrders = [];
-    let kitchenItemsCache = [];
+    let kitchenItems = [];
+let kitchenRoutes = [];
     
     const config = {
         forms: [
@@ -63,6 +65,9 @@ document.addEventListener('DOMContentLoaded', () => {
         ],
         posProduct: [
             { url: '/shop-register/generate-product' }
+        ],
+        dropdown: [
+            { url: '/kitchen-route/generate-options', dropdownSelector: '#kitchen-route-select' }
         ],
     };
 
@@ -379,404 +384,6 @@ document.addEventListener('DOMContentLoaded', () => {
             totalTendered,
             change,
         });
-    };
-
-    const renderCategoryTab = (category) => {
-
-        return `
-            <button
-                type="button"
-                class="btn btn-light rounded-pill px-4 py-2 product-category-filter"
-                data-product-filter="${category.id}">
-
-                ${category.name}
-
-            </button>
-        `;
-    };
-
-    const renderProduct = (product) => {
-        const disabled = !product.in_stock;
-
-        const badgeClass = disabled
-            ? 'bg-danger-subtle text-danger'
-            : 'bg-success-subtle text-success';
-
-        const badgeText = disabled
-            ? 'Out of Stock'
-            : 'Available';
-
-        const icon = disabled
-            ? 'ki-cross-circle text-danger'
-            : 'ki-basket text-muted';
-
-        const modalAttrs = !disabled
-            ? `data-bs-toggle="modal"
-            data-bs-target="#shop-register-order-modal"
-            data-product-id="${product.id}"
-            data-product-name="${product.product_name}"
-            data-price="${product.base_price}"`
-            : '';
-
-        return `
-        <div class="col-6 col-md-4">
-
-            <div 
-                class="card border-0 shadow-sm h-100 product-card ${
-                    disabled ? 'product-card-disabled opacity-60' : 'cursor-pointer'
-                }"
-
-                ${modalAttrs}
-
-                style="
-                    transition: transform 0.2s ease, box-shadow 0.2s ease;
-                    ${disabled ? 'pointer-events: none;' : ''}
-                "
-
-                ${!disabled ? `
-                    onmouseover="this.style.transform='translateY(-4px)';
-                        this.classList.remove('shadow-sm');
-                        this.classList.add('shadow');"
-
-                    onmouseout="this.style.transform='translateY(0)';
-                        this.classList.remove('shadow');
-                        this.classList.add('shadow-sm');"
-                ` : ''}
-            >
-
-                <div class="card-body d-flex flex-column justify-content-between p-5">
-
-                    <!-- TOP -->
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <span class="badge rounded-pill ${badgeClass} px-3 py-2 fw-semibold fs-8">
-                            ${badgeText}
-                        </span>
-
-                        <i class="ki-duotone ${icon} fs-1">
-                            <span class="path1"></span>
-                            <span class="path2"></span>
-                        </i>
-                    </div>
-
-                    <!-- MIDDLE -->
-                    <div class="mb-4 flex-grow-1">
-                        <div class="text-muted fs-8 mb-1 text-uppercase">
-                            ${product.category_name}
-                        </div>
-
-                        <h5 class="fw-bold fs-2 ${
-                            disabled ? 'text-muted' : 'text-gray-900'
-                        } mb-2 lh-base">
-                            ${product.product_name}
-                        </h5>
-
-                        ${
-                            disabled && product.stock_status
-                            ? `
-                            <div class="text-danger fs-8 d-inline-block px-2 py-1 rounded-sm mt-1">
-                                <i class="ki-duotone ki-information fs-7 me-1 text-danger"></i>
-                                ${product.stock_status}
-                            </div>
-                            `
-                            : ''
-                        }
-                    </div>
-
-                    <!-- BOTTOM -->
-                    <div class="d-flex align-items-end justify-content-between pt-3 border-top border-gray-100">
-                        <div>
-                            <div class="fs-8 text-muted text-uppercase mb-1">
-                                Price
-                            </div>
-                            <div class="fw-bolder fs-1 ${
-                                disabled ? 'text-muted' : 'text-primary'
-                            }">
-                                ₱ ${Number(product.price).toLocaleString(undefined, {
-                                    minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2
-                                })}
-                            </div>
-                        </div>
-
-                        <div class="btn btn-icon btn-sm ${
-                            disabled ? 'btn-light' : 'btn-light-primary'
-                        } rounded-circle">
-                            <i class="ki-duotone ${
-                                disabled ? 'ki-information' : 'ki-arrow-right'
-                            } fs-3"></i>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-        `;
-    };
-
-    const renderProductLoading = () => {
-
-        const container = document.getElementById('product-container');
-
-        container.innerHTML = `
-        <div class="col-12">
-
-            <div class="card border-0 shadow-sm">
-
-                <div class="card-body py-15 text-center">
-
-                    <div class="spinner-border text-primary mb-5"
-                        style="width: 3rem; height: 3rem;">
-                    </div>
-
-                    <div class="fw-bold fs-4 text-gray-800 mb-2">
-                        Loading products...
-                    </div>
-
-                    <div class="text-muted">
-                        Please wait while products are being prepared
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-        `;
-    };
-
-    const renderNoProductsFound = ({
-        search = '',
-        category = 'all',
-    }) => {
-
-        let title = 'No products found';
-        let description = '';
-
-        /*
-        |--------------------------------------------------------------------------
-        | SEARCH + CATEGORY
-        |--------------------------------------------------------------------------
-        */
-
-        if (search && category !== 'all') {
-
-            description = `
-                No products matched
-                "<strong>${search}</strong>"
-                under this category.
-            `;
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | SEARCH ONLY
-        |--------------------------------------------------------------------------
-        */
-
-        else if (search) {
-
-            description = `
-                No products matched
-                "<strong>${search}</strong>".
-            `;
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | CATEGORY ONLY
-        |--------------------------------------------------------------------------
-        */
-
-        else if (category !== 'all') {
-
-            description = `
-                No products available under this category.
-            `;
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | DEFAULT
-        |--------------------------------------------------------------------------
-        */
-
-        else {
-
-            description = `
-                No POS products are currently available.
-            `;
-        }
-
-        return `
-        <div class="col-12">
-
-            <div class="card border-0 shadow-sm">
-
-                <div class="card-body py-15 text-center">
-
-                    <div class="mb-5">
-
-                        <i class="ki-duotone ki-file-deleted fs-5tx text-gray-300">
-                            <span class="path1"></span>
-                            <span class="path2"></span>
-                        </i>
-
-                    </div>
-
-                    <div class="fw-bold fs-2 text-gray-800 mb-3">
-                        ${title}
-                    </div>
-
-                    <div class="text-muted fs-6 mb-6">
-                        ${description}
-                    </div>
-
-                    <button
-                        type="button"
-                        class="btn btn-light-primary reset-product-filter">
-
-                        Reset Filters
-
-                    </button>
-
-                </div>
-
-            </div>
-
-        </div>
-        `;
-    };
-
-    const renderOrderHistoryGrid = (orders) => {
-
-        const html = orders.map(order => {
-
-            const statusClass = getOrderStatusClass(
-                order.payment_status,
-                order.order_status
-            );
-
-            const statusColor = getOrderStatusColor(
-                order.payment_status,
-                order.order_status
-            );
-
-            const tableInfo =
-                order.table_number
-                    ? `${order.floor_plan_name ?? ''} • Table ${order.table_number}`
-                    : null;
-
-            return `
-            <div class="col-12 col-md-6 col-xl-4">
-
-                <div
-                    class="card border-0 shadow-sm rounded-4 order-history-card cursor-pointer h-100 position-relative overflow-hidden"
-                    data-order-id="${order.id ?? 'No Active Order'}">
-
-                    <!-- STATUS STRIP -->
-                    <div
-                        class="position-absolute top-0 start-0 h-100"
-                        style="width: 5px; background: ${statusColor};">
-                    </div>
-
-                    <div class="card-body p-4">
-
-                        <!-- TOP ROW -->
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-
-                            <div>
-
-                                <div class="fw-bold fs-6 text-gray-900">
-                                    ${order.order_number}
-                                </div>
-
-                                <div class="text-muted small">
-                                    ${order.customer_name ?? 'Walk-in Customer'}
-                                </div>
-
-                            </div>
-
-                            <span class="badge ${statusClass} fw-bold">
-                                ${order.payment_status}
-                            </span>
-
-                        </div>
-
-                        <!-- MIDDLE -->
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-
-                            <!-- LEFT SIDE -->
-                            <div class="d-flex align-items-center flex-wrap gap-2">
-
-                                <!-- ORDER TYPE -->
-                                <span class="badge badge-light-primary fw-semibold px-3 py-2">
-                                    ${order.order_type}
-                                </span>
-
-                                <!-- TABLE INFO -->
-                                ${tableInfo ? `
-                                    <span class="badge badge-light-info fw-semibold px-3 py-2">
-                                        ${tableInfo}
-                                    </span>
-                                ` : ''}
-
-                            </div>
-
-                            <!-- RIGHT SIDE -->
-                            <div class="fw-bolder fs-5 text-dark text-nowrap">
-
-                                ₱ ${Number(order.net_total).toLocaleString(undefined, {
-                                    minimumFractionDigits: 2
-                                })}
-
-                            </div>
-
-                        </div>
-
-                        <!-- BOTTOM META -->
-                        <div class="text-muted small d-flex justify-content-between">
-
-                            <span>
-                                # ${order.id}
-                            </span>
-
-                            <span>
-                                ${formatOrderTime(order.created_at)}
-                            </span>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-            `;
-        }).join('');
-
-        $('#order-history-grid').html(html);
-
-        if (!orders.length) {
-            $('#order-history-empty').removeClass('d-none');
-        } else {
-            $('#order-history-empty').addClass('d-none');
-        }
-    };
-
-    const renderOrderHeader = (order) => {
-
-        activeOrder.id = order?.id ?? activeOrder.id;
-        activeOrder.orderNumber = order?.order_number ?? activeOrder.orderNumber;
-        activeOrder.status = order?.order_status ?? activeOrder.status;
-        activeOrder.paymentStatus = order?.payment_status ?? activeOrder.paymentStatus;
-
-        $('#order-id').text(activeOrder.orderNumber ?? '--');
-
-        $('#badge-payment-status')
-            .text(activeOrder.paymentStatus ?? 'Unpaid');
-
-        $('#badge-order-type')
-            .text(order?.order_type ?? $('#badge-order-type').text());
     };
 
     const initializeCart = async () => {
@@ -1117,39 +724,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             handleSystemError(error, 'load_order_history_failed', error.message);
         }
-    };
-
-    const loadKitchenItems = async (shopOrderId) => {
-
-        const csrf = getCsrfToken();
-        const ctx = getPageContext();
-
-        const params = new URLSearchParams();
-        params.append('shop_order_id', shopOrderId);
-
-        params.append('appId', ctx.appId ?? '');
-        params.append('navigationMenuId', ctx.navigationMenuId ?? '');
-
-        const response = await fetch('/shop-order/kitchen-items', {
-            method: 'POST',
-            body: params,
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                Accept: 'application/json',
-                ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
-            },
-        });
-
-        const data = await response.json();
-
-        if (!data.success) {
-            showNotification(data.message);
-            return;
-        }
-
-        kitchenItemsCache = data.data || [];
-
-        renderKitchenItems(kitchenItemsCache);
     };
 
     const assignTableToOrder = async (
@@ -1828,6 +1402,404 @@ document.addEventListener('DOMContentLoaded', () => {
                 .replace(/,/g, '')
                 .trim()
         ) || 0;
+    };    
+
+    const renderCategoryTab = (category) => {
+
+        return `
+            <button
+                type="button"
+                class="btn btn-light rounded-pill px-4 py-2 product-category-filter"
+                data-product-filter="${category.id}">
+
+                ${category.name}
+
+            </button>
+        `;
+    };
+
+    const renderProduct = (product) => {
+        const disabled = !product.in_stock;
+
+        const badgeClass = disabled
+            ? 'bg-danger-subtle text-danger'
+            : 'bg-success-subtle text-success';
+
+        const badgeText = disabled
+            ? 'Out of Stock'
+            : 'Available';
+
+        const icon = disabled
+            ? 'ki-cross-circle text-danger'
+            : 'ki-basket text-muted';
+
+        const modalAttrs = !disabled
+            ? `data-bs-toggle="modal"
+            data-bs-target="#shop-register-order-modal"
+            data-product-id="${product.id}"
+            data-product-name="${product.product_name}"
+            data-price="${product.base_price}"`
+            : '';
+
+        return `
+        <div class="col-6 col-md-4">
+
+            <div 
+                class="card border-0 shadow-sm h-100 product-card ${
+                    disabled ? 'product-card-disabled opacity-60' : 'cursor-pointer'
+                }"
+
+                ${modalAttrs}
+
+                style="
+                    transition: transform 0.2s ease, box-shadow 0.2s ease;
+                    ${disabled ? 'pointer-events: none;' : ''}
+                "
+
+                ${!disabled ? `
+                    onmouseover="this.style.transform='translateY(-4px)';
+                        this.classList.remove('shadow-sm');
+                        this.classList.add('shadow');"
+
+                    onmouseout="this.style.transform='translateY(0)';
+                        this.classList.remove('shadow');
+                        this.classList.add('shadow-sm');"
+                ` : ''}
+            >
+
+                <div class="card-body d-flex flex-column justify-content-between p-5">
+
+                    <!-- TOP -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <span class="badge rounded-pill ${badgeClass} px-3 py-2 fw-semibold fs-8">
+                            ${badgeText}
+                        </span>
+
+                        <i class="ki-duotone ${icon} fs-1">
+                            <span class="path1"></span>
+                            <span class="path2"></span>
+                        </i>
+                    </div>
+
+                    <!-- MIDDLE -->
+                    <div class="mb-4 flex-grow-1">
+                        <div class="text-muted fs-8 mb-1 text-uppercase">
+                            ${product.category_name}
+                        </div>
+
+                        <h5 class="fw-bold fs-2 ${
+                            disabled ? 'text-muted' : 'text-gray-900'
+                        } mb-2 lh-base">
+                            ${product.product_name}
+                        </h5>
+
+                        ${
+                            disabled && product.stock_status
+                            ? `
+                            <div class="text-danger fs-8 d-inline-block px-2 py-1 rounded-sm mt-1">
+                                <i class="ki-duotone ki-information fs-7 me-1 text-danger"></i>
+                                ${product.stock_status}
+                            </div>
+                            `
+                            : ''
+                        }
+                    </div>
+
+                    <!-- BOTTOM -->
+                    <div class="d-flex align-items-end justify-content-between pt-3 border-top border-gray-100">
+                        <div>
+                            <div class="fs-8 text-muted text-uppercase mb-1">
+                                Price
+                            </div>
+                            <div class="fw-bolder fs-1 ${
+                                disabled ? 'text-muted' : 'text-primary'
+                            }">
+                                ₱ ${Number(product.price).toLocaleString(undefined, {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2
+                                })}
+                            </div>
+                        </div>
+
+                        <div class="btn btn-icon btn-sm ${
+                            disabled ? 'btn-light' : 'btn-light-primary'
+                        } rounded-circle">
+                            <i class="ki-duotone ${
+                                disabled ? 'ki-information' : 'ki-arrow-right'
+                            } fs-3"></i>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        `;
+    };
+
+    const renderProductLoading = () => {
+
+        const container = document.getElementById('product-container');
+
+        container.innerHTML = `
+        <div class="col-12">
+
+            <div class="card border-0 shadow-sm">
+
+                <div class="card-body py-15 text-center">
+
+                    <div class="spinner-border text-primary mb-5"
+                        style="width: 3rem; height: 3rem;">
+                    </div>
+
+                    <div class="fw-bold fs-4 text-gray-800 mb-2">
+                        Loading products...
+                    </div>
+
+                    <div class="text-muted">
+                        Please wait while products are being prepared
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+        `;
+    };
+
+    const renderNoProductsFound = ({
+        search = '',
+        category = 'all',
+    }) => {
+
+        let title = 'No products found';
+        let description = '';
+
+        /*
+        |--------------------------------------------------------------------------
+        | SEARCH + CATEGORY
+        |--------------------------------------------------------------------------
+        */
+
+        if (search && category !== 'all') {
+
+            description = `
+                No products matched
+                "<strong>${search}</strong>"
+                under this category.
+            `;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | SEARCH ONLY
+        |--------------------------------------------------------------------------
+        */
+
+        else if (search) {
+
+            description = `
+                No products matched
+                "<strong>${search}</strong>".
+            `;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | CATEGORY ONLY
+        |--------------------------------------------------------------------------
+        */
+
+        else if (category !== 'all') {
+
+            description = `
+                No products available under this category.
+            `;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | DEFAULT
+        |--------------------------------------------------------------------------
+        */
+
+        else {
+
+            description = `
+                No POS products are currently available.
+            `;
+        }
+
+        return `
+        <div class="col-12">
+
+            <div class="card border-0 shadow-sm">
+
+                <div class="card-body py-15 text-center">
+
+                    <div class="mb-5">
+
+                        <i class="ki-duotone ki-file-deleted fs-5tx text-gray-300">
+                            <span class="path1"></span>
+                            <span class="path2"></span>
+                        </i>
+
+                    </div>
+
+                    <div class="fw-bold fs-2 text-gray-800 mb-3">
+                        ${title}
+                    </div>
+
+                    <div class="text-muted fs-6 mb-6">
+                        ${description}
+                    </div>
+
+                    <button
+                        type="button"
+                        class="btn btn-light-primary reset-product-filter">
+
+                        Reset Filters
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+        `;
+    };
+
+    const renderOrderHistoryGrid = (orders) => {
+
+        const html = orders.map(order => {
+
+            const statusClass = getOrderStatusClass(
+                order.payment_status,
+                order.order_status
+            );
+
+            const statusColor = getOrderStatusColor(
+                order.payment_status,
+                order.order_status
+            );
+
+            const tableInfo =
+                order.table_number
+                    ? `${order.floor_plan_name ?? ''} • Table ${order.table_number}`
+                    : null;
+
+            return `
+            <div class="col-12 col-md-6 col-xl-4">
+
+                <div
+                    class="card border-0 shadow-sm rounded-4 order-history-card cursor-pointer h-100 position-relative overflow-hidden"
+                    data-order-id="${order.id ?? 'No Active Order'}">
+
+                    <!-- STATUS STRIP -->
+                    <div
+                        class="position-absolute top-0 start-0 h-100"
+                        style="width: 5px; background: ${statusColor};">
+                    </div>
+
+                    <div class="card-body p-4">
+
+                        <!-- TOP ROW -->
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+
+                            <div>
+
+                                <div class="fw-bold fs-6 text-gray-900">
+                                    ${order.order_number}
+                                </div>
+
+                                <div class="text-muted small">
+                                    ${order.customer_name ?? 'Walk-in Customer'}
+                                </div>
+
+                            </div>
+
+                            <span class="badge ${statusClass} fw-bold">
+                                ${order.payment_status}
+                            </span>
+
+                        </div>
+
+                        <!-- MIDDLE -->
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+
+                            <!-- LEFT SIDE -->
+                            <div class="d-flex align-items-center flex-wrap gap-2">
+
+                                <!-- ORDER TYPE -->
+                                <span class="badge badge-light-primary fw-semibold px-3 py-2">
+                                    ${order.order_type}
+                                </span>
+
+                                <!-- TABLE INFO -->
+                                ${tableInfo ? `
+                                    <span class="badge badge-light-info fw-semibold px-3 py-2">
+                                        ${tableInfo}
+                                    </span>
+                                ` : ''}
+
+                            </div>
+
+                            <!-- RIGHT SIDE -->
+                            <div class="fw-bolder fs-5 text-dark text-nowrap">
+
+                                ₱ ${Number(order.net_total).toLocaleString(undefined, {
+                                    minimumFractionDigits: 2
+                                })}
+
+                            </div>
+
+                        </div>
+
+                        <!-- BOTTOM META -->
+                        <div class="text-muted small d-flex justify-content-between">
+
+                            <span>
+                                # ${order.id}
+                            </span>
+
+                            <span>
+                                ${formatOrderTime(order.created_at)}
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+            `;
+        }).join('');
+
+        $('#order-history-grid').html(html);
+
+        if (!orders.length) {
+            $('#order-history-empty').removeClass('d-none');
+        } else {
+            $('#order-history-empty').addClass('d-none');
+        }
+    };
+
+    const renderOrderHeader = (order) => {
+
+        activeOrder.id = order?.id ?? activeOrder.id;
+        activeOrder.orderNumber = order?.order_number ?? activeOrder.orderNumber;
+        activeOrder.status = order?.order_status ?? activeOrder.status;
+        activeOrder.paymentStatus = order?.payment_status ?? activeOrder.paymentStatus;
+
+        $('#order-id').text(activeOrder.orderNumber ?? '--');
+
+        $('#badge-payment-status')
+            .text(activeOrder.paymentStatus ?? 'Unpaid');
+
+        $('#badge-order-type')
+            .text(order?.order_type ?? $('#badge-order-type').text());
     };
 
     const renderOrderItem = (item) => {
@@ -2943,91 +2915,141 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const renderKitchenItems = (items) => {
 
-        const tbody = $('#kitchen-send-table-body');
-        tbody.html('');
-
         if (!items.length) {
-            tbody.html(`
-                <tr>
-                    <td colspan="6" class="text-center text-muted py-10">
-                        No items found
-                    </td>
-                </tr>
+
+            $('#kitchen-items-container').html(`
+
+                <div class="text-center py-15">
+
+                    <div class="fw-bold fs-3 mb-2">
+                        No Kitchen Updates
+                    </div>
+
+                    <div class="text-muted">
+                        All items are already synced with kitchen
+                    </div>
+
+                </div>
+
             `);
+
             return;
         }
 
-        items.forEach(item => {
+        const html = items.map(item => {
 
-            const html = `
-            <tr data-id="${item.id}">
+            return `
 
-                <!-- CHECKBOX -->
-                <td>
-                    <div class="form-check form-check-sm form-check-custom form-check-solid">
-                        <input class="form-check-input kitchen-item-checkbox"
-                            type="checkbox"
-                            data-id="${item.id}">
+            <label
+                class="card border border-gray-300 border-hover-primary cursor-pointer rounded-4 kitchen-item-card">
+
+                <div class="card-body p-4">
+
+                    <div class="d-flex align-items-center">
+
+                        <!-- CHECK -->
+                        <div class="form-check form-check-custom form-check-solid me-4">
+
+                            <input
+                                class="form-check-input kitchen-item-checkbox"
+
+                                type="checkbox"
+
+                                data-order-item-id="${item.shop_order_item_id}"
+
+                                data-quantity="${item.quantity}"
+
+                                data-action="${item.action_type}">
+
+                        </div>
+
+                        <!-- INFO -->
+                        <div class="flex-grow-1">
+
+                            <div class="fw-bold fs-5">
+
+                                ${item.product_name}
+
+                            </div>
+
+                            <div class="text-muted fs-7">
+
+                                Qty:
+                                ${item.quantity}
+
+                                ${
+                                    item.order_note
+                                        ? `• ${item.order_note}`
+                                        : ''
+                                }
+
+                            </div>
+
+                        </div>
+
+                        <!-- STATUS -->
+                        <div>
+
+                            ${renderKitchenBadge(
+                                item.action_type
+                            )}
+
+                        </div>
+
                     </div>
-                </td>
 
-                <!-- PRODUCT -->
-                <td>
-                    <div class="d-flex flex-column">
-                        <span class="fw-bold fs-6">${item.product_name}</span>
-                        <span class="text-muted fs-7">${item.order_note ?? ''}</span>
-                    </div>
-                </td>
+                </div>
 
-                <!-- QTY -->
-                <td>
-                    <input type="number"
-                        class="form-control form-control-solid kitchen-qty"
-                        value="${item.quantity ?? 1}"
-                        min="0.01"
-                        step="0.01"
-                        data-id="${item.id}">
-                </td>
+            </label>
 
-                <!-- ROUTE -->
-                <td>
-                    <select class="form-select form-select-solid kitchen-route"
-                            data-control="select2"
-                            data-hide-search="true"
-                            data-id="${item.id}">
-                        ${renderKitchenRoutesOptions(item.kitchen_routes || [])}
-                    </select>
-                </td>
-
-                <!-- ACTION -->
-                <td>
-                    <select class="form-select form-select-solid kitchen-action"
-                            data-control="select2"
-                            data-hide-search="true"
-                            data-id="${item.id}">
-                        <option value="New">New</option>
-                        <option value="Add">Add</option>
-                        <option value="Reduce">Reduce</option>
-                        <option value="Cancel">Cancel</option>
-                        <option value="Refire">Refire</option>
-                    </select>
-                </td>
-
-                <!-- NOTE -->
-                <td>
-                    <input type="text"
-                        class="form-control form-control-solid kitchen-note"
-                        placeholder="Note"
-                        data-id="${item.id}">
-                </td>
-
-            </tr>
             `;
+        }).join('');
 
-            tbody.append(html);
-        });
+        $('#kitchen-items-container')
+            .html(html);
+    };
 
-        initKitchenUI();
+    const renderKitchenBadge = (action) => {
+
+        const map = {
+
+            New: 'primary',
+
+            Add: 'success',
+
+            Reduce: 'warning',
+
+            Cancel: 'danger',
+
+            Refire: 'info',
+        };
+
+        return `
+
+            <span class="badge badge-light-${map[action] || 'secondary'}">
+
+                ${action}
+
+            </span>
+
+        `;
+    };
+
+    const renderKitchenLoading = () => {
+
+        return `
+
+            <div class="text-center py-15">
+
+                <div class="spinner-border text-warning"></div>
+
+                <div class="mt-5 text-muted">
+                    Loading kitchen items...
+                </div>
+
+            </div>
+
+        `;
     };
 
     const createPaymentRow = ({
@@ -3225,28 +3247,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 value="${paymentMethodName}">
         </div>
         `;
-    };
-
-    const renderKitchenRoutesOptions = (routes) => {
-
-        if (!routes.length) {
-            return `<option value="">No route</option>`;
-        }
-
-        return routes.map(route => `
-            <option value="${route.kitchen_route_id}">
-                ${route.kitchen_route_name}
-            </option>
-        `).join('');
-    };
-
-    const initKitchenUI = () => {
-
-        $('[data-control="select2"]').select2({
-            dropdownParent: $('#kitchen-send-modal')
-        });
-
-        updateSelectedCount();
     };
 
     const discountLoadingState = () => {
@@ -3577,17 +3577,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const updateSelectedCount = () => {
+    const updateKitchenSelectionCount = () => {
 
-        const count = $('.kitchen-item-checkbox:checked').length;
+        const count = $(
+            '.kitchen-item-checkbox:checked'
+        ).length;
 
-        $('#selected-kitchen-items-count').text(`${count} Item(s) Selected`);
+        $('#selected-kitchen-items-count')
+            .text(count);
     };
-
 
     config.forms.map((cfg) => initValidation(cfg.selector, cfg.rules));
     config.posCategory.map((cfg) => generatePOSCategory(cfg.url));
     config.posProduct.map((cfg) => generatePOSProduct(cfg.url));
+    config.dropdown.map((cfg) => generateDropdownOptions(cfg))
 
     initializeCart();
 
@@ -5441,114 +5444,325 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     );
 
-    $(document).on('click', '#send-kitchen-ticket', async function () {
-        try {
+    $(document).on(
+        'click',
+        '#send-kitchen-ticket',
+        async function () {
 
-            const shopOrderId = sessionStorage.getItem('shop_order_id');
+            try {
 
-            if (!shopOrderId) {
-                showNotification('No active order selected.');
-                return;
+                const shopOrderId =
+                    sessionStorage.getItem('shop_order_id');
+
+                if (!shopOrderId) {
+
+                    showNotification(
+                        'Order not found.'
+                    );
+
+                    return;
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | RESET
+                |--------------------------------------------------------------------------
+                */
+
+                $('#selected-kitchen-items-count')
+                    .text('0');
+
+                $('#kitchen-items-container')
+                    .html(renderKitchenLoading());
+
+                /*
+                |--------------------------------------------------------------------------
+                | FETCH
+                |--------------------------------------------------------------------------
+                */
+
+                const csrf = getCsrfToken();
+                const ctx = getPageContext();
+
+                const params = new URLSearchParams();
+
+                params.append(
+                    'shop_order_id',
+                    shopOrderId
+                );
+
+                params.append(
+                    'appId',
+                    ctx.appId ?? ''
+                );
+
+                params.append(
+                    'navigationMenuId',
+                    ctx.navigationMenuId ?? ''
+                );
+
+                const response = await fetch(
+                    '/kitchen-ticket/generate-kitchen-send-data',
+                    {
+                        method: 'POST',
+                        body: params,
+                        headers: {
+                            'Content-Type':
+                                'application/x-www-form-urlencoded; charset=UTF-8',
+
+                            Accept: 'application/json',
+
+                            ...(csrf
+                                ? { 'X-CSRF-TOKEN': csrf }
+                                : {}),
+                        },
+                    }
+                );
+
+                const data =
+                    await response.json();
+
+                if (!data.success) {
+
+                    showNotification(
+                        data.message
+                    );
+
+                    return;
+                }
+
+                kitchenItems =
+                    data.data || [];
+
+                kitchenRoutes =
+                    data.routes || [];
+
+                /*
+                |--------------------------------------------------------------------------
+                | RENDER
+                |--------------------------------------------------------------------------
+                */
+
+                renderKitchenItems(
+                    kitchenItems
+                );
+
+            } catch (error) {
+
+                handleSystemError(
+                    error,
+                    'open_kitchen_modal_failed',
+                    error.message
+                );
             }
-
-            await loadKitchenItems(shopOrderId);
-
-        } catch (error) {
-            handleSystemError(error, 'kitchen_load_failed', error.message);
         }
-    });
+    );
 
-    $(document).on('click', '#select-all-kitchen-items', function () {
+    $(document).on(
+        'change',
+        '.kitchen-item-checkbox',
+        function () {
 
-        $('.kitchen-item-checkbox').prop('checked', true);
-
-        updateSelectedCount();
-    });
-
-
-    $(document).on('click', '#unselect-all-kitchen-items', function () {
-
-        $('.kitchen-item-checkbox').prop('checked', false);
-
-        updateSelectedCount();
-    });
-
-
-    $(document).on('change', '.kitchen-item-checkbox', function () {
-        updateSelectedCount();
-    });
-
-    $(document).on('change', '#check-all-kitchen-items', function () {
-
-        const checked = $(this).is(':checked');
-
-        $('.kitchen-item-checkbox').prop('checked', checked);
-
-        updateSelectedCount();
-    });
-
-    $(document).on('click', '#confirm-send-kitchen-ticket', async function () {
-
-        try {
-
-            const shopOrderId = sessionStorage.getItem('shop_order_id');
-
-            const selectedRows = [];
-
-            $('.kitchen-item-checkbox:checked').each(function () {
-
-                const id = $(this).data('id');
-
-                const row = $(`tr[data-id="${id}"]`);
-
-                selectedRows.push({
-                    shop_order_item_id: id,
-                    quantity: row.find('.kitchen-qty').val(),
-                    kitchen_route_id: row.find('.kitchen-route').val(),
-                    action_type: row.find('.kitchen-action').val(),
-                    note: row.find('.kitchen-note').val(),
-                });
-            });
-
-            if (!selectedRows.length) {
-                showNotification('Please select at least one item.');
-                return;
-            }
-
-            const csrf = getCsrfToken();
-            const ctx = getPageContext();
-
-            const params = new URLSearchParams();
-            params.append('shop_order_id', shopOrderId);
-            params.append('items', JSON.stringify(selectedRows));
-
-            params.append('appId', ctx.appId ?? '');
-            params.append('navigationMenuId', ctx.navigationMenuId ?? '');
-
-            const response = await fetch('/kitchen-ticket/send', {
-                method: 'POST',
-                body: params,
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                    Accept: 'application/json',
-                    ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
-                },
-            });
-
-            const data = await response.json();
-
-            if (!data.success) {
-                showNotification(data.message);
-                return;
-            }
-
-            $('#kitchen-send-modal').modal('hide');
-
-            showNotification('Sent to kitchen successfully.');
-
-        } catch (error) {
-            handleSystemError(error, 'kitchen_send_failed', error.message);
+            updateKitchenSelectionCount();
         }
-    });
+    );
+
+    $(document).on(
+        'click',
+        '#confirm-send-kitchen-ticket',
+        async function () {
+
+            try {
+
+                const routeId =
+                    $('#kitchen-route-select').val();
+
+                if (!routeId) {
+
+                    showNotification(
+                        'Please select kitchen station.'
+                    );
+
+                    return;
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | SELECTED ITEMS
+                |--------------------------------------------------------------------------
+                */
+
+                const selectedItems = [];
+
+                $('.kitchen-item-checkbox:checked')
+                    .each(function () {
+
+                        selectedItems.push({
+
+                            shop_order_item_id:
+                                $(this).data('order-item-id'),
+
+                            quantity:
+                                $(this).data('quantity'),
+
+                            action_type:
+                                $(this).data('action'),
+                        });
+                    });
+
+                if (!selectedItems.length) {
+
+                    showNotification(
+                        'Please select items.'
+                    );
+
+                    return;
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | REQUEST
+                |--------------------------------------------------------------------------
+                */
+
+                const csrf = getCsrfToken();
+                const ctx = getPageContext();
+
+                const formData =
+                    new URLSearchParams();
+
+                formData.append(
+                    'shop_order_id',
+                    sessionStorage.getItem(
+                        'shop_order_id'
+                    )
+                );
+
+                formData.append(
+                    'kitchen_route_id',
+                    routeId
+                );
+
+                formData.append(
+                    'items',
+                    JSON.stringify(selectedItems)
+                );
+
+                formData.append(
+                    'appId',
+                    ctx.appId ?? ''
+                );
+
+                formData.append(
+                    'navigationMenuId',
+                    ctx.navigationMenuId ?? ''
+                );
+
+                /*
+                |--------------------------------------------------------------------------
+                | BUTTON LOADING
+                |--------------------------------------------------------------------------
+                */
+
+                const button =
+                    $('#confirm-send-kitchen-ticket');
+
+                button.prop('disabled', true);
+
+                button.html(`
+
+                    <span class="spinner-border spinner-border-sm me-2"></span>
+
+                    Sending...
+
+                `);
+
+                const response = await fetch(
+                    '/kitchen-ticket/send-kitchen-ticket',
+                    {
+                        method: 'POST',
+
+                        body: formData,
+
+                        headers: {
+                            'Content-Type':
+                                'application/x-www-form-urlencoded; charset=UTF-8',
+
+                            Accept: 'application/json',
+
+                            ...(csrf
+                                ? { 'X-CSRF-TOKEN': csrf }
+                                : {}),
+                        },
+                    }
+                );
+
+                const data =
+                    await response.json();
+
+                /*
+                |--------------------------------------------------------------------------
+                | RESET BUTTON
+                |--------------------------------------------------------------------------
+                */
+
+                button.prop('disabled', false);
+
+                button.html(`
+
+                    <i class="ki-outline ki-entrance-left fs-2 me-1"></i>
+
+                    Send
+
+                `);
+
+                if (!data.success) {
+
+                    showNotification(
+                        data.message
+                    );
+
+                    return;
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | SUCCESS
+                |--------------------------------------------------------------------------
+                */
+
+                $('#kitchen-send-modal')
+                    .modal('hide');
+
+                showNotification(
+                    data.message
+                );
+
+            } catch (error) {
+
+                handleSystemError(
+                    error,
+                    'send_kitchen_ticket_failed',
+                    error.message
+                );
+            }
+        }
+    );
+
+    $('#kitchen-send-modal').on(
+        'hidden.bs.modal',
+        function () {
+
+            $('#kitchen-route-select')
+                .val('')
+                .trigger('change');
+
+            $('#selected-kitchen-items-count')
+                .text('0');
+
+            $('#kitchen-items-container')
+                .html('');
+        }
+    );
 
 });

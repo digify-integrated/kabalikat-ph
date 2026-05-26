@@ -738,6 +738,20 @@ class RolePermissionSeeder extends Seeder
                 'export_access' => false,
                 'logs_access' => false,
             ],
+
+            [
+                'role_id' => 1,
+                'role_name' => 'Super Admin',
+                'navigation_menu_id' => 53,
+                'navigation_menu_name' => 'Preparation Display',
+                'read_access' => true,
+                'write_access' => false,
+                'create_access' => false,
+                'delete_access' => false,
+                'import_access' => false,
+                'export_access' => false,
+                'logs_access' => false,
+            ],
         ];
 
         DB::table('role_permission')->insert(

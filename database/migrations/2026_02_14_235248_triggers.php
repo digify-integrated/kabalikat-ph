@@ -3309,6 +3309,26 @@ return new class extends Migration
                     SET audit_log = CONCAT(audit_log, "Quantity:", OLD.quantity, " -> ", NEW.quantity, "<br/>");
                 END IF;
 
+                IF NEW.sent_to_kitchen_quantity <> OLD.sent_to_kitchen_quantity THEN
+                    SET audit_log = CONCAT(audit_log, "Sent to Kitchen Quantity:", OLD.sent_to_kitchen_quantity, " -> ", NEW.sent_to_kitchen_quantity, "<br/>");
+                END IF;
+
+                IF NEW.prepared_quantity <> OLD.prepared_quantity THEN
+                    SET audit_log = CONCAT(audit_log, "Prepared Quantity:", OLD.prepared_quantity, " -> ", NEW.prepared_quantity, "<br/>");
+                END IF;
+
+                IF NEW.served_quantity <> OLD.served_quantity THEN
+                    SET audit_log = CONCAT(audit_log, "Served Quantity:", OLD.served_quantity, " -> ", NEW.served_quantity, "<br/>");
+                END IF;
+
+                IF NEW.cancelled_quantity <> OLD.cancelled_quantity THEN
+                    SET audit_log = CONCAT(audit_log, "Cancelled Quantity:", OLD.cancelled_quantity, " -> ", NEW.cancelled_quantity, "<br/>");
+                END IF;
+
+                IF NEW.kitchen_route_name <> OLD.kitchen_route_name THEN
+                    SET audit_log = CONCAT(audit_log, "Kitchen Route Name:", OLD.kitchen_route_name, " -> ", NEW.kitchen_route_name, "<br/>");
+                END IF;
+
                 IF NEW.original_unit_price <> OLD.original_unit_price THEN
                     SET audit_log = CONCAT(audit_log, "Original Unit Price:", OLD.original_unit_price, " -> ", NEW.original_unit_price, "<br/>");
                 END IF;
@@ -3351,6 +3371,22 @@ return new class extends Migration
 
                 IF NEW.item_status <> OLD.item_status THEN
                     SET audit_log = CONCAT(audit_log, "Item Status:", OLD.item_status, " -> ", NEW.item_status, "<br/>");
+                END IF;
+
+                IF NEW.sent_to_kitchen_quantity <> OLD.sent_to_kitchen_quantity THEN
+                    SET audit_log = CONCAT(audit_log, "Sent to Kitchen Quantity:", OLD.sent_to_kitchen_quantity, " -> ", NEW.sent_to_kitchen_quantity, "<br/>");
+                END IF;
+
+                IF NEW.prepared_quantity <> OLD.prepared_quantity THEN
+                    SET audit_log = CONCAT(audit_log, "Prepared Quantity:", OLD.prepared_quantity, " -> ", NEW.prepared_quantity, "<br/>");
+                END IF;
+
+                IF NEW.served_quantity <> OLD.served_quantity THEN
+                    SET audit_log = CONCAT(audit_log, "Served Quantity:", OLD.served_quantity, " -> ", NEW.served_quantity, "<br/>");
+                END IF;
+
+                IF NEW.cancelled_quantity <> OLD.served_quantity THEN
+                    SET audit_log = CONCAT(audit_log, "Served Quantity:", OLD.served_quantity, " -> ", NEW.served_quantity, "<br/>");
                 END IF;
 
                 IF NEW.queued_at <> OLD.queued_at THEN
@@ -3407,7 +3443,6 @@ return new class extends Migration
                 VALUES ('shop_order_item', NEW.id, audit_log, NEW.last_log_by, NEW.updated_at);
             END
         SQL);
-
 
         /* =============================================================================================
             TABLE: SHOP ORDER APPLIED DISCOUNT
@@ -3754,6 +3789,257 @@ return new class extends Migration
                 VALUES ('shop_order_request', NEW.id, audit_log, NEW.last_log_by, NEW.updated_at);
             END
         SQL);
+
+        /* =============================================================================================
+            TABLE: KITCHEN TICKET
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_kitchen_ticket_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_kitchen_ticket_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_kitchen_ticket_update
+            AFTER UPDATE ON kitchen_ticket
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Kitchen ticket changed.<br/><br/>';
+
+                IF NEW.ticket_number <> OLD.ticket_number THEN
+                    SET audit_log = CONCAT(audit_log, "Ticket Number:", OLD.ticket_number, " -> ", NEW.ticket_number, "<br/>");
+                END IF;
+
+                IF NEW.shop_register_name <> OLD.shop_register_name THEN
+                    SET audit_log = CONCAT(audit_log, "Shop Register Name:", OLD.shop_register_name, " -> ", NEW.shop_register_name, "<br/>");
+                END IF;
+
+                IF NEW.kitchen_route_name <> OLD.kitchen_route_name THEN
+                    SET audit_log = CONCAT(audit_log, "Kitchen Route Name:", OLD.kitchen_route_name, " -> ", NEW.kitchen_route_name, "<br/>");
+                END IF;
+
+                IF NEW.table_number <> OLD.table_number THEN
+                    SET audit_log = CONCAT(audit_log, "Table Number:", OLD.table_number, " -> ", NEW.table_number, "<br/>");
+                END IF;
+
+                IF NEW.customer_name <> OLD.customer_name THEN
+                    SET audit_log = CONCAT(audit_log, "Customer Name:", OLD.customer_name, " -> ", NEW.customer_name, "<br/>");
+                END IF;
+
+                IF NEW.ticket_status <> OLD.ticket_status THEN
+                    SET audit_log = CONCAT(audit_log, "Ticket Status:", OLD.ticket_status, " -> ", NEW.ticket_status, "<br/>");
+                END IF;
+
+                IF NEW.ticket_type <> OLD.ticket_type THEN
+                    SET audit_log = CONCAT(audit_log, "Ticket Type:", OLD.ticket_type, " -> ", NEW.ticket_type, "<br/>");
+                END IF;
+
+                IF NEW.is_acknowledged <> OLD.is_acknowledged THEN
+                    SET audit_log = CONCAT(audit_log, "Is Acknowledged:", OLD.is_acknowledged, " -> ", NEW.is_acknowledged, "<br/>");
+                END IF;
+
+                IF NEW.acknowledged_at <> OLD.acknowledged_at THEN
+                    SET audit_log = CONCAT(audit_log, "Acknowledged At:", OLD.acknowledged_at, " -> ", NEW.acknowledged_at, "<br/>");
+                END IF;
+
+                IF NEW.print_count <> OLD.print_count THEN
+                    SET audit_log = CONCAT(audit_log, "Print Count:", OLD.print_count, " -> ", NEW.print_count, "<br/>");
+                END IF;
+
+                IF NEW.last_printed_at <> OLD.last_printed_at THEN
+                    SET audit_log = CONCAT(audit_log, "Last Printed At:", OLD.last_printed_at, " -> ", NEW.last_printed_at, "<br/>");
+                END IF;
+
+                IF NEW.queued_at <> OLD.queued_at THEN
+                    SET audit_log = CONCAT(audit_log, "Queued At:", OLD.queued_at, " -> ", NEW.queued_at, "<br/>");
+                END IF;
+
+                IF NEW.started_at <> OLD.started_at THEN
+                    SET audit_log = CONCAT(audit_log, "Started At:", OLD.started_at, " -> ", NEW.started_at, "<br/>");
+                END IF;
+
+                IF NEW.ready_at <> OLD.ready_at THEN
+                    SET audit_log = CONCAT(audit_log, "Ready At:", OLD.ready_at, " -> ", NEW.ready_at, "<br/>");
+                END IF;
+
+                IF NEW.completed_at <> OLD.completed_at THEN
+                    SET audit_log = CONCAT(audit_log, "Completed At:", OLD.completed_at, " -> ", NEW.completed_at, "<br/>");
+                END IF;
+
+                IF NEW.cancelled_at <> OLD.cancelled_at THEN
+                    SET audit_log = CONCAT(audit_log, "Cancelled At:", OLD.cancelled_at, " -> ", NEW.cancelled_at, "<br/>");
+                END IF;
+
+                IF NEW.created_by_name <> OLD.created_by_name THEN
+                    SET audit_log = CONCAT(audit_log, "Created By Name:", OLD.created_by_name, " -> ", NEW.created_by_name, "<br/>");
+                END IF;
+
+                IF audit_log <> 'Kitchen ticket changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('kitchen_ticket', NEW.id, audit_log, NEW.last_log_by, NEW.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_kitchen_ticket_insert
+            AFTER INSERT ON kitchen_ticket
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Kitchen ticket created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('kitchen_ticket', NEW.id, audit_log, NEW.last_log_by, NEW.updated_at);
+            END
+        SQL);
+
+        /* =============================================================================================
+            TABLE: KITCHEN TICKET ITEM
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_kitchen_ticket_item_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_kitchen_ticket_item_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_kitchen_ticket_item_update
+            AFTER UPDATE ON kitchen_ticket_item
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Kitchen ticket item changed.<br/><br/>';
+
+                IF NEW.product_name <> OLD.product_name THEN
+                    SET audit_log = CONCAT(audit_log, "Product:", OLD.product_name, " -> ", NEW.product_name, "<br/>");
+                END IF;
+
+                IF NEW.action_type <> OLD.action_type THEN
+                    SET audit_log = CONCAT(audit_log, "Action Type:", OLD.action_type, " -> ", NEW.action_type, "<br/>");
+                END IF;
+
+                IF NEW.action_reason <> OLD.action_reason THEN
+                    SET audit_log = CONCAT(audit_log, "Action Reason:", OLD.action_reason, " -> ", NEW.action_reason, "<br/>");
+                END IF;
+
+                IF NEW.quantity <> OLD.quantity THEN
+                    SET audit_log = CONCAT(audit_log, "Quantity:", OLD.quantity, " -> ", NEW.quantity, "<br/>");
+                END IF;
+
+                IF NEW.original_quantity <> OLD.original_quantity THEN
+                    SET audit_log = CONCAT(audit_log, "Original Quantity:", OLD.original_quantity, " -> ", NEW.original_quantity, "<br/>");
+                END IF;
+
+                IF NEW.prepared_quantity <> OLD.prepared_quantity THEN
+                    SET audit_log = CONCAT(audit_log, "Prepared Quantity:", OLD.prepared_quantity, " -> ", NEW.prepared_quantity, "<br/>");
+                END IF;
+
+                IF NEW.served_quantity <> OLD.served_quantity THEN
+                    SET audit_log = CONCAT(audit_log, "Served Quantity:", OLD.served_quantity, " -> ", NEW.served_quantity, "<br/>");
+                END IF;
+
+                IF NEW.order_note <> OLD.order_note THEN
+                    SET audit_log = CONCAT(audit_log, "Order Note:", OLD.order_note, " -> ", NEW.order_note, "<br/>");
+                END IF;
+
+                IF NEW.is_seen <> OLD.is_seen THEN
+                    SET audit_log = CONCAT(audit_log, "Is Seen:", OLD.is_seen, " -> ", NEW.is_seen, "<br/>");
+                END IF;
+                
+                IF NEW.seen_at <> OLD.seen_at THEN
+                    SET audit_log = CONCAT(audit_log, "Seen At:", OLD.seen_at, " -> ", NEW.seen_at, "<br/>");
+                END IF;
+                
+                IF NEW.priority_level <> OLD.priority_level THEN
+                    SET audit_log = CONCAT(audit_log, "Priority Level:", OLD.priority_level, " -> ", NEW.priority_level, "<br/>");
+                END IF;
+                
+                IF NEW.item_status <> OLD.item_status THEN
+                    SET audit_log = CONCAT(audit_log, "Item Status:", OLD.item_status, " -> ", NEW.item_status, "<br/>");
+                END IF;
+                
+                IF NEW.queued_at <> OLD.queued_at THEN
+                    SET audit_log = CONCAT(audit_log, "Queued At:", OLD.queued_at, " -> ", NEW.queued_at, "<br/>");
+                END IF;
+                
+                IF NEW.started_at <> OLD.started_at THEN
+                    SET audit_log = CONCAT(audit_log, "Started At:", OLD.started_at, " -> ", NEW.started_at, "<br/>");
+                END IF;
+                
+                IF NEW.ready_at <> OLD.ready_at THEN
+                    SET audit_log = CONCAT(audit_log, "Ready At:", OLD.ready_at, " -> ", NEW.ready_at, "<br/>");
+                END IF;
+                
+                IF NEW.served_at <> OLD.served_at THEN
+                    SET audit_log = CONCAT(audit_log, "Served At:", OLD.served_at, " -> ", NEW.served_at, "<br/>");
+                END IF;
+                
+                IF NEW.cancelled_at <> OLD.cancelled_at THEN
+                    SET audit_log = CONCAT(audit_log, "Cancelled At:", OLD.cancelled_at, " -> ", NEW.cancelled_at, "<br/>");
+                END IF;
+                
+                IF NEW.created_by_name <> OLD.created_by_name THEN
+                    SET audit_log = CONCAT(audit_log, "Created By:", OLD.created_by_name, " -> ", NEW.created_by_name, "<br/>");
+                END IF;
+
+                IF audit_log <> 'Kitchen ticket item changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('kitchen_ticket_item', NEW.id, audit_log, NEW.last_log_by, NEW.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_kitchen_ticket_item_insert
+            AFTER INSERT ON kitchen_ticket_item
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Kitchen ticket item created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('kitchen_ticket_item', NEW.id, audit_log, NEW.last_log_by, NEW.updated_at);
+            END
+        SQL);
+
+        /* =============================================================================================
+            TABLE: KITCHEN TICKET HISTORY
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_kitchen_ticket_history_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_kitchen_ticket_history_insert');
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_kitchen_ticket_history_update
+            AFTER UPDATE ON kitchen_ticket_history
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Kitchen ticket history changed.<br/><br/>';
+
+                IF NEW.activity <> OLD.activity THEN
+                    SET audit_log = CONCAT(audit_log, "Activity:", OLD.activity, " -> ", NEW.activity, "<br/>");
+                END IF;
+
+                IF NEW.remarks <> OLD.remarks THEN
+                    SET audit_log = CONCAT(audit_log, "Remarks:", OLD.remarks, " -> ", NEW.remarks, "<br/>");
+                END IF;
+
+                IF audit_log <> 'Kitchen ticket history changed.<br/><br/>' THEN
+                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                    VALUES ('kitchen_ticket_history', NEW.id, audit_log, NEW.last_log_by, NEW.updated_at);
+                END IF;
+            END
+        SQL);
+
+        DB::unprepared(<<<SQL
+            CREATE TRIGGER trg_kitchen_ticket_history_insert
+            AFTER INSERT ON kitchen_ticket_history
+            FOR EACH ROW
+            BEGIN
+                DECLARE audit_log TEXT DEFAULT 'Kitchen ticket history created.';
+
+                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
+                VALUES ('kitchen_ticket_history', NEW.id, audit_log, NEW.last_log_by, NEW.updated_at);
+            END
+        SQL);
+
+        /* =============================================================================================
+            TABLE:
+        ============================================================================================= */
     }
 
     /**
@@ -4230,5 +4516,26 @@ return new class extends Migration
 
         DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_order_request_update');
         DB::unprepared('DROP TRIGGER IF EXISTS trg_shop_order_request_insert');
+
+        /* =============================================================================================
+            TABLE: KITCHEN TICKET
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_kitchen_ticket_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_kitchen_ticket_insert');
+
+        /* =============================================================================================
+            TABLE: KITCHEN TICKET ITEM
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_kitchen_ticket_item_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_kitchen_ticket_item_insert');
+
+        /* =============================================================================================
+            TABLE: KITCHEN TICKET HISTORY
+        ============================================================================================= */
+
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_kitchen_ticket_history_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS trg_kitchen_ticket_history_insert');
     }
 };

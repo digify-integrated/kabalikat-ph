@@ -1882,7 +1882,7 @@ return new class extends Migration
         });
 
         /* =============================================================================================
-            TABLE: SHOP ORDER
+            TABLE: Shop Order
         ============================================================================================= */
 
         Schema::create('shop_order', function (Blueprint $table) {
@@ -2057,7 +2057,7 @@ return new class extends Migration
         });
 
         /* =============================================================================================
-            TABLE: SHOP ORDER ITEM
+            TABLE: Shop Order Item
         ============================================================================================= */
 
         Schema::create('shop_order_item', function (Blueprint $table) {
@@ -2084,6 +2084,26 @@ return new class extends Migration
 
             $table->decimal('quantity', 12, 2)
                 ->default(1);
+
+            $table->decimal('sent_to_kitchen_quantity', 12, 2)
+                ->default(0);
+
+            $table->decimal('prepared_quantity', 12, 2)
+                ->default(0);
+
+            $table->decimal('served_quantity', 12, 2)
+                ->default(0);
+
+            $table->decimal('cancelled_quantity', 12, 2)
+                ->default(0);
+
+            $table->foreignId('kitchen_route_id')
+                ->nullable()
+                ->constrained('kitchen_route')
+                ->nullOnDelete();
+
+            $table->string('kitchen_route_name')
+                ->nullable();
 
             $table->decimal('original_unit_price', 12, 2)
                 ->default(0);
@@ -2126,32 +2146,6 @@ return new class extends Migration
                 'Completed',
                 'Cancelled',
             ])->default('Pending');
-
-            $table->decimal('sent_to_kitchen_quantity', 12, 2)
-                ->default(0)
-                ->after('quantity');
-
-            $table->decimal('prepared_quantity', 12, 2)
-                ->default(0)
-                ->after('sent_to_kitchen_quantity');
-
-            $table->decimal('served_quantity', 12, 2)
-                ->default(0)
-                ->after('prepared_quantity');
-
-            $table->decimal('cancelled_quantity', 12, 2)
-                ->default(0)
-                ->after('served_quantity');
-
-            $table->foreignId('kitchen_route_id')
-                ->nullable()
-                ->after('product_id')
-                ->constrained('kitchen_route')
-                ->nullOnDelete();
-
-            $table->string('kitchen_route_name')
-                ->nullable()
-                ->after('kitchen_route_id');
 
             $table->datetime('queued_at')
                 ->nullable();
@@ -2199,7 +2193,7 @@ return new class extends Migration
         });
 
         /* =============================================================================================
-            TABLE: SHOP ORDER APPLIED DISCOUNT
+            TABLE: Shop Order Applied Discount
         ============================================================================================= */
 
         Schema::create('shop_order_applied_discount', function (Blueprint $table) {
@@ -2209,29 +2203,12 @@ return new class extends Migration
                 ->constrained('shop_order')
                 ->cascadeOnDelete();
 
-            /*
-            |--------------------------------------------------------------------------
-            | DISCOUNT TYPE SNAPSHOT
-            |--------------------------------------------------------------------------
-            |
-            | Snapshot values are stored so that
-            | historical orders remain accurate even if
-            | discount configuration changes later.
-            |
-            */
-
             $table->foreignId('discount_type_id')
                 ->nullable()
                 ->constrained('discount_type')
                 ->nullOnDelete();
 
             $table->string('discount_type_name');
-
-            /*
-            |--------------------------------------------------------------------------
-            | DISCOUNT CONFIG SNAPSHOT
-            |--------------------------------------------------------------------------
-            */
 
             $table->enum('value_type', [
                 'Percentage',
@@ -2251,50 +2228,14 @@ return new class extends Migration
                 'No'
             ])->default('No');
 
-            /*
-            |--------------------------------------------------------------------------
-            | COMPUTED VALUES
-            |--------------------------------------------------------------------------
-            |
-            | discount_rate
-            | - actual percentage used
-            |
-            | discount_amount
-            | - computed peso amount
-            |
-            */
-
             $table->decimal('discount_rate', 12, 4)
                 ->default(0);
 
             $table->decimal('discount_amount', 12, 2)
                 ->default(0);
 
-            /*
-            |--------------------------------------------------------------------------
-            | VAT EXEMPTION SNAPSHOT
-            |--------------------------------------------------------------------------
-            |
-            | Important for:
-            | - Senior Citizen
-            | - PWD
-            |
-            */
-
             $table->decimal('vat_exempt_amount', 12, 2)
                 ->default(0);
-
-            /*
-            |--------------------------------------------------------------------------
-            | REFERENCE DETAILS
-            |--------------------------------------------------------------------------
-            |
-            | Examples:
-            | - Senior Citizen ID
-            | - PWD ID
-            | - Promo code
-            |
-            */
 
             $table->string('reference_number')
                 ->nullable();
@@ -2302,20 +2243,8 @@ return new class extends Migration
             $table->string('reference_name')
                 ->nullable();
 
-            /*
-            |--------------------------------------------------------------------------
-            | REMARKS
-            |--------------------------------------------------------------------------
-            */
-
             $table->text('remarks')
                 ->nullable();
-
-            /*
-            |--------------------------------------------------------------------------
-            | AUDIT
-            |--------------------------------------------------------------------------
-            */
 
             $table->foreignId('applied_by')
                 ->nullable()
@@ -2333,12 +2262,6 @@ return new class extends Migration
 
             $table->timestamps();
 
-            /*
-            |--------------------------------------------------------------------------
-            | INDEXES
-            |--------------------------------------------------------------------------
-            */
-
             $table->index(['shop_order_id']);
             $table->index(['discount_type_id']);
             $table->index(['application_order']);
@@ -2346,32 +2269,15 @@ return new class extends Migration
         });
 
         /* =============================================================================================
-            TABLE: SHOP ORDER APPLIED CHARGE
+            TABLE: Shop Order Applied Charge
         ============================================================================================= */
 
         Schema::create('shop_order_applied_charge', function (Blueprint $table) {
             $table->id();
 
-            /*
-            |--------------------------------------------------------------------------
-            | ORDER
-            |--------------------------------------------------------------------------
-            */
-
             $table->foreignId('shop_order_id')
                 ->constrained('shop_order')
                 ->cascadeOnDelete();
-
-            /*
-            |--------------------------------------------------------------------------
-            | CHARGE TYPE SNAPSHOT
-            |--------------------------------------------------------------------------
-            |
-            | Snapshot values are stored so that
-            | historical orders remain accurate even if
-            | charge configuration changes later.
-            |
-            */
 
             $table->foreignId('charge_type_id')
                 ->nullable()
@@ -2379,12 +2285,6 @@ return new class extends Migration
                 ->nullOnDelete();
 
             $table->string('charge_type_name');
-
-            /*
-            |--------------------------------------------------------------------------
-            | CHARGE CONFIG SNAPSHOT
-            |--------------------------------------------------------------------------
-            */
 
             $table->enum('value_type', [
                 'Percentage',
@@ -2404,35 +2304,11 @@ return new class extends Migration
                 'Non Vatable'
             ])->default('Non Vatable');
 
-            /*
-            |--------------------------------------------------------------------------
-            | COMPUTED VALUES
-            |--------------------------------------------------------------------------
-            |
-            | charge_rate
-            | - actual percentage used
-            |
-            | charge_amount
-            | - computed peso amount
-            |
-            */
-
             $table->decimal('charge_rate', 12, 4)
                 ->default(0);
 
             $table->decimal('charge_amount', 12, 2)
                 ->default(0);
-
-            /*
-            |--------------------------------------------------------------------------
-            | VAT SNAPSHOT
-            |--------------------------------------------------------------------------
-            |
-            | Important for:
-            | - service charge
-            | - taxable fees
-            |
-            */
 
             $table->decimal('vatable_amount', 12, 2)
                 ->default(0);
@@ -2440,20 +2316,8 @@ return new class extends Migration
             $table->decimal('vat_amount', 12, 2)
                 ->default(0);
 
-            /*
-            |--------------------------------------------------------------------------
-            | REMARKS
-            |--------------------------------------------------------------------------
-            */
-
             $table->text('remarks')
                 ->nullable();
-
-            /*
-            |--------------------------------------------------------------------------
-            | AUDIT
-            |--------------------------------------------------------------------------
-            */
 
             $table->foreignId('applied_by')
                 ->nullable()
@@ -2471,12 +2335,6 @@ return new class extends Migration
 
             $table->timestamps();
 
-            /*
-            |--------------------------------------------------------------------------
-            | INDEXES
-            |--------------------------------------------------------------------------
-            */
-
             $table->index(['shop_order_id']);
             $table->index(['charge_type_id']);
             $table->index(['application_order']);
@@ -2490,24 +2348,9 @@ return new class extends Migration
         Schema::create('shop_order_payment', function (Blueprint $table) {
             $table->id();
 
-            /*
-            |--------------------------------------------------------------------------
-            | ORDER
-            |--------------------------------------------------------------------------
-            */
-
             $table->foreignId('shop_order_id')
                 ->constrained('shop_order')
                 ->cascadeOnDelete();
-
-            /*
-            |--------------------------------------------------------------------------
-            | PAYMENT METHOD SNAPSHOT
-            |--------------------------------------------------------------------------
-            |
-            | Snapshot stored for historical integrity.
-            |
-            */
 
             $table->foreignId('payment_method_id')
                 ->nullable()
@@ -2516,26 +2359,8 @@ return new class extends Migration
 
             $table->string('payment_method_name');
 
-            /*
-            |--------------------------------------------------------------------------
-            | PAYMENT DETAILS
-            |--------------------------------------------------------------------------
-            */
-
             $table->decimal('payment_amount', 12, 2)
                 ->default(0);
-
-            /*
-            |--------------------------------------------------------------------------
-            | CASH HANDLING
-            |--------------------------------------------------------------------------
-            |
-            | Useful for:
-            | - cash payments
-            | - mixed tenders
-            | - cashier reconciliation
-            |
-            */
 
             $table->decimal('tendered_amount', 12, 2)
                 ->default(0);
@@ -2543,30 +2368,11 @@ return new class extends Migration
             $table->decimal('change_amount', 12, 2)
                 ->default(0);
 
-            /*
-            |--------------------------------------------------------------------------
-            | REFERENCE DETAILS
-            |--------------------------------------------------------------------------
-            |
-            | Examples:
-            | - GCash reference
-            | - Maya transaction ID
-            | - Card approval code
-            | - Bank reference number
-            |
-            */
-
             $table->string('reference_number')
                 ->nullable();
 
             $table->string('reference_name')
                 ->nullable();
-
-            /*
-            |--------------------------------------------------------------------------
-            | PAYMENT STATUS
-            |--------------------------------------------------------------------------
-            */
 
             $table->enum('payment_status', [
                 'Paid',
@@ -2575,20 +2381,8 @@ return new class extends Migration
                 'Failed',
             ])->default('Paid');
 
-            /*
-            |--------------------------------------------------------------------------
-            | PAYMENT TIMESTAMP
-            |--------------------------------------------------------------------------
-            */
-
             $table->datetime('paid_at')
                 ->nullable();
-
-            /*
-            |--------------------------------------------------------------------------
-            | VOID / REFUND DETAILS
-            |--------------------------------------------------------------------------
-            */
 
             $table->datetime('voided_at')
                 ->nullable();
@@ -2618,20 +2412,8 @@ return new class extends Migration
             $table->string('refunded_by_name')
                 ->nullable();
 
-            /*
-            |--------------------------------------------------------------------------
-            | REMARKS
-            |--------------------------------------------------------------------------
-            */
-
             $table->text('remarks')
                 ->nullable();
-
-            /*
-            |--------------------------------------------------------------------------
-            | AUDIT
-            |--------------------------------------------------------------------------
-            */
 
             $table->foreignId('last_log_by')
                 ->nullable()
@@ -2640,12 +2422,6 @@ return new class extends Migration
                 ->nullOnDelete();
 
             $table->timestamps();
-
-            /*
-            |--------------------------------------------------------------------------
-            | INDEXES
-            |--------------------------------------------------------------------------
-            */
 
             $table->index(['shop_order_id']);
             $table->index(['payment_method_id']);
@@ -2659,14 +2435,7 @@ return new class extends Migration
         ============================================================================================= */
         
         Schema::create('shop_order_request', function (Blueprint $table) {
-
             $table->id();
-
-            /*
-            |--------------------------------------------------------------------------
-            | ORDER
-            |--------------------------------------------------------------------------
-            */
 
             $table->foreignId('shop_order_id')
                 ->constrained('shop_order')
@@ -2674,22 +2443,10 @@ return new class extends Migration
 
             $table->string('order_number');
 
-            /*
-            |--------------------------------------------------------------------------
-            | REQUEST TYPE
-            |--------------------------------------------------------------------------
-            */
-
             $table->enum('request_type', [
                 'Void',
                 'Refund',
             ]);
-
-            /*
-            |--------------------------------------------------------------------------
-            | REQUEST STATUS
-            |--------------------------------------------------------------------------
-            */
 
             $table->enum('request_status', [
                 'Pending',
@@ -2698,19 +2455,7 @@ return new class extends Migration
                 'Cancelled',
             ])->default('Pending');
 
-            /*
-            |--------------------------------------------------------------------------
-            | REQUEST DETAILS
-            |--------------------------------------------------------------------------
-            */
-
             $table->text('request_reason');
-
-            /*
-            |--------------------------------------------------------------------------
-            | REQUESTED BY
-            |--------------------------------------------------------------------------
-            */
 
             $table->foreignId('requested_by')
                 ->nullable()
@@ -2722,12 +2467,6 @@ return new class extends Migration
 
             $table->timestamp('requested_at')
                 ->nullable();
-
-            /*
-            |--------------------------------------------------------------------------
-            | APPROVAL
-            |--------------------------------------------------------------------------
-            */
 
             $table->foreignId('approved_by')
                 ->nullable()
@@ -2743,12 +2482,6 @@ return new class extends Migration
             $table->text('approval_remarks')
                 ->nullable();
 
-            /*
-            |--------------------------------------------------------------------------
-            | REJECTION
-            |--------------------------------------------------------------------------
-            */
-
             $table->foreignId('rejected_by')
                 ->nullable()
                 ->constrained('users')
@@ -2762,12 +2495,6 @@ return new class extends Migration
 
             $table->text('rejection_reason')
                 ->nullable();
-
-            /*
-            |--------------------------------------------------------------------------
-            | CANCELLATION
-            |--------------------------------------------------------------------------
-            */
 
             $table->foreignId('cancelled_by')
                 ->nullable()
@@ -2783,12 +2510,6 @@ return new class extends Migration
             $table->text('cancellation_reason')
                 ->nullable();
 
-            /*
-            |--------------------------------------------------------------------------
-            | AUDIT
-            |--------------------------------------------------------------------------
-            */
-
             $table->foreignId('last_log_by')
                 ->nullable()
                 ->default(1)
@@ -2797,42 +2518,10 @@ return new class extends Migration
 
             $table->timestamps();
 
-            /*
-            |--------------------------------------------------------------------------
-            | INDEXES
-            |--------------------------------------------------------------------------
-            */
-
             $table->index(['shop_order_id']);
             $table->index(['request_type']);
             $table->index(['request_status']);
             $table->index(['requested_at']);
-        });
-                
-        /* =============================================================================================
-            TABLE: Product Kitchen Route
-        ============================================================================================= */
-
-        Schema::create('product_kitchen_route', function (Blueprint $table) {
-            $table->id();
-
-            $table->foreignId('product_id')
-                ->constrained('product')
-                ->cascadeOnDelete();
-
-            $table->string('product_name');
-
-            $table->foreignId('kitchen_route_id')
-                ->constrained('kitchen_route')
-                ->cascadeOnDelete();
-
-            $table->string('kitchen_route_name');
-
-            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
-
-            $table->timestamps();
-
-            $table->unique(['product_id']);
         });
                 
         /* =============================================================================================
@@ -2848,11 +2537,23 @@ return new class extends Migration
                 ->constrained('shop_order')
                 ->cascadeOnDelete();
 
+            $table->foreignId('shop_register_id')
+                ->constrained('shop_register')
+                ->cascadeOnDelete();
+
+            $table->string('shop_register_name');
+
             $table->foreignId('kitchen_route_id')
                 ->constrained('kitchen_route')
                 ->cascadeOnDelete();
 
             $table->string('kitchen_route_name');
+
+            $table->string('table_number')
+                ->nullable();
+
+            $table->string('customer_name')
+                ->nullable();
 
             $table->enum('ticket_status', [
                 'Queued',
@@ -2862,51 +2563,10 @@ return new class extends Migration
                 'Cancelled',
             ])->default('Queued');
 
-            /*
-            |--------------------------------------------------------------------------
-            | SHOP REGISTER
-            |--------------------------------------------------------------------------
-            */
-
-            $table->foreignId('shop_register_id')
-                ->after('shop_order_id')
-                ->constrained('shop_register')
-                ->cascadeOnDelete();
-
-            $table->string('shop_register_name')
-                ->after('shop_register_id');
-
-            /*
-            |--------------------------------------------------------------------------
-            | SESSION
-            |--------------------------------------------------------------------------
-            */
-
             $table->foreignId('shop_register_session_id')
                 ->nullable()
-                ->after('shop_register_name')
                 ->constrained('shop_register_session')
                 ->nullOnDelete();
-
-            /*
-            |--------------------------------------------------------------------------
-            | TABLE INFO SNAPSHOT
-            |--------------------------------------------------------------------------
-            */
-
-            $table->string('table_number')
-                ->nullable()
-                ->after('kitchen_route_name');
-
-            $table->string('customer_name')
-                ->nullable()
-                ->after('table_number');
-
-            /*
-            |--------------------------------------------------------------------------
-            | TICKET TYPE
-            |--------------------------------------------------------------------------
-            */
 
             $table->enum('ticket_type', [
                 'Initial',
@@ -2916,23 +2576,11 @@ return new class extends Migration
                 'Refire',
             ])->default('Initial');
 
-            /*
-            |--------------------------------------------------------------------------
-            | KITCHEN FLAGS
-            |--------------------------------------------------------------------------
-            */
-
             $table->enum('is_acknowledged', ['Yes', 'No'])
                 ->default('No');
 
             $table->timestamp('acknowledged_at')
                 ->nullable();
-
-            /*
-            |--------------------------------------------------------------------------
-            | PRINT TRACKING
-            |--------------------------------------------------------------------------
-            */
 
             $table->integer('print_count')
                 ->default(0);
@@ -2985,12 +2633,6 @@ return new class extends Migration
 
             $table->string('product_name');
 
-            /*
-            |--------------------------------------------------------------------------
-            | PRODUCTION ACTION
-            |--------------------------------------------------------------------------
-            */
-
             $table->enum('action_type', [
                 'New',
                 'Add',
@@ -2999,61 +2641,21 @@ return new class extends Migration
                 'Refire',
             ]);
 
-            /*
-            |--------------------------------------------------------------------------
-            | QUANTITY SENT TO KITCHEN
-            |--------------------------------------------------------------------------
-            */
+            $table->text('action_reason')
+                ->nullable();
 
             $table->decimal('quantity', 12, 2);
 
-            /*
-            |--------------------------------------------------------------------------
-            | SNAPSHOT NOTES
-            |--------------------------------------------------------------------------
-            */
-
-            $table->text('order_note')->nullable();
-
-             /*
-            |--------------------------------------------------------------------------
-            | ORIGINAL ORDER QUANTITY
-            |--------------------------------------------------------------------------
-            */
-
             $table->decimal('original_quantity', 12, 2)
-                ->default(0)
-                ->after('quantity');
-
-            /*
-            |--------------------------------------------------------------------------
-            | PRODUCTION TRACKING
-            |--------------------------------------------------------------------------
-            */
+                ->default(0);
 
             $table->decimal('prepared_quantity', 12, 2)
-                ->default(0)
-                ->after('original_quantity');
+                ->default(0);
 
             $table->decimal('served_quantity', 12, 2)
-                ->default(0)
-                ->after('prepared_quantity');
+                ->default(0);
 
-            /*
-            |--------------------------------------------------------------------------
-            | MODIFICATION REASON
-            |--------------------------------------------------------------------------
-            */
-
-            $table->text('action_reason')
-                ->nullable()
-                ->after('action_type');
-
-            /*
-            |--------------------------------------------------------------------------
-            | ACKNOWLEDGEMENT
-            |--------------------------------------------------------------------------
-            */
+            $table->text('order_note')->nullable();
 
             $table->enum('is_seen', ['Yes', 'No'])
                 ->default('No');
@@ -3061,23 +2663,11 @@ return new class extends Migration
             $table->timestamp('seen_at')
                 ->nullable();
 
-            /*
-            |--------------------------------------------------------------------------
-            | PRIORITY
-            |--------------------------------------------------------------------------
-            */
-
             $table->enum('priority_level', [
                 'Normal',
                 'Rush',
                 'Urgent',
             ])->default('Normal');
-
-            /*
-            |--------------------------------------------------------------------------
-            | KITCHEN STATUS
-            |--------------------------------------------------------------------------
-            */
 
             $table->enum('item_status', [
                 'Queued',
@@ -3092,12 +2682,6 @@ return new class extends Migration
             $table->timestamp('ready_at')->nullable();
             $table->timestamp('served_at')->nullable();
             $table->timestamp('cancelled_at')->nullable();
-
-            /*
-            |--------------------------------------------------------------------------
-            | AUDIT
-            |--------------------------------------------------------------------------
-            */
 
             $table->foreignId('created_by')
                 ->nullable()
@@ -3233,6 +2817,10 @@ return new class extends Migration
         Schema::dropIfExists('shop_order_payment');
         Schema::dropIfExists('shop_order_item');
         Schema::dropIfExists('shop_order_request');
+        Schema::dropIfExists('product_kitchen_route');
+        Schema::dropIfExists('kitchen_ticket');
+        Schema::dropIfExists('kitchen_ticket_item');
+        Schema::dropIfExists('kitchen_ticket_history');
         Schema::dropIfExists('shop_order');
         Schema::dropIfExists('shop_register');
         Schema::dropIfExists('nationality');

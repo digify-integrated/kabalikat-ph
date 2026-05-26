@@ -20,6 +20,7 @@ use App\Http\Controllers\FloorPlanTableController;
 use App\Http\Controllers\KitchenRouteController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\InventoryDashboardController;
+use App\Http\Controllers\KitchenTicketController;
 use App\Http\Controllers\NavigationMenuController;
 use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\ProductAddonController;
@@ -934,6 +935,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/delete-discount', 'deleteDiscount')->name('delete.discount');
             Route::post('/delete-charge', 'deleteCharge')->name('delete.charge');
             Route::post('/generate-options', 'generateOptions')->name('generate.option');
+            Route::post('/generate-kitchen-items', 'generateKitchenItems')->name('generate.kitchen.items');
         });
 
     
@@ -962,6 +964,15 @@ Route::middleware('auth')->group(function () {
             Route::post('/generate-payment-summary-table', 'generatePaymentSummaryTable')->name('generate.payment.summary.table');
             Route::post('/generate-transaction-summary-table', 'generateTransactionSummaryTable')->name('generate.transaction.summary.table');
             Route::post('/generate-cash-count-table', 'generateCashCountReportTable')->name('generate.cash.count.table');
+        });
+    
+    // Kitchen Report
+    Route::prefix('kitchen-ticket')
+        ->name('kitchen.ticket.')
+        ->controller(KitchenTicketController::class)
+        ->group(function () {
+            Route::post('/send-kitchen-ticket', 'sendKitchenTicket')->name('send.ticket');
+            Route::post('/generate-kitchen-send-data', 'generateKitchenSendData')->name('generate.kitchen.send.data');
         });
     
     Route::get(

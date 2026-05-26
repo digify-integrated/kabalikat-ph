@@ -17,7 +17,7 @@ class AppRenderController extends Controller
             ->select([
                 'am.id as app_id',
                 'am.app_name',
-                DB::raw('MIN(nm.id) as navigation_menu_id'),
+                'am.navigation_menu_id', // <-- Pull directly from the app table update
                 'am.app_logo',
                 'am.app_description',
                 'am.app_version',
@@ -35,7 +35,8 @@ class AppRenderController extends Controller
                             ->where('user_account_id', $userId);
                     });
             })
-            ->groupBy('am.id', 'am.app_name', 'am.app_logo', 'am.app_description', 'am.app_version', 'am.order_sequence')
+            // Add am.navigation_menu_id to the group by since it's now in the select
+            ->groupBy('am.id', 'am.app_name', 'am.navigation_menu_id', 'am.app_logo', 'am.app_description', 'am.app_version', 'am.order_sequence')
             ->orderBy('am.order_sequence')
             ->orderBy('am.app_name')
             ->get();

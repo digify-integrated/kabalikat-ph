@@ -624,7 +624,6 @@ class NavigationMenuSeeder extends Seeder
                 'order_sequence'                => 16
             ],
 
-            
             // Reports -> Transaction Summary ID: 52
             [
                 'navigation_menu_name'          => 'Transaction Summary',
@@ -633,6 +632,18 @@ class NavigationMenuSeeder extends Seeder
                 'app_name'                      => 'Point of Sale',
                 'parent_navigation_menu_id'     => 49,
                 'parent_navigation_menu_name'   => 'Reports',
+                'database_table'                => null,
+                'order_sequence'                => 10
+            ],
+
+            // Preparation Display ID: 53
+            [
+                'navigation_menu_name'          => 'Preparation Display',
+                'navigation_menu_icon'          => 'ki-outline ki-questionnaire-tablet',
+                'app_id'                        => 5,
+                'app_name'                      => 'Kitchen Display',
+                'parent_navigation_menu_id'     => null,
+                'parent_navigation_menu_name'   => null,
                 'database_table'                => null,
                 'order_sequence'                => 10
             ],

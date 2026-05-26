@@ -1044,6 +1044,20 @@ class NavigationMenuRouteSeeder extends Seeder
                 'view_file'             => 'pages.transaction-summary.index',
                 'js_file'               => 'transaction-summary/index',
             ],
+            
+            // Preparation Display
+            [
+                'navigation_menu_id'    => 53,
+                'route_type'            => 'index',
+                'view_file'             => 'pages.preparation-display.index',
+                'js_file'               => 'preparation-display/index',
+            ],
+            [
+                'navigation_menu_id'    => 53,
+                'route_type'            => 'details',
+                'view_file'             => 'pages.preparation-display.details',
+                'js_file'               => 'preparation-display/details',
+            ],
         ];
 
         DB::table('navigation_menu_route')->insert(
