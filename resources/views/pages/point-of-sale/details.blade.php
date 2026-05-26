@@ -134,31 +134,23 @@
                     <div class="d-flex gap-2 flex-wrap mt-4 cart-action d-none">
 
                         <span
-                            class="badge badge-light-success px-4 py-3 fw-bold fs-8"
-                            id="badge-payment-status">
-
-                            --
-
-                        </span>
-
-                        <span
                             class="badge badge-light-primary px-4 py-3 fw-bold fs-8"
-                            id="badge-order-type">
-                            Walk-in
-                        </span>
-
-                        <span
-                            class="badge badge-light-warning px-4 py-3 fw-bold fs-8"
                             id="badge-customer-name">
 
                             Walk-in Customer
 
                         </span>
 
+                        <span
+                            class="badge badge-light-warning px-4 py-3 fw-bold fs-8"
+                            id="badge-order-type">
+                            Walk-in
+                        </span>
+
                         @if($shopRegister->is_restaurant === 'Yes')
 
                             <span
-                                class="badge badge-light-info px-4 py-3 fw-bold fs-8"
+                                class="badge badge-light-dark px-4 py-3 fw-bold fs-8"
                                 id="badge-table">
 
                                 No Table
@@ -166,6 +158,14 @@
                             </span>
 
                         @endif
+
+                        <span
+                            class="badge badge-light-success px-4 py-3 fw-bold fs-8"
+                            id="badge-payment-status">
+
+                            Unpaid
+
+                        </span>
 
                     </div>
 
@@ -337,7 +337,7 @@
                         </div>
 
                         <div class="text-muted fs-6 fw-semibold">
-                            Scan or select products to begin.
+                            Select products to begin.
                         </div>
 
                     </div>
@@ -374,13 +374,13 @@
                 <!-- ===================================================== -->
                 <!-- STICKY BOTTOM ACTION BAR -->
                 <!-- ===================================================== -->
-                <div class="border-top p-4 cart-action d-none">
+                <div class="border-top p-4">
 
                     <!-- ===================================================== -->
                     <!-- ORDER UTILITIES -->
                     <!-- ===================================================== -->
                     <div class="row g-2 mb-3">
-                        <div class="col-12 mb-2">
+                        <div class="col-12 mb-2 cart-action d-none">
 
                             <button
                                 class="btn btn-light w-100 fw-bold py-3 rounded-4"
@@ -402,7 +402,7 @@
 
                         <!-- VOID -->
                         <div
-                            class="col-6 d-none"
+                            class="col-6 cart-action d-none"
                             id="void-order-column">
 
                            <button
@@ -421,7 +421,7 @@
 
                         <!-- REFUND -->
                         <div
-                            class="col-6 d-none"
+                            class="col-6 cart-action d-none"
                             id="refund-order-column">
 
                             <button
@@ -461,7 +461,7 @@
 
                             </div>
 
-                            <div class="col">
+                            <div class="col cart-action d-none">
 
                                 <button
                                     class="btn btn-success w-100 py-4 fs-4 rounded-4"
@@ -479,7 +479,7 @@
 
                         @else
 
-                            <div class="col-12">
+                            <div class="col cart-action d-none">
 
                                 <button
                                     class="btn btn-success w-100 py-4 fs-2 rounded-4 shadow-sm"
@@ -1379,7 +1379,7 @@
         tabindex="-1"
         aria-hidden="true">
 
-        <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
 
             <div class="modal-content border-0 rounded-4 shadow-sm overflow-hidden">
 
@@ -1425,7 +1425,7 @@
                             data-hide-search="true">
 
                             <option value="">
-                                Select Station
+                                --
                             </option>
 
                         </select>

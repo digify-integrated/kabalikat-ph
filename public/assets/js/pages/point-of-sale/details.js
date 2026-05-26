@@ -44,6 +44,7 @@ let kitchenRoutes = [];
 
                             if (data.success) {
                                 sessionStorage.setItem('shop_order_id', data.shop_order_id);
+                                sessionStorage.setItem('shop_order_number', data.order_number);
                                 $('#shop-register-order-modal').modal('hide');
                                 loadCart(data.shop_order_id, {
                                     silent: true
@@ -261,7 +262,7 @@ let kitchenRoutes = [];
 
         if (paymentStatus === 'Paid') return 'badge-light-success';
 
-        if (paymentStatus === 'Unpaid') return 'badge-light-warning';
+        if (paymentStatus === 'Unpaid') return 'badge-light-danger';
 
         return 'badge-light-primary';
     };
@@ -950,10 +951,14 @@ let kitchenRoutes = [];
             $('#order-id')
                 .text(currentOrderId);
 
+            $('#send-kitchen-ticket').removeClass('d-none');
+
         } else {
 
             $('#order-id')
                 .text('No Active Order');
+
+            $('#send-kitchen-ticket').addClass('d-none');
         }
 
         /*
@@ -1034,7 +1039,7 @@ let kitchenRoutes = [];
 
         $('#manage-payment-button').prop('disabled', false);
 
-        $('#kitchen-button').prop('disabled', false);
+        $('#send-kitchen-ticket').prop('disabled', false);
 
         $('#cancel-button').prop('disabled', false);
 
@@ -1065,9 +1070,22 @@ let kitchenRoutes = [];
         |--------------------------------------------------------------------------
         */
 
-        $('#order-id').text(
-            order.order_number ?? '--'
-        );
+        const currentOrderId = sessionStorage.getItem('shop_order_number');
+
+        if (currentOrderId) {
+
+            $('#order-id')
+                .text(currentOrderId);
+
+            $('#send-kitchen-ticket').removeClass('d-none');
+
+        } else {
+
+            $('#order-id')
+                .text('No Active Order');
+
+            $('#send-kitchen-ticket').addClass('d-none');
+        }
 
         /*
         |--------------------------------------------------------------------------
@@ -1086,7 +1104,7 @@ let kitchenRoutes = [];
         $('#badge-table').text(
             order.table_number
                 ? `${order.floor_plan_name} • Table ${order.table_number}`
-                : 'No Table'
+                : 'No Table Selected'
         );
 
         /*
@@ -1129,7 +1147,7 @@ let kitchenRoutes = [];
         |--------------------------------------------------------------------------
         */
 
-        sessionStorage.setItem('shop_order_number', order.shop_order_number);
+        sessionStorage.setItem('shop_order_number', order.order_number);
 
         $('#order-id').text(
             order.order_number ?? '--'
@@ -1148,7 +1166,7 @@ let kitchenRoutes = [];
         $('#badge-table').text(
             order.table_number
                 ? `${order.floor_plan_name} • Table ${order.table_number}`
-                : 'No Table'
+                : 'No Table Selected'
         );
 
         $('#badge-order-type').text(order.order_type);
@@ -1284,7 +1302,7 @@ let kitchenRoutes = [];
 
             $('#manage-payment-button').prop('disabled', true);
 
-            $('#kitchen-button').prop('disabled', true);
+            $('#send-kitchen-ticket').prop('disabled', true);
 
             $('#cancel-button').prop('disabled', true);
 
@@ -1339,7 +1357,7 @@ let kitchenRoutes = [];
 
             $('#manage-payment-button').prop('disabled', false);
 
-            $('#kitchen-button').prop('disabled', false);
+            $('#send-kitchen-ticket').prop('disabled', false);
 
             $('#cancel-button').prop('disabled', false);
 
@@ -1364,6 +1382,9 @@ let kitchenRoutes = [];
 
             $('.cart-action')
                 .removeClass('d-none');
+
+            $('#send-kitchen-ticket')
+            .removeClass('d-none');    
 
             return;
         }
@@ -2918,121 +2939,121 @@ let kitchenRoutes = [];
         if (!items.length) {
 
             $('#kitchen-items-container').html(`
-
                 <div class="text-center py-15">
-
-                    <div class="fw-bold fs-3 mb-2">
+                    <div class="fw-bold fs-2 mb-2">
                         No Kitchen Updates
                     </div>
-
-                    <div class="text-muted">
-                        All items are already synced with kitchen
+                    <div class="text-muted fs-6">
+                        All items are already synced
                     </div>
-
                 </div>
-
             `);
 
             return;
         }
 
-        const html = items.map(item => {
+        const html = `
+            <div class="row g-4">
+                ${items.map(item => {
 
-            return `
+                    const style = getKitchenActionStyle(item.action_type);
 
-            <label
-                class="card border border-gray-300 border-hover-primary cursor-pointer rounded-4 kitchen-item-card">
+                    return `
+                    <div class="col-12 col-md-6 col-xl-4">
 
-                <div class="card-body p-4">
+                        <div class="
+                            card
+                            border-2
+                            ${style.border}
+                            shadow-sm
+                            rounded-4
+                            kitchen-grid-item
+                            h-100
+                            cursor-pointer
+                            overflow-hidden
+                            position-relative
+                        ">
 
-                    <div class="d-flex align-items-center">
+                            <!-- LEFT ACCENT BAR -->
+                            <div class="
+                                position-absolute
+                                top-0
+                                start-0
+                                h-100
+                                ${style.accent}
+                            " style="width:5px;"></div>
 
-                        <!-- CHECK -->
-                        <div class="form-check form-check-custom form-check-solid me-4">
+                           <!-- HEADER -->
+                            <div class="
+                                ${style.header}
+                                px-4 py-3
+                                d-flex justify-content-between align-items-center
+                            ">
 
-                            <input
-                                class="form-check-input kitchen-item-checkbox"
+                                <div class="form-check form-check-custom form-check-solid d-none">
+                                    <input
+                                        type="checkbox"
+                                        class="form-check-input kitchen-item-checkbox"
+                                        data-order-item-id="${item.shop_order_item_id}"
+                                        data-quantity="${item.quantity}"
+                                        data-action="${item.action_type}"
+                                    >
+                                </div>
 
-                                type="checkbox"
+                                ${renderKitchenActionBadge(item.action_type)}
 
-                                data-order-item-id="${item.shop_order_item_id}"
-
-                                data-quantity="${item.quantity}"
-
-                                data-action="${item.action_type}">
-
-                        </div>
-
-                        <!-- INFO -->
-                        <div class="flex-grow-1">
-
-                            <div class="fw-bold fs-5">
-
-                                ${item.product_name}
+                                <i class="${style.icon} fs-2 ${style.text}"></i>
 
                             </div>
 
-                            <div class="text-muted fs-7">
+                            <!-- BODY -->
+                            <div class="card-body p-4 d-flex flex-column">
 
-                                Qty:
-                                ${item.quantity}
+                                <div class="fw-bold fs-3 mb-2 text-dark">
+                                    ${item.product_name}
+                                </div>
 
-                                ${
-                                    item.order_note
-                                        ? `• ${item.order_note}`
-                                        : ''
-                                }
+                                <div class="d-flex align-items-center justify-content-between mb-3">
+
+                                    <div class="fs-2 fw-bold ${style.text}">
+                                        Qty: ${item.quantity}
+                                    </div>
+
+                                    ${renderKitchenPriority(item)}
+
+                                </div>
+
+                                <!-- NOTE -->
+                                <div class="mb-3">
+
+                                    <div class="text-muted fs-7 fw-bold mb-1">
+                                        Order Note
+                                    </div>
+
+                                    <div class="fs-7 text-dark">
+                                        ${item.note || '—'}
+                                    </div>
+
+                                </div>
+
+                                <!-- STATUS -->
+                                <div class="mt-auto">
+
+                                    ${renderKitchenRouteSection(item)}
+
+                                </div>
 
                             </div>
-
-                        </div>
-
-                        <!-- STATUS -->
-                        <div>
-
-                            ${renderKitchenBadge(
-                                item.action_type
-                            )}
 
                         </div>
 
                     </div>
-
-                </div>
-
-            </label>
-
+                    `;
+                }).join('')}
+            </div>
             `;
-        }).join('');
 
-        $('#kitchen-items-container')
-            .html(html);
-    };
-
-    const renderKitchenBadge = (action) => {
-
-        const map = {
-
-            New: 'primary',
-
-            Add: 'success',
-
-            Reduce: 'warning',
-
-            Cancel: 'danger',
-
-            Refire: 'info',
-        };
-
-        return `
-
-            <span class="badge badge-light-${map[action] || 'secondary'}">
-
-                ${action}
-
-            </span>
-
-        `;
+        $('#kitchen-items-container').html(html);
     };
 
     const renderKitchenLoading = () => {
@@ -3041,7 +3062,7 @@ let kitchenRoutes = [];
 
             <div class="text-center py-15">
 
-                <div class="spinner-border text-warning"></div>
+                <div class="spinner-border text-primary"></div>
 
                 <div class="mt-5 text-muted">
                     Loading kitchen items...
@@ -3050,6 +3071,137 @@ let kitchenRoutes = [];
             </div>
 
         `;
+    };
+
+    const renderKitchenRouteSection = (item) => {
+
+        if (item.is_route_locked) {
+
+            return `
+                <div class="d-flex align-items-center gap-2">
+
+                    <span class="badge badge-light-danger px-4 py-2">
+
+                        <i class="ki-outline ki-lock-2 me-1"></i>
+
+                        ${item.locked_route_name}
+
+                    </span>
+
+                    <span class="text-muted fs-8">
+                        Locked to original station
+                    </span>
+
+                </div>
+            `;
+        }
+
+        return `
+            <span class="badge badge-light-primary px-4 py-2">
+                Select Route
+            </span>
+        `;
+    };
+
+    const renderKitchenActionBadge = (action) => {
+
+        const styles = {
+
+            New:
+                'badge-light-success',
+
+            Add:
+                'badge-light-primary',
+
+            Reduce:
+                'badge-light-warning',
+
+            Cancel:
+                'badge-light-danger',
+
+            Refire:
+                'badge-light-info',
+        };
+
+        return `
+            <span class="
+                badge
+                ${styles[action]}
+                fw-bold
+                fs-7
+                px-4
+                py-2
+            ">
+                ${action.toUpperCase()}
+            </span>
+        `;
+    };
+
+    const renderKitchenPriority = (item) => {
+
+        if (item.action_type === 'Cancel') {
+
+            return `
+                <span class="badge badge-danger fs-7">
+                    Immediate Kitchen Update
+                </span>
+            `;
+        }
+
+        if (item.action_type === 'Reduce') {
+
+            return `
+                <span class="badge badge-warning fs-7">
+                    Quantity Reduction
+                </span>
+            `;
+        }
+
+        return `
+            <span class="badge badge-light-success fs-7">
+                Ready To Send
+            </span>
+        `;
+    };
+
+    const getKitchenActionStyle = (action) => {
+
+        const map = {
+
+            New: {
+                header: 'bg-light-success',
+                border: 'border-success',
+                accent: 'border-success',
+                text: 'text-success',
+                icon: 'ki-check-circle'
+            },
+
+            Add: {
+                header: 'bg-light-primary',
+                border: 'border-primary',
+                accent: 'border-primary',
+                text: 'text-primary',
+                icon: 'ki-plus-circle'
+            },
+
+            Reduce: {
+                header: 'bg-light-warning',
+                border: 'border-warning',
+                accent: 'border-warning',
+                text: 'text-warning',
+                icon: 'ki-minus-circle'
+            },
+
+            Cancel: {
+                header: 'bg-light-danger',
+                border: 'border-danger',
+                accent: 'border-danger',
+                text: 'text-danger',
+                icon: 'ki-cross-circle'
+            }
+        };
+
+        return map[action] || map.New;
     };
 
     const createPaymentRow = ({
@@ -5735,7 +5887,7 @@ let kitchenRoutes = [];
                     .modal('hide');
 
                 showNotification(
-                    data.message
+                    data.message, 'success'
                 );
 
             } catch (error) {
@@ -5764,5 +5916,44 @@ let kitchenRoutes = [];
                 .html('');
         }
     );
+
+    $(document).on('click', '.kitchen-grid-item', function (e) {
+
+        // ignore checkbox clicks
+        if ($(e.target).closest('.kitchen-item-checkbox').length) {
+            return;
+        }
+
+        const checkbox = $(this).find('.kitchen-item-checkbox');
+
+        if (!checkbox.length) return;
+
+        checkbox.prop('checked', !checkbox.prop('checked'))
+                .trigger('change');
+    });
+
+    $(document).on('change', '.kitchen-item-checkbox', function () {
+
+        const card = $(this).closest('.kitchen-grid-item');
+
+        if ($(this).is(':checked')) {
+            card.addClass('kitchen-selected');
+        } else {
+            card.removeClass('kitchen-selected');
+        }
+
+        card.find('.selected-indicator')
+            .toggleClass('d-none', !$(this).is(':checked'));
+
+        updateKitchenSelectedCount();
+    });
+
+    $(document).on('keydown', '.kitchen-grid-item', function (e) {
+
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            $(this).trigger('click');
+        }
+    });
 
 });

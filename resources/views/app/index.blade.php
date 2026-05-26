@@ -37,11 +37,6 @@
                                 />
                             </div>
 
-                            <!-- Version Badge -->
-                            <span class="badge badge-light-primary fw-bold px-3 py-2 app-version-badge">
-                                v{{ $version }}
-                            </span>
-
                         </div>
 
                         <!-- App Name -->
