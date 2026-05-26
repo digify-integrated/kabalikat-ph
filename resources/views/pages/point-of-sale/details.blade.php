@@ -1409,108 +1409,53 @@
                 </div>
 
                 <!-- BODY -->
-                <div class="modal-body pt-5">
+               <div class="modal-body pt-5">
 
-                    <!-- STATION -->
-                    <div class="mb-6">
+                    <!-- SUMMARY -->
+                    <div class="
+                        d-flex
+                        align-items-center
+                        justify-content-between
+                        mb-5
+                        p-4
+                        rounded-4
+                        bg-light-primary
+                    ">
 
-                        <label class="form-label fw-bold fs-6 mb-2">
-                            Kitchen Station
-                        </label>
+                        <div>
 
-                        <select
-                            class="form-select form-select-solid"
-                            id="kitchen-route-select"
-                            data-control="select2"
-                            data-hide-search="true">
+                            <div class="fw-bold fs-3">
+                                Kitchen Dispatch Center
+                            </div>
 
-                            <option value="">
-                                --
-                            </option>
+                            <div class="text-muted fs-7">
+                                Assign stations only for NEW items
+                            </div>
 
-                        </select>
+                        </div>
+
+                        <div class="text-end">
+
+                            <div class="fw-bold fs-1"
+                                id="selected-kitchen-items-count">
+                                0
+                            </div>
+
+                            <div class="text-muted fs-8">
+                                Selected
+                            </div>
+
+                        </div>
 
                     </div>
 
                     <!-- ITEMS -->
-                    <div class="d-flex flex-column gap-3"
-                        id="kitchen-items-container">
-
-                        <!-- SAMPLE ITEM -->
-
-                        <label
-                            class="card border border-gray-300 border-hover-primary cursor-pointer rounded-4">
-
-                            <div class="card-body p-4">
-
-                                <div class="d-flex align-items-center">
-
-                                    <!-- CHECK -->
-                                    <div class="form-check form-check-custom form-check-solid me-4">
-
-                                        <input
-                                            class="form-check-input kitchen-item-checkbox"
-                                            type="checkbox">
-
-                                    </div>
-
-                                    <!-- INFO -->
-                                    <div class="flex-grow-1">
-
-                                        <div class="fw-bold fs-5">
-                                            Ribeye Steak
-                                        </div>
-
-                                        <div class="text-muted fs-7">
-
-                                            Qty:
-                                            2
-
-                                            •
-
-                                            Medium Rare
-
-                                        </div>
-
-                                    </div>
-
-                                    <!-- STATUS -->
-                                    <div>
-
-                                        <span class="badge badge-light-warning">
-
-                                            Not Sent
-
-                                        </span>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </label>
-
-                    </div>
+                    <div id="kitchen-items-container"></div>
 
                 </div>
 
                 <!-- FOOTER -->
                 <div class="modal-footer border-0 pt-0">
-
-                    <div class="me-auto">
-
-                        <span class="text-muted fs-7">
-
-                            <span id="selected-kitchen-items-count">
-                                0
-                            </span>
-
-                            item(s) selected
-
-                        </span>
-
-                    </div>
 
                     <button type="button"
                             class="btn btn-light"

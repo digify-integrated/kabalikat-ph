@@ -52583,10 +52583,6 @@ label.rating-label:hover~.rating-label>i {
     color: transparent
 }
 
-.cursor-pointer {
-    cursor: pointer
-}
-
 .cursor-default {
     cursor: default
 }
@@ -53860,25 +53856,20 @@ body {
     border-width: 2px !important;
 }
 
-.cursor-pointer {
+.kitchen-grid-item {
+    transition: all .15s ease;
     cursor: pointer;
 }
 
-.kitchen-grid-item {
-    transition: all 0.15s ease-in-out;
+.kitchen-grid-item:hover {
+    transform: translateY(-2px);
 }
 
-/* STRONG SELECTED STATE (OVERRIDES EVERYTHING) */
-.kitchen-grid-item.kitchen-selected {
-    border: 3px solid #0d6efd !important;
+.kitchen-selected {
+
+    border-width: 3px !important;
+
     box-shadow:
-        0 0 0 3px rgba(13, 110, 253, 0.25),
-        0 10px 25px rgba(0, 0, 0, 0.08);
-    transform: scale(1.03);
-    z-index: 5;
-}
-
-/* OPTIONAL: dim unselected when many items */
-.kitchen-grid-item:not(.kitchen-selected) {
-    opacity: 0.98;
+        0 0 0 4px rgba(54,153,255,.15),
+        0 8px 25px rgba(0,0,0,.08) !important;
 }

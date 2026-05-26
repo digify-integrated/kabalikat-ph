@@ -11,14 +11,10 @@ class KitchenTicketController extends Controller
     {
         $shopOrderId = $request->input('shop_order_id');
 
-        $selectedRouteId =
-            $request->input('kitchen_route_id');
-
-        $items =
-            json_decode(
-                $request->input('items'),
-                true
-            );
+        $items = json_decode(
+            $request->input('items'),
+            true
+        );
 
         if (
             !$shopOrderId
@@ -54,12 +50,6 @@ class KitchenTicketController extends Controller
                 ]);
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | RESOLVE FINAL ROUTES
-            |--------------------------------------------------------------------------
-            */
-
             $resolvedItems = [];
 
             foreach ($items as $item) {
@@ -72,7 +62,7 @@ class KitchenTicketController extends Controller
 
                 /*
                 |--------------------------------------------------------------------------
-                | GET ORIGINAL ROUTE FROM HISTORY
+                | ORIGINAL ROUTE
                 |--------------------------------------------------------------------------
                 */
 
@@ -104,39 +94,59 @@ class KitchenTicketController extends Controller
 
                     ->first();
 
-                /*
-                |--------------------------------------------------------------------------
-                | ROUTING RULES
-                |--------------------------------------------------------------------------
-                */
-
                 $finalRouteId = null;
+                $finalRouteName = null;
 
                 /*
                 |--------------------------------------------------------------------------
-                | NEW ITEMS
+                | NEW ITEMS REQUIRE MANUAL ROUTE
                 |--------------------------------------------------------------------------
                 */
 
                 if ($actionType === 'New') {
 
+                    $selectedRouteId =
+                        $item['kitchen_route_id'] ?? null;
+
+                    if (!$selectedRouteId) {
+
+                        DB::rollBack();
+
+                        return response()->json([
+                            'success' => false,
+                            'message' =>
+                                'Some new items do not have kitchen route assigned.'
+                        ]);
+                    }
+
+                    $route = DB::table('kitchen_route')
+                        ->where('id', $selectedRouteId)
+                        ->first();
+
+                    if (!$route) {
+
+                        DB::rollBack();
+
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Invalid kitchen route.'
+                        ]);
+                    }
+
                     $finalRouteId =
-                        $selectedRouteId;
+                        $route->id;
+
+                    $finalRouteName =
+                        $route->kitchen_route_name;
                 }
 
                 /*
                 |--------------------------------------------------------------------------
-                | ADD / REDUCE / CANCEL / REFIRE
+                | LOCKED ROUTE ACTIONS
                 |--------------------------------------------------------------------------
                 */
 
                 else {
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | MUST HAVE ORIGINAL ROUTE
-                    |--------------------------------------------------------------------------
-                    */
 
                     if (!$originalRoute) {
 
@@ -145,46 +155,29 @@ class KitchenTicketController extends Controller
                         return response()->json([
                             'success' => false,
                             'message' =>
-                                'Unable to determine original kitchen route for item.'
+                                'Unable to determine original route.'
                         ]);
                     }
 
                     $finalRouteId =
                         $originalRoute->kitchen_route_id;
-                }
 
-                /*
-                |--------------------------------------------------------------------------
-                | VALIDATE ROUTE EXISTS
-                |--------------------------------------------------------------------------
-                */
-
-                $route = DB::table('kitchen_route')
-                    ->where('id', $finalRouteId)
-                    ->first();
-
-                if (!$route) {
-
-                    DB::rollBack();
-
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Kitchen route not found.'
-                    ]);
+                    $finalRouteName =
+                        $originalRoute->kitchen_route_name;
                 }
 
                 $item['kitchen_route_id'] =
-                    $route->id;
+                    $finalRouteId;
 
                 $item['kitchen_route_name'] =
-                    $route->kitchen_route_name;
+                    $finalRouteName;
 
                 $resolvedItems[] = $item;
             }
 
             /*
             |--------------------------------------------------------------------------
-            | GROUP BY FINAL ROUTE
+            | GROUP BY ROUTE
             |--------------------------------------------------------------------------
             */
 
@@ -201,7 +194,7 @@ class KitchenTicketController extends Controller
 
                 /*
                 |--------------------------------------------------------------------------
-                | CREATE KITCHEN TICKET
+                | CREATE TICKET
                 |--------------------------------------------------------------------------
                 */
 
@@ -248,18 +241,19 @@ class KitchenTicketController extends Controller
 
                 /*
                 |--------------------------------------------------------------------------
-                | INSERT TICKET ITEMS
+                | INSERT ITEMS
                 |--------------------------------------------------------------------------
                 */
 
                 foreach ($routeItems as $item) {
 
-                    $orderItem = DB::table('shop_order_item')
-                        ->where(
-                            'id',
-                            $item['shop_order_item_id']
-                        )
-                        ->first();
+                    $orderItem =
+                        DB::table('shop_order_item')
+                            ->where(
+                                'id',
+                                $item['shop_order_item_id']
+                            )
+                            ->first();
 
                     DB::table('kitchen_ticket_item')
                         ->insert([
@@ -303,12 +297,6 @@ class KitchenTicketController extends Controller
                             'updated_at' =>
                                 now(),
                         ]);
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | UPDATE ORDER ITEM STATUS
-                    |--------------------------------------------------------------------------
-                    */
 
                     DB::table('shop_order_item')
                         ->where(
