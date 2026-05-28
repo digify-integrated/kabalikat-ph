@@ -3302,7 +3302,6 @@ document.addEventListener('DOMContentLoaded', () => {
         $('#kitchen-items-container').html(html);
     };
 
-
     const createPaymentRow = ({
         paymentMethodId,
         paymentMethodName
@@ -5694,80 +5693,80 @@ document.addEventListener('DOMContentLoaded', () => {
     );
 
     $(document).on(
-    'click',
-    '#send-kitchen-ticket',
-    async function () {
+        'click',
+        '#send-kitchen-ticket',
+        async function () {
 
-        try {
+            try {
 
-            const shopOrderId =
-                sessionStorage.getItem('shop_order_id');
+                const shopOrderId =
+                    sessionStorage.getItem('shop_order_id');
 
-            $('#selected-kitchen-items-count')
-                .text('0');
+                $('#selected-kitchen-items-count')
+                    .text('0');
 
-            $('#kitchen-items-container')
-                .html(renderKitchenLoading());
+                $('#kitchen-items-container')
+                    .html(renderKitchenLoading());
 
-            const csrf = getCsrfToken();
-            const ctx = getPageContext();
+                const csrf = getCsrfToken();
+                const ctx = getPageContext();
 
-            const params = new URLSearchParams();
+                const params = new URLSearchParams();
 
-            params.append(
-                'shop_order_id',
-                shopOrderId
-            );
+                params.append(
+                    'shop_order_id',
+                    shopOrderId
+                );
 
-            params.append(
-                'appId',
-                ctx.appId ?? ''
-            );
+                params.append(
+                    'appId',
+                    ctx.appId ?? ''
+                );
 
-            params.append(
-                'navigationMenuId',
-                ctx.navigationMenuId ?? ''
-            );
+                params.append(
+                    'navigationMenuId',
+                    ctx.navigationMenuId ?? ''
+                );
 
-            const response = await fetch(
-                '/kitchen-ticket/generate-kitchen-send-data',
-                {
-                    method: 'POST',
-                    body: params,
-                    headers: {
-                        'Content-Type':
-                            'application/x-www-form-urlencoded; charset=UTF-8',
+                const response = await fetch(
+                    '/kitchen-ticket/generate-kitchen-send-data',
+                    {
+                        method: 'POST',
+                        body: params,
+                        headers: {
+                            'Content-Type':
+                                'application/x-www-form-urlencoded; charset=UTF-8',
 
-                        Accept: 'application/json',
+                            Accept: 'application/json',
 
-                        ...(csrf
-                            ? { 'X-CSRF-TOKEN': csrf }
-                            : {}),
-                    },
-                }
-            );
+                            ...(csrf
+                                ? { 'X-CSRF-TOKEN': csrf }
+                                : {}),
+                        },
+                    }
+                );
 
-            const data =
-                await response.json();
+                const data =
+                    await response.json();
 
-            kitchenItems =
-                data.data || [];
+                kitchenItems =
+                    data.data || [];
 
-            kitchenRoutes =
-                data.routes || [];
+                kitchenRoutes =
+                    data.routes || [];
 
-            renderKitchenItems(kitchenItems);
+                renderKitchenItems(kitchenItems);
 
-        } catch (error) {
+            } catch (error) {
 
-            handleSystemError(
-                error,
-                'open_kitchen_modal_failed',
-                error.message
-            );
+                handleSystemError(
+                    error,
+                    'open_kitchen_modal_failed',
+                    error.message
+                );
+            }
         }
-    }
-);
+    );
 
     $(document).on(
         'click',

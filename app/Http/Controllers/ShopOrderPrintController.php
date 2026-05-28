@@ -131,552 +131,187 @@ class ShopOrderPrintController extends Controller
         ShopOrder $shopOrder,
         $cashier
     ): void {
-
-        /*
-        |--------------------------------------------------------------------------
-        | BRAND HEADER
-        |--------------------------------------------------------------------------
-        */
-
-        /*
-        |--------------------------------------------------------------------------
-        | COMPANY NAME
-        |--------------------------------------------------------------------------
-        */
-
-        $pdf->SetFont(
-            'helvetica',
-            'B',
-            11
-        );
-
-        /*
-        |--------------------------------------------------------------------------
-        | COMPANY DETAILS
-        |--------------------------------------------------------------------------
-        */
-
-        $pdf->SetFont(
-            'helvetica',
-            '',
-            7
-        );
+        // Standard printable width boundary context config for 80mm roll
+        $leftMargin = 4;
+        $rightMargin = 76;
+        $totalWidth = $rightMargin - $leftMargin; // 72mm printable width
 
         /*
         |--------------------------------------------------------------------------
         | BILL LABEL
         |--------------------------------------------------------------------------
         */
-
-        $pdf->Ln(2);
-
-        $pdf->SetFillColor(
-            235,
-            235,
-            235
-        );
-
-        $pdf->SetFont(
-            'helvetica',
-            'B',
-            9
-        );
-
-        $pdf->Cell(
-            0,
-            6,
-            'CUSTOMER BILL',
-            0,
-            1,
-            'C',
-            true
-        );
+        $pdf->SetFont('helvetica', 'B', 9);
+        $pdf->Cell(0, 5, 'CUSTOMER BILL', 0, 1, 'C');
+        $pdf->Ln(1);
 
         /*
         |--------------------------------------------------------------------------
         | ORDER DETAILS
         |--------------------------------------------------------------------------
         */
-
-        $pdf->Ln(2);
-
-        $pdf->SetFont(
-            'helvetica',
-            '',
-            7.5
-        );
+        $pdf->SetFont('helvetica', '', 7.5);
 
         $details = [
-
-            'Order No' =>
-                $shopOrder->order_number,
-
-            'Date' =>
-                now()->format(
-                    'M d, Y h:i A'
-                ),
-
-            'Cashier' =>
-                $cashier?->name ?? '',
-
-            'Register' =>
-                $shopOrder?->shopRegister?->shop_register_name,
+            'Order No' => $shopOrder->order_number,
+            'Date'     => now()->format('M d, Y h:i A'),
+            'Cashier'  => $cashier?->name ?? 'N/A',
+            'Register' => $shopOrder?->shopRegister?->shop_register_name ?? 'Main Reg',
         ];
 
         if ($shopOrder?->floorPlan?->floor_plan_name) {
-
-            $details['Area'] =
-                $shopOrder
-                    ->floorPlan
-                    ->floor_plan_name;
+            $details['Area'] = $shopOrder->floorPlan->floor_plan_name;
         }
 
         if ($shopOrder->table_number) {
-
-            $details['Table'] =
-                $shopOrder->table_number;
+            $details['Table'] = $shopOrder->table_number;
         }
 
         foreach ($details as $label => $value) {
-
-            $pdf->Cell(
-                19,
-                4,
-                $label,
-                0,
-                0
-            );
-
-            $pdf->Cell(
-                2,
-                4,
-                ':',
-                0,
-                0
-            );
-
-            $pdf->Cell(
-                0,
-                4,
-                $value,
-                0,
-                1
-            );
+            $pdf->Cell(16, 4, $label, 0, 0, 'L');
+            $pdf->Cell(3, 4, ':', 0, 0, 'C');
+            $pdf->Cell(0, 4, $value, 0, 1, 'L');
         }
 
         /*
         |--------------------------------------------------------------------------
-        | DIVIDER
+        | RECEIPT ITEM TABLE HEADER
         |--------------------------------------------------------------------------
         */
-
         $pdf->Ln(1);
-
-        $pdf->Line(
-            4,
-            $pdf->GetY(),
-            76,
-            $pdf->GetY()
-        );
-
-        $pdf->Ln(1.5);
-
-        /*
-        |--------------------------------------------------------------------------
-        | ITEM TABLE HEADER
-        |--------------------------------------------------------------------------
-        */
-
-        $pdf->SetFont(
-            'helvetica',
-            'B',
-            7.5
-        );
-
-        $pdf->Cell(
-            10,
-            5,
-            'QTY',
-            0,
-            0,
-            'L'
-        );
-
-        $pdf->Cell(
-            38,
-            5,
-            'ITEM',
-            0,
-            0,
-            'L'
-        );
-
-        $pdf->Cell(
-            24,
-            5,
-            'AMOUNT',
-            0,
-            1,
-            'R'
-        );
-
-        $pdf->Line(
-            4,
-            $pdf->GetY(),
-            76,
-            $pdf->GetY()
-        );
+        $pdf->Cell(0, 3, str_repeat('-', 46), 0, 1, 'C'); // Dynamic text divider string
+        
+        $pdf->SetFont('helvetica', 'B', 7.5);
+        $pdf->Cell(8, 4.5, 'QTY', 0, 0, 'L');
+        $pdf->Cell(42, 4.5, 'ITEM DESCRIPTION', 0, 0, 'L');
+        $pdf->Cell(22, 4.5, 'AMOUNT', 0, 1, 'R');
+        
+        $pdf->Cell(0, 3, str_repeat('-', 46), 0, 1, 'C');
 
         /*
         |--------------------------------------------------------------------------
-        | ITEMS
+        | ITEMS MAP & RENDER LOOP
         |--------------------------------------------------------------------------
         */
+        $pdf->SetFont('helvetica', '', 7.5);
 
-        $pdf->SetFont(
-            'helvetica',
-            '',
-            7.5
-        );
+        foreach ($shopOrder->items as $item) {
+            $currentY = $pdf->GetY();
+            
+            // QTY Column
+            $pdf->Cell(8, 4, number_format($item->quantity) . 'x', 0, 0, 'L');
 
-        foreach (
-            $shopOrder->items
-            as $item
-        ) {
+            // MultiCell variable height calculations management for long strings
+            $itemName = strtoupper($item->product_name);
+            $pdf->MultiCell(42, 4, $itemName, 0, 'L', false, 0);
+            $endY = $pdf->GetY();
+            
+            // Compute calculated multi-line height matching boundary limits
+            $lineHeight = $endY - $currentY;
+            if ($lineHeight < 4) {
+                $lineHeight = 4;
+            }
 
-            $startY = $pdf->GetY();
+            // Amount Column
+            $lineSubtotal = $item->line_subtotal ?? $item->subtotal ?? 0;
+            $pdf->SetXY($leftMargin + 50, $currentY);
+            $pdf->Cell(22, 4, number_format($lineSubtotal, 2), 0, 1, 'R');
 
-            $pdf->Cell(
-                10,
-                5,
-                number_format(
-                    $item->quantity
-                ),
-                0,
-                0,
-                'L'
-            );
-
-            $pdf->MultiCell(
-                38,
-                5,
-                strtoupper(
-                    $item->product_name
-                ),
-                0,
-                'L',
-                false,
-                0
-            );
-
-            $lineSubtotal =
-                $item->line_subtotal
-                ?? $item->subtotal
-                ?? 0;
-
-            $pdf->Cell(
-                24,
-                5,
-                'P ' .
-                number_format(
-                    $lineSubtotal,
-                    2
-                ),
-                0,
-                1,
-                'R'
-            );
+            // Reset tracking coordinates back to baseline after MultiCell line break adjustments
+            $pdf->SetY($currentY + $lineHeight);
 
             /*
             |--------------------------------------------------------------------------
-            | NOTES / VARIANTS
+            | REMARKS / NOTES VARIANT MODIFIER BLOCK
             |--------------------------------------------------------------------------
             */
-
             if (!empty($item->remarks)) {
-
-                $pdf->SetFont(
-                    'helvetica',
-                    'I',
-                    6.5
-                );
-
-                $pdf->Cell(
-                    10,
-                    3,
-                    '',
-                    0,
-                    0
-                );
-
-                $pdf->MultiCell(
-                    62,
-                    3,
-                    'Note: ' .
-                    $item->remarks,
-                    0,
-                    'L',
-                    false,
-                    1
-                );
-
-                $pdf->SetFont(
-                    'helvetica',
-                    '',
-                    7.5
-                );
+                $pdf->SetFont('helvetica', 'I', 7);
+                $pdf->Cell(8, 3.5, '', 0, 0);
+                $pdf->MultiCell(64, 3.5, '* Note: ' . $item->remarks, 0, 'L', false, 1);
+                $pdf->SetFont('helvetica', '', 7.5); // Fall back to table defaults
             }
-
-            if (
-                $pdf->GetY() - $startY < 5
-            ) {
-
-                $pdf->Ln(0.5);
-            }
+            $pdf->Ln(0.5);
         }
 
         /*
         |--------------------------------------------------------------------------
-        | DIVIDER
+        | BILL TOTALS SECTIONS
         |--------------------------------------------------------------------------
         */
-
+        $pdf->Cell(0, 3, str_repeat('-', 46), 0, 1, 'C');
         $pdf->Ln(1);
 
-        $pdf->Line(
-            4,
-            $pdf->GetY(),
-            76,
-            $pdf->GetY()
-        );
+        $this->renderAmountLine($pdf, 'Subtotal', $shopOrder->subtotal);
 
-        $pdf->Ln(2);
+        // Applied Service Charges/Surcharges Map
+        if (isset($shopOrder->appliedCharges)) {
+            foreach ($shopOrder->appliedCharges as $charge) {
+                $this->renderAmountLine($pdf, $charge->charge_type_name, $charge->charge_amount);
+            }
+        }
 
-        /*
-        |--------------------------------------------------------------------------
-        | TOTALS
-        |--------------------------------------------------------------------------
-        */
-
-        $pdf->SetFont(
-            'helvetica',
-            '',
-            7.5
-        );
-
-        $this->renderAmountLine(
-            $pdf,
-            'Subtotal',
-            $shopOrder->subtotal
-        );
-
-        /*
-        |--------------------------------------------------------------------------
-        | CHARGES
-        |--------------------------------------------------------------------------
-        */
-
-        foreach (
-            $shopOrder->appliedCharges
-            as $charge
-        ) {
-
-            $this->renderAmountLine(
-                $pdf,
-                $charge->charge_type_name,
-                $charge->charge_amount
-            );
+        // Applied Discount Deductions Map
+        if (isset($shopOrder->appliedDiscounts)) {
+            foreach ($shopOrder->appliedDiscounts as $discount) {
+                $this->renderAmountLine($pdf, $discount->discount_type_name, -$discount->discount_amount);
+            }
         }
 
         /*
         |--------------------------------------------------------------------------
-        | DISCOUNTS
+        | GRAND TOTAL WRAPPER BOX
         |--------------------------------------------------------------------------
         */
+        $pdf->Ln(1.5);
+        $pdf->Cell(0, 2, str_repeat('=', 31), 0, 1, 'R'); // Clean dual line separation anchor
 
-        foreach (
-            $shopOrder->appliedDiscounts
-            as $discount
-        ) {
-
-            $this->renderAmountLine(
-                $pdf,
-                $discount->discount_type_name,
-                $discount->discount_amount
-            );
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | GRAND TOTAL BOX
-        |--------------------------------------------------------------------------
-        */
-
+        $pdf->SetFont('helvetica', 'B', 10);
+        $pdf->Cell(35, 6, 'TOTAL DUE', 0, 0, 'L');
+        $pdf->Cell(37, 6, 'PHP ' . number_format($shopOrder->net_total, 2), 0, 1, 'R');
+        
+        $pdf->SetFont('helvetica', '', 7.5);
+        $pdf->Cell(0, 2, str_repeat('=', 31), 0, 1, 'R');
         $pdf->Ln(2);
 
-        $pdf->SetFillColor(
-            245,
-            245,
-            245
-        );
-
-        $pdf->SetFont(
-            'helvetica',
-            'B',
-            10
-        );
-
-        $pdf->Cell(
-            35,
-            8,
-            'TOTAL DUE',
-            0,
-            0,
-            'L',
-            true
-        );
-
-        $pdf->Cell(
-            37,
-            8,
-            'P ' .
-            number_format(
-                $shopOrder->net_total,
-                2
-            ),
-            0,
-            1,
-            'R',
-            true
-        );
+        /*
+        |--------------------------------------------------------------------------
+        | TAX ACCOUNTING BREAKDOWN
+        |--------------------------------------------------------------------------
+        */
+        $pdf->SetFont('helvetica', '', 6.8);
+        $this->renderAmountLine($pdf, 'VATable Sales', $shopOrder->vatable_sales);
+        $this->renderAmountLine($pdf, 'VAT Exempt Sales', $shopOrder->vat_exempt_sales);
+        $this->renderAmountLine($pdf, 'VAT Amount (12%)', $shopOrder->vat_amount);
 
         /*
         |--------------------------------------------------------------------------
-        | VAT BREAKDOWN
+        | TERMINAL FOOTER DECLARES
         |--------------------------------------------------------------------------
         */
-
-        $pdf->Ln(2);
-
-        $pdf->SetFont(
-            'helvetica',
-            '',
-            6.8
-        );
-
-        $this->renderAmountLine(
-            $pdf,
-            'VATable Sales',
-            $shopOrder->vatable_sales
-        );
-
-        $this->renderAmountLine(
-            $pdf,
-            'VAT Exempt Sales',
-            $shopOrder->vat_exempt_sales
-        );
-
-        $this->renderAmountLine(
-            $pdf,
-            'VAT Amount',
-            $shopOrder->vat_amount
-        );
-
-        /*
-        |--------------------------------------------------------------------------
-        | FOOTER
-        |--------------------------------------------------------------------------
-        */
-
         $pdf->Ln(4);
-
-        $pdf->SetFont(
-            'helvetica',
-            '',
-            7
-        );
-
-        $pdf->MultiCell(
-            0,
-            3.5,
-            'Thank you for dining with us!',
-            0,
-            'C'
-        );
-
+        $pdf->SetFont('helvetica', '', 7.5);
+        $pdf->MultiCell(0, 4, 'Thank you for dining with us!', 0, 'C');
         $pdf->Ln(1);
 
-        $pdf->SetFont(
-            'helvetica',
-            'B',
-            6.8
-        );
-
-        $pdf->MultiCell(
-            0,
-            3.5,
-            'THIS IS NOT AN OFFICIAL RECEIPT',
-            0,
-            'C'
-        );
+        $pdf->SetFont('helvetica', 'B', 7);
+        $pdf->MultiCell(0, 4, 'THIS IS NOT AN OFFICIAL RECEIPT', 0, 'C');
 
         /*
         |--------------------------------------------------------------------------
-        | POWERED BY
+        | SYSTEM TRACE FOOTPRINT
         |--------------------------------------------------------------------------
         */
-
         $pdf->Ln(2);
-
-        $pdf->SetFont(
-            'helvetica',
-            '',
-            6
-        );
-
-        $pdf->SetTextColor(
-            120,
-            120,
-            120
-        );
-
-        $pdf->MultiCell(
-            0,
-            3,
-            'Generated ' .
-            now()->format(
-                'M d, Y h:i:s A'
-            ),
-            0,
-            'C'
-        );
+        $pdf->SetFont('helvetica', '', 6);
+        $pdf->SetTextColor(100, 100, 100);
+        $pdf->MultiCell(0, 3, 'System Generated: ' . now()->format('M d, Y h:i:s A'), 0, 'C');
     }
 
-    private function renderAmountLine(
-        TCPDF $pdf,
-        string $label,
-        float $amount
-    ): void {
-
-        $pdf->Cell(
-            42,
-            4,
-            $label,
-            0,
-            0
-        );
-
-        $pdf->Cell(
-            30,
-            4,
-            'P ' .
-            number_format(
-                $amount,
-                2
-            ),
-            0,
-            1,
-            'R'
-        );
+    private function renderAmountLine(TCPDF $pdf, string $label, float $amount): void
+    {
+        // Total design width matches exact item column structure layout bounds cleanly
+        $pdf->Cell(45, 4, $label, 0, 0, 'L');
+        $pdf->Cell(27, 4, number_format($amount, 2), 0, 1, 'R');
     }
 }

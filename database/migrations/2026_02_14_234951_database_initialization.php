@@ -2695,41 +2695,6 @@ return new class extends Migration
         });
 
         /* =============================================================================================
-            TABLE: Kitchen Ticket History
-        ============================================================================================= */
-
-        Schema::create('kitchen_ticket_history', function (Blueprint $table) {
-
-            $table->id();
-
-            $table->foreignId('kitchen_ticket_id')
-                ->constrained('kitchen_ticket')
-                ->cascadeOnDelete();
-
-            $table->foreignId('kitchen_ticket_item_id')
-                ->nullable()
-                ->constrained('kitchen_ticket_item')
-                ->nullOnDelete();
-
-            $table->string('activity');
-
-            $table->text('remarks')
-                ->nullable();
-
-            $table->foreignId('created_by')
-                ->nullable()
-                ->constrained('users')
-                ->nullOnDelete();
-
-            $table->string('created_by_name')
-                ->nullable();
-
-            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
-
-            $table->timestamps();
-        });
-
-        /* =============================================================================================
             TABLE: 
         ============================================================================================= */
     }
@@ -2813,7 +2778,6 @@ return new class extends Migration
         Schema::dropIfExists('product_kitchen_route');
         Schema::dropIfExists('kitchen_ticket');
         Schema::dropIfExists('kitchen_ticket_item');
-        Schema::dropIfExists('kitchen_ticket_history');
         Schema::dropIfExists('shop_order');
         Schema::dropIfExists('shop_register');
         Schema::dropIfExists('nationality');

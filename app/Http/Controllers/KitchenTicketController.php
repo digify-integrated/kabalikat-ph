@@ -2,9 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Product;
+use App\Models\ProductBOM;
+use App\Models\ShopOrder;
+use App\Models\StockLevel;
+use App\Models\StockMovement;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Validator;
 
@@ -114,42 +120,87 @@ class KitchenTicketController extends Controller
                     ]);
                 }
 
+                /*
+                |--------------------------------------------------------------------------
+                | INSERT/PROCESS ITEMS (SMART REDUCTION PATCH)
+                |--------------------------------------------------------------------------
+                */
                 foreach ($routeItems as $item) {
-                    $orderItem = DB::table('shop_order_item')->where('id', $item['shop_order_item_id'])->first();
 
-                    DB::table('kitchen_ticket_item')->insert([
-                        'kitchen_ticket_id'  => $ticketId,
-                        'shop_order_item_id' => $item['shop_order_item_id'],
-                        'product_id'         => $orderItem->product_id,
-                        'product_name'       => $orderItem->product_name,
-                        'action_type'        => $item['action_type'],
-                        'quantity'           => $item['quantity'],
-                        'order_note'         => $item['note'] ?? null,
-                        'item_status'        => 'Queued',
-                        'queued_at'          => now(),
-                        'created_by'         => auth()->id(),
-                        'created_by_name'    => auth()->user()->name ?? 'System',
-                        'created_at'         => now(),
-                        'updated_at'         => now(),
-                    ]);
+                    $orderItem = DB::table('shop_order_item')
+                        ->where('id', $item['shop_order_item_id'])
+                        ->first();
 
+                    if (in_array($item['action_type'], ['Reduce', 'Cancel'])) {
+                        
+                        $qtyToReduce = $item['quantity'];
+
+                        // 1. Try to find 'Queued' lines first to safely remove without disturbing the cooks
+                        $activeKitchenLines = DB::table('kitchen_ticket_item')
+                            ->where('kitchen_ticket_id', $ticketId)
+                            ->where('shop_order_item_id', $item['shop_order_item_id'])
+                            ->whereIn('item_status', ['Queued', 'Preparing'])
+                            ->orderBy('item_status', 'asc') // 'Queued' targets first, then 'Preparing'
+                            ->orderBy('id', 'desc')
+                            ->get();
+
+                        foreach ($activeKitchenLines as $line) {
+                            if ($qtyToReduce <= 0) break;
+
+                            if ($line->quantity <= $qtyToReduce) {
+                                // This entire kitchen row is wiped out by the reduction
+                                $qtyToReduce -= $line->quantity;
+
+                                DB::table('kitchen_ticket_item')
+                                    ->where('id', $line->id)
+                                    ->update([
+                                        'item_status' => 'Cancelled',
+                                        'cancelled_at' => now(),
+                                        'updated_at' => now()
+                                    ]);
+                            } else {
+                                // Deduct partially from this kitchen row quantity
+                                DB::table('kitchen_ticket_item')
+                                    ->where('id', $line->id)
+                                    ->decrement('quantity', $qtyToReduce);
+                                
+                                $qtyToReduce = 0;
+                            }
+                        }
+
+                        // Optional Log Entry: If you still need a paper trail for the reduction action 
+                        // without cluttering your checklist view, add a dedicated history log row here.
+
+                    } else {
+                        // 'New' or 'Add' - Regular append behavior
+                        DB::table('kitchen_ticket_item')->insert([
+                            'kitchen_ticket_id' => $ticketId,
+                            'shop_order_item_id' => $item['shop_order_item_id'],
+                            'product_id' => $orderItem->product_id,
+                            'product_name' => $orderItem->product_name,
+                            'action_type' => $item['action_type'],
+                            'quantity' => $item['quantity'],
+                            'order_note' => $item['note'] ?? null,
+                            'item_status' => 'Queued',
+                            'queued_at' => now(),
+                            'created_by' => auth()->id(),
+                            'created_by_name' => auth()->user()->name ?? 'System',
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    }
+
+                    // Update main order line status mapping
                     DB::table('shop_order_item')
                         ->where('id', $item['shop_order_item_id'])
                         ->update([
                             'item_status' => $this->mapKitchenStatus($item['action_type']),
                             'last_log_by' => auth()->id(),
-                            'updated_at'  => now(),
+                            'updated_at' => now(),
                         ]);
                 }
 
-                /*
-                |--------------------------------------------------------------------------
-                |  FIX: RE-EVALUATE MASTER STATUS
-                |--------------------------------------------------------------------------
-                | When an extra item drops onto an active ticket, force the master entry 
-                | to adjust down according to the lowest incomplete item status.
-                | This pushes the card layout container visually back to "Queued".
-                */
+                // Recalculate ticket status after processing all item updates
                 $this->recalculateTicketStatus($ticketId);
 
                 $createdTickets[] = $ticketId;
@@ -178,72 +229,296 @@ class KitchenTicketController extends Controller
     {
         $ticketItemId = $request->input('ticket_item_id');
 
-        // 1. Find the exact row being interacted with
-        $baseItem = DB::table('kitchen_ticket_item')->where('id', $ticketItemId)->first();
+        // 1. START THE TRANSACTION IMMEDIATELY AT THE TOP
+        DB::beginTransaction();
 
-        if (!$baseItem) {
-            return response()->json(['success' => false, 'message' => 'Item not found.']);
-        }
+        try {
+            // 2. Find the exact row and lock it for update to prevent concurrent race conditions
+            $baseItem = DB::table('kitchen_ticket_item')
+                ->where('id', $ticketItemId)
+                ->lockForUpdate()
+                ->first();
 
-        $ticketId = $baseItem->kitchen_ticket_id;
+            if (!$baseItem) {
+                DB::rollBack();
+                return response()->json(['success' => false, 'message' => 'Item not found.']);
+            }
 
-        // Calculate actual remaining quantity for this specific product record line
-        $groupedItems = DB::table('kitchen_ticket_item')
-            ->where('kitchen_ticket_id', $ticketId)
-            ->where('shop_order_item_id', $baseItem->shop_order_item_id)
-            ->get();
+            $ticketId = $baseItem->kitchen_ticket_id;
 
-        $baseQty   = $groupedItems->where('action_type', 'New')->sum('quantity');
-        $addQty    = $groupedItems->where('action_type', 'Add')->sum('quantity');
-        $reduceQty = $groupedItems->where('action_type', 'Reduce')->sum('quantity');
-        $cancelQty = $groupedItems->where('action_type', 'Cancel')->sum('quantity');
-        
-        $remainingQty = max(($baseQty + $addQty) - ($reduceQty + $cancelQty), 0);
+            // Calculate actual remaining quantity for this specific product record line
+            $groupedItems = DB::table('kitchen_ticket_item')
+                ->where('kitchen_ticket_id', $ticketId)
+                ->where('shop_order_item_id', $baseItem->shop_order_item_id)
+                ->get();
 
-        // Handle Cancellations / Structural Voids
-        if ($remainingQty <= 0 || $baseItem->item_status === 'Cancelled') {
+            $baseQty   = $groupedItems->where('action_type', 'New')->sum('quantity');
+            $addQty    = $groupedItems->where('action_type', 'Add')->sum('quantity');
+            $reduceQty = $groupedItems->where('action_type', 'Reduce')->sum('quantity');
+            $cancelQty = $groupedItems->where('action_type', 'Cancel')->sum('quantity');
+            
+            $remainingQty = max(($baseQty + $addQty) - ($reduceQty + $cancelQty), 0);
+
+            /*
+            |--------------------------------------------------------------------------
+            | HANDLE CANCELLATIONS / STRUCTURAL VOIDS
+            |--------------------------------------------------------------------------
+            | If the line is cancelled or net available quantities are gone, enforce 
+            | status termination and commit safely inside our transactional scope.
+            */
+            if ($remainingQty <= 0 || $baseItem->item_status === 'Cancelled') {
+                DB::table('kitchen_ticket_item')
+                    ->where('id', $ticketItemId)
+                    ->update([
+                        'item_status' => 'Cancelled',
+                        'cancelled_at' => now(),
+                        'updated_at' => now()
+                    ]);
+
+                $this->recalculateTicketStatus($ticketId);
+                
+                DB::commit(); // ✅ Commit the transactional lock state cleanly
+                
+                return response()->json([
+                    'success' => true, 
+                    'message' => 'Item has been cancelled and skipped from inventory processing.'
+                ]);
+            }
+
+            // 3. Advance the status cycle strictly for THIS database record line
+            $currentStatus = $baseItem->item_status;
+
+            // Workflow matching line progression: Queued -> Preparing -> Ready -> Served
+            if ($currentStatus === 'Queued') {
+                $next = 'Preparing';
+            } elseif ($currentStatus === 'Preparing') {
+                $next = 'Ready';
+            } else {
+                $next = 'Served'; 
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | INTERCEPT STATUS SWAP: RUN INVENTORY ENGINE ON 'PREPARING'
+            |--------------------------------------------------------------------------
+            */
+            if ($currentStatus === 'Queued' && $next === 'Preparing') {
+                
+                // Trace the source Shop Order from the item row record
+                $shopOrderItem = DB::table('shop_order_item')
+                    ->where('id', $baseItem->shop_order_item_id)
+                    ->first();
+                
+                if ($shopOrderItem) {
+                    $shopOrder = ShopOrder::with(['shopRegister'])->find($shopOrderItem->shop_order_id);
+                    
+                    if ($shopOrder) {
+                        // Resolve warehouse scope assignments
+                        $warehouseIds = DB::table('shop_register_warehouse')
+                            ->where('shop_register_id', $shopOrder->shop_register_id)
+                            ->pluck('warehouse_id')
+                            ->toArray();
+
+                        if (empty($warehouseIds)) {
+                            throw new \Exception('No warehouse assigned to the register serving this order.');
+                        }
+
+                        // Locate baseline Master Inventory tracking scheme
+                        $product = Product::find($shopOrderItem->product_id);
+
+                        if ($product) {
+                            $bomItems = ProductBom::where('product_id', $product->id)->get();
+
+                            /*
+                            |--------------------------------------------------------------------------
+                            | SCENARIO A: PRODUCT MAPS TO A RECIPE / BILL OF MATERIALS
+                            |--------------------------------------------------------------------------
+                            */
+                            if ($bomItems->isNotEmpty()) {
+                                foreach ($bomItems as $bom) {
+                                    $bomProduct = Product::find($bom->bom_product_id);
+
+                                    if (!$bomProduct || $bomProduct->track_inventory === 'No') {
+                                        continue;
+                                    }
+
+                                    // Use the exact remaining calculation balance for accuracy
+                                    $requiredQuantity = $bom->quantity * $remainingQty;
+
+                                    $this->deductInventory(
+                                        product: $bomProduct,
+                                        quantity: $requiredQuantity,
+                                        referenceNumber: $shopOrder->order_number,
+                                        warehouseIds: $warehouseIds,
+                                        remarks: 'KDS - Production line component consumption'
+                                    );
+                                }
+                            } 
+                            /*
+                            |--------------------------------------------------------------------------
+                            | SCENARIO B: STANDALONE TRACED INVENTORY LINE
+                            |--------------------------------------------------------------------------
+                            */
+                            elseif ($product->track_inventory === 'Yes') {
+                                $this->deductInventory(
+                                    product: $product,
+                                    quantity: $remainingQty, // ✅ Fixed: Scale by net remaining balance instead of stale row variables
+                                    referenceNumber: $shopOrder->order_number,
+                                    warehouseIds: $warehouseIds,
+                                    remarks: 'KDS - Item production started'
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 4. Update the exact database row entry
             DB::table('kitchen_ticket_item')
                 ->where('id', $ticketItemId)
                 ->update([
-                    'item_status' => 'Cancelled',
-                    'cancelled_at' => now()
+                    'item_status' => $next,
+                    'started_at' => $next === 'Preparing' ? now() : DB::raw('started_at'),
+                    'ready_at'   => $next === 'Ready'     ? now() : DB::raw('ready_at'),
+                    'served_at'  => $next === 'Served'    ? now() : DB::raw('served_at'),
+                    'updated_at' => now()
                 ]);
 
+            // 5. Recalculate master ticket status card
             $this->recalculateTicketStatus($ticketId);
-            return response()->json(['success' => true, 'message' => 'Item cancelled.']);
+
+            DB::commit();
+            return response()->json(['success' => true]);
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            report($e);
+
+            return response()->json([
+                'success' => false, 
+                'message' => 'Inventory Error: ' . $e->getMessage()
+            ], 422);
+        }
+    }
+
+    private function deductInventory(Product $product, float $quantity, string $referenceNumber, array $warehouseIds, ?string $remarks = null ) {
+        if (empty($warehouseIds)) {
+            throw new \Exception("No warehouse assigned to register.");
         }
 
-        // 2. Advance the status cycle strictly for THIS database record line
-        $currentStatus = $baseItem->item_status;
+        // 1. Initialize query on the stock_level table
+        $query = StockLevel::query()
+            ->with('inventoryLot')
+            ->where('product_id', $product->id)
+            ->whereIn('warehouse_id', $warehouseIds)
+            ->where('quantity', '>', 0);
 
-        // Workflow matching line progression: Queued -> Preparing -> Ready -> Served
-        if ($currentStatus === 'Queued') {
-            $next = 'Preparing';
-        } elseif ($currentStatus === 'Preparing') {
-            $next = 'Ready';
-        } else {
-            $next = 'Served'; 
+        /*
+        |--------------------------------------------------------------------------
+        | DYNAMIC INVENTORY FLOW ORDERING STRATEGY
+        |--------------------------------------------------------------------------
+        | We evaluate the product's evaluation strategy and alter the query order.
+        */
+        $flowStrategy = $product->inventory_flow ?? 'FIFO';
+
+        switch ($flowStrategy) {
+            case 'LIFO':
+                // Last-In, First-Out: Deduct the newest records first
+                $query->orderBy('stock_level.id', 'desc');
+                break;
+
+            case 'FEFO':
+                // First-Expired, First-Out: Bring earliest expiration dates to the front
+                $query->join('inventory_lot', 'stock_level.inventory_lot_id', '=', 'inventory_lot.id')
+                    ->select('stock_level.*') // Avoid column collisions with inventory_lot.id
+                    ->orderBy('inventory_lot.expiration_date', 'asc')
+                    ->orderBy('stock_level.id', 'asc'); // Tie-breaker fallback
+                break;
+
+            case 'FIFO':
+            case 'Manual':
+            default:
+                // First-In, First-Out / Manual Default: Deduct oldest records first
+                $query->orderBy('stock_level.id', 'asc');
+                break;
         }
 
-        // 3. Update the exact database row entry
-        DB::table('kitchen_ticket_item')
-            ->where('id', $ticketItemId)
-            ->update([
-                'item_status' => $next,
-                'started_at' => $next === 'Preparing' ? now() : DB::raw('started_at'),
-                'ready_at'   => $next === 'Ready'     ? now() : DB::raw('ready_at'),
-                'served_at'  => $next === 'Served'    ? now() : DB::raw('served_at'),
+       
+
+        // 2. Execute query to retrieve eligible stock lines
+        $stocks = $query->get();
+
+        if ($stocks->isEmpty()) {
+            throw new \Exception("No stock found for: {$product->product_name} using {$flowStrategy} strategy.");
+        }
+
+        $remaining = $quantity;
+
+        foreach ($stocks as $stock) {
+
+            if ($remaining <= 0) {
+                break;
+            }
+
+            $deduct = min($remaining, $stock->quantity);
+
+            if ($deduct <= 0) {
+                continue;
+            }
+
+            // Decrement using your atomic operational logic
+            $stock->decrement('quantity', $deduct);
+            $stock->refresh();
+
+            // Dynamically re-evaluate stock threshold statuses
+            $stock->update([
+                'stock_status' => match (true) {
+                    $stock->quantity <= 0 => 'Out of Stock',
+                    $stock->quantity <= ($product->reorder_level ?? 0) => 'Low Stock',
+                    default => 'In Stock',
+                },
             ]);
 
-        // 4. Recalculate master ticket status card
-        $this->recalculateTicketStatus($ticketId);
+            /*
+            |--------------------------------------------------------------------------
+            | AUDIT REMARKS CONTEXT MANIPULATION
+            |--------------------------------------------------------------------------
+            */
+            if (empty($remarks)) {
+                $remarks = (request()->is('*kitchen-ticket*') || request()->is('*toggle-item-status*'))
+                    ? 'KDS - Item production started'
+                    : 'POS checkout payment deduction';
+            }
 
-        return response()->json(['success' => true]);
+            // Append the structural strategy to the remarks ledger for audit clarity
+            $finalRemarks = sprintf("%s (%s)", $remarks, $flowStrategy);
+
+            StockMovement::create([
+                'product_id' => $product->id,
+                'product_name' => $product->product_name,
+                'warehouse_id' => $stock->warehouse_id,
+                'warehouse_name' => $stock->warehouse_name ?? 'Unknown Warehouse',
+                'inventory_lot_id' => $stock->inventory_lot_id,
+                'movement_type' => 'SALE',
+                'quantity' => $deduct,
+                'reference_type' => 'Shop Order',
+                'reference_number' => $referenceNumber,
+                'remarks' => $finalRemarks,
+                'last_log_by' => Auth::id() ?? 1,
+            ]);
+
+            $remaining -= $deduct;
+        }
+
+        // 3. Fallback check if the batch pool ran dry before full clearance
+        if ($remaining > 0) {
+            throw new \Exception("Insufficient stock for {$product->product_name}. Short by {$remaining} units under policy {$flowStrategy}.");
+        }
     }
 
     private function recalculateTicketStatus($ticketId)
     {
-        // Fetch all items belonging to this ticket
+        // 1. Fetch all individual database rows belonging to this ticket
         $items = DB::table('kitchen_ticket_item')
             ->where('kitchen_ticket_id', $ticketId)
             ->get();
@@ -252,60 +527,49 @@ class KitchenTicketController extends Controller
             return;
         }
 
-        // Group items by shop_order_item_id to evaluate their effective remaining quantities
-        $groupedByProduct = $items->groupBy('shop_order_item_id'); 
+        $totalActiveItems = 0;
+        $completedItems = 0;
+        $readyItems = 0;
+        $preparingItems = 0;
+        $queuedItems = 0;
 
-        $totalActiveGroups = 0;
-        $completedGroups = 0;
-        $readyGroups = 0;
-        $preparingGroups = 0;
-        $queuedGroups = 0;
-
-        foreach ($groupedByProduct as $shopOrderItemId => $group) {
-            $baseQty   = $group->where('action_type', 'New')->sum('quantity');
-            $addQty    = $group->where('action_type', 'Add')->sum('quantity');
-            $reduceQty = $group->where('action_type', 'Reduce')->sum('quantity');
-            $cancelQty = $group->where('action_type', 'Cancel')->sum('quantity');
-            
-            $remainingQty = max(($baseQty + $addQty) - ($reduceQty + $cancelQty), 0);
-
-            // If the product line has 0 remaining quantities, it requires NO work. Skip it.
-            if ($remainingQty <= 0) {
+        foreach ($items as $item) {
+            // Skip items that have been voided/cancelled by the cashier
+            if ($item->item_status === 'Cancelled') {
                 continue; 
             }
 
-            $totalActiveGroups++;
+            // Count this as a valid row that needs to be tracked
+            $totalActiveItems++;
 
-            // Read active statuses (ignoring explicit cancellation entries)
-            $statuses = $group->whereNotIn('item_status', ['Cancelled'])->pluck('item_status')->unique()->toArray();
-
-            if (empty($statuses) || in_array('Served', $statuses)) {
-                $completedGroups++;
-            } elseif (in_array('Queued', $statuses)) {
-                $queuedGroups++;
-            } elseif (in_array('Preparing', $statuses)) {
-                $preparingGroups++;
-            } elseif (in_array('Ready', $statuses)) {
-                $readyGroups++;
+            // Evaluate the status of this exact database line row entry
+            if ($item->item_status === 'Served') {
+                $completedItems++;
+            } elseif ($item->item_status === 'Queued') {
+                $queuedItems++;
+            } elseif ($item->item_status === 'Preparing') {
+                $preparingItems++;
+            } elseif ($item->item_status === 'Ready') {
+                $readyItems++;
             }
         }
 
         /*
         |--------------------------------------------------------------------------
-        | DETERMINING MASTER TICKET STATUS (FIXED HIERARCHY)
+        | DETERMINING MASTER TICKET STATUS (ROW-LEVEL HIERARCHY)
         |--------------------------------------------------------------------------
-        | The ticket status follows the least progressive active item line status.
+        | The master ticket state drops down to match the least progressive active row.
         */
-        if ($totalActiveGroups === 0 || $completedGroups === $totalActiveGroups) {
+        if ($totalActiveItems === 0 || $completedItems === $totalActiveItems) {
             $ticketStatus = 'Completed';
-        } elseif ($queuedGroups > 0) {
-            // 1. If any single item line is still Queued, the master ticket stays Queued
+        } elseif ($queuedItems > 0) {
+            // If any single line item on the ticket is still Queued, the ticket stays Queued
             $ticketStatus = 'Queued';
-        } elseif ($preparingGroups > 0) {
-            // 2. If nothing is Queued, but something is still Preparing, the ticket is Preparing
+        } elseif ($preparingItems > 0) {
+            // If nothing is Queued, but something is still Preparing, the ticket is Preparing
             $ticketStatus = 'Preparing';
-        } elseif ($readyGroups > 0) {
-            // 3. If everything is done prepping and some lines are Ready, the ticket is Ready
+        } elseif ($readyItems > 0) {
+            // If everything is done prepping and some lines are Ready, the ticket is Ready
             $ticketStatus = 'Ready';
         } else {
             $ticketStatus = 'Queued';
@@ -339,7 +603,6 @@ class KitchenTicketController extends Controller
         $shopOrderId = $request->input('shop_order_id');
 
         if (!$shopOrderId) {
-
             return response()->json([
                 'success' => false,
                 'message' => 'Missing order ID',
@@ -351,40 +614,27 @@ class KitchenTicketController extends Controller
         | ORDER ITEMS
         |--------------------------------------------------------------------------
         */
-
         $items = DB::table('shop_order_item')
             ->where('shop_order_id', $shopOrderId)
-            ->select([
-                'id',
-                'product_id',
-                'product_name',
-                'quantity',
-                'order_note',
-                'item_status',
-            ])
+            ->select(['id', 'product_id', 'product_name', 'quantity', 'order_note', 'item_status'])
             ->get();
 
         /*
         |--------------------------------------------------------------------------
-        | KITCHEN HISTORY
+        | KITCHEN HISTORY & STATUS TRACKING
         |--------------------------------------------------------------------------
         */
-
         $kitchenHistory = DB::table('kitchen_ticket_item as kti')
-            ->join(
-                'kitchen_ticket as kt',
-                'kt.id',
-                '=',
-                'kti.kitchen_ticket_id'
-            )
+            ->join('kitchen_ticket as kt', 'kt.id', '=', 'kti.kitchen_ticket_id')
             ->where('kt.shop_order_id', $shopOrderId)
             ->select([
                 'kti.shop_order_item_id',
                 'kti.action_type',
                 'kti.quantity',
+                'kti.item_status',
                 'kt.kitchen_route_id',
                 'kt.kitchen_route_name',
-                'kti.created_at',
+                'kti.id as ticket_item_id'
             ])
             ->orderBy('kti.id')
             ->get()
@@ -395,12 +645,8 @@ class KitchenTicketController extends Controller
         | AVAILABLE ROUTES
         |--------------------------------------------------------------------------
         */
-
         $routes = DB::table('kitchen_route')
-            ->select([
-                'id',
-                'kitchen_route_name',
-            ])
+            ->select(['id', 'kitchen_route_name'])
             ->orderBy('kitchen_route_name')
             ->get();
 
@@ -409,293 +655,122 @@ class KitchenTicketController extends Controller
         | BUILD RESPONSE
         |--------------------------------------------------------------------------
         */
-
         $response = $items->map(function ($item) use ($kitchenHistory) {
-
-            $history =
-                $kitchenHistory->get(
-                    $item->id,
-                    collect()
-                );
+            $history = $kitchenHistory->get($item->id, collect());
 
             /*
             |--------------------------------------------------------------------------
-            | REBUILD KITCHEN QTY
+            | REBUILD KITCHEN QTY (FIX: READ ACTIVE LIVESTATES INSTEAD OF HISTORICAL LOOPS)
             |--------------------------------------------------------------------------
             */
-
-            $kitchenQty = 0;
-
-            foreach ($history as $row) {
-
-                switch ($row->action_type) {
-
-                    case 'New':
-                    case 'Add':
-                    case 'Refire':
-
-                        $kitchenQty += $row->quantity;
-
-                        break;
-
-                    case 'Reduce':
-                    case 'Cancel':
-
-                        $kitchenQty -= $row->quantity;
-
-                        break;
-                }
-            }
-
-            $kitchenQty =
-                max(0, $kitchenQty);
-
-            $currentQty =
-                (float) $item->quantity;
+            $kitchenQty = $history
+                ->whereIn('item_status', ['Queued', 'Preparing', 'Ready', 'Served', 'Completed'])
+                ->sum('quantity');
+                
+            $currentQty = (float) $item->quantity;
 
             /*
             |--------------------------------------------------------------------------
-            | ORIGINAL ROUTE
+            | RESOLVE ROUTE LOCKS
             |--------------------------------------------------------------------------
             */
-
-            $latestRoute =
-                $history
-                    ->whereIn('action_type', [
-                        'New',
-                        'Add',
-                        'Refire',
-                    ])
-                    ->last();
-
-            $lockedRouteId =
-                $latestRoute?->kitchen_route_id;
-
-            $lockedRouteName =
-                $latestRoute?->kitchen_route_name;
+            $latestRoute = $history->whereNotNull('kitchen_route_id')->last();
+            $lockedRouteId = $latestRoute?->kitchen_route_id;
+            $lockedRouteName = $latestRoute?->kitchen_route_name;
 
             /*
             |--------------------------------------------------------------------------
-            | CANCELLED ITEM
+            | CASE 1: CANCELLED ITEM
             |--------------------------------------------------------------------------
             */
-
-            if (
-                $item->item_status === 'Cancelled'
-            ) {
-
+            if ($item->item_status === 'Cancelled') {
                 if ($kitchenQty > 0) {
-
                     return [
-
-                        'shop_order_item_id' =>
-                            $item->id,
-
-                        'product_id' =>
-                            $item->product_id,
-
-                        'product_name' =>
-                            $item->product_name,
-
-                        'quantity' =>
-                            $kitchenQty,
-
-                        'note' =>
-                            $item->order_note,
-
-                        'status' =>
-                            'Cancelled',
-
-                        'action_type' =>
-                            'Cancel',
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | LOCK ROUTE
-                        |--------------------------------------------------------------------------
-                        */
-
-                        'is_route_locked' =>
-                            true,
-
-                        'locked_route_id' =>
-                            $lockedRouteId,
-
-                        'locked_route_name' =>
-                            $lockedRouteName,
-
-                        'previous_sent_qty' =>
-                            $kitchenQty,
+                        'shop_order_item_id' => $item->id,
+                        'product_id'        => $item->product_id,
+                        'product_name'      => $item->product_name,
+                        'quantity'          => $kitchenQty,
+                        'note'              => $item->order_note,
+                        'status'            => 'Cancelled',
+                        'action_type'       => 'Cancel',
+                        'is_route_locked'   => !is_null($lockedRouteId),
+                        'locked_route_id'   => $lockedRouteId,
+                        'locked_route_name' => $lockedRouteName,
+                        'previous_sent_qty' => $kitchenQty,
                     ];
                 }
-
                 return null;
             }
 
             /*
             |--------------------------------------------------------------------------
-            | NO CHANGES
+            | CASE 2: NO CHANGES BETWEEN CART AND KITCHEN
             |--------------------------------------------------------------------------
             */
-
             if ($currentQty == $kitchenQty) {
                 return null;
             }
 
             /*
             |--------------------------------------------------------------------------
-            | NEW ITEM
+            | CASE 3: NEW ITEM (OR FRESH LINE RE-ADD EXCEPTION)
             |--------------------------------------------------------------------------
             */
-
-            if (
-                $kitchenQty == 0
-                &&
-                $currentQty > 0
-            ) {
-
+            if ($kitchenQty == 0 && $currentQty > 0) {
                 return [
-
-                    'shop_order_item_id' =>
-                        $item->id,
-
-                    'product_id' =>
-                        $item->product_id,
-
-                    'product_name' =>
-                        $item->product_name,
-
-                    'quantity' =>
-                        $currentQty,
-
-                    'note' =>
-                        $item->order_note,
-
-                    'status' =>
-                        $item->item_status,
-
-                    'action_type' =>
-                        'New',
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | CASHIER MAY SELECT ROUTE
-                    |--------------------------------------------------------------------------
-                    */
-
-                    'is_route_locked' =>
-                        false,
-
-                    'locked_route_id' =>
-                        null,
-
-                    'locked_route_name' =>
-                        null,
-
-                    'previous_sent_qty' =>
-                        0,
+                    'shop_order_item_id' => $item->id,
+                    'product_id'        => $item->product_id,
+                    'product_name'      => $item->product_name,
+                    'quantity'          => $currentQty,
+                    'note'              => $item->order_note,
+                    'status'            => $item->item_status,
+                    'action_type'       => 'New',
+                    'is_route_locked'   => false,
+                    'locked_route_id'   => null,
+                    'locked_route_name' => null,
+                    'previous_sent_qty' => 0,
                 ];
             }
 
             /*
             |--------------------------------------------------------------------------
-            | ADDITIONAL QTY
+            | CASE 4: ADDITIONAL QUANTITY DETECTED
             |--------------------------------------------------------------------------
             */
-
             if ($currentQty > $kitchenQty) {
-
                 return [
-
-                    'shop_order_item_id' =>
-                        $item->id,
-
-                    'product_id' =>
-                        $item->product_id,
-
-                    'product_name' =>
-                        $item->product_name,
-
-                    'quantity' =>
-                        $currentQty - $kitchenQty,
-
-                    'note' =>
-                        $item->order_note,
-
-                    'status' =>
-                        $item->item_status,
-
-                    'action_type' =>
-                        'Add',
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | LOCK TO ORIGINAL ROUTE
-                    |--------------------------------------------------------------------------
-                    */
-
-                    'is_route_locked' =>
-                        true,
-
-                    'locked_route_id' =>
-                        $lockedRouteId,
-
-                    'locked_route_name' =>
-                        $lockedRouteName,
-
-                    'previous_sent_qty' =>
-                        $kitchenQty,
+                    'shop_order_item_id' => $item->id,
+                    'product_id'        => $item->product_id,
+                    'product_name'      => $item->product_name,
+                    'quantity'          => $currentQty - $kitchenQty,
+                    'note'              => $item->order_note,
+                    'status'            => $item->item_status,
+                    'action_type'       => 'Add',
+                    'is_route_locked'   => !is_null($lockedRouteId),
+                    'locked_route_id'   => $lockedRouteId,
+                    'locked_route_name' => $lockedRouteName,
+                    'previous_sent_qty' => $kitchenQty,
                 ];
             }
 
             /*
             |--------------------------------------------------------------------------
-            | REDUCE QTY
+            | CASE 5: REDUCE QUANTITY
             |--------------------------------------------------------------------------
             */
-
             if ($currentQty < $kitchenQty) {
-
                 return [
-
-                    'shop_order_item_id' =>
-                        $item->id,
-
-                    'product_id' =>
-                        $item->product_id,
-
-                    'product_name' =>
-                        $item->product_name,
-
-                    'quantity' =>
-                        $kitchenQty - $currentQty,
-
-                    'note' =>
-                        $item->order_note,
-
-                    'status' =>
-                        $item->item_status,
-
-                    'action_type' =>
-                        'Reduce',
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | LOCK TO ORIGINAL ROUTE
-                    |--------------------------------------------------------------------------
-                    */
-
-                    'is_route_locked' =>
-                        true,
-
-                    'locked_route_id' =>
-                        $lockedRouteId,
-
-                    'locked_route_name' =>
-                        $lockedRouteName,
-
-                    'previous_sent_qty' =>
-                        $kitchenQty,
+                    'shop_order_item_id' => $item->id,
+                    'product_id'        => $item->product_id,
+                    'product_name'      => $item->product_name,
+                    'quantity'          => $kitchenQty - $currentQty,
+                    'note'              => $item->order_note,
+                    'status'            => $item->item_status,
+                    'action_type'       => 'Reduce',
+                    'is_route_locked'   => !is_null($lockedRouteId),
+                    'locked_route_id'   => $lockedRouteId,
+                    'locked_route_name' => $lockedRouteName,
+                    'previous_sent_qty' => $kitchenQty,
                 ];
             }
 
@@ -705,12 +780,9 @@ class KitchenTicketController extends Controller
         ->values();
 
         return response()->json([
-
             'success' => true,
-
-            'data' => $response,
-
-            'routes' => $routes,
+            'data'    => $response,
+            'routes'  => $routes,
         ]);
     }
 
@@ -719,148 +791,100 @@ class KitchenTicketController extends Controller
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
 
+        // Get today's date string (YYYY-MM-DD)
+        $today = now()->toDateString();
+
         /*
         |--------------------------------------------------------------------------
-        | ROUTES
+        | 1. FETCH ROUTES
         |--------------------------------------------------------------------------
         */
-
         $routes = DB::table('kitchen_route')
             ->orderBy('kitchen_route_name')
             ->get();
 
-        $response = $routes->map(function ($route) use (
-            $pageAppId,
-            $pageNavigationMenuId
-        ) {
+        /*
+        |--------------------------------------------------------------------------
+        | 2. BULK AGGREGATE ITEM QUANTITIES & TICKET COUNTS (TODAY ONLY)
+        |--------------------------------------------------------------------------
+        | Added ->whereDate('kt.created_at', $today) to scope the totals to today.
+        */
+        $routeStats = DB::table('kitchen_ticket_item as kti')
+            ->join('kitchen_ticket as kt', 'kt.id', '=', 'kti.kitchen_ticket_id')
+            ->whereDate('kt.created_at', $today) // 📅 Scope items to today's tickets
+            ->whereIn('kti.item_status', ['Queued', 'Preparing', 'Ready', 'Served'])
+            ->selectRaw("
+                kt.kitchen_route_id,
+                COUNT(DISTINCT CASE WHEN kt.ticket_status IN ('Queued', 'Preparing', 'Ready') THEN kt.id END) as active_ticket_count,
+                SUM(CASE WHEN kti.item_status = 'Queued' THEN kti.quantity ELSE 0 END) as queued_qty,
+                SUM(CASE WHEN kti.item_status = 'Preparing' THEN kti.quantity ELSE 0 END) as preparing_qty,
+                SUM(CASE WHEN kti.item_status = 'Ready' THEN kti.quantity ELSE 0 END) as ready_qty,
+                SUM(CASE WHEN kti.item_status = 'Served' THEN kti.quantity ELSE 0 END) as completed_qty
+            ")
+            ->groupBy('kt.kitchen_route_id')
+            ->get()
+            ->keyBy('kitchen_route_id');
 
-            /*
-            |--------------------------------------------------------------------------
-            | ACTIVE TICKETS
-            |--------------------------------------------------------------------------
-            */
+        /*
+        |--------------------------------------------------------------------------
+        | 3. BULK FETCH TIMESTAMPS FOR METRICS (TODAY ONLY)
+        |--------------------------------------------------------------------------
+        | Added ->whereDate('created_at', $today) so age checks ignore old hanging logs.
+        */
+        $ticketTimestamps = DB::table('kitchen_ticket')
+            ->whereDate('created_at', $today) // 📅 Scope timestamps to today
+            ->selectRaw("
+                kitchen_route_id,
+                MAX(updated_at) as latest_update,
+                MIN(CASE WHEN ticket_status IN ('Queued', 'Preparing') THEN queued_at END) as oldest_queued
+            ")
+            ->groupBy('kitchen_route_id')
+            ->get()
+            ->keyBy('kitchen_route_id');
 
-            $activeTickets = DB::table('kitchen_ticket')
-                ->where('kitchen_route_id', $route->id)
-                ->whereIn('ticket_status', [
-                    'Queued',
-                    'Preparing',
-                    'Ready'
-                ]);
-
-            $activeTicketCount =
-                (clone $activeTickets)->count();
-
-            /*
-            |--------------------------------------------------------------------------
-            | ITEM COUNTS
-            |--------------------------------------------------------------------------
-            */
-
-            $itemStats = DB::table('kitchen_ticket_item as kti')
-
-                ->join(
-                    'kitchen_ticket as kt',
-                    'kt.id',
-                    '=',
-                    'kti.kitchen_ticket_id'
-                )
-
-                ->where('kt.kitchen_route_id', $route->id)
-
-                ->selectRaw("
-                    SUM(CASE WHEN kti.item_status = 'Queued' THEN 1 ELSE 0 END) as queued_count,
-                    SUM(CASE WHEN kti.item_status = 'Preparing' THEN 1 ELSE 0 END) as preparing_count,
-                    SUM(CASE WHEN kti.item_status = 'Ready' THEN 1 ELSE 0 END) as ready_count,
-                    SUM(CASE WHEN kti.item_status = 'Completed' THEN 1 ELSE 0 END) as completed_count
-                ")
-
-                ->first();
-
-            /*
-            |--------------------------------------------------------------------------
-            | OLDEST ACTIVE TICKET
-            |--------------------------------------------------------------------------
-            */
-
-            $oldestTicket = DB::table('kitchen_ticket')
-                ->where('kitchen_route_id', $route->id)
-                ->whereIn('ticket_status', [
-                    'Queued',
-                    'Preparing',
-                ])
-                ->oldest('queued_at')
-                ->first();
-
-            /*
-            |--------------------------------------------------------------------------
-            | LAST ACTIVITY
-            |--------------------------------------------------------------------------
-            */
-
-            $latestActivity = DB::table('kitchen_ticket')
-                ->where('kitchen_route_id', $route->id)
-                ->latest('updated_at')
-                ->first();
-
-            /*
-            |--------------------------------------------------------------------------
-            | LINK
-            |--------------------------------------------------------------------------
-            */
+        /*
+        |--------------------------------------------------------------------------
+        | 4. MAP TO RESPONSE PAYLOAD
+        |--------------------------------------------------------------------------
+        */
+        $response = $routes->map(function ($route) use ($pageAppId, $pageNavigationMenuId, $routeStats, $ticketTimestamps) {
+            
+            $stats = $routeStats->get($route->id);
+            $times = $ticketTimestamps->get($route->id);
 
             $link = route('apps.details', [
-                'appId' => $pageAppId,
+                'appId'            => $pageAppId,
                 'navigationMenuId' => $pageNavigationMenuId,
-                'details_id' => $route->id,
+                'details_id'       => $route->id,
             ]);
 
             return [
+                'id'                  => $route->id,
+                'kitchen_route_name'  => $route->kitchen_route_name,
+                'kitchen_route_type'  => $route->kitchen_route_type ?? 'Kitchen',
+                
+                'queued_count'        => (int) ($stats->queued_qty ?? 0),
+                'preparing_count'     => (int) ($stats->preparing_qty ?? 0),
+                'ready_count'         => (int) ($stats->ready_qty ?? 0),
+                'completed_count'     => (int) ($stats->completed_qty ?? 0),
+                'active_ticket_count' => (int) ($stats->active_ticket_count ?? 0),
 
-                'id' => $route->id,
+                'oldest_ticket_time'  => $times?->oldest_queued
+                    ? \Carbon\Carbon::parse($times->oldest_queued)->diffForHumans(now(), true)
+                    : null,
 
-                'kitchen_route_name' =>
-                    $route->kitchen_route_name,
+                'last_activity'       => $times?->latest_update
+                    ? \Carbon\Carbon::parse($times->latest_update)->diffForHumans()
+                    : 'No activity',
 
-                'kitchen_route_type' =>
-                    $route->kitchen_route_type ?? 'Kitchen',
-
-                'queued_count' =>
-                    (int) ($itemStats->queued_count ?? 0),
-
-                'preparing_count' =>
-                    (int) ($itemStats->preparing_count ?? 0),
-
-                'ready_count' =>
-                    (int) ($itemStats->ready_count ?? 0),
-
-                'completed_count' =>
-                    (int) ($itemStats->completed_count ?? 0),
-
-                'active_ticket_count' =>
-                    $activeTicketCount,
-
-                'oldest_ticket_time' =>
-                    $oldestTicket
-                        ? Carbon::parse($oldestTicket->queued_at)
-                            ->diffForHumans(now(), true)
-                        : null,
-
-                'last_activity' =>
-                    $latestActivity
-                        ? Carbon::parse($latestActivity->updated_at)
-                            ->diffForHumans()
-                        : 'No activity',
-
-                'link' => $link,
+                'link'                => $link,
             ];
         });
 
         return response()->json([
             'success' => true,
-            'data' => $response,
+            'data'    => $response,
         ]);
-
     }
 
     public function generateKitchenTickets(Request $request)
@@ -996,24 +1020,21 @@ class KitchenTicketController extends Controller
                 |--------------------------------------------------------------------------
                 */
                 $items = $rawItems
-                    ->groupBy('id') // Change grouping from shop_order_item_id to unique id
-                    ->map(function ($group) {
-                        $first = $group->first();
-
-                        return [
-                            'ticket_item_id' => $first->id,
-                            'shop_order_item_id' => $first->shop_order_item_id,
-                            'product_name' => $first->product_name,
-                            'base_quantity' => $first->quantity, // Treat quantities natively relative to row entries
-                            'add_quantity' => $first->action_type === 'Add' ? $first->quantity : 0,
-                            'reduce_quantity' => $first->action_type === 'Reduce' ? $first->quantity : 0,
-                            'cancelled_quantity' => $first->action_type === 'Cancel' ? $first->quantity : 0,
-                            'remaining_quantity' => $first->action_type === 'Cancel' ? 0 : $first->quantity,
-                            'status' => $first->item_status,
-                            'note' => $first->order_note,
-                        ];
-                    })
-                    ->values();
+                ->map(function ($row) {
+                    return [
+                        'ticket_item_id' => $row->id, 
+                        'shop_order_item_id' => $row->shop_order_item_id, // Shared parent order item reference
+                        'product_name' => $row->product_name,
+                        'base_quantity' => $row->quantity,
+                        'add_quantity' => $row->action_type === 'Add' ? $row->quantity : 0,
+                        'reduce_quantity' => $row->action_type === 'Reduce' ? $row->quantity : 0,
+                        'cancelled_quantity' => $row->action_type === 'Cancel' ? $row->quantity : 0,
+                        'remaining_quantity' => $row->action_type === 'Cancel' ? 0 : $row->quantity,
+                        'status' => $row->item_status,
+                        'note' => $row->order_note,
+                    ];
+                })
+                ->values();
 
                 /*
                 |--------------------------------------------------------------------------

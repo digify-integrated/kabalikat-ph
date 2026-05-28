@@ -3989,47 +3989,6 @@ return new class extends Migration
         SQL);
 
         /* =============================================================================================
-            TABLE: KITCHEN TICKET HISTORY
-        ============================================================================================= */
-
-        DB::unprepared('DROP TRIGGER IF EXISTS trg_kitchen_ticket_history_update');
-        DB::unprepared('DROP TRIGGER IF EXISTS trg_kitchen_ticket_history_insert');
-
-        DB::unprepared(<<<SQL
-            CREATE TRIGGER trg_kitchen_ticket_history_update
-            AFTER UPDATE ON kitchen_ticket_history
-            FOR EACH ROW
-            BEGIN
-                DECLARE audit_log TEXT DEFAULT 'Kitchen ticket history changed.<br/><br/>';
-
-                IF NEW.activity <> OLD.activity THEN
-                    SET audit_log = CONCAT(audit_log, "Activity:", OLD.activity, " -> ", NEW.activity, "<br/>");
-                END IF;
-
-                IF NEW.remarks <> OLD.remarks THEN
-                    SET audit_log = CONCAT(audit_log, "Remarks:", OLD.remarks, " -> ", NEW.remarks, "<br/>");
-                END IF;
-
-                IF audit_log <> 'Kitchen ticket history changed.<br/><br/>' THEN
-                    INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
-                    VALUES ('kitchen_ticket_history', NEW.id, audit_log, NEW.last_log_by, NEW.updated_at);
-                END IF;
-            END
-        SQL);
-
-        DB::unprepared(<<<SQL
-            CREATE TRIGGER trg_kitchen_ticket_history_insert
-            AFTER INSERT ON kitchen_ticket_history
-            FOR EACH ROW
-            BEGIN
-                DECLARE audit_log TEXT DEFAULT 'Kitchen ticket history created.';
-
-                INSERT INTO audit_log (table_name, reference_id, log, changed_by, created_at) 
-                VALUES ('kitchen_ticket_history', NEW.id, audit_log, NEW.last_log_by, NEW.updated_at);
-            END
-        SQL);
-
-        /* =============================================================================================
             TABLE:
         ============================================================================================= */
     }
@@ -4522,12 +4481,5 @@ return new class extends Migration
 
         DB::unprepared('DROP TRIGGER IF EXISTS trg_kitchen_ticket_item_update');
         DB::unprepared('DROP TRIGGER IF EXISTS trg_kitchen_ticket_item_insert');
-
-        /* =============================================================================================
-            TABLE: KITCHEN TICKET HISTORY
-        ============================================================================================= */
-
-        DB::unprepared('DROP TRIGGER IF EXISTS trg_kitchen_ticket_history_update');
-        DB::unprepared('DROP TRIGGER IF EXISTS trg_kitchen_ticket_history_insert');
     }
 };
