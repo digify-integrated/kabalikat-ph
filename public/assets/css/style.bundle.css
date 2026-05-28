@@ -53856,20 +53856,16 @@ body {
     border-width: 2px !important;
 }
 
-.kitchen-grid-item {
-    transition: all .15s ease;
-    cursor: pointer;
+.kitchen-item-row {
+    transition: background-color 0.15s ease-in-out;
 }
-
-.kitchen-grid-item:hover {
-    transform: translateY(-2px);
+.kitchen-item-row:hover {
+    background-color: rgba(0, 0, 0, 0.04) !important;
 }
-
-.kitchen-selected {
-
-    border-width: 3px !important;
-
-    box-shadow:
-        0 0 0 4px rgba(54,153,255,.15),
-        0 8px 25px rgba(0,0,0,.08) !important;
+.kitchen-item-row:active {
+    background-color: rgba(0, 0, 0, 0.08) !important;
+}
+/* Helper class for bolding layout numbers */
+.fw-extrabold {
+    font-weight: 800;
 }

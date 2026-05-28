@@ -3815,15 +3815,7 @@ return new class extends Migration
                 IF NEW.kitchen_route_name <> OLD.kitchen_route_name THEN
                     SET audit_log = CONCAT(audit_log, "Kitchen Route Name:", OLD.kitchen_route_name, " -> ", NEW.kitchen_route_name, "<br/>");
                 END IF;
-
-                IF NEW.table_number <> OLD.table_number THEN
-                    SET audit_log = CONCAT(audit_log, "Table Number:", OLD.table_number, " -> ", NEW.table_number, "<br/>");
-                END IF;
-
-                IF NEW.customer_name <> OLD.customer_name THEN
-                    SET audit_log = CONCAT(audit_log, "Customer Name:", OLD.customer_name, " -> ", NEW.customer_name, "<br/>");
-                END IF;
-
+                
                 IF NEW.ticket_status <> OLD.ticket_status THEN
                     SET audit_log = CONCAT(audit_log, "Ticket Status:", OLD.ticket_status, " -> ", NEW.ticket_status, "<br/>");
                 END IF;

@@ -58,8 +58,8 @@ class AppSeeder extends Seeder
                 'app_description'       => 'Displays incoming orders from your Point of Sale (POS) system directly to your kitchen staff in real time.',
                 'app_version'           => '1.0.0',
                 'app_logo'              => 'app/5/kitchen-display.png',
-                'navigation_menu_id'    => 18,
-                'navigation_menu_name'  => 'Dashboard',
+                'navigation_menu_id'    => 53,
+                'navigation_menu_name'  => 'Preparation Display',
                 'order_sequence'        => 7,
             ],
         ];

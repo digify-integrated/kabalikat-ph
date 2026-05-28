@@ -972,7 +972,10 @@ Route::middleware('auth')->group(function () {
         ->controller(KitchenTicketController::class)
         ->group(function () {
             Route::post('/send-kitchen-ticket', 'sendKitchenTicket')->name('send.ticket');
+            Route::post('/toggle-item-status', 'toggleKitchenItemStatus')->name('toggle.item.status');
             Route::post('/generate-kitchen-send-data', 'generateKitchenSendData')->name('generate.kitchen.send.data');
+            Route::post('/generate-kitchen-routes', 'generateKitchenRoutes')->name('generate.kitchen.routes');
+            Route::post('/generate-kitchen-tickets', 'generateKitchenTickets')->name('generate.kitchen.tickets');
         });
     
     Route::get(

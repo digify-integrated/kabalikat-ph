@@ -2428,8 +2428,7 @@ return new class extends Migration
             $table->index(['payment_status']);
             $table->index(['paid_at']);
         });
-        
-                
+                        
         /* =============================================================================================
             TABLE: Shop Order Request
         ============================================================================================= */
@@ -2548,12 +2547,6 @@ return new class extends Migration
                 ->cascadeOnDelete();
 
             $table->string('kitchen_route_name');
-
-            $table->string('table_number')
-                ->nullable();
-
-            $table->string('customer_name')
-                ->nullable();
 
             $table->enum('ticket_status', [
                 'Queued',

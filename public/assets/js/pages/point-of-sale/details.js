@@ -1101,7 +1101,7 @@ document.addEventListener('DOMContentLoaded', () => {
         $('#badge-table').text(
             order.table_number
                 ? `${order.floor_plan_name} • Table ${order.table_number}`
-                : 'No Table Selected'
+                : 'No Table'
         );
 
         /*
@@ -1163,7 +1163,7 @@ document.addEventListener('DOMContentLoaded', () => {
         $('#badge-table').text(
             order.table_number
                 ? `${order.floor_plan_name} • Table ${order.table_number}`
-                : 'No Table Selected'
+                : 'No Table'
         );
 
         $('#badge-order-type').text(order.order_type);
@@ -3122,11 +3122,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
                                     <div class="
                                         fw-bold
-                                        fs-1
+                                        fs-3
                                         ${style.text}
                                     ">
 
-                                        ${item.quantity}
+                                        QTY: ${item.quantity}
 
                                     </div>
 
