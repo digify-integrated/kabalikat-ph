@@ -95,15 +95,32 @@ class KitchenTicketController extends Controller
             foreach ($grouped as $routeId => $routeItems) {
                 $routeName = $routeItems->first()['kitchen_route_name'];
 
+                // 🌟 FIXED: Differentiate between structural reductions vs expansions
+                $hasAdditions = $routeItems->contains(function ($item) {
+                    return in_array($item['action_type'], ['New', 'Add', 'Refire']);
+                });
+                
+                // Look for an existing ticket ONLY if it is still completely un-engaged ('Queued')
                 $existingTicket = DB::table('kitchen_ticket')
                     ->where('shop_order_id', $shopOrderId)
                     ->where('kitchen_route_id', $routeId)
-                    ->whereNotIn('ticket_status', ['Completed', 'Cancelled'])
+                    ->where('ticket_status', 'Queued') // Strict lock: Only catch it if the line hasn't touched it
                     ->first();
+
+                // Fallback for reductions: If we're reducing/voiding items, we still want to hit the active working ticket
+                if (!$existingTicket && !$hasAdditions) {
+                    $existingTicket = DB::table('kitchen_ticket')
+                        ->where('shop_order_id', $shopOrderId)
+                        ->where('kitchen_route_id', $routeId)
+                        ->whereIn('ticket_status', ['Preparing', 'Ready'])
+                        ->orderByDesc('id') // Hit the most recent working ticket iteration
+                        ->first();
+                }
 
                 if ($existingTicket) {
                     $ticketId = $existingTicket->id;
                 } else {
+                    // Spawns a brand new clean ticket if the old one is already being worked on/finished
                     $ticketId = DB::table('kitchen_ticket')->insertGetId([
                         'ticket_number'      => 'KT-' . time() . rand(100, 999),
                         'shop_order_id'      => $shopOrderId,
@@ -122,25 +139,22 @@ class KitchenTicketController extends Controller
 
                 /*
                 |--------------------------------------------------------------------------
-                | INSERT/PROCESS ITEMS (SMART REDUCTION PATCH)
+                | INSERT/PROCESS ITEMS
                 |--------------------------------------------------------------------------
                 */
                 foreach ($routeItems as $item) {
-
                     $orderItem = DB::table('shop_order_item')
                         ->where('id', $item['shop_order_item_id'])
                         ->first();
 
                     if (in_array($item['action_type'], ['Reduce', 'Cancel'])) {
-                        
                         $qtyToReduce = $item['quantity'];
 
-                        // 1. Try to find 'Queued' lines first to safely remove without disturbing the cooks
                         $activeKitchenLines = DB::table('kitchen_ticket_item')
                             ->where('kitchen_ticket_id', $ticketId)
                             ->where('shop_order_item_id', $item['shop_order_item_id'])
                             ->whereIn('item_status', ['Queued', 'Preparing'])
-                            ->orderBy('item_status', 'asc') // 'Queued' targets first, then 'Preparing'
+                            ->orderBy('item_status', 'asc')
                             ->orderBy('id', 'desc')
                             ->get();
 
@@ -148,7 +162,6 @@ class KitchenTicketController extends Controller
                             if ($qtyToReduce <= 0) break;
 
                             if ($line->quantity <= $qtyToReduce) {
-                                // This entire kitchen row is wiped out by the reduction
                                 $qtyToReduce -= $line->quantity;
 
                                 DB::table('kitchen_ticket_item')
@@ -159,7 +172,6 @@ class KitchenTicketController extends Controller
                                         'updated_at' => now()
                                     ]);
                             } else {
-                                // Deduct partially from this kitchen row quantity
                                 DB::table('kitchen_ticket_item')
                                     ->where('id', $line->id)
                                     ->decrement('quantity', $qtyToReduce);
@@ -167,12 +179,8 @@ class KitchenTicketController extends Controller
                                 $qtyToReduce = 0;
                             }
                         }
-
-                        // Optional Log Entry: If you still need a paper trail for the reduction action 
-                        // without cluttering your checklist view, add a dedicated history log row here.
-
                     } else {
-                        // 'New' or 'Add' - Regular append behavior
+                        // Regular append into our safely resolved target ticket configuration
                         DB::table('kitchen_ticket_item')->insert([
                             'kitchen_ticket_id' => $ticketId,
                             'shop_order_item_id' => $item['shop_order_item_id'],
@@ -180,7 +188,7 @@ class KitchenTicketController extends Controller
                             'product_name' => $orderItem->product_name,
                             'action_type' => $item['action_type'],
                             'quantity' => $item['quantity'],
-                            'order_note' => $item['note'] ?? null,
+                            'order_note' => $item['order_note'] ?? null,
                             'item_status' => 'Queued',
                             'queued_at' => now(),
                             'created_by' => auth()->id(),
@@ -190,7 +198,6 @@ class KitchenTicketController extends Controller
                         ]);
                     }
 
-                    // Update main order line status mapping
                     DB::table('shop_order_item')
                         ->where('id', $item['shop_order_item_id'])
                         ->update([
@@ -200,7 +207,7 @@ class KitchenTicketController extends Controller
                         ]);
                 }
 
-                // Recalculate ticket status after processing all item updates
+                // Clean reassessment score run wrapper
                 $this->recalculateTicketStatus($ticketId);
 
                 $createdTickets[] = $ticketId;
@@ -690,7 +697,7 @@ class KitchenTicketController extends Controller
                         'product_id'        => $item->product_id,
                         'product_name'      => $item->product_name,
                         'quantity'          => $kitchenQty,
-                        'note'              => $item->order_note,
+                        'order_note'        => $item->order_note,
                         'status'            => 'Cancelled',
                         'action_type'       => 'Cancel',
                         'is_route_locked'   => !is_null($lockedRouteId),
@@ -722,7 +729,7 @@ class KitchenTicketController extends Controller
                     'product_id'        => $item->product_id,
                     'product_name'      => $item->product_name,
                     'quantity'          => $currentQty,
-                    'note'              => $item->order_note,
+                    'order_note'        => $item->order_note,
                     'status'            => $item->item_status,
                     'action_type'       => 'New',
                     'is_route_locked'   => false,
@@ -743,7 +750,7 @@ class KitchenTicketController extends Controller
                     'product_id'        => $item->product_id,
                     'product_name'      => $item->product_name,
                     'quantity'          => $currentQty - $kitchenQty,
-                    'note'              => $item->order_note,
+                    'order_note'        => $item->order_note,
                     'status'            => $item->item_status,
                     'action_type'       => 'Add',
                     'is_route_locked'   => !is_null($lockedRouteId),
@@ -764,7 +771,7 @@ class KitchenTicketController extends Controller
                     'product_id'        => $item->product_id,
                     'product_name'      => $item->product_name,
                     'quantity'          => $kitchenQty - $currentQty,
-                    'note'              => $item->order_note,
+                    'order_note'        => $item->order_note,
                     'status'            => $item->item_status,
                     'action_type'       => 'Reduce',
                     'is_route_locked'   => !is_null($lockedRouteId),
@@ -870,11 +877,11 @@ class KitchenTicketController extends Controller
                 'active_ticket_count' => (int) ($stats->active_ticket_count ?? 0),
 
                 'oldest_ticket_time'  => $times?->oldest_queued
-                    ? \Carbon\Carbon::parse($times->oldest_queued)->diffForHumans(now(), true)
+                    ? Carbon::parse($times->oldest_queued)->diffForHumans(now(), true)
                     : null,
 
                 'last_activity'       => $times?->latest_update
-                    ? \Carbon\Carbon::parse($times->latest_update)->diffForHumans()
+                    ? Carbon::parse($times->latest_update)->diffForHumans()
                     : 'No activity',
 
                 'link'                => $link,
@@ -912,10 +919,9 @@ class KitchenTicketController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | ROUTE
+        | 1. ROUTE
         |--------------------------------------------------------------------------
         */
-
         $route = DB::table('kitchen_route')
             ->where('id', $kitchenRouteId)
             ->first();
@@ -929,10 +935,9 @@ class KitchenTicketController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | TICKETS
+        | 2. TICKETS
         |--------------------------------------------------------------------------
         */
-
         $tickets = DB::table('kitchen_ticket')
             ->join('shop_order', 'shop_order.id', '=', 'kitchen_ticket.shop_order_id')
             ->leftJoin('floor_plan', 'floor_plan.id', '=', 'shop_order.floor_plan_id')
@@ -963,24 +968,29 @@ class KitchenTicketController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | ITEMS (RAW)
+        | 3. ITEMS (RAW) - JOINED TO SHOP_ORDER_ITEM FOR NOTES
         |--------------------------------------------------------------------------
+        | Fixed: Joined shop_order_item to inherit the real order line notes.
+        | Coalesced order_note fields to protect custom inputs if either table has them.
         */
-
         $ticketIds = $tickets->pluck('id');
 
-        $ticketItems = DB::table('kitchen_ticket_item')
-            ->whereIn('kitchen_ticket_id', $ticketIds)
-            ->orderBy('id')
+        $ticketItems = DB::table('kitchen_ticket_item as kti')
+            ->leftJoin('shop_order_item as soi', 'soi.id', '=', 'kti.shop_order_item_id')
+            ->whereIn('kti.kitchen_ticket_id', $ticketIds)
+            ->select(
+                'kti.*',
+                DB::raw('COALESCE(kti.order_note, soi.order_note, soi.order_note) as resolved_note')
+            )
+            ->orderBy('kti.id')
             ->get()
             ->groupBy('kitchen_ticket_id');
 
         /*
         |--------------------------------------------------------------------------
-        | STATS
+        | 4. STATS
         |--------------------------------------------------------------------------
         */
-
         $queuedCount = DB::table('kitchen_ticket_item')
             ->whereIn('kitchen_ticket_id', $ticketIds)
             ->where('item_status', 'Queued')
@@ -998,10 +1008,9 @@ class KitchenTicketController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | BUILD RESPONSE
+        | 5. BUILD RESPONSE
         |--------------------------------------------------------------------------
         */
-
         $response = [
             'route_id' => $route->id,
             'route_name' => $route->kitchen_route_name,
@@ -1014,16 +1023,10 @@ class KitchenTicketController extends Controller
 
                 $rawItems = $ticketItems->get($ticket->id, collect());
 
-                /*
-                |--------------------------------------------------------------------------
-                | FINAL GROUPED ITEMS (UPDATED SEPARATION)
-                |--------------------------------------------------------------------------
-                */
-                $items = $rawItems
-                ->map(function ($row) {
+                $items = $rawItems->map(function ($row) {
                     return [
                         'ticket_item_id' => $row->id, 
-                        'shop_order_item_id' => $row->shop_order_item_id, // Shared parent order item reference
+                        'shop_order_item_id' => $row->shop_order_item_id,
                         'product_name' => $row->product_name,
                         'base_quantity' => $row->quantity,
                         'add_quantity' => $row->action_type === 'Add' ? $row->quantity : 0,
@@ -1031,43 +1034,24 @@ class KitchenTicketController extends Controller
                         'cancelled_quantity' => $row->action_type === 'Cancel' ? $row->quantity : 0,
                         'remaining_quantity' => $row->action_type === 'Cancel' ? 0 : $row->quantity,
                         'status' => $row->item_status,
-                        'note' => $row->order_note,
+                        'order_note' => $row->resolved_note, // 🌟 Assigns the resolved order note
                     ];
-                })
-                ->values();
+                })->values();
 
-                /*
-                |--------------------------------------------------------------------------
-                | WAIT TIME
-                |--------------------------------------------------------------------------
-                */
-
-                $minutesWaiting = Carbon::parse($ticket->queued_at)
-                    ->diffInMinutes(now());
+                $minutesWaiting = \Carbon\Carbon::parse($ticket->queued_at)->diffInMinutes(now());
 
                 return [
                     'ticket_id' => $ticket->id,
                     'ticket_number' => $ticket->ticket_number,
                     'ticket_status' => $ticket->ticket_status,
                     'ticket_type' => $ticket->ticket_type,
-
                     'minutes_waiting' => $minutesWaiting,
-
-                    'queued_at' => Carbon::parse($ticket->queued_at)
-                        ->format('d M Y · h:i A'),
-
+                    'queued_at' => \Carbon\Carbon::parse($ticket->queued_at)->format('d M Y · h:i A'),
                     'shop_register_name' => $ticket->shop_register_name,
                     'floor_plan_name' => $ticket->floor_plan_name,
                     'table_number' => $ticket->table_number,
                     'order_type' => $ticket->order_type,
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | FINAL GROUPED ITEMS (IMPORTANT)
-                    |--------------------------------------------------------------------------
-                    */
-
-                    'items' => $items->values(),
+                    'items' => $items,
                 ];
             })->values(),
         ];

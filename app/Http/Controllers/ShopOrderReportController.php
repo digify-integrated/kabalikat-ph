@@ -299,11 +299,17 @@ class ShopOrderReportController extends Controller
         return $payments->map(function ($row) {
             $date = Carbon::parse($row->paid_at);
 
+            $paymentBadge = match($row->payment_status) {
+                    'Paid' => 'badge-success',
+                    'Refunded' => 'badge-warning text-dark',
+                    default => 'badge-danger'
+                };
+
             return [
                 'PAYMENT_METHOD' => $row->payment_method_name,
                 'ORDER_NO' => $row->order_number,
                 'AMOUNT' => number_format($row->payment_amount, 2),
-                'STATUS' => '<span class="badge badge-light-primary">'.$row->payment_status.'</span>',
+                'STATUS' => '<span class="badge '. $paymentBadge .'">'.$row->payment_status.'</span>',
                 'CASHIER' => $row->created_by_name ?? 'N/A',
                 'REFERENCE' => $row->reference_number ?? '-', 
                 'DATE' => '

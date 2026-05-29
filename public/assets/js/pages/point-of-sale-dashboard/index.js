@@ -6,65 +6,46 @@ document.addEventListener('DOMContentLoaded', () => {
     const config = {
         table: [
             {
-                url: '/inventory-dashboard/generate-out-of-stock-table',
-                selector: '#out-of-stock-table',
+                url: '/point-of-sale-dashboard/generate-recent-orders-table',
+                selector: '#recent-orders-table',
                 serverSide: false,
-                order: [[0, 'asc']],
+                order: [[0, 'desc']],
                 columns: [
-                    { data: 'PRODUCT' }
+                    { data: 'ORDER_INFO' },
+                    { data: 'LOCATION_CONTEXT' },
+                    { data: 'STATUS' },
+                    { data: 'NET_TOTAL', className: 'text-end' }
                 ],
             },
             {
-                url: '/inventory-dashboard/generate-expired-stock-table',
-                selector: '#expired-stock-table',
+                url: '/point-of-sale-dashboard/generate-payments-ledger-table',
+                selector: '#payments-ledger-table',
                 serverSide: false,
-                order: [[0, 'asc']],
+                order: [[0, 'desc']],
                 columns: [
-                    { data: 'PRODUCT' },
-                    { data: 'BATCH_NUMBER' },
-                    { data: 'QUANTITY' },
-                    { data: 'EXPIRATION_DATE' },
+                    { data: 'ORDER_REF' },
+                    { data: 'METHOD' },
+                    { data: 'TRACE_REF' },
+                    { data: 'STATUS' },
+                    { data: 'AMOUNT', className: 'text-end' }
                 ],
-            },
-            {
-                url: '/inventory-dashboard/generate-low-stock-table',
-                selector: '#low-stock-table',
-                serverSide: false,
-                order: [[0, 'asc']],
-                columns: [
-                    { data: 'PRODUCT' },
-                    { data: 'QUANTITY' },
-                    { data: 'REORDER_LEVEL' },
-                ],
-            },
-            {
-                url: '/inventory-dashboard/generate-near-expiry-table',
-                selector: '#near-expiry-table',
-                serverSide: false,
-                order: [[0, 'asc']],
-                columns: [
-                    { data: 'PRODUCT' },
-                    { data: 'BATCH_NUMBER' },
-                    { data: 'QUANTITY' },
-                    { data: 'EXPIRATION_DATE' },
-                ],
-            },
+            }
         ],
         details: [
             {
-                url: '/inventory-dashboard/fetch-details',
+                url: '/point-of-sale-dashboard/fetch-details',
                 onSuccess: async (data) => {
-                    document.getElementById('out-of-stock-count').textContent = data.outOfStockCount || '0';
-                    document.getElementById('expired-items-count').textContent = data.expiredItemsCount || '0';
-                    document.getElementById('low-stock-count').textContent = data.lowStockCount || '0';
-                    document.getElementById('expiring-soon-count').textContent = data.expiringSoonCount || '0';
+                    document.getElementById('gross-sales-count').textContent = data.grossSales || '0.00';
+                    document.getElementById('net-sales-count').textContent = data.netSales || '0.00';
+                    document.getElementById('total-orders-count').textContent = data.totalOrders || '0';
+                    document.getElementById('avg-order-value').textContent = data.avgOrderValue || '0.00';
                 },
             }
         ]
-    }
+    };
     
-    checkNotification()
+    checkNotification();
     
-    config.details.map((cfg) => displayDetails(cfg))
-    config.table.map((cfg) => initializeDatatable(cfg))
+    config.details.map((cfg) => displayDetails(cfg));
+    config.table.map((cfg) => initializeDatatable(cfg));
 });

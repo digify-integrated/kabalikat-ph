@@ -3,7 +3,7 @@ import { showNotification, setNotification } from '../../util/notifications.js';
 import { disableButton, enableButton } from '../../form/button.js';
 import { getPageContext, getCsrfToken, resetForm } from '../../form/form.js';
 import { handleSystemError } from '../../util/system-errors.js';
-import { generateDropdownOptions } from '../../form/field.js';
+import { generateDropdownOptions, appendObject } from '../../form/field.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     let searchTimeout;
@@ -61,12 +61,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         ],
-        posCategory: [
-            { url: '/shop-register/generate-category' }
-        ],
-        posProduct: [
-            { url: '/shop-register/generate-product' }
-        ],
+        posCategory: { url: '/shop-register/generate-category' },
+        posProduct: { url: '/shop-register/generate-product' },
     };
 
     const updateModalTotal = () => {
@@ -82,17 +78,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     }
 
-    const appendObject = (params, object = {}) => {
-        Object.entries(object).forEach(([key, value]) => {
-            if (value !== undefined && value !== null) {
-                params.append(key, value);
-            }
-        });
-    };
-
     const generatePOSCategory = async (url, otherData = {}) => {
         try {
-
             const csrf = getCsrfToken();
             const ctx = getPageContext();
 
@@ -121,44 +108,29 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
 
             if (data?.success) {
-
                 const container = document.getElementById('shop-product-category-container');
                 container.innerHTML = `
-                    <button
-                        type="button"
-                        class="btn btn-primary rounded-pill px-4 py-2 product-category-filter active"
-                        data-product-filter="all">
-
+                    <button type="button" class="btn btn-primary rounded-pill px-4 py-2 product-category-filter active" data-product-filter="all">
                         All
-
-                    </button>
-                    `;
+                    </button>`;
 
                 const categories = data.data || [];
 
                 categories.forEach(category => {
-
                     let html = renderCategoryTab(category);
 
                     container.insertAdjacentHTML('beforeend', html);
                 });
             }
 
-        } catch (error) {
-
-            handleSystemError(
-                error,
-                'fetch_failed',
-                `Fetch request failed: ${error.message}`
-            );
-
-            throw error;
+        }
+        catch (error) {
+            handleSystemError(error, 'fetch_failed', `Fetch request failed: ${error.message}`);
         }
     };
 
     const generatePOSProduct = async (url, otherData = {}) => {
         try {
-
             const csrf = getCsrfToken();
             const ctx = getPageContext();
 
@@ -169,12 +141,6 @@ document.addEventListener('DOMContentLoaded', () => {
             params.append('navigationMenuId', ctx.navigationMenuId ?? '');
 
             appendObject(params, otherData);
-
-            /*
-            |--------------------------------------------------------------------------
-            | SHOW LOADING STATE
-            |--------------------------------------------------------------------------
-            */
 
             renderProductLoading();
 
@@ -195,99 +161,56 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
 
             if (data?.success) {
-
                 const container = document.getElementById('product-container');
                 container.innerHTML = '';
 
                 const products = data.data || [];
 
-                /*
-                |--------------------------------------------------------------------------
-                | EMPTY STATE
-                |--------------------------------------------------------------------------
-                */
-
                 if (!products.length) {
-
-                    const search =
-                        otherData.search?.trim() ?? '';
-
-                    const category =
-                        otherData.category_id ?? 'all';
-
-                    container.innerHTML = renderNoProductsFound({
-                        search,
-                        category,
-                    });
+                    const search = otherData.search?.trim() ?? '';
+                    const category = otherData.category_id ?? 'all';
+                    container.innerHTML = renderNoProductsFound({search,category});
 
                     return;
                 }
 
-                /*
-                |--------------------------------------------------------------------------
-                | PRODUCTS
-                |--------------------------------------------------------------------------
-                */
-
                 products.forEach(product => {
-
                     let html = renderProduct(product);
 
                     container.insertAdjacentHTML('beforeend', html);
                 });
             }
-
-        } catch (error) {
-
-            handleSystemError(
-                error,
-                'fetch_failed',
-                `Fetch request failed: ${error.message}`
-            );
-
-            throw error;
+        } 
+        catch (error) {
+            handleSystemError(error, 'fetch_failed', `Fetch request failed: ${error.message}`);
         }
     };
 
     const getOrderStatusClass = (paymentStatus, orderStatus) => {
-
-        if (orderStatus === 'Cancelled') return 'badge-light-warning';
-
+        if (orderStatus === 'Cancelled') return 'badge-light-danger';
         if (orderStatus === 'Voided') return 'badge-light-danger';
-
+        if (orderStatus === 'Pending') return 'badge-light-primary';
         if (paymentStatus === 'Refunded') return 'badge-light-danger';
-
         if (paymentStatus === 'Paid') return 'badge-light-success';
-
         if (paymentStatus === 'Unpaid') return 'badge-light-danger';
 
         return 'badge-light-primary';
     };
 
     const getOrderStatusColor = (paymentStatus, orderStatus) => {
+        if (orderStatus === 'Cancelled') return '#dc3545';
+        if (orderStatus === 'Voided') return '#6c757d';
+        if (paymentStatus === 'Refunded') return '#0d6efd';
+        if (paymentStatus === 'Paid') return '#198754';
 
-        if (orderStatus === 'Cancelled') return '#dc3545'; // red
-        if (orderStatus === 'Voided') return '#6c757d'; // gray
-        if (paymentStatus === 'Refunded') return '#0d6efd'; // blue
-        if (paymentStatus === 'Paid') return '#198754'; // green
-
-        return '#ffc107'; // unpaid = yellow
+        return '#ffc107';
     };
 
     const calculatePayments = () => {
-
         let totalPayment = 0;
-
         let totalTendered = 0;
 
-        /*
-        |--------------------------------------------------------------------------
-        | PAYMENT ROWS
-        |--------------------------------------------------------------------------
-        */
-
         $('.payment-row').each(function () {
-
             const paymentAmount =
                 parseMoney(
                     $(this)
@@ -303,7 +226,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 );
 
             if (tenderedAmount <= 0) {
-
                 tenderedAmount = paymentAmount;
             }
 
@@ -312,23 +234,11 @@ document.addEventListener('DOMContentLoaded', () => {
             totalTendered += tenderedAmount;
         });
 
-        /*
-        |--------------------------------------------------------------------------
-        | OUTSTANDING BALANCE
-        |--------------------------------------------------------------------------
-        */
-
         const outstandingBalance =
             parseMoney(
                 $('#payment-balance-display')
                     .attr('data-balance')
             );
-
-        /*
-        |--------------------------------------------------------------------------
-        | CHANGE
-        |--------------------------------------------------------------------------
-        */
 
         const change =
             Math.max(
@@ -336,125 +246,58 @@ document.addEventListener('DOMContentLoaded', () => {
                 0
             );
 
-        /*
-        |--------------------------------------------------------------------------
-        | DISPLAY
-        |--------------------------------------------------------------------------
-        */
+        $('#total-payment-display').text(formatPeso(totalPayment));
 
-        $('#total-payment-display').text(
-            formatPeso(totalPayment)
-        );
-
-        $('#payment-change-display').text(
-            formatPeso(change)
-        );
-
-        /*
-        |--------------------------------------------------------------------------
-        | VALIDATION
-        |--------------------------------------------------------------------------
-        */
+        $('#payment-change-display').text(formatPeso(change));
 
         if (totalPayment < outstandingBalance) {
-
             $('#payment-validation-message')
                 .removeClass('d-none')
                 .text(
                     'Total payment is less than outstanding balance.'
                 );
 
-            $('#complete-payment-button')
-                .prop('disabled', true);
+            $('#complete-payment-button').prop('disabled', true);
+        } 
+        else {
+            $('#payment-validation-message').addClass('d-none');
 
-        } else {
-
-            $('#payment-validation-message')
-                .addClass('d-none');
-
-            $('#complete-payment-button')
-                .prop('disabled', false);
+            $('#complete-payment-button').prop('disabled', false);
         }
-
-        console.log({
-            outstandingBalance,
-            totalPayment,
-            totalTendered,
-            change,
-        });
     };
 
     const initializeCart = async () => {
-
         const shopOrderId = sessionStorage.getItem('shop_order_id');
 
-        /*
-        |--------------------------------------------------------------------------
-        | NO ACTIVE ORDER
-        |--------------------------------------------------------------------------
-        */
-
         if (!shopOrderId) {
-
             resetCartUI();
 
             return;
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | LOAD EXISTING CART
-        |--------------------------------------------------------------------------
-        */
-
         await loadCart(shopOrderId);
     };
 
-    const loadCart = async (
-        shopOrderId,
-        options = {}
-    ) => {
-
+    const loadCart = async (shopOrderId,options = {}) => {
         const {
             silent = false
         } = options;
 
         try {
-
-            /*
-            |--------------------------------------------------------------------------
-            | LOADING
-            |--------------------------------------------------------------------------
-            */
-
             if (!silent) {
-
                 showCartLoading();
             }
 
             const ctx = getPageContext();
-
             const csrf = getCsrfToken();
 
             const formData = new URLSearchParams();
 
-            formData.append(
-                'shop_order_id',
-                shopOrderId
-            );
+            formData.append('shop_order_id',shopOrderId);
+            formData.append('appId',ctx.appId ?? '');
+            formData.append('navigationMenuId',ctx.navigationMenuId ?? '');
 
-            formData.append(
-                'appId',
-                ctx.appId ?? ''
-            );
-
-            formData.append(
-                'navigationMenuId',
-                ctx.navigationMenuId ?? ''
-            );
-
-            const response = await fetch(
-                '/shop-order/fetch-details',
+            const response = await fetch('/shop-order/fetch-details',
                 {
                     method: 'POST',
                     body: formData,
@@ -472,84 +315,45 @@ document.addEventListener('DOMContentLoaded', () => {
             );
 
             if (!response.ok) {
-
-                throw new Error(
-                    `Load cart failed: ${response.status}`
-                );
+                throw new Error(`Load cart failed: ${response.status}`);
             }
 
             const data = await response.json();
 
-            /*
-            |--------------------------------------------------------------------------
-            | INVALID
-            |--------------------------------------------------------------------------
-            */
-
             if (!data.success) {
-
-                sessionStorage.removeItem(
-                    'shop_order_id'
-                );
+                sessionStorage.removeItem('shop_order_id');
 
                 resetCartUI();
-
                 showNotification(data.message);
 
                 return;
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | EMPTY
-            |--------------------------------------------------------------------------
-            */
-
-            if (
-                !data.order ||
-                !data.order.items ||
-                data.order.items.length === 0
-            ) {
-
+            if (!data.order || !data.order.items || data.order.items.length === 0) {
                 resetCartUI();
 
                 return;
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | POPULATE
-            |--------------------------------------------------------------------------
-            */
-
             populateCart(data.order);
 
-        } catch (error) {
-
-            handleSystemError(
-                error,
-                'load_cart_failed',
-                error.message
-            );
+        }
+        catch (error) {
+            handleSystemError(error, 'load_cart_failed', error.message);
         }
     };
 
     const loadFloorPlans = async (shopOrderId) => {
-
         try {
-
             const ctx = getPageContext();
-
             const csrf = getCsrfToken();
 
             const formData = new URLSearchParams();
 
             formData.append('shop_order_id', shopOrderId);
-
             formData.append('shop_register_id', ctx.detailId ?? '');
 
-            const response = await fetch(
-                '/shop-order/fetch-floor-plans',
+            const response = await fetch('/shop-order/fetch-floor-plans',
                 {
                     method: 'POST',
                     body: formData,
@@ -564,16 +368,12 @@ document.addEventListener('DOMContentLoaded', () => {
             );
 
             if (!response.ok) {
-
-                throw new Error(
-                    `Failed to load floor plans: ${response.status}`
-                );
+                throw new Error(`Failed to load floor plans: ${response.status}`);
             }
 
             const data = await response.json();
 
             if (!data.success) {
-
                 showNotification(data.message);
 
                 return;
@@ -581,50 +381,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
             renderFloorPlans(data.floorPlans);
 
-            /*
-            |--------------------------------------------------------------------------
-            | AUTO SELECT FIRST
-            |--------------------------------------------------------------------------
-            */
-
             if (data.floorPlans.length > 0) {
+                selectedFloorPlanId = data.floorPlans[0].id;
 
-                selectedFloorPlanId =
-                    data.floorPlans[0].id;
-
-                await loadFloorTables(
-                    selectedFloorPlanId,
-                    shopOrderId
-                );
+                await loadFloorTables(selectedFloorPlanId,shopOrderId);
             }
 
-        } catch (error) {
-
-            handleSystemError(
-                error,
-                'load_floor_plans_failed',
-                error.message
-            );
+        }
+        catch (error) {
+            handleSystemError(error, 'load_floor_plans_failed', error.message);
         }
     };
 
-    const loadFloorTables = async (
-        floorPlanId,
-        shopOrderId
-    ) => {
-
+    const loadFloorTables = async (floorPlanId,shopOrderId) => {
         try {
-
-            $('#shop-floor-table-container').html(`
-            
+            $('#shop-floor-table-container').html(`            
                 <div class="col-12 text-center py-15">
-
                     <div class="spinner-border text-success mb-3"></div>
-
                     <div class="fw-semibold text-muted">
                         Loading tables...
                     </div>
-
                 </div>
             `);
 
@@ -633,11 +409,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const formData = new URLSearchParams();
 
             formData.append('floor_plan_id', floorPlanId);
-
             formData.append('shop_order_id', shopOrderId);
 
-            const response = await fetch(
-                '/shop-order/fetch-floor-tables',
+            const response = await fetch('/shop-order/fetch-floor-tables',
                 {
                     method: 'POST',
                     body: formData,
@@ -652,16 +426,12 @@ document.addEventListener('DOMContentLoaded', () => {
             );
 
             if (!response.ok) {
-
-                throw new Error(
-                    `Failed to load tables: ${response.status}`
-                );
+                throw new Error(`Failed to load tables: ${response.status}`);
             }
 
             const data = await response.json();
 
             if (!data.success) {
-
                 showNotification(data.message);
 
                 return;
@@ -669,20 +439,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             renderFloorTables(data.tables);
 
-        } catch (error) {
-
-            handleSystemError(
-                error,
-                'load_floor_tables_failed',
-                error.message
-            );
+        }
+        catch (error) {
+            handleSystemError(error, 'load_floor_tables_failed', error.message);
         }
     };
 
     const loadOrderHistory = async () => {
-
         try {
-
             $('#order-history-loading').removeClass('d-none');
             $('#order-history-empty').addClass('d-none');
             $('#order-history-grid').html('');
@@ -717,38 +481,23 @@ document.addEventListener('DOMContentLoaded', () => {
             renderOrderHistoryGrid(cachedOrders);
 
         } catch (error) {
-
             $('#order-history-loading').addClass('d-none');
 
             handleSystemError(error, 'load_order_history_failed', error.message);
         }
     };
 
-    const assignTableToOrder = async (
-        floorPlanTableId
-    ) => {
-
+    const assignTableToOrder = async (floorPlanTableId) => {
         try {
-
-            const shopOrderId =
-                sessionStorage.getItem('shop_order_id');
-
+            const shopOrderId = sessionStorage.getItem('shop_order_id');
             const csrf = getCsrfToken();
 
             const formData = new URLSearchParams();
 
-            formData.append(
-                'shop_order_id',
-                shopOrderId
-            );
+            formData.append('shop_order_id', shopOrderId);
+            formData.append('floor_plan_table_id', floorPlanTableId);
 
-            formData.append(
-                'floor_plan_table_id',
-                floorPlanTableId
-            );
-
-            const response = await fetch(
-                '/shop-order/save-table',
+            const response = await fetch('/shop-order/save-table',
                 {
                     method: 'POST',
                     body: formData,
@@ -763,83 +512,38 @@ document.addEventListener('DOMContentLoaded', () => {
             );
 
             if (!response.ok) {
-
-                throw new Error(
-                    `Update table failed: ${response.status}`
-                );
+                throw new Error(`Update table failed: ${response.status}`);
             }
 
             const data = await response.json();
 
             if (!data.success) {
-
                 showNotification(data.message);
 
                 return;
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | UPDATE BADGE
-            |--------------------------------------------------------------------------
-            */
+            $('#badge-table').text(`${data.floor_plan_name} • Table ${data.table_number}`);
 
-            $('#badge-table').text(
-                `${data.floor_plan_name} • Table ${data.table_number}`
-            );
-
-            /*
-            |--------------------------------------------------------------------------
-            | RELOAD TABLES ONLY
-            |--------------------------------------------------------------------------
-            */
-
-            await loadFloorTables(
-                selectedFloorPlanId,
-                shopOrderId
-            );
-
-        } catch (error) {
-
-            handleSystemError(
-                error,
-                'assign_table_failed',
-                error.message
-            );
+            await loadFloorTables(selectedFloorPlanId, shopOrderId);
+        }
+        catch (error) {
+            handleSystemError(error, 'assign_table_failed', error.message);
         }
     };
 
-    const updateOrderItemQuantity = async ({
-        shopOrderItemId,
-        action,
-    }) => {
-
+    const updateOrderItemQuantity = async ({shopOrderItemId, action}) => {
         try {
-
             const csrf = getCsrfToken();
-
-            const shopOrderId =
-                sessionStorage.getItem('shop_order_id');
-
+            const shopOrderId = sessionStorage.getItem('shop_order_id');
+            
             const formData = new URLSearchParams();
 
-            formData.append(
-                'shop_order_item_id',
-                shopOrderItemId
-            );
+            formData.append('shop_order_item_id', shopOrderItemId);
+            formData.append('shop_order_id', shopOrderId);
+            formData.append('action', action);
 
-            formData.append(
-                'shop_order_id',
-                shopOrderId
-            );
-
-            formData.append(
-                'action',
-                action
-            );
-
-            const response = await fetch(
-                '/shop-order/save-item-quantity',
+            const response = await fetch('/shop-order/save-item-quantity',
                 {
                     method: 'POST',
                     body: formData,
@@ -854,261 +558,95 @@ document.addEventListener('DOMContentLoaded', () => {
             );
 
             if (!response.ok) {
-
-                throw new Error(
-                    `Update failed: ${response.status}`
-                );
+                throw new Error(`Update failed: ${response.status}`);
             }
 
             const data = await response.json();
 
             if (!data.success) {
-
                 showNotification(data.message);
 
                 return;
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | EMPTY ORDER
-            |--------------------------------------------------------------------------
-            */
-
-            if (
-                !data.order ||
-                !data.order.items ||
-                data.order.items.length === 0
-            ) {
-
+            if (!data.order || !data.order.items ||data.order.items.length === 0) {
                 resetCartUI();
 
                 return;
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | REFRESH ONLY CART
-            |--------------------------------------------------------------------------
-            */
-
             refreshCartContent(data.order);
-
-        } catch (error) {
-
-            handleSystemError(
-                error,
-                'update_order_item_failed',
-                error.message
-            );
+        }
+        catch (error) {
+            handleSystemError(error, 'update_order_item_failed', error.message);
         }
     };
 
     const showCartLoading = () => {
-
-        /*
-        |--------------------------------------------------------------------------
-        | LOADING
-        |--------------------------------------------------------------------------
-        */
-
-        $('#shop-order-loading')
-            .removeClass('d-none');
-
-        /*
-        |--------------------------------------------------------------------------
-        | HIDE EMPTY
-        |--------------------------------------------------------------------------
-        */
-
-        $('#shop-order-empty')
-            .addClass('d-none');
-
-        /*
-        |--------------------------------------------------------------------------
-        | KEEP CURRENT CONTENT
-        |--------------------------------------------------------------------------
-        |
-        | DO NOT HIDE:
-        | - register-action
-        | - order summary
-        | - existing cart
-        |
-        | Prevents annoying flicker
-        |
-        */
+        $('#shop-order-loading').removeClass('d-none');
+        $('#shop-order-empty').addClass('d-none');
     };
 
     const resetCartUI = () => {
-
         const currentOrderId = sessionStorage.getItem('shop_order_number');
 
         if (currentOrderId) {
-
-            $('#order-id')
-                .text(currentOrderId);
-
+            $('#order-id').text(currentOrderId);
             $('#send-kitchen-ticket').removeClass('d-none');
-
-        } else {
-
-            $('#order-id')
-                .text('No Active Order');
-
+        }
+        else {
+            $('#order-id').text('No Active Order');
             $('#send-kitchen-ticket').addClass('d-none');
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | CLEAR ITEMS
-        |--------------------------------------------------------------------------
-        */
-
-        $('#shop-order-list')
-            .html('')
-            .addClass('d-none');
-
-        /*
-        |--------------------------------------------------------------------------
-        | CLEAR SUMMARY
-        |--------------------------------------------------------------------------
-        */
-
+        $('#shop-order-list').html('').addClass('d-none');
         $('#order-summary-list').html('');
-
-        $('#shop-order-summary-card')
-            .addClass('d-none');
-
-        /*
-        |--------------------------------------------------------------------------
-        | STATES
-        |--------------------------------------------------------------------------
-        */
-
-        $('#shop-order-loading')
-            .addClass('d-none');
-
-        $('#shop-order-empty')
-            .removeClass('d-none');
-
-        /*
-        |--------------------------------------------------------------------------
-        | RESET INTERACTION STATE
-        |--------------------------------------------------------------------------
-        */
+        $('#shop-order-summary-card').addClass('d-none');
+        $('#shop-order-loading').addClass('d-none');
+        $('#shop-order-empty').removeClass('d-none');
 
         restoreCartInteraction();
 
-        /*
-        |--------------------------------------------------------------------------
-        | HIDE CART ACTIONS
-        |--------------------------------------------------------------------------
-        */
-
         toggleCartActions(false);
-
-        /*
-        |--------------------------------------------------------------------------
-        | RESET STATE FLAG ONLY (NOT ORDER CONTEXT)
-        |--------------------------------------------------------------------------
-        */
 
         cartInitialized = false;
     };
 
     const restoreCartInteraction = () => {
-
-        /*
-        |--------------------------------------------------------------------------
-        | ENABLE ALL INTERACTIVE ELEMENTS
-        |--------------------------------------------------------------------------
-        */
-
-        $('#shop-order-list')
-            .find('input, select, textarea, button')
-            .prop('disabled', false);
-
-        /*
-        |--------------------------------------------------------------------------
-        | RESTORE ACTION BUTTONS
-        |--------------------------------------------------------------------------
-        */
-
+        $('#shop-order-list').find('input, select, textarea, button').prop('disabled', false);
         $('#manage-payment-button').prop('disabled', false);
-
         $('#send-kitchen-ticket').prop('disabled', false);
-
         $('#cancel-button').prop('disabled', false);
-
         $('#manage-discount-button').prop('disabled', false);
-
         $('#manage-charge-button').prop('disabled', false);
-
         $('#customer-button').prop('disabled', false);
-
         $('#submit-product').prop('disabled', false);
-
         $('#order-type').prop('disabled', false);
-
         $('#set-table').prop('disabled', false);
-
         $('#print-bill').prop('disabled', false);
-
         $('#void-order-button').prop('disabled', false);
-
         $('#refund-order-button').prop('disabled', false);
     };
 
     const refreshCartContent = (order) => {
-
-        /*
-        |--------------------------------------------------------------------------
-        | HEADER
-        |--------------------------------------------------------------------------
-        */
-
         const currentOrderId = sessionStorage.getItem('shop_order_number');
 
         if (currentOrderId) {
-
-            $('#order-id')
-                .text(currentOrderId);
+            $('#order-id').text(currentOrderId);
 
             $('#send-kitchen-ticket').removeClass('d-none');
-
-        } else {
-
-            $('#order-id')
-                .text('No Active Order');
+        }
+        else {
+            $('#order-id').text('No Active Order');
 
             $('#send-kitchen-ticket').addClass('d-none');
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | BADGES
-        |--------------------------------------------------------------------------
-        */
+        $('#badge-order-type').text(order.order_type ?? 'Walk-in');
+        $('#badge-payment-status').text(order.payment_status ?? 'Unpaid');
+        $('#badge-order-status').text(order.order_status ?? 'Pending');
+        $('#badge-table').text(order.table_number ? `${order.floor_plan_name} • Table ${order.table_number}` : 'No Table');
 
-        $('#badge-order-type').text(
-            order.order_type ?? 'Walk-in'
-        );
-
-        $('#badge-payment-status').text(
-            order.payment_status ?? 'Unpaid'
-        );
-
-        $('#badge-table').text(
-            order.table_number
-                ? `${order.floor_plan_name} • Table ${order.table_number}`
-                : 'No Table'
-        );
-
-        /*
-        |--------------------------------------------------------------------------
-        | ITEMS
-        |--------------------------------------------------------------------------
-        */
 
         const itemsHtml = order.items
             .map(renderOrderItem)
@@ -1116,74 +654,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
         $('#shop-order-list').html(itemsHtml);
 
-        /*
-        |--------------------------------------------------------------------------
-        | SUMMARY
-        |--------------------------------------------------------------------------
-        */
-
         renderOrderSummary(order);
 
-        /*
-        |--------------------------------------------------------------------------
-        | REINIT COMPONENTS
-        |--------------------------------------------------------------------------
-        */
-
         if (typeof KTComponents !== 'undefined') {
-
             KTComponents.init();
         }
     };
 
     const populateCart = (order) => {
-
-        /*
-        |--------------------------------------------------------------------------
-        | YOUR ORIGINAL FUNCTION (UNCHANGED)
-        |--------------------------------------------------------------------------
-        */
-
         sessionStorage.setItem('shop_order_number', order.order_number);
 
-        $('#order-id').text(
-            order.order_number ?? '--'
-        );
-
-        $('#order-type').val(
-            order.order_type ?? 'Walk-in'
-        );
+        $('#order-id').text(order.order_number ?? '--');
+        $('#order-type').val(order.order_type ?? 'Walk-in');
 
         if (order.order_type === 'Dine-in') {
             $('#set-table-column').removeClass('d-none');
-        } else {
+        }
+        else {
             $('#set-table-column').addClass('d-none');
         }
 
-        $('#badge-table').text(
-            order.table_number
-                ? `${order.floor_plan_name} • Table ${order.table_number}`
-                : 'No Table'
-        );
-
+        $('#badge-table').text(order.table_number ? `${order.floor_plan_name} • Table ${order.table_number}` : 'No Table');
         $('#badge-order-type').text(order.order_type);
-
-        $('#badge-payment-status').text(
-            order.payment_status ?? 'Unpaid'
-        );
-
-        $('#badge-customer-name').text(
-            order.customer_name || 'Walk-in Customer'
-        );
+        $('#badge-payment-status').text(order.payment_status ?? 'Unpaid');
+        $('#badge-order-status').text(order.order_status ?? 'Pending');
+        $('#badge-customer-name').text(order.customer_name || 'Walk-in Customer');
 
         $('#shop-order-loading').addClass('d-none');
         $('#shop-order-empty').addClass('d-none');
-
-        $('#shop-order-list')
-            .removeClass('d-none');
-
-        $('#shop-order-summary-card')
-            .removeClass('d-none');
+        $('#shop-order-list').removeClass('d-none');
+        $('#shop-order-summary-card').removeClass('d-none');
 
         renderOrderSummary(order);
 
@@ -1202,40 +702,15 @@ document.addEventListener('DOMContentLoaded', () => {
             KTComponents.init();
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | ONLY ADD THIS NEW PART (SAFE EXTENSION)
-        |--------------------------------------------------------------------------
-        */
-
         applyCartState(order);
     };
 
     const applyCartState = (order) => {
-
-        const isPaid =
-            order.payment_status === 'Paid';
-
-        const isRefunded =
-            order.payment_status === 'Refunded';
-
-        const isCancelled =
-            order.order_status === 'Cancelled';
-
-        const isVoided =
-            order.order_status === 'Voided';
-
-        const isLocked =
-            isPaid ||
-            isRefunded ||
-            isCancelled ||
-            isVoided;
-
-        /*
-        |--------------------------------------------------------------------------
-        | STATUS BADGE
-        |--------------------------------------------------------------------------
-        */
+        const isPaid = order.payment_status === 'Paid';
+        const isRefunded = order.payment_status === 'Refunded';
+        const isCancelled = order.order_status === 'Cancelled';
+        const isVoided = order.order_status === 'Voided';
+        const isLocked = isPaid || isRefunded || isCancelled || isVoided;
 
         $('#badge-payment-status')
             .removeClass()
@@ -1247,104 +722,48 @@ document.addEventListener('DOMContentLoaded', () => {
             )
             .text(order.payment_status ?? 'Unpaid');
 
-        /*
-        |--------------------------------------------------------------------------
-        | VOID + REFUND VISIBILITY
-        |--------------------------------------------------------------------------
-        */
+        $('#badge-order-status')
+            .removeClass()
+            .addClass(
+                `badge ${getOrderStatusClass(
+                    order.payment_status,
+                    order.order_status
+                )} px-4 py-3 fw-bold fs-8`
+            )
+            .text(order.order_status ?? 'Pending');
 
         if (isPaid && !isVoided) {
-
-            $('#void-order-column')
-                .removeClass('d-none');
-
-            $('#refund-order-column')
-                .removeClass('d-none');
-
+            $('#void-order-column').removeClass('d-none');
+            $('#refund-order-column').removeClass('d-none');
         }
         else {
-
-            $('#void-order-column')
-                .addClass('d-none');
-
-            $('#refund-order-column')
-                .addClass('d-none');
+            $('#void-order-column').addClass('d-none');
+            $('#refund-order-column').addClass('d-none');
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | LOCK ORDER
-        |--------------------------------------------------------------------------
-        */
-
         if (isLocked) {
-
-            /*
-            |--------------------------------------------------------------------------
-            | DISABLE CART MODIFICATION
-            |--------------------------------------------------------------------------
-            */
-
             $('#shop-order-list')
                 .find(
                     'input, select, textarea, button'
                 )
                 .prop('disabled', true);
 
-            /*
-            |--------------------------------------------------------------------------
-            | DISABLE TRANSACTION ACTIONS
-            |--------------------------------------------------------------------------
-            */
-
             $('#manage-payment-button').prop('disabled', true);
-
             $('#send-kitchen-ticket').prop('disabled', true);
-
             $('#cancel-button').prop('disabled', true);
-
             $('#manage-discount-button').prop('disabled', true);
-
             $('#manage-charge-button').prop('disabled', true);
-
             $('#customer-button').prop('disabled', true);
-
             $('#submit-product').prop('disabled', true);
-
             $('#order-type').prop('disabled', true);
-
             $('#set-table').prop('disabled', true);
-
-            /*
-            |--------------------------------------------------------------------------
-            | KEEP SAFE ACTIONS AVAILABLE
-            |--------------------------------------------------------------------------
-            */
-
             $('#print-bill').prop('disabled', false);
-
             $('#new-order').prop('disabled', false);
-
             $('#order-history-button').prop('disabled', false);
-
-            $('#void-order-button').prop(
-                'disabled',
-                !isPaid
-            );
-
-            $('#refund-order-button').prop(
-                'disabled',
-                !isPaid
-            );
-
+            $('#void-order-button').prop('disabled',!isPaid);
+            $('#refund-order-button').prop('disabled',!isPaid);
         }
         else {
-
-            /*
-            |--------------------------------------------------------------------------
-            | RESTORE EDIT MODE
-            |--------------------------------------------------------------------------
-            */
 
             $('#shop-order-list')
                 .find(
@@ -1353,45 +772,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 .prop('disabled', false);
 
             $('#manage-payment-button').prop('disabled', false);
-
             $('#send-kitchen-ticket').prop('disabled', false);
-
             $('#cancel-button').prop('disabled', false);
-
             $('#manage-discount-button').prop('disabled', false);
-
             $('#manage-charge-button').prop('disabled', false);
-
             $('#customer-button').prop('disabled', false);
-
             $('#submit-product').prop('disabled', false);
-
             $('#order-type').prop('disabled', false);
-
             $('#set-table').prop('disabled', false);
-
             $('#print-bill').prop('disabled', false);
         }
     };
 
     const toggleCartActions = (show = false) => {
         if (show) {
-
-            $('.cart-action')
-                .removeClass('d-none');
-
-            $('#send-kitchen-ticket')
-            .removeClass('d-none');    
+            $('.cart-action').removeClass('d-none');
+            $('#send-kitchen-ticket').removeClass('d-none');    
 
             return;
         }
 
-        $('.cart-action')
-            .addClass('d-none');
+        $('.cart-action').addClass('d-none');
     };
 
     const formatPeso = (value = 0) => {
-
         return `₱ ${Number(value).toLocaleString(undefined, {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
@@ -1399,18 +803,13 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const formatOrderTime = (datetime) => {
-
         if (!datetime) return '--';
 
         return moment(datetime).format('MMM D, hh:mm A');
     };
 
     const parseMoney = (value) => {
-
-        if (
-            value === null
-            || value === undefined
-        ) {
+        if (value === null || value === undefined) {
             return 0;
         }
 
@@ -1423,15 +822,9 @@ document.addEventListener('DOMContentLoaded', () => {
     };    
 
     const renderCategoryTab = (category) => {
-
         return `
-            <button
-                type="button"
-                class="btn btn-light rounded-pill px-4 py-2 product-category-filter"
-                data-product-filter="${category.id}">
-
+            <button type="button" class="btn btn-light rounded-pill px-4 py-2 product-category-filter" data-product-filter="${category.id}">
                 ${category.name}
-
             </button>
         `;
     };
@@ -1461,18 +854,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         return `
         <div class="col-6 col-md-4">
-
-            <div 
-                class="card border-0 shadow-sm h-100 product-card ${
-                    disabled ? 'product-card-disabled opacity-60' : 'cursor-pointer'
-                }"
-
-                ${modalAttrs}
-
-                style="
-                    transition: transform 0.2s ease, box-shadow 0.2s ease;
-                    ${disabled ? 'pointer-events: none;' : ''}
-                "
+            <div class="card border-0 shadow-sm h-100 product-card ${disabled ? 'product-card-disabled opacity-60' : 'cursor-pointer'}" ${modalAttrs} style="transition: transform 0.2s ease, box-shadow 0.2s ease; ${disabled ? 'pointer-events: none;' : ''}"
 
                 ${!disabled ? `
                     onmouseover="this.style.transform='translateY(-4px)';
@@ -1486,28 +868,20 @@ document.addEventListener('DOMContentLoaded', () => {
             >
 
                 <div class="card-body d-flex flex-column justify-content-between p-5">
-
-                    <!-- TOP -->
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <span class="badge rounded-pill ${badgeClass} px-3 py-2 fw-semibold fs-8">
                             ${badgeText}
                         </span>
 
-                        <i class="ki-duotone ${icon} fs-1">
-                            <span class="path1"></span>
-                            <span class="path2"></span>
-                        </i>
+                        <i class="ki-duotone ${icon} fs-1"></i>
                     </div>
 
-                    <!-- MIDDLE -->
                     <div class="mb-4 flex-grow-1">
                         <div class="text-muted fs-8 mb-1 text-uppercase">
                             ${product.category_name}
                         </div>
 
-                        <h5 class="fw-bold fs-2 ${
-                            disabled ? 'text-muted' : 'text-gray-900'
-                        } mb-2 lh-base">
+                        <h5 class="fw-bold fs-2 ${disabled ? 'text-muted' : 'text-gray-900'} mb-2 lh-base">
                             ${product.product_name}
                         </h5>
 
@@ -1523,15 +897,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     </div>
 
-                    <!-- BOTTOM -->
                     <div class="d-flex align-items-end justify-content-between pt-3 border-top border-gray-100">
                         <div>
                             <div class="fs-8 text-muted text-uppercase mb-1">
                                 Price
                             </div>
-                            <div class="fw-bolder fs-1 ${
-                                disabled ? 'text-muted' : 'text-primary'
-                            }">
+                            <div class="fw-bolder fs-1 ${disabled ? 'text-muted' : 'text-primary'}">
                                 ₱ ${Number(product.price).toLocaleString(undefined, {
                                     minimumFractionDigits: 2,
                                     maximumFractionDigits: 2
@@ -1539,15 +910,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                         </div>
 
-                        <div class="btn btn-icon btn-sm ${
-                            disabled ? 'btn-light' : 'btn-light-primary'
-                        } rounded-circle">
-                            <i class="ki-duotone ${
-                                disabled ? 'ki-information' : 'ki-arrow-right'
-                            } fs-3"></i>
+                        <div class="btn btn-icon btn-sm ${disabled ? 'btn-light' : 'btn-light-primary'} rounded-circle">
+                            <i class="ki-duotone ${disabled ? 'ki-information' : 'ki-arrow-right'} fs-3"></i>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
@@ -1555,19 +921,13 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const renderProductLoading = () => {
-
         const container = document.getElementById('product-container');
 
         container.innerHTML = `
         <div class="col-12">
-
             <div class="card border-0 shadow-sm">
-
                 <div class="card-body py-15 text-center">
-
-                    <div class="spinner-border text-primary mb-5"
-                        style="width: 3rem; height: 3rem;">
-                    </div>
+                    <div class="spinner-border text-primary mb-5"style="width: 3rem; height: 3rem;"></div>
 
                     <div class="fw-bold fs-4 text-gray-800 mb-2">
                         Loading products...
@@ -1576,92 +936,35 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="text-muted">
                         Please wait while products are being prepared
                     </div>
-
                 </div>
-
             </div>
-
         </div>
         `;
     };
 
-    const renderNoProductsFound = ({
-        search = '',
-        category = 'all',
-    }) => {
-
+    const renderNoProductsFound = ({search = '', category = 'all',}) => {
         let title = 'No products found';
         let description = '';
 
-        /*
-        |--------------------------------------------------------------------------
-        | SEARCH + CATEGORY
-        |--------------------------------------------------------------------------
-        */
-
         if (search && category !== 'all') {
-
-            description = `
-                No products matched
-                "<strong>${search}</strong>"
-                under this category.
-            `;
+            description = `No products matched "<strong>${search}</strong>" under this category.`;
         }
-
-        /*
-        |--------------------------------------------------------------------------
-        | SEARCH ONLY
-        |--------------------------------------------------------------------------
-        */
-
         else if (search) {
-
-            description = `
-                No products matched
-                "<strong>${search}</strong>".
-            `;
+            description = `No products matched "<strong>${search}</strong>".`;
         }
-
-        /*
-        |--------------------------------------------------------------------------
-        | CATEGORY ONLY
-        |--------------------------------------------------------------------------
-        */
-
         else if (category !== 'all') {
-
-            description = `
-                No products available under this category.
-            `;
+            description = `No products available under this category.`;
         }
-
-        /*
-        |--------------------------------------------------------------------------
-        | DEFAULT
-        |--------------------------------------------------------------------------
-        */
-
         else {
-
-            description = `
-                No POS products are currently available.
-            `;
+            description = `No POS products are currently available.`;
         }
 
         return `
         <div class="col-12">
-
             <div class="card border-0 shadow-sm">
-
                 <div class="card-body py-15 text-center">
-
                     <div class="mb-5">
-
-                        <i class="ki-duotone ki-file-deleted fs-5tx text-gray-300">
-                            <span class="path1"></span>
-                            <span class="path2"></span>
-                        </i>
-
+                        <i class="ki-duotone ki-file-deleted fs-5tx text-gray-300"></i>
                     </div>
 
                     <div class="fw-bold fs-2 text-gray-800 mb-3">
@@ -1672,89 +975,67 @@ document.addEventListener('DOMContentLoaded', () => {
                         ${description}
                     </div>
 
-                    <button
-                        type="button"
-                        class="btn btn-light-primary reset-product-filter">
-
+                    <button type="button" class="btn btn-light-primary reset-product-filter">
                         Reset Filters
-
                     </button>
-
                 </div>
-
             </div>
-
         </div>
         `;
     };
 
     const renderOrderHistoryGrid = (orders) => {
-
         const html = orders.map(order => {
+            const statusClass = getOrderStatusClass(order.payment_status, order.order_status);
+            const statusColor = getOrderStatusColor(order.payment_status, order.order_status);
 
-            const statusClass = getOrderStatusClass(
-                order.payment_status,
-                order.order_status
-            );
+            let orderStatusBadgeClass = 'badge-light-primary text-primary';
+            switch (order.order_status) {
+                case 'Completed':
+                    orderStatusBadgeClass = 'badge-light-success text-success';
+                    break;
+                case 'Cancelled':
+                case 'Voided':
+                    orderStatusBadgeClass = 'badge-light-danger text-danger';
+                    break;
+                case 'Preparing':
+                case 'Ready':
+                    orderStatusBadgeClass = 'badge-light-warning text-warning';
+                    break;
+            }
 
-            const statusColor = getOrderStatusColor(
-                order.payment_status,
-                order.order_status
-            );
-
-            const tableInfo =
-                order.table_number
-                    ? `${order.floor_plan_name ?? ''} • Table ${order.table_number}`
-                    : null;
+            const tableInfo = order.table_number ? `${order.floor_plan_name ?? ''} • Table ${order.table_number}` : null;
 
             return `
             <div class="col-12 col-md-6 col-xl-4">
-
-                <div
-                    class="card border-0 shadow-sm rounded-4 order-history-card cursor-pointer h-100 position-relative overflow-hidden"
-                    data-order-id="${order.id ?? 'No Active Order'}">
-
-                    <!-- STATUS STRIP -->
-                    <div
-                        class="position-absolute top-0 start-0 h-100"
-                        style="width: 5px; background: ${statusColor};">
-                    </div>
+                <div class="card border-0 shadow-sm rounded-4 order-history-card cursor-pointer h-100 position-relative overflow-hidden" data-order-id="${order.id ?? 'No Active Order'}">
+                    <div class="position-absolute top-0 start-0 h-100" style="width: 5px; background: ${statusColor};"></div>
 
                     <div class="card-body p-4">
-
-                        <!-- TOP ROW -->
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-
+                        <div class="d-flex justify-content-between align-items-start mb-3">
                             <div>
-
                                 <div class="fw-bold fs-6 text-gray-900">
                                     ${order.order_number}
                                 </div>
-
                                 <div class="text-muted small">
                                     ${order.customer_name ?? 'Walk-in Customer'}
                                 </div>
-
                             </div>
 
-                            <span class="badge ${statusClass} fw-bold">
-                                ${order.payment_status}
-                            </span>
-
+                            <div class="d-flex flex-column align-items-end gap-1">
+                                <span class="badge ${orderStatusBadgeClass} fw-semibold fs-8 px-2 py-0.5">
+                                    ${order.order_status}
+                                </span>
+                                <span class="badge ${statusClass} fw-bold">
+                                    ${order.payment_status}
+                                </span>
+                            </div>
                         </div>
 
-                        <!-- MIDDLE -->
                         <div class="d-flex justify-content-between align-items-center mb-2">
-
-                            <!-- LEFT SIDE -->
                             <div class="d-flex align-items-center flex-wrap gap-2">
+                                <span class="badge badge-light-primary fw-semibold px-3 py-2">${order.order_type}</span>
 
-                                <!-- ORDER TYPE -->
-                                <span class="badge badge-light-primary fw-semibold px-3 py-2">
-                                    ${order.order_type}
-                                </span>
-
-                                <!-- TABLE INFO -->
                                 ${tableInfo ? `
                                     <span class="badge badge-light-info fw-semibold px-3 py-2">
                                         ${tableInfo}
@@ -1763,34 +1044,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
                             </div>
 
-                            <!-- RIGHT SIDE -->
                             <div class="fw-bolder fs-5 text-dark text-nowrap">
-
                                 ₱ ${Number(order.net_total).toLocaleString(undefined, {
                                     minimumFractionDigits: 2
                                 })}
-
                             </div>
-
                         </div>
 
-                        <!-- BOTTOM META -->
-                        <div class="text-muted small d-flex justify-content-between">
-
-                            <span>
-                                # ${order.id}
-                            </span>
-
-                            <span>
-                                ${formatOrderTime(order.created_at)}
-                            </span>
-
+                        <div class="text-muted small d-flex justify-content-between pt-2 border-top border-gray-100 mt-2">
+                            <span># ${order.id}</span>
+                            <span>${formatOrderTime(order.created_at)}</span>
                         </div>
-
                     </div>
-
                 </div>
-
             </div>
             `;
         }).join('');
@@ -1799,356 +1065,141 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!orders.length) {
             $('#order-history-empty').removeClass('d-none');
-        } else {
+        }
+        else {
             $('#order-history-empty').addClass('d-none');
         }
     };
 
     const renderOrderHeader = (order) => {
-
         activeOrder.id = order?.id ?? activeOrder.id;
         activeOrder.orderNumber = order?.order_number ?? activeOrder.orderNumber;
         activeOrder.status = order?.order_status ?? activeOrder.status;
         activeOrder.paymentStatus = order?.payment_status ?? activeOrder.paymentStatus;
 
         $('#order-id').text(activeOrder.orderNumber ?? '--');
-
-        $('#badge-payment-status')
-            .text(activeOrder.paymentStatus ?? 'Unpaid');
-
-        $('#badge-order-type')
-            .text(order?.order_type ?? $('#badge-order-type').text());
+        $('#badge-payment-status').text(activeOrder.paymentStatus ?? 'Unpaid');
+        $('#badge-order-status').text(activeOrder.status ?? 'Pending');
+        $('#badge-order-type').text(order?.order_type ?? $('#badge-order-type').text());
     };
 
     const renderOrderItem = (item) => {
-
         return `
-
         <div class="card border-0 shadow-sm mb-3 order-item-card rounded-3">
-
             <div class="card-body p-4">
-
-                <!-- HEADER -->
                 <div class="d-flex justify-content-between align-items-start mb-3">
-
-                    <!-- PRODUCT INFO -->
                     <div class="flex-grow-1 pe-3">
-
                         <div class="fw-bold fs-5 text-gray-900 mb-1 text-truncate">
-
                             ${item.product_name}
-
                         </div>
 
                         <div class="d-flex align-items-center gap-2 flex-wrap">
-
-                            <span class="badge badge-light-dark fw-semibold">
-
-                                ${formatPeso(item.unit_price)} / item
-
-                            </span>
-
+                            <span class="badge badge-light-dark fw-semibold">${formatPeso(item.unit_price)} / item</span>
                             <span class="text-muted fs-8">
-
-                                Qty <span class="fw-bold text-gray-800">
-                                    ${item.quantity}
-                                </span>
-
+                                Qty <span class="fw-bold text-gray-800">${item.quantity}</span>
                             </span>
-
                         </div>
-
                     </div>
-
-                    <!-- PRICE -->
                     <div class="text-end">
-
                         <div class="fw-bolder fs-2 text-primary lh-1">
-
                             ${formatPeso(item.line_total)}
-
                         </div>
 
                         <div class="text-muted fs-8 mt-1">
                             Total
                         </div>
-
                     </div>
-
                 </div>
-
-                <!-- NOTE -->
                 ${
                     item.order_note
                         ? `
                         <div class="d-flex align-items-start gap-2 bg-light-warning border border-warning border-dashed rounded-3 p-3 mb-4">
-
                             <i class="ki-outline ki-notepad fs-4 text-warning mt-1"></i>
-
                             <div class="fs-7 fw-semibold text-gray-700">
-
                                 ${item.order_note}
-
                             </div>
-
                         </div>
-                    `
-                        : ''
+                    ` : ''
                 }
 
-                <!-- FOOTER -->
                 <div class="d-flex justify-content-between align-items-center">
-
-                   <!-- QUANTITY CONTROL -->
-                    <div
-                        class="
-                            d-flex
-                            align-items-center
-                            bg-light
-                            rounded-pill
-                            px-2
-                            py-1
-                            gap-2
-                            shadow-sm
-                        ">
-
-                        <!-- DECREASE -->
-                        <button
-                            type="button"
-                            class="
-                                btn
-                                btn-icon
-                                btn-sm
-                                btn-light-primary
-                                rounded-circle
-                                decrease-item-qty
-                            "
-                            data-shop-order-item-id="${item.id}">
-
+                    <div class="d-flex align-items-center bg-light rounded-pill px-2 py-1 gap-2 shadow-sm">
+                        <button type="button" class="btn btn-icon btn-sm btn-light-primary rounded-circle decrease-item-qty" data-shop-order-item-id="${item.id}">
                             <i class="ki-outline ki-minus fs-5"></i>
-
                         </button>
 
-                        <!-- QUANTITY -->
-                        <input
-                            type="text"
-                            class="
-                                form-control
-                                form-control-flush
-                                fw-bold
-                                text-center
-                                bg-transparent
-                                border-0
-                                text-gray-900
-                                w-40px
-                                px-0
-                            "
-                            value="${item.quantity}"
-                            readonly>
+                        <input type="text" class=" form-control form-control-flush fw-bold text-center bg-transparent border-0 text-gray-900 w-40px px-0" value="${item.quantity}" readonly>
 
-                        <!-- INCREASE -->
-                        <button
-                            type="button"
-                            class="
-                                btn
-                                btn-icon
-                                btn-sm
-                                btn-light-primary
-                                rounded-circle
-                                increase-item-qty
-                            "
-                            data-shop-order-item-id="${item.id}">
-
+                        <button type="button" class="btn btn-icon btn-sm btn-light-primary rounded-circle increase-item-qty" data-shop-order-item-id="${item.id}">
                             <i class="ki-outline ki-plus fs-5"></i>
-
                         </button>
-
                     </div>
 
-                    <!-- DELETE -->
-                    <button
-                        type="button"
-                        class="
-                            btn
-                            btn-icon
-                            btn-sm
-                            btn-light-danger
-                            delete-order-item
-                        "
-                        data-shop-order-item-id="${item.id}"
-                        title="Remove item">
-
+                    <button type="button" class="btn btn-icon btn-sm btn-light-danger delete-order-item" data-shop-order-item-id="${item.id}" title="Remove item">
                         <i class="ki-outline ki-trash fs-4"></i>
-
                     </button>
-
                 </div>
-
             </div>
-
         </div>
         `;
     };
 
     const renderOrderSummary = (order) => {
-
         let html = '';
-
-        /*
-        |--------------------------------------------------------------------------
-        | SUBTOTAL
-        |--------------------------------------------------------------------------
-        */
 
         html += `
             <div class="d-flex justify-content-between align-items-center mb-3">
-
-                <span class="fw-semibold text-gray-700">
-                    Subtotal
-                </span>
-
-                <span class="fw-bold text-gray-900">
-                    ${formatPeso(order.subtotal ?? 0)}
-                </span>
-
+                <span class="fw-semibold text-gray-700">Subtotal</span>
+                <span class="fw-bold text-gray-900">${formatPeso(order.subtotal ?? 0)}</span>
             </div>
         `;
 
-        /*
-        |--------------------------------------------------------------------------
-        | VATABLE SALES
-        |--------------------------------------------------------------------------
-        */
-
         if ((order.vatable_sales ?? 0) > 0) {
-
             html += `
                 <div class="d-flex justify-content-between align-items-center mb-3">
-
-                    <span class="fw-semibold text-gray-700">
-                        VATable Sales
-                    </span>
-
-                    <span class="fw-semibold text-gray-900">
-                        ${formatPeso(order.vatable_sales ?? 0)}
-                    </span>
-
+                    <span class="fw-semibold text-gray-700">VATable Sales</span>
+                    <span class="fw-semibold text-gray-900">${formatPeso(order.vatable_sales ?? 0)}</span>
                 </div>
             `;
         }
-
-        /*
-        |--------------------------------------------------------------------------
-        | VAT AMOUNT
-        |--------------------------------------------------------------------------
-        */
 
         if ((order.vat_amount ?? 0) > 0) {
-
             html += `
                 <div class="d-flex justify-content-between align-items-center mb-3">
-
-                    <span class="fw-semibold text-gray-700">
-                        VAT (12%)
-                    </span>
-
-                    <span class="fw-semibold text-gray-900">
-                        ${formatPeso(order.vat_amount ?? 0)}
-                    </span>
-
+                    <span class="fw-semibold text-gray-700">VAT (12%)</span>
+                    <span class="fw-semibold text-gray-900">${formatPeso(order.vat_amount ?? 0)}</span>
                 </div>
             `;
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | DISCOUNTS
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            Array.isArray(order.discounts)
-            &&
-            order.discounts.length > 0
-        ) {
-
+        if (Array.isArray(order.discounts) && order.discounts.length > 0) {
             order.discounts.forEach((discount) => {
-
                 html += `
                     <div class="d-flex justify-content-between align-items-center mb-2">
-
-                        <span class="fw-semibold text-danger">
-
-                            ${discount.discount_type_name}
-
-                        </span>
-
-                        <span class="fw-bold text-danger">
-
-                            - ${formatPeso(discount.discount_amount ?? 0)}
-
-                        </span>
-
+                        <span class="fw-semibold text-danger">${discount.discount_type_name}</span>
+                        <span class="fw-bold text-danger">- ${formatPeso(discount.discount_amount ?? 0)}</span>
                     </div>
                 `;
             });
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | CHARGES
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            Array.isArray(order.charges)
-            &&
-            order.charges.length > 0
-        ) {
-
+        if (Array.isArray(order.charges) && order.charges.length > 0) {
             order.charges.forEach((charge) => {
-
                 html += `
                     <div class="d-flex justify-content-between align-items-center mb-2">
-
-                        <span class="fw-semibold text-primary">
-
-                            ${charge.charge_type_name}
-
-                        </span>
-
-                        <span class="fw-bold text-primary">
-
-                            + ${formatPeso(charge.charge_amount ?? 0)}
-
-                        </span>
-
+                        <span class="fw-semibold text-primary">${charge.charge_type_name}</span>
+                        <span class="fw-bold text-primary">+ ${formatPeso(charge.charge_amount ?? 0)}</span>
                     </div>
                 `;
             });
         }
-
-        /*
-        |--------------------------------------------------------------------------
-        | TOTAL
-        |--------------------------------------------------------------------------
-        */
 
         html += `
             <div class="separator separator-dashed my-4"></div>
 
             <div class="d-flex justify-content-between align-items-center">
-
-                <span class="fw-bolder fs-3 text-gray-900">
-                    Total
-                </span>
-
-                <span class="fw-bolder fs-2 text-success">
-
-                    ${formatPeso(order.net_total ?? 0)}
-
-                </span>
-
+                <span class="fw-bolder fs-3 text-gray-900">Total</span>
+                <span class="fw-bolder fs-2 text-success">${formatPeso(order.net_total ?? 0)}</span>
             </div>
         `;
 
@@ -2156,31 +1207,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const renderFloorPlans = (floorPlans) => {
-
         const html = floorPlans.map((plan, index) => {
-
-            return `
-            
-            <button
-                type="button"
-                class="
-                    btn
-                    floor-plan-filter
-                    rounded-pill
-                    px-6
-                    py-3
-                    fw-bold
-                    fs-6
-                    ${
-                        index === 0
-                        ? 'btn-success'
-                        : 'btn-light'
-                    }
-                "
-                data-floor-plan-id="${plan.id}">
-
+            return `            
+            <button type="button" class="btn floor-plan-filter rounded-pill px-6 py-3 fw-bold fs-6 ${index === 0 ? 'btn-success' : 'btn-light'}" data-floor-plan-id="${plan.id}">
                 ${plan.floor_plan_name}
-
             </button>
             `;
         }).join('');
@@ -2189,159 +1219,66 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const renderFloorTables = (tables) => {
-
         const html = tables.map((table) => {
+            const isSelected = table.is_selected;
+            const isOccupied = table.is_occupied;
 
-            const isSelected =
-                table.is_selected;
-
-            const isOccupied =
-                table.is_occupied;
-
-            let cardClass =
-                'border-gray-200 border-hover-primary';
-
-            let badgeClass =
-                'badge-light-primary';
-
-            let badgeText =
-                'Available';
+            let cardClass = 'border-gray-200 border-hover-primary';
+            let badgeClass = 'badge-light-primary';
+            let badgeText = 'Available';
 
             if (isSelected) {
-
-                cardClass =
-                    'border-success bg-success bg-opacity-10';
-
-                badgeClass =
-                    'badge-success';
-
-                badgeText =
-                    'Selected';
+                cardClass = 'border-success bg-success bg-opacity-10';
+                badgeClass = 'badge-success';
+                badgeText = 'Selected';
             }
-
             else if (isOccupied) {
-
-                cardClass =
-                    'bg-light opacity-75 border-gray-300';
-
-                badgeClass =
-                    'badge-light-danger';
-
-                badgeText =
-                    'Occupied';
+                cardClass = 'bg-light opacity-75 border-gray-300';
+                badgeClass = 'badge-light-danger';
+                badgeText = 'Occupied';
             }
 
-            return `
-            
+            return `            
             <div class="col-6 col-md-4 col-xl-3">
-
-                <div
-                    class="
-                        table-card
-                        card
-                        shadow-sm
-                        rounded-4
-                        h-100
-                        ${cardClass}
-                        ${
-                            !isOccupied || isSelected
-                            ? 'cursor-pointer selectable-table'
-                            : ''
-                        }
-                    "
-                    data-floor-plan-table-id="${table.id}">
-
+                <div class=" table-card card shadow-sm rounded-4 h-100 ${cardClass} ${ !isOccupied || isSelected ? 'cursor-pointer selectable-table' : ''}"data-floor-plan-table-id="${table.id}">
                     <div class="card-body p-5">
-
-                        <div
-                            class="d-flex justify-content-between align-items-start mb-5">
-
+                        <div class="d-flex justify-content-between align-items-start mb-5">
                             <div>
-
-                                <div class="
-                                    fw-bold
-                                    fs-2
-                                    ${
-                                        isSelected
-                                        ? 'text-success'
-                                        : 'text-gray-900'
-                                    }
-                                    mb-1
-                                ">
-
+                                <div class="fw-bold fs-2 ${isSelected ? 'text-success' : 'text-gray-900'} mb-1">
                                     Table ${table.table_number}
-
                                 </div>
 
                                 <div class="text-muted fw-semibold fs-7">
-
                                     ${table.seats} Seats
-
                                 </div>
-
                             </div>
 
-                            <span class="badge ${badgeClass} fw-bold">
-
-                                ${badgeText}
-
-                            </span>
-
+                            <span class="badge ${badgeClass} fw-bold">${badgeText}</span>
                         </div>
-
-                        <div
-                            class="d-flex justify-content-between align-items-center">
-
+ 
+                        <div class="d-flex justify-content-between align-items-center">
                             <div class="d-flex gap-1">
-
                                 ${Array(table.seats)
                                     .fill('')
-                                    .map(() => `
-                                    
-                                        <i class="
-                                            ki-outline
-                                            ki-profile-user
-                                            fs-4
-                                            ${
-                                                isSelected
-                                                ? 'text-success'
-                                                : 'text-muted'
-                                            }
-                                        "></i>
+                                    .map(() => `                                    
+                                        <i class=" ki-outline ki-profile-user fs-4 ${ isSelected ? 'text-success' : 'text-muted'}"></i>
                                     `)
                                     .join('')}
-
                             </div>
 
                             ${
                                 isSelected
                                 ? `
-                                    <i class="
-                                        ki-duotone
-                                        ki-check-circle
-                                        fs-1
-                                        text-success
-                                    ">
-                                        <span class="path1"></span>
-                                        <span class="path2"></span>
-                                    </i>
+                                    <i class="ki-duotone ki-check-circle fs-1 text-success"></i>
                                 `
                                 : `
-                                    <i class="
-                                        ki-outline
-                                        ki-arrow-right
-                                        fs-2
-                                        text-muted
-                                    "></i>
+                                    <i class="ki-outline ki-arrow-right fs-2 text-muted"></i>
                                 `
                             }
 
                         </div>
-
                     </div>
-
                 </div>
-
             </div>
             `;
         }).join('');
@@ -2350,9 +1287,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const renderAvailableDiscounts = (discounts) => {
-
         if (!discounts.length) {
-
             $('#available-discount-list').html(`
                 <div class="text-center py-10 text-muted">
                     No available discounts
@@ -2363,38 +1298,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const html = discounts.map(discount => {
-
-            const isVariable =
-                discount.is_variable === 'Yes';
+            const isVariable = discount.is_variable === 'Yes';
 
             return `
-
-            <div
-                class="card border-0 shadow-sm rounded-4 mb-3 overflow-hidden">
-
+            <div class="card border-0 shadow-sm rounded-4 mb-3 overflow-hidden">
                 <div class="card-body p-3">
-
-                    <!-- TOP -->
-                    <div
-                        class="d-flex justify-content-between align-items-start gap-3">
-
+                    <div class="d-flex justify-content-between align-items-start gap-3">
                         <div class="flex-grow-1">
-
-                            <div
-                                class="fw-bold text-gray-900 fs-5 mb-1">
-
+                            <div class="fw-bold text-gray-900 fs-5 mb-1">
                                 ${discount.discount_type_name}
-
                             </div>
 
-                            <div
-                                class="d-flex align-items-center flex-wrap gap-2">
-
-                                <span
-                                    class="badge badge-light-success">
-
+                            <div class="d-flex align-items-center flex-wrap gap-2">
+                                <span class="badge badge-light-success">
                                     ${discount.value_type}
-
                                 </span>
 
                                 ${
@@ -2426,28 +1343,14 @@ document.addEventListener('DOMContentLoaded', () => {
                                 }
 
                             </div>
-
                         </div>
 
-                        <button
-                            type="button"
-                            class="btn btn-success btn-sm px-4 apply-discount-button"
-
-                            data-discount-id="${discount.id}"
-
-                            data-variable="${discount.is_variable}"
-
-                            data-value-type="${discount.value_type}">
-
+                        <button type="button" class="btn btn-success btn-sm px-4 apply-discount-button" data-discount-id="${discount.id}" data-variable="${discount.is_variable}" data-value-type="${discount.value_type}">
                             Apply
-
                         </button>
-
                     </div>
 
-                    <!-- QUICK INPUTS -->
                     <div class="row g-2 mt-2">
-
                         ${
                             isVariable
                                 ? `
@@ -2470,36 +1373,18 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
 
                         <div class="${isVariable ? 'col-md-3' : 'col-md-4'}">
-
-                            <input
-                                type="text"
-                                class="form-control form-control-sm discount-reference-name"
-                                placeholder="Reference Name">
-
+                            <input type="text" class="form-control form-control-sm discount-reference-name" placeholder="Reference Name">
                         </div>
 
                         <div class="${isVariable ? 'col-md-3' : 'col-md-4'}">
-
-                            <input
-                                type="text"
-                                class="form-control form-control-sm discount-reference-number"
-                                placeholder="Reference No.">
-
+                            <input type="text" class="form-control form-control-sm discount-reference-number" placeholder="Reference No.">
                         </div>
 
                         <div class="${isVariable ? 'col-md-3' : 'col-md-4'}">
-
-                            <input
-                                type="text"
-                                class="form-control form-control-sm discount-remarks"
-                                placeholder="Remarks">
-
+                            <input type="text" class="form-control form-control-sm discount-remarks" placeholder="Remarks">
                         </div>
-
                     </div>
-
                 </div>
-
             </div>
             `;
         }).join('');
@@ -2508,9 +1393,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const renderAppliedDiscounts = (discounts) => {
-
         if (!discounts.length) {
-
             $('#applied-discount-list').html(`
                 <div class="text-center py-5 text-muted">
                     No applied discounts
@@ -2521,38 +1404,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const html = discounts.map(discount => {
-
             return `
-
-            <div
-                class="card border-0 shadow-sm rounded-4 mb-2">
-
+            <div class="card border-0 shadow-sm rounded-4 mb-2">
                 <div class="card-body p-3">
-
-                    <div
-                        class="d-flex justify-content-between align-items-start gap-3">
-
-                        <!-- LEFT -->
+                    <div class="d-flex justify-content-between align-items-start gap-3">
                         <div class="flex-grow-1">
-
-                            <div
-                                class="d-flex align-items-center flex-wrap gap-2 mb-1">
-
+                            <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
                                 <div class="fw-bold text-gray-900">
                                     ${discount.discount_type_name}
                                 </div>
 
-                                <span
-                                    class="badge badge-light-success">
-
+                                <span class="badge badge-light-success">
                                     ${
                                         discount.value_type === 'Percentage'
                                             ? `${discount.discount_value}%`
                                             : formatPeso(discount.discount_value)
                                     }
-
                                 </span>
-
                             </div>
 
                             ${
@@ -2604,31 +1472,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         </div>
 
-                        <!-- RIGHT -->
                         <div class="text-end">
-
-                            <div
-                                class="fw-bolder text-success fs-5 mb-2">
-
+                            <div class="fw-bolder text-success fs-5 mb-2">
                                 - ${formatPeso(discount.discount_amount)}
-
                             </div>
 
-                            <button
-                                type="button"
-                                class="btn btn-light-danger btn-sm remove-discount-button"
-                                data-applied-id="${discount.id}">
-
+                            <button type="button" class="btn btn-light-danger btn-sm remove-discount-button" data-applied-id="${discount.id}">
                                 Remove
-
                             </button>
-
                         </div>
-
                     </div>
-
                 </div>
-
             </div>
             `;
         }).join('');
@@ -2636,8 +1490,9 @@ document.addEventListener('DOMContentLoaded', () => {
         $('#applied-discount-list').html(html);
     };
 
-    const renderAvailableCharges = (charges) => {
+    // --------------------
 
+    const renderAvailableCharges = (charges) => {
         if (!charges.length) {
 
             $('#available-charge-list').html(`
@@ -3837,8 +2692,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     config.forms.map((cfg) => initValidation(cfg.selector, cfg.rules));
-    config.posCategory.map((cfg) => generatePOSCategory(cfg.url));
-    config.posProduct.map((cfg) => generatePOSProduct(cfg.url));
+    generatePOSCategory(config.posCategory.url)
+    generatePOSProduct(config.posProduct.url);
 
     initializeCart();
 
@@ -3934,7 +2789,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 activeCategory?.dataset.productFilter ?? 'all';
 
             generatePOSProduct(
-                '/shop-register/generate-product',
+                config.posProduct.url,
                 {
                     category_id: categoryId,
                     search: event.target.value,
@@ -3968,7 +2823,7 @@ document.addEventListener('DOMContentLoaded', () => {
         button.classList.remove('btn-light');
 
         generatePOSProduct(
-            '/shop-register/generate-product',
+            config.posProduct.url,
             {
                 category_id: button.dataset.productFilter,
                 search: document.getElementById('product_search').value,
@@ -4028,7 +2883,7 @@ document.addEventListener('DOMContentLoaded', () => {
         */
 
         generatePOSProduct(
-            '/shop-register/generate-product',
+            config.posProduct.url,
             {
                 category_id: 'all',
                 search: '',
@@ -4863,6 +3718,72 @@ document.addEventListener('DOMContentLoaded', () => {
 
     $(document).on(
         'click',
+        '#print-order-summary',
+        function () {
+            
+            const ctx = getPageContext();
+
+            const width = 900;
+
+            const height = 700;
+
+            const left =
+                (screen.width - width) / 2;
+
+            const top =
+                (screen.height - height) / 2;
+
+            const url =
+                `/shop-order/register/${ctx.detailId}/print-orders`;
+
+            window.open(
+                url,
+                '_blank',
+                `
+                    width=${width},
+                    height=${height},
+                    top=${top},
+                    left=${left}
+                `
+            );
+        }
+    );
+
+    $(document).on(
+        'click',
+        '#print-payment-summary',
+        function () {
+            
+            const ctx = getPageContext();
+
+            const width = 900;
+
+            const height = 700;
+
+            const left =
+                (screen.width - width) / 2;
+
+            const top =
+                (screen.height - height) / 2;
+
+            const url =
+                `/shop-order/register/${ctx.detailId}/print-payments`;
+
+            window.open(
+                url,
+                '_blank',
+                `
+                    width=${width},
+                    height=${height},
+                    top=${top},
+                    left=${left}
+                `
+            );
+        }
+    );
+
+    $(document).on(
+        'click',
         '#manage-charge-button',
         async function () {
 
@@ -5397,26 +4318,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 /*
                 |--------------------------------------------------------------------------
-                | PRINT BILL
-                |--------------------------------------------------------------------------
-                */
-
-                if (
-                    typeof bill
-                    === 'function'
-                ) {
-
-                    bill(shopOrderId);
-                }
-
-                /*
-                |--------------------------------------------------------------------------
                 | CLEAR ACTIVE ORDER
                 |--------------------------------------------------------------------------
                 */
 
                 sessionStorage.removeItem('shop_order_id');
                 sessionStorage.removeItem('shop_order_number');
+
+                generatePOSProduct(config.posProduct.url);
 
                 resetCartUI();
 
@@ -5919,6 +4828,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
 
+                generatePOSProduct(config.posProduct.url);
+
                 $('#kitchen-send-modal')
                     .modal('hide');
 
@@ -6022,5 +4933,81 @@ document.addEventListener('DOMContentLoaded', () => {
             updateKitchenSelectionCount();
         }
     );
+
+    // Quick text assignment event listener
+    $(document).on('click', '.reason-quick-select', function () {
+        const reason = $(this).data('reason');
+        $('#order-cancellation-reason').val(reason);
+    });
+
+    // Submit cancellation handler
+    $(document).on('click', '#confirm-cancel-order-button', function () {
+        executeOrderCancellation();
+    });
+
+    const executeOrderCancellation = async () => {
+        try {
+            const shopOrderId = sessionStorage.getItem('shop_order_id');
+            if (!shopOrderId) {
+                showNotification('No active order context found.', 'danger');
+                return;
+            }
+
+            const cancellationReason = $('#order-cancellation-reason').val().trim();
+            if (!cancellationReason) {
+                showNotification('You must provide a cancellation reason.', 'warning');
+                return;
+            }
+
+            const csrf = getCsrfToken();
+            const formData = new URLSearchParams();
+            formData.append('shop_order_id', shopOrderId);
+            formData.append('void_reason', cancellationReason);
+
+            // Disable button to prevent double-clicks
+            const confirmBtn = document.getElementById('confirm-cancel-order-button');
+            confirmBtn.setAttribute('disabled', 'true');
+
+            const response = await fetch('/shop-order/cancel-order', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    'Accept': 'application/json',
+                    ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`Cancellation payload request failed: ${response.status}`);
+            }
+
+            const data = await response.json();
+            confirmBtn.removeAttribute('disabled');
+
+            if (!data.success) {
+                showNotification(data.message, 'error');
+                return;
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | INTERFACE STATUS AND VIEW UPDATES
+            |--------------------------------------------------------------------------
+            */
+            $('#cancel-order-modal').modal('hide');
+            $('#order-cancellation-reason').val(''); // Reset text box
+
+            showNotification('Order canceled successfully.', 'success');
+
+            sessionStorage.removeItem('shop_order_id');
+            sessionStorage.removeItem('shop_order_number');
+            resetCartUI();
+
+        } catch (error) {
+            document.getElementById('confirm-cancel-order-button').removeAttribute('disabled');
+            handleSystemError(error, 'cancel_order_failed', error.message);
+        }
+    };
 
 });

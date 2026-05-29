@@ -223,11 +223,7 @@ class ShopOrderController extends Controller
 
                 $isNewOrder = true;
 
-                $orderNumber =
-                    'SO-' .
-                    now()->format('YmdHis') .
-                    '-' .
-                    Str::upper(Str::random(4));
+                $orderNumber = 'SO-' . now()->format('ymd') . '-' . Str::upper(Str::random(4));
 
                 $shopOrder = ShopOrder::create([
 
@@ -1930,6 +1926,163 @@ class ShopOrderController extends Controller
         ]);
     }
 
+    public function cancelOrder(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'shop_order_id' => [
+                'required',
+                'integer',
+                Rule::exists('shop_order', 'id'),
+            ],
+            'void_reason' => [
+                'required',
+                'string',
+                'max:1000',
+            ],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ]);
+        }
+
+        $validated = $validator->validated();
+
+        DB::beginTransaction();
+
+        try {
+            // Fetch order and lock row for update to prevent race conditions
+            $shopOrder = ShopOrder::query()
+                ->lockForUpdate()
+                ->findOrFail($validated['shop_order_id']);
+
+            /*
+            |--------------------------------------------------------------------------
+            | GUARD: PRE-EXISTING IMMUTABLE FINALIZE BLOCKS
+            |--------------------------------------------------------------------------
+            */
+            if (in_array($shopOrder->order_status, ['Cancelled', 'Voided'])) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This order has already been canceled or voided.',
+                ]);
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | RESTAURANT RULES: KITCHEN PREPARATION STATES AUDIT
+            |--------------------------------------------------------------------------
+            | Join across shop_register to see if this register functions as a kitchen printer unit.
+            */
+            $registerContext = DB::table('shop_register')
+                ->where('id', $shopOrder->shop_register_id)
+                ->first();
+
+            if ($registerContext && $registerContext->is_restaurant === 'Yes') {
+                
+                // 1. Check if any master kitchen ticket header has advanced past "Queued" or "Cancelled"
+                $hasActiveKitchenTickets = DB::table('kitchen_ticket')
+                    ->where('shop_order_id', $shopOrder->id)
+                    ->whereIn('ticket_status', ['Preparing', 'Ready', 'Completed'])
+                    ->exists();
+
+                // 2. Check if any individual line items on the kitchen screens are being worked on or served
+                $hasActiveKitchenItems = DB::table('kitchen_ticket_item')
+                    ->join('kitchen_ticket', 'kitchen_ticket_item.kitchen_ticket_id', '=', 'kitchen_ticket.id')
+                    ->where('kitchen_ticket.shop_order_id', $shopOrder->id)
+                    ->whereIn('kitchen_ticket_item.item_status', ['Preparing', 'Ready', 'Served'])
+                    ->exists();
+
+                if ($hasActiveKitchenTickets || $hasActiveKitchenItems) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Cannot cancel order. Food preparation has already started or items have been served.',
+                    ]);
+                }
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | REVENUE STATE DECORATOR
+            |--------------------------------------------------------------------------
+            | If order was paid, status tracks as 'Voided' (requires cash count reconciliation).
+            | If unpaid, tracking sets to 'Cancelled'.
+            */
+            $targetStatus = ($shopOrder->payment_status === 'Paid') ? 'Voided' : 'Cancelled';
+            $timestamp = now();
+
+            // Perform transaction updates
+            $shopOrder->update([
+                'order_status' => $targetStatus,
+                'cancelled_at' => $timestamp,
+                'cancelled_by' => Auth::id(),
+                'cancelled_by_name' => Auth::user()?->name ?? 'System Cashier',
+                'voided_by' => ($targetStatus === 'Voided') ? Auth::id() : null,
+                'voided_by_name' => ($targetStatus === 'Voided') ? (Auth::user()?->name ?? 'System Cashier') : null,
+                'void_reason' => $validated['void_reason'],
+                'last_log_by' => Auth::id(),
+            ]);
+
+            // Cascade cancellation update down to individual order line items
+            DB::table('shop_order_item')
+                ->where('shop_order_id', $shopOrder->id)
+                ->where('item_status', '!=', 'Cancelled')
+                ->update([
+                    'item_status' => 'Cancelled',
+                    'cancelled_at' => $timestamp,
+                    'cancelled_by' => Auth::id(),
+                    'cancelled_by_name' => Auth::user()?->name ?? 'System Cashier',
+                    'cancellation_reason' => $validated['void_reason'],
+                    'last_log_by' => Auth::id(),
+                    'updated_at' => $timestamp,
+                ]);
+
+            // Cascade update down to any open kitchen tickets linked to this order
+            DB::table('kitchen_ticket')
+                ->where('shop_order_id', $shopOrder->id)
+                ->where('ticket_status', '!=', 'Cancelled')
+                ->update([
+                    'ticket_status' => 'Cancelled',
+                    'cancelled_at' => $timestamp,
+                    'last_log_by' => Auth::id(),
+                    'updated_at' => $timestamp,
+                ]);
+
+            // Cascade update down to any open kitchen ticket line items
+            DB::table('kitchen_ticket_item')
+                ->join('kitchen_ticket', 'kitchen_ticket_item.kitchen_ticket_id', '=', 'kitchen_ticket.id')
+                ->where('kitchen_ticket.shop_order_id', $shopOrder->id)
+                ->where('kitchen_ticket_item.item_status', '!=', 'Cancelled')
+                ->update([
+                    'kitchen_ticket_item.item_status' => 'Cancelled',
+                    'kitchen_ticket_item.cancelled_at' => $timestamp,
+                    'kitchen_ticket_item.last_log_by' => Auth::id(),
+                    'kitchen_ticket_item.updated_at' => $timestamp,
+                ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => "Order successfully status marked as {$targetStatus}.",
+                'order_status' => $targetStatus,
+            ]);
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            report($e);
+            return response()->json([
+                'success' => false,
+                'message' => 'An internal database error occurred while processing your cancellation.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
     private function calculatePaymentTotals(array $payments): array
     {
         $totalPayment = 0;
@@ -2670,7 +2823,7 @@ class ShopOrderController extends Controller
                 'order_number',
                 'customer_name',
                 'order_type',
-                'order_status',
+                'order_status', // Already optimized and included in data dictionary responses
                 'payment_status',
                 'net_total',
                 'floor_plan_name',
@@ -2833,88 +2986,6 @@ class ShopOrderController extends Controller
                 'message' => 'Order not found.',
             ]);
         }
-
-        /*
-        |--------------------------------------------------------------------------
-        | ORDER ITEMS
-        |--------------------------------------------------------------------------
-        */
-
-        $items = ShopOrderItem::query()
-
-            ->where('shop_order_id', $shopOrder->id)
-
-            ->orderBy('id')
-
-            ->get([
-                'id',
-
-                'product_id',
-
-                'product_name',
-
-                'sku',
-
-                'barcode',
-
-                'quantity',
-
-                'unit_price',
-
-                'original_unit_price',
-
-                'line_subtotal',
-
-                'line_total',
-
-                'tax_classification',
-
-                'vatable_sales',
-
-                'vat_exempt_sales',
-
-                'zero_rated_sales',
-
-                'vat_amount',
-
-                'order_note',
-
-                'item_status',
-            ]);
-
-        /*
-        |--------------------------------------------------------------------------
-        | APPLIED DISCOUNTS
-        |--------------------------------------------------------------------------
-        */
-
-        $appliedDiscounts = ShopOrderAppliedDiscount::query()
-
-            ->where('shop_order_id', $shopOrder->id)
-
-            ->get([
-                'id',
-                'discount_type_id',
-                'discount_type_name',
-                'discount_amount',
-            ]);
-
-        /*
-        |--------------------------------------------------------------------------
-        | APPLIED CHARGES
-        |--------------------------------------------------------------------------
-        */
-
-        $appliedCharges = ShopOrderAppliedCharge::query()
-
-            ->where('shop_order_id', $shopOrder->id)
-
-            ->get([
-                'id',
-                'charge_type_id',
-                'charge_type_name',
-                'charge_amount',
-            ]);
 
         /*
         |--------------------------------------------------------------------------
@@ -3338,7 +3409,7 @@ class ShopOrderController extends Controller
 
             ->where('shop_order_id', $shopOrderId)
 
-            ->where('item_status', '!=', 'Cancelled')
+            ->where('quantity', '>', '0')
 
             ->orderBy('id')
 

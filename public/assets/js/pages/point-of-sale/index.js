@@ -3,19 +3,9 @@ import { showNotification, setNotification } from '../../util/notifications.js';
 import { disableButton, enableButton } from '../../form/button.js';
 import { getPageContext, getCsrfToken, resetForm } from '../../form/form.js';
 import { handleSystemError } from '../../util/system-errors.js';
+import { appendObject } from '../../form/field.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    const appendObject = (params, object = {}) => {
-
-        Object.entries(object).forEach(([key, value]) => {
-
-            if (value !== undefined && value !== null) {
-                params.append(key, value);
-            }
-
-        });
-    };
-
     const generateShopRegister = async (url, otherData = {}) => {
 
         try {

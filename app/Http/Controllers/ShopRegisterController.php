@@ -118,6 +118,7 @@ class ShopRegisterController extends Controller
             |--------------------------------------------------------------------------
             | SHOP REGISTER
             |--------------------------------------------------------------------------
+            |
             */
 
             $shopRegister = ShopRegister::query()
@@ -136,6 +137,7 @@ class ShopRegisterController extends Controller
             |--------------------------------------------------------------------------
             | COMPUTE TOTAL
             |--------------------------------------------------------------------------
+            |
             */
 
             $grandTotal = 0;
@@ -170,6 +172,7 @@ class ShopRegisterController extends Controller
             |--------------------------------------------------------------------------
             | OPEN SESSION
             |--------------------------------------------------------------------------
+            |
             */
 
             if ($sessionType === 'OPEN') {
@@ -193,6 +196,7 @@ class ShopRegisterController extends Controller
                 |--------------------------------------------------------------------------
                 | UPDATE REGISTER STATUS
                 |--------------------------------------------------------------------------
+                |
                 */
 
                 $shopRegister->update([
@@ -204,6 +208,7 @@ class ShopRegisterController extends Controller
                 |--------------------------------------------------------------------------
                 | SAVE DENOMINATIONS
                 |--------------------------------------------------------------------------
+                |
                 */
 
                 foreach ($denominations as $row) {
@@ -226,6 +231,7 @@ class ShopRegisterController extends Controller
             |--------------------------------------------------------------------------
             | CLOSE SESSION
             |--------------------------------------------------------------------------
+            |
             */
 
             if ($sessionType === 'CLOSE') {
@@ -234,6 +240,7 @@ class ShopRegisterController extends Controller
                 |--------------------------------------------------------------------------
                 | FIND ACTIVE SESSION
                 |--------------------------------------------------------------------------
+                |
                 */
 
                 $shopRegisterSession = ShopRegisterSession::query()
@@ -254,8 +261,32 @@ class ShopRegisterController extends Controller
 
                 /*
                 |--------------------------------------------------------------------------
+                | VALIDATE UNPAID ORDERS
+                |--------------------------------------------------------------------------
+                | Before closing, ensure there are no unpaid orders tied to this register session.
+                | We exclude 'Cancelled' and 'Voided' orders as they shouldn't block the closure.
+                */
+
+                $hasUnpaidOrders = DB::table('shop_order')
+                    ->where('shop_register_session_id', $shopRegisterSession->id)
+                    ->where('payment_status', 'Unpaid')
+                    ->whereNotIn('order_status', ['Cancelled', 'Voided'])
+                    ->exists();
+
+                if ($hasUnpaidOrders) {
+                    DB::rollBack();
+
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Cannot close register. There are active unpaid orders in this session.',
+                    ]);
+                }
+
+                /*
+                |--------------------------------------------------------------------------
                 | UPDATE SESSION
                 |--------------------------------------------------------------------------
+                |
                 */
 
                 $shopRegisterSession->update([
@@ -274,6 +305,7 @@ class ShopRegisterController extends Controller
                 |--------------------------------------------------------------------------
                 | UPDATE REGISTER STATUS
                 |--------------------------------------------------------------------------
+                |
                 */
 
                 $shopRegister->update([
@@ -285,6 +317,7 @@ class ShopRegisterController extends Controller
                 |--------------------------------------------------------------------------
                 | SAVE DENOMINATIONS
                 |--------------------------------------------------------------------------
+                |
                 */
 
                 foreach ($denominations as $row) {

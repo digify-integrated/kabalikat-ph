@@ -23,6 +23,7 @@ use App\Http\Controllers\InventoryDashboardController;
 use App\Http\Controllers\KitchenTicketController;
 use App\Http\Controllers\NavigationMenuController;
 use App\Http\Controllers\PaymentMethodController;
+use App\Http\Controllers\PointOfSaleDashboardController;
 use App\Http\Controllers\ProductAddonController;
 use App\Http\Controllers\ProductBOMController;
 use App\Http\Controllers\ProductCategoryController;
@@ -924,6 +925,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/save-charge', 'saveCharge')->name('save.charge');
             Route::post('/save-payment', 'savePayment')->name('save.payment');
             Route::post('/save-customer', 'saveCustomer')->name('save.customer');
+            Route::post('/cancel-order', 'cancelOrder')->name('cancel.order');
             Route::post('/fetch-floor-plans', 'fetchFloorPlans')->name('fetch.floor.plans');
             Route::post('/fetch-floor-tables', 'fetchFloorTables')->name('fetch.floor.tables');
             Route::post('/fetch-discounts', 'fetchDiscounts')->name('fetch.discounts');
@@ -977,11 +979,31 @@ Route::middleware('auth')->group(function () {
             Route::post('/generate-kitchen-routes', 'generateKitchenRoutes')->name('generate.kitchen.routes');
             Route::post('/generate-kitchen-tickets', 'generateKitchenTickets')->name('generate.kitchen.tickets');
         });
+
+    // Inventory Dashboard
+    Route::prefix('point-of-sale-dashboard')
+        ->name('point.of.sale.dashboard.')
+        ->controller(PointOfSaleDashboardController::class)
+        ->group(function () {
+            Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
+            Route::post('/generate-recent-orders-table', 'generateRecentOrdersTable')->name('generate.recent.orders.table');
+            Route::post('/generate-payments-ledger-table', 'generatePaymentsLedgerTable')->name('generate.payments.ledger.table');
+        });
     
     Route::get(
         '/shop-order/{shopOrder}/print-bill',
         [ShopOrderPrintController::class, 'printBill']
     )->name('shop-order.print-bill');
+    
+    Route::get(
+        '/shop-order/register/{shopRegister}/print-orders',
+        [ShopOrderPrintController::class, 'printRegisterOrdersReport']
+    )->name('shop-order.register.print-orders');
+
+    Route::get(
+        '/shop-order/register/{shopRegister}/print-payments',
+        [ShopOrderPrintController::class, 'printRegisterPaymentsReport']
+    )->name('shop-order.register.print-payments');
 
     // Import
     Route::prefix('import')

@@ -8,10 +8,7 @@
 @section('content')
     <div class="row mb-4">
         <div class="col">
-            <input type="text"
-                class="form-control form-control-solid"
-                id="kitchen_ticket_search"
-                placeholder="Search tickets..." />
+            <input type="text" class="form-control form-control-solid" id="kitchen_ticket_search"placeholder="Search tickets..." />
         </div>
     </div>
 
@@ -29,18 +26,13 @@
                     <i class="ki-outline ki-notification-on fs-3tx text-warning position-relative z-index-1"></i>
                 </div>
 
-                <h1 class="text-white fw-extrabold tracking-tight mb-2 fs-2">
-                    Kitchen Audio Standby
-                </h1>
+                <h1 class="text-white fw-extrabold tracking-tight mb-2 fs-2">Kitchen Audio Standby</h1>
                 
-                <p class="text-muted px-3 mb-5 fs-6 lh-base">
-                    Browser security rules require an initial tap to authorize live order chimes and instant ticket alerts.
-                </p>
+                <p class="text-muted px-3 mb-5 fs-6 lh-base">Browser security rules require an initial tap to authorize live order chimes and instant ticket alerts.</p>
 
                 <button id="btn-unlock-kds" class="btn btn-warning w-100 py-4 fs-5 fw-extrabold text-uppercase tracking-widest shadow-lg d-flex align-items-center justify-content-center gap-2" style="border-radius: 0.75rem; transition: transform 0.1s ease-in-out;">
                     <span>🔊 Launch Live KDS Board</span>
                 </button>
-
             </div>
         </div>
     </div>

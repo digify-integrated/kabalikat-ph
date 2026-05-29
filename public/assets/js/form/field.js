@@ -285,3 +285,11 @@ export const initializeDateRangePicker = (
     $element.val("");
   }
 };
+
+export const appendObject = (params, object = {}) => {
+  Object.entries(object).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      params.append(key, value);
+    }
+  });
+};
