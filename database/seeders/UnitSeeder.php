@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -18,22 +17,21 @@ class UnitSeeder extends Seeder
         ];
 
         $unit = [
-            ['unit_name' => 'Piece', 'abbreviation' => 'pc', 'unit_type_id' => '1', 'unit_type_name' => 'Quantity/Count'],
-            ['unit_name' => 'Capsule', 'abbreviation' => 'cap', 'unit_type_id' => '1', 'unit_type_name' => 'Quantity/Count'],
-            ['unit_name' => 'Tablet', 'abbreviation' => 'tab', 'unit_type_id' => '1', 'unit_type_name' => 'Quantity/Count'],
-            ['unit_name' => 'Ream', 'abbreviation' => 'rm', 'unit_type_id' => '1', 'unit_type_name' => 'Quantity/Count'],
-
-            ['unit_name' => 'Milligram', 'abbreviation' => 'mg', 'unit_type_id' => '2', 'unit_type_name' => 'Weight/Mass'],
-            ['unit_name' => 'Kilogram', 'abbreviation' => 'kg', 'unit_type_id' => '2', 'unit_type_name' => 'Weight/Mass'],
-            ['unit_name' => 'Gram', 'abbreviation' => 'g', 'unit_type_id' => '2', 'unit_type_name' => 'Weight/Mass'],
-
-            ['unit_name' => 'Milliliter', 'abbreviation' => 'ml', 'unit_type_id' => '3', 'unit_type_name' => 'Volume/Liquid'],
-            ['unit_name' => 'Liter', 'abbreviation' => 'L', 'unit_type_id' => '3', 'unit_type_name' => 'Volume/Liquid'],
-            
-            ['unit_name' => 'Meter', 'abbreviation' => 'm', 'unit_type_id' => '4', 'unit_type_name' => 'Length/Area'],
-            
-            ['unit_name' => 'Hour', 'abbreviation' => 'hr', 'unit_type_id' => '5', 'unit_type_name' => 'Time/Duration'],
-            ['unit_name' => 'Session', 'abbreviation' => 'sess', 'unit_type_id' => '5', 'unit_type_name' => 'Time/Duration'],
+            ['unit_name' => 'Kilogram', 'abbreviation' => 'kg', 'unit_type_id' => '1', 'unit_type_name' => 'Weight/Mass'],
+            ['unit_name' => 'Grams', 'abbreviation' => 'g', 'unit_type_id' => '1', 'unit_type_name' => 'Weight/Mass'],
+            ['unit_name' => 'Milliliter', 'abbreviation' => 'ml', 'unit_type_id' => '2', 'unit_type_name' => 'Volume/Liquid'],
+            ['unit_name' => 'Liter', 'abbreviation' => 'l', 'unit_type_id' => '2', 'unit_type_name' => 'Volume/Liquid'],
+            ['unit_name' => 'Gallon', 'abbreviation' => 'gal', 'unit_type_id' => '2', 'unit_type_name' => 'Volume/Liquid'],
+            ['unit_name' => 'Cup', 'abbreviation' => 'c', 'unit_type_id' => '2', 'unit_type_name' => 'Volume/Liquid'],
+            ['unit_name' => 'Piece', 'abbreviation' => 'pc', 'unit_type_id' => '3', 'unit_type_name' => 'Countable/Packaging Units'],
+            ['unit_name' => 'Pack', 'abbreviation' => 'pk', 'unit_type_id' => '3', 'unit_type_name' => 'Countable/Packaging Units'],
+            ['unit_name' => 'Portion', 'abbreviation' => 'port', 'unit_type_id' => '3', 'unit_type_name' => 'Countable/Packaging Units'],
+            ['unit_name' => 'Slice', 'abbreviation' => 'sl', 'unit_type_id' => '3', 'unit_type_name' => 'Countable/Packaging Units'],
+            ['unit_name' => 'Can', 'abbreviation' => 'cn', 'unit_type_id' => '3', 'unit_type_name' => 'Countable/Packaging Units'],
+            ['unit_name' => 'Jar', 'abbreviation' => 'jr', 'unit_type_id' => '3', 'unit_type_name' => 'Countable/Packaging Units'],
+            ['unit_name' => 'Bottle', 'abbreviation' => 'btl', 'unit_type_id' => '3', 'unit_type_name' => 'Countable/Packaging Units'],
+            ['unit_name' => 'Bar', 'abbreviation' => 'br', 'unit_type_id' => '3', 'unit_type_name' => 'Countable/Packaging Units'],
+            ['unit_name' => 'Order', 'abbreviation' => 'or', 'unit_type_id' => '3', 'unit_type_name' => 'Countable/Packaging Units'],
         ];
 
         DB::table('unit')->insert(

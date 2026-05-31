@@ -710,6 +710,11 @@ class ShopRegisterController extends Controller
         ]);
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | 1. THE REFACTORED GENERATEPRODUCT METHOD
+    |--------------------------------------------------------------------------
+    */
     public function generateProduct(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -731,12 +736,6 @@ class ShopRegisterController extends Controller
         $categoryId = $validated['category_id'] ?? 'all';
         $search = trim($validated['search'] ?? '');
 
-        /*
-        |--------------------------------------------------------------------------
-        | WAREHOUSE IDS
-        |--------------------------------------------------------------------------
-        */
-
         $warehouseIds = DB::table('shop_register_warehouse')
             ->where('shop_register_id', $shopRegisterId)
             ->pluck('warehouse_id')
@@ -744,50 +743,28 @@ class ShopRegisterController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | CACHE: STOCK LEVEL (FAST LOOKUP MAP)
+        | CACHE STOCK LEVELS
         |--------------------------------------------------------------------------
         */
-
         $stockMap = DB::table('stock_level')
             ->join('inventory_lot', 'inventory_lot.id', '=', 'stock_level.inventory_lot_id')
             ->whereIn('stock_level.warehouse_id', $warehouseIds)
-            ->select(
-                'stock_level.product_id',
-                'stock_level.quantity',
-                'inventory_lot.expiration_date'
-            )
+            ->select('stock_level.product_id', 'stock_level.quantity', 'inventory_lot.expiration_date')
             ->get()
             ->groupBy('product_id');
 
-        /*
-        |--------------------------------------------------------------------------
-        | HELPER: GET AVAILABLE STOCK FROM CACHE
-        |--------------------------------------------------------------------------
-        */
-
-        $getAvailableStock = function ($productId) use ($stockMap) {
-
+        // Simple single-level collection wrapper for cache evaluation
+        $getAvailableStock = function ($productId) use ($stockMap): float {
             if (!isset($stockMap[$productId])) {
-                return 0;
+                return 0.0;
             }
-
-            return $stockMap[$productId]
+            return (float) $stockMap[$productId]
                 ->filter(function ($row) {
-
                     return $row->quantity > 0 &&
-                        (
-                            is_null($row->expiration_date) ||
-                            $row->expiration_date >= now()->toDateString()
-                        );
+                        (is_null($row->expiration_date) || $row->expiration_date >= now()->toDateString());
                 })
                 ->sum('quantity');
         };
-
-        /*
-        |--------------------------------------------------------------------------
-        | PRODUCTS
-        |--------------------------------------------------------------------------
-        */
 
         $products = DB::table('shop_register_product')
             ->join('product', 'product.id', '=', 'shop_register_product.product_id')
@@ -795,7 +772,6 @@ class ShopRegisterController extends Controller
             ->where('shop_register_product.shop_register_id', $shopRegisterId)
             ->where('product.show_on_pos', 'Yes')
             ->where('product.product_status', 'Active')
-
             ->when($categoryId !== 'all', function ($query) use ($categoryId) {
                 $query->whereExists(function ($sub) use ($categoryId) {
                     $sub->select(DB::raw(1))
@@ -804,7 +780,6 @@ class ShopRegisterController extends Controller
                         ->where('product_category_map.product_category_id', $categoryId);
                 });
             })
-
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($sub) use ($search) {
                     $sub->where('product.product_name', 'like', "%{$search}%")
@@ -812,96 +787,18 @@ class ShopRegisterController extends Controller
                         ->orWhere('product.barcode', 'like', "%{$search}%");
                 });
             })
-
             ->orderBy('product.product_name')
             ->get();
 
         /*
         |--------------------------------------------------------------------------
-        | MAP PRODUCTS WITH STOCK LOGIC
+        | MAP EVALUATION VIA CLASS METHOD REGISTER
         |--------------------------------------------------------------------------
         */
-
-        $response = $products->map(function ($product) use ($getAvailableStock, $warehouseIds) {
-
-            $inStock = true;
-            $reason = 'Available';
-
-            /*
-            |--------------------------------------------------------------------------
-            | BOM CHECK
-            |--------------------------------------------------------------------------
-            */
-
-            $bomItems = DB::table('product_bom')
-                ->where('product_id', $product->id)
-                ->get();
-
-            if ($bomItems->count() > 0) {
-
-                foreach ($bomItems as $bom) {
-
-                    if ($bom->stock_policy !== 'Strict') {
-                        continue;
-                    }
-
-                    $bomProduct = DB::table('product')
-                        ->where('id', $bom->bom_product_id)
-                        ->first();
-
-                    if (!$bomProduct) {
-                        continue;
-                    }
-
-                    /*
-                    |-----------------------------------------
-                    | SERVICE ITEM = ALWAYS AVAILABLE
-                    |-----------------------------------------
-                    */
-
-                    if ($bomProduct->track_inventory === 'No') {
-                        continue;
-                    }
-
-                    $available = $getAvailableStock($bom->bom_product_id);
-
-                    /*
-                    | IMPORTANT FIX:
-                    | REQUIRED QTY MUST BE RESPECTED
-                    */
-
-                    if ($available < $bom->quantity) {
-                        $inStock = false;
-                        $reason = "Insufficient quantity: {$bom->bom_product_name}";
-                        break;
-                    }
-                }
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | NON-BOM PRODUCT CHECK
-            |--------------------------------------------------------------------------
-            */
-
-            else {
-
-                if ($product->track_inventory === 'Yes') {
-
-                    $available = $getAvailableStock($product->id);
-
-                    if ($available <= 0) {
-                        $inStock = false;
-                        $reason = 'Out of stock';
-                    }
-                }
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | CATEGORY
-            |--------------------------------------------------------------------------
-            */
+        $response = $products->map(function ($product) use ($getAvailableStock) {
+            
+            // Calling the dedicated private method keeps the type-inferring flat
+            $availability = $this->checkComponentAvailability((int)$product->id, 1.0, $getAvailableStock);
 
             $category = DB::table('product_category_map')
                 ->where('product_id', $product->id)
@@ -917,17 +814,12 @@ class ShopRegisterController extends Controller
                 'image' => $product->product_image,
                 'track_inventory' => $product->track_inventory,
                 'category_name' => $category?->product_category_name ?? 'Uncategorized',
-                'in_stock' => $inStock,
-                'stock_status' => $reason,
+                'in_stock' => $availability['can_fulfill'],
+                'stock_status' => $availability['can_fulfill'] 
+                    ? 'Available' 
+                    : "Insufficient component: " . ($availability['failed_component'] ?? 'Ingredients'),
             ];
         })
-
-        /*
-        |--------------------------------------------------------------------------
-        | SORT: AVAILABLE FIRST THEN NAME
-        |--------------------------------------------------------------------------
-        */
-
         ->sortBy([
             fn ($a, $b) => ($b['in_stock'] <=> $a['in_stock']),
             fn ($a, $b) => strcmp($a['product_name'], $b['product_name']),
@@ -938,6 +830,73 @@ class ShopRegisterController extends Controller
             'success' => true,
             'data' => $response,
         ]);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | 2. THE DEDICATED PRIVATE RECURSIVE METHOD (Add this to your class)
+    |--------------------------------------------------------------------------
+    */
+    /**
+     * Recursively monitors multi-tiered nested BOM structures for absolute availability thresholds.
+     */
+    private function checkComponentAvailability(int $productId, float $multiplier, \Closure $getAvailableStock): array
+    {
+        $bomItems = DB::table('product_bom')
+            ->where('product_id', $productId)
+            ->get();
+
+        // Node A: Base Product Layer reached
+        if ($bomItems->isEmpty()) {
+            $productMeta = DB::table('product')
+                ->select('track_inventory', 'product_name')
+                ->where('id', $productId)
+                ->first();
+            
+            if ($productMeta && $productMeta->track_inventory === 'Yes') {
+                $physicalStock = $getAvailableStock($productId);
+                
+                return [
+                    'can_fulfill' => $physicalStock >= $multiplier,
+                    'max_possible' => (int) floor($physicalStock / ($multiplier ?: 1)),
+                    'failed_component' => $physicalStock < $multiplier ? $productMeta->product_name : null
+                ];
+            }
+            
+            return ['can_fulfill' => true, 'max_possible' => PHP_INT_MAX, 'failed_component' => null];
+        }
+
+        // Node B: Nesting Combo Recipe layer found
+        $minPossibleBuilds = PHP_INT_MAX;
+
+        foreach ($bomItems as $bom) {
+            if ($bom->stock_policy !== 'Strict') {
+                continue;
+            }
+
+            $scaledRequirement = (float) $bom->quantity * $multiplier;
+            
+            // Safe, clean recursion step over structural layers
+            $childStatus = $this->checkComponentAvailability((int)$bom->bom_product_id, $scaledRequirement, $getAvailableStock);
+
+            if (!$childStatus['can_fulfill']) {
+                return [
+                    'can_fulfill' => false,
+                    'max_possible' => 0,
+                    'failed_component' => $childStatus['failed_component'] ?? $bom->bom_product_name
+                ];
+            }
+
+            if ($childStatus['max_possible'] < $minPossibleBuilds) {
+                $minPossibleBuilds = $childStatus['max_possible'];
+            }
+        }
+
+        return [
+            'can_fulfill' => $minPossibleBuilds > 0,
+            'max_possible' => $minPossibleBuilds === PHP_INT_MAX ? 1 : $minPossibleBuilds,
+            'failed_component' => null
+        ];
     }
 
     public function generateOptions(Request $request)

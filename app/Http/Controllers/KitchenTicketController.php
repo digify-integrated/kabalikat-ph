@@ -270,8 +270,6 @@ class KitchenTicketController extends Controller
             |--------------------------------------------------------------------------
             | HANDLE CANCELLATIONS / STRUCTURAL VOIDS
             |--------------------------------------------------------------------------
-            | If the line is cancelled or net available quantities are gone, enforce 
-            | status termination and commit safely inside our transactional scope.
             */
             if ($remainingQty <= 0 || $baseItem->item_status === 'Cancelled') {
                 DB::table('kitchen_ticket_item')
@@ -284,7 +282,7 @@ class KitchenTicketController extends Controller
 
                 $this->recalculateTicketStatus($ticketId);
                 
-                DB::commit(); // ✅ Commit the transactional lock state cleanly
+                DB::commit(); // Commit the transactional lock state cleanly
                 
                 return response()->json([
                     'success' => true, 
@@ -334,47 +332,15 @@ class KitchenTicketController extends Controller
                         $product = Product::find($shopOrderItem->product_id);
 
                         if ($product) {
-                            $bomItems = ProductBom::where('product_id', $product->id)->get();
-
-                            /*
-                            |--------------------------------------------------------------------------
-                            | SCENARIO A: PRODUCT MAPS TO A RECIPE / BILL OF MATERIALS
-                            |--------------------------------------------------------------------------
-                            */
-                            if ($bomItems->isNotEmpty()) {
-                                foreach ($bomItems as $bom) {
-                                    $bomProduct = Product::find($bom->bom_product_id);
-
-                                    if (!$bomProduct || $bomProduct->track_inventory === 'No') {
-                                        continue;
-                                    }
-
-                                    // Use the exact remaining calculation balance for accuracy
-                                    $requiredQuantity = $bom->quantity * $remainingQty;
-
-                                    $this->deductInventory(
-                                        product: $bomProduct,
-                                        quantity: $requiredQuantity,
-                                        referenceNumber: $shopOrder->order_number,
-                                        warehouseIds: $warehouseIds,
-                                        remarks: 'KDS - Production line component consumption'
-                                    );
-                                }
-                            } 
-                            /*
-                            |--------------------------------------------------------------------------
-                            | SCENARIO B: STANDALONE TRACED INVENTORY LINE
-                            |--------------------------------------------------------------------------
-                            */
-                            elseif ($product->track_inventory === 'Yes') {
-                                $this->deductInventory(
-                                    product: $product,
-                                    quantity: $remainingQty, // ✅ Fixed: Scale by net remaining balance instead of stale row variables
-                                    referenceNumber: $shopOrder->order_number,
-                                    warehouseIds: $warehouseIds,
-                                    remarks: 'KDS - Item production started'
-                                );
-                            }
+                            // 🌟 REVISED: Pass directly into our unified recursive engine.
+                            // This single line handles Standalone items, Standard BOMs, and Nested "BOM of BOM" items.
+                            $this->deductInventory(
+                                product: $product,
+                                quantity: (float) $remainingQty,
+                                referenceNumber: $shopOrder->order_number,
+                                warehouseIds: $warehouseIds,
+                                remarks: 'KDS - Production line component consumption'
+                            );
                         }
                     }
                 }
@@ -408,51 +374,79 @@ class KitchenTicketController extends Controller
         }
     }
 
-    private function deductInventory(Product $product, float $quantity, string $referenceNumber, array $warehouseIds, ?string $remarks = null ) {
-        if (empty($warehouseIds)) {
-            throw new \Exception("No warehouse assigned to register.");
+    private function deductInventory(Product $product, float $quantity, string $referenceNumber, array $warehouseIds, ?string $remarks = null)
+    {
+        // Case A: Product tracks inventory directly itself
+        if ($product->track_inventory === 'Yes') {
+            $this->executeStockDeduction($product, $quantity, $referenceNumber, $warehouseIds, $remarks);
+            return;
         }
 
-        // 1. Initialize query on the stock_level table
+        // Case B: Does not track inventory — resolve recipe/components down the tree recursion
+        $this->deductBomComponents($product->id, $quantity, $referenceNumber, $warehouseIds, $remarks);
+    }
+    
+    private function deductBomComponents(int $productId, float $parentQuantity, string $referenceNumber, array $warehouseIds, ?string $remarks = null)
+    {
+        // Fetch immediate child items for the current item configuration level
+        $bomItems = DB::table('product_bom')
+            ->where('product_id', $productId)
+            ->get();
+
+        // Structural safeguard: if item doesn't track inventory and has no child recipe, drop out gracefully
+        if ($bomItems->isEmpty()) {
+            return;
+        }
+
+        foreach ($bomItems as $bomItem) {
+            // Compound multiplier calculation (Parent ordered balance * Child formula configuration requirement)
+            $requiredQuantity = $parentQuantity * $bomItem->quantity;
+
+            $component = Product::find($bomItem->bom_product_id);
+            
+            if (!$component) {
+                throw new \Exception("BOM Ingredient ID {$bomItem->bom_product_id} missing from catalog definition.");
+            }
+
+            if ($component->track_inventory === 'Yes') {
+                // Base physical raw material hit — execute direct single table record stock subtraction
+                $this->executeStockDeduction($component, $requiredQuantity, $referenceNumber, $warehouseIds, $remarks);
+            } else {
+                // Nested sub-BOM tier found (e.g. Set Combo -> Burger -> Patty) — drill down further recursively
+                $this->deductBomComponents($component->id, $requiredQuantity, $referenceNumber, $warehouseIds, $remarks);
+            }
+        }
+    }
+    
+    private function executeStockDeduction(Product $product, float $quantity, string $referenceNumber, array $warehouseIds, ?string $remarks = null)
+    {
         $query = StockLevel::query()
             ->with('inventoryLot')
             ->where('product_id', $product->id)
             ->whereIn('warehouse_id', $warehouseIds)
             ->where('quantity', '>', 0);
 
-        /*
-        |--------------------------------------------------------------------------
-        | DYNAMIC INVENTORY FLOW ORDERING STRATEGY
-        |--------------------------------------------------------------------------
-        | We evaluate the product's evaluation strategy and alter the query order.
-        */
         $flowStrategy = $product->inventory_flow ?? 'FIFO';
 
         switch ($flowStrategy) {
             case 'LIFO':
-                // Last-In, First-Out: Deduct the newest records first
                 $query->orderBy('stock_level.id', 'desc');
                 break;
 
             case 'FEFO':
-                // First-Expired, First-Out: Bring earliest expiration dates to the front
                 $query->join('inventory_lot', 'stock_level.inventory_lot_id', '=', 'inventory_lot.id')
-                    ->select('stock_level.*') // Avoid column collisions with inventory_lot.id
+                    ->select('stock_level.*') 
                     ->orderBy('inventory_lot.expiration_date', 'asc')
-                    ->orderBy('stock_level.id', 'asc'); // Tie-breaker fallback
+                    ->orderBy('stock_level.id', 'asc'); 
                 break;
 
             case 'FIFO':
             case 'Manual':
             default:
-                // First-In, First-Out / Manual Default: Deduct oldest records first
                 $query->orderBy('stock_level.id', 'asc');
                 break;
         }
 
-       
-
-        // 2. Execute query to retrieve eligible stock lines
         $stocks = $query->get();
 
         if ($stocks->isEmpty()) {
@@ -462,7 +456,6 @@ class KitchenTicketController extends Controller
         $remaining = $quantity;
 
         foreach ($stocks as $stock) {
-
             if ($remaining <= 0) {
                 break;
             }
@@ -473,7 +466,7 @@ class KitchenTicketController extends Controller
                 continue;
             }
 
-            // Decrement using your atomic operational logic
+            // Decrement using atomic operational logic
             $stock->decrement('quantity', $deduct);
             $stock->refresh();
 
@@ -486,18 +479,13 @@ class KitchenTicketController extends Controller
                 },
             ]);
 
-            /*
-            |--------------------------------------------------------------------------
-            | AUDIT REMARKS CONTEXT MANIPULATION
-            |--------------------------------------------------------------------------
-            */
+            // Fallback context remarks check
             if (empty($remarks)) {
                 $remarks = (request()->is('*kitchen-ticket*') || request()->is('*toggle-item-status*'))
                     ? 'KDS - Item production started'
                     : 'POS checkout payment deduction';
             }
 
-            // Append the structural strategy to the remarks ledger for audit clarity
             $finalRemarks = sprintf("%s (%s)", $remarks, $flowStrategy);
 
             StockMovement::create([
@@ -517,7 +505,6 @@ class KitchenTicketController extends Controller
             $remaining -= $deduct;
         }
 
-        // 3. Fallback check if the batch pool ran dry before full clearance
         if ($remaining > 0) {
             throw new \Exception("Insufficient stock for {$product->product_name}. Short by {$remaining} units under policy {$flowStrategy}.");
         }

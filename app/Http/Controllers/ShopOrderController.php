@@ -1633,6 +1633,91 @@ class ShopOrderController extends Controller
         }
     }
 
+    public function saveCustomer(Request $request)
+    {
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'shop_order_id' => [
+                    'required',
+                    'integer',
+                    Rule::exists(
+                        'shop_order',
+                        'id'
+                    ),
+                ],
+
+                'customer_name' => [
+                    'nullable',
+                    'string',
+                    'max:255',
+                ],
+            ]
+        );
+
+        if ($validator->fails()) {
+
+            return response()->json([
+                'success' => false,
+                'message'
+                    => $validator
+                        ->errors()
+                        ->first(),
+            ]);
+        }
+
+        $validated =
+            $validator->validated();
+
+        $shopOrder = ShopOrder::query()
+            ->find(
+                $validated['shop_order_id']
+            );
+
+        /*
+        |--------------------------------------------------------------------------
+        | LOCKED ORDERS
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            in_array(
+                $shopOrder->payment_status,
+                ['Paid', 'Refunded']
+            )
+            ||
+            in_array(
+                $shopOrder->order_status,
+                ['Cancelled', 'Voided']
+            )
+        ) {
+
+            return response()->json([
+                'success' => false,
+                'message'
+                    => 'Customer can no longer be modified.',
+            ]);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | UPDATE
+        |--------------------------------------------------------------------------
+        */
+
+        $shopOrder->update([
+            'customer_name'
+                => $validated['customer_name'] ?: null,
+        ]);
+
+        return response()->json([
+            'success' => true,
+
+            'customer_name'
+                => $shopOrder->customer_name,
+        ]);
+    }
+
     public function savePayment(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -1764,7 +1849,7 @@ class ShopOrderController extends Controller
             */
             if ($shopOrder->shopRegister?->is_restaurant === 'No') {
                 
-                // OPTIMIZATION: Extract from eager loaded relationship to avoid sub-querying inside loop
+                // Extract from eager-loaded relationship to avoid sub-querying inside loop
                 $warehouseIds = $shopOrder->shopRegister->warehouses->pluck('warehouse_id')->toArray();
 
                 if (empty($warehouseIds)) {
@@ -1778,48 +1863,15 @@ class ShopOrderController extends Controller
                         continue;
                     }
 
-                    $bomItems = ProductBom::where('product_id', $product->id)->get();
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | CASE 1: PRODUCT HAS RECIPE (BOM MAP)
-                    |--------------------------------------------------------------------------
-                    */
-                    if ($bomItems->isNotEmpty()) {
-                        foreach ($bomItems as $bom) {
-                            $bomProduct = Product::find($bom->bom_product_id);
-
-                            if (!$bomProduct || $bomProduct->track_inventory === 'No') {
-                                continue;
-                            }
-
-                            $requiredQuantity = $bom->quantity * $item->quantity;
-
-                            $this->deductInventory(
-                                product: $bomProduct,
-                                quantity: $requiredQuantity,
-                                referenceNumber: $shopOrder->order_number,
-                                warehouseIds: $warehouseIds,
-                                remarks: 'POS payment deduction' // ✅ Explicit remarks context
-                            );
-                        }
-                        continue;
-                    }
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | CASE 2: STANDALONE PRODUCT TRACKING
-                    |--------------------------------------------------------------------------
-                    */
-                    if ($product->track_inventory === 'Yes') {
-                        $this->deductInventory(
-                            product: $product,
-                            quantity: $item->quantity,
-                            referenceNumber: $shopOrder->order_number,
-                            warehouseIds: $warehouseIds,
-                            remarks: 'POS payment deduction' // ✅ Explicit remarks context
-                        );
-                    }
+                    // 🌟 REVISED: Pass directly to the recursive orchestrator method.
+                    // It safely processes single items, BOM combos, and deep nested raw ingredients.
+                    $this->deductInventory(
+                        product: $product,
+                        quantity: (float) $item->quantity,
+                        referenceNumber: $shopOrder->order_number,
+                        warehouseIds: $warehouseIds,
+                        remarks: 'POS payment deduction'
+                    );
                 }
             }
 
@@ -1841,89 +1893,132 @@ class ShopOrderController extends Controller
         }
     }
 
-    public function saveCustomer(Request $request)
+    private function deductInventory(Product $product, float $quantity, string $referenceNumber, array $warehouseIds, ?string $remarks = null)
     {
-        $validator = Validator::make(
-            $request->all(),
-            [
-                'shop_order_id' => [
-                    'required',
-                    'integer',
-                    Rule::exists(
-                        'shop_order',
-                        'id'
-                    ),
-                ],
-
-                'customer_name' => [
-                    'nullable',
-                    'string',
-                    'max:255',
-                ],
-            ]
-        );
-
-        if ($validator->fails()) {
-
-            return response()->json([
-                'success' => false,
-                'message'
-                    => $validator
-                        ->errors()
-                        ->first(),
-            ]);
+        // Case A: The item tracks inventory directly itself
+        if ($product->track_inventory === 'Yes') {
+            $this->executeStockDeduction($product, $quantity, $referenceNumber, $warehouseIds, $remarks);
+            return;
         }
 
-        $validated =
-            $validator->validated();
+        // Case B: Does not track inventory — resolve recipe/components down the tree
+        $this->deductBomComponents($product->id, $quantity, $referenceNumber, $warehouseIds, $remarks);
+    }
 
-        $shopOrder = ShopOrder::query()
-            ->find(
-                $validated['shop_order_id']
-            );
+    private function deductBomComponents(int $productId, float $parentQuantity, string $referenceNumber, array $warehouseIds, ?string $remarks = null)
+    {
+        // Fetch immediate child items for the current item configuration level
+        $bomItems = DB::table('product_bom')
+            ->where('product_id', $productId)
+            ->get();
 
-        /*
-        |--------------------------------------------------------------------------
-        | LOCKED ORDERS
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            in_array(
-                $shopOrder->payment_status,
-                ['Paid', 'Refunded']
-            )
-            ||
-            in_array(
-                $shopOrder->order_status,
-                ['Cancelled', 'Voided']
-            )
-        ) {
-
-            return response()->json([
-                'success' => false,
-                'message'
-                    => 'Customer can no longer be modified.',
-            ]);
+        // If an item does not track inventory and has no recipe breakdown, drop out gracefully
+        if ($bomItems->isEmpty()) {
+            return;
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | UPDATE
-        |--------------------------------------------------------------------------
-        */
+        foreach ($bomItems as $bomItem) {
+            // Compound multiplier calculation (Parent Ordered Qty * Component Formula Qty)
+            $requiredQuantity = $parentQuantity * $bomItem->quantity;
 
-        $shopOrder->update([
-            'customer_name'
-                => $validated['customer_name'] ?: null,
-        ]);
+            $component = Product::find($bomItem->bom_product_id);
+            
+            if (!$component) {
+                throw new \Exception("BOM Ingredient ID {$bomItem->bom_product_id} missing from catalog definition.");
+            }
 
-        return response()->json([
-            'success' => true,
+            if ($component->track_inventory === 'Yes') {
+                // Base physical raw material found — apply direct table line stock deduction
+                $this->executeStockDeduction($component, $requiredQuantity, $referenceNumber, $warehouseIds, $remarks);
+            } else {
+                // Nested BOM detected (e.g. Burger Combo -> Burger -> Patty) — drill down further
+                $this->deductBomComponents($component->id, $requiredQuantity, $referenceNumber, $warehouseIds, $remarks);
+            }
+        }
+    }
+    
+    private function executeStockDeduction(Product $product, float $quantity, string $referenceNumber, array $warehouseIds, ?string $remarks = null)
+    {
+        $query = StockLevel::query()
+            ->with('inventoryLot')
+            ->where('product_id', $product->id)
+            ->whereIn('warehouse_id', $warehouseIds)
+            ->where('quantity', '>', 0);
 
-            'customer_name'
-                => $shopOrder->customer_name,
-        ]);
+        $flowStrategy = $product->inventory_flow ?? 'FIFO';
+
+        switch ($flowStrategy) {
+            case 'LIFO':
+                $query->orderBy('id', 'desc'); 
+                break;
+
+            case 'FEFO':
+                $query->join('inventory_lot', 'stock_level.inventory_lot_id', '=', 'inventory_lot.id')
+                    ->select('stock_level.*') 
+                    ->orderBy('inventory_lot.expiration_date', 'asc')
+                    ->orderBy('stock_level.id', 'asc'); 
+                break;
+
+            case 'FIFO':
+            case 'Manual':
+        default:
+                $query->orderBy('id', 'asc'); 
+                break;
+        }
+
+        $stocks = $query->get();
+
+        if ($stocks->isEmpty()) {
+            throw new \Exception("No stock records found for product: {$product->product_name}.");
+        }
+
+        $remaining = $quantity;
+
+        foreach ($stocks as $stock) {
+            if ($remaining <= 0) {
+                break;
+            }
+
+            $deduct = min($remaining, $stock->quantity);
+
+            if ($deduct <= 0) {
+                continue;
+            }
+
+            // Atomic DB structural decrement
+            $stock->decrement('quantity', $deduct);
+            $stock->refresh();
+
+            $stock->update([
+                'stock_status' => match (true) {
+                    $stock->quantity <= 0 => 'Out of Stock',
+                    $stock->quantity <= ($product->reorder_level ?? 0) => 'Low Stock',
+                    default => 'In Stock',
+                },
+            ]);
+
+            $finalRemarks = sprintf("%s (%s)", $remarks ?? 'POS Payment Deduction', $flowStrategy);
+
+            StockMovement::create([
+                'product_id' => $product->id,
+                'product_name' => $product->product_name,
+                'warehouse_id' => $stock->warehouse_id,
+                'warehouse_name' => $stock->warehouse_name ?? 'Unknown Warehouse',
+                'inventory_lot_id' => $stock->inventory_lot_id,
+                'movement_type' => 'SALE',
+                'quantity' => $deduct,
+                'reference_type' => 'Shop Order',
+                'reference_number' => $referenceNumber,
+                'remarks' => $finalRemarks,
+                'last_log_by' => Auth::id() ?? 1,
+            ]);
+
+            $remaining -= $deduct;
+        }
+
+        if ($remaining > 0) {
+            throw new \Exception("Insufficient physical stock available for ingredient [{$product->product_name}]. Missing {$remaining} items.");
+        }
     }
 
     public function cancelOrder(Request $request)
@@ -2102,115 +2197,6 @@ class ShopOrderController extends Controller
         }
 
         return [$totalPayment, $totalTendered];
-    }
-
-    private function deductInventory(Product $product, float $quantity, string $referenceNumber, array $warehouseIds, ?string $remarks = null) {
-        if (empty($warehouseIds)) {
-            throw new \Exception("No warehouse assigned to register.");
-        }
-
-        // 1. Build the base query according to your schema ('stock_level')
-        $query = StockLevel::query()
-            ->with('inventoryLot')
-            ->where('product_id', $product->id)
-            ->whereIn('warehouse_id', $warehouseIds)
-            ->where('quantity', '>', 0);
-
-        /*
-        |--------------------------------------------------------------------------
-        | DYNAMIC INVENTORY FLOW STRATEGY (FIFO, FEFO, LIFO, Manual)
-        |--------------------------------------------------------------------------
-        */
-        $flowStrategy = $product->inventory_flow ?? 'FIFO';
-
-        switch ($flowStrategy) {
-            case 'LIFO':
-                // ✅ Fixed: Standard single-table column reference
-                $query->orderBy('id', 'desc'); 
-                break;
-
-            case 'FEFO':
-                // ✅ Correct: Joins 'inventory_lot', so explicit prefixes are required to avoid ID collision
-                $query->join('inventory_lot', 'stock_level.inventory_lot_id', '=', 'inventory_lot.id')
-                    ->select('stock_level.*') 
-                    ->orderBy('inventory_lot.expiration_date', 'asc')
-                    ->orderBy('stock_level.id', 'asc'); 
-                break;
-
-            case 'FIFO':
-            case 'Manual':
-            default:
-                // ✅ Fixed: Removed 'stock_level.' prefix since no join exists in this execution branch
-                $query->orderBy('id', 'asc'); 
-                break;
-        }
-
-        $stocks = $query->get();
-
-        if ($stocks->isEmpty()) {
-            throw new \Exception("No stock found for: {$product->product_name}.");
-        }
-
-        $remaining = $quantity;
-
-        foreach ($stocks as $stock) {
-            if ($remaining <= 0) {
-                break;
-            }
-
-            $deduct = min($remaining, $stock->quantity);
-
-            if ($deduct <= 0) {
-                continue;
-            }
-
-            // Atomic update decrement
-            $stock->decrement('quantity', $deduct);
-            $stock->refresh();
-
-            $stock->update([
-                'stock_status' => match (true) {
-                    $stock->quantity <= 0 => 'Out of Stock',
-                    $stock->quantity <= ($product->reorder_level ?? 0) => 'Low Stock',
-                    default => 'In Stock',
-                },
-            ]);
-
-            /*
-            |--------------------------------------------------------------------------
-            | INTELLECTUAL REMARKS FALLBACK DETECTION
-            |--------------------------------------------------------------------------
-            | If you didn't pass explicit remarks string text (like in your POS method), 
-            | it reads the HTTP context request to write accurate audit trail statements.
-            */
-            if (empty($remarks)) {
-                $remarks = (request()->is('*kitchen-ticket*') || request()->is('*toggle-item-status*'))
-                    ? 'KDS - Item production started'
-                    : 'POS checkout payment deduction'; // ✅ Handles your savePayment workflow automatically
-            }
-
-            $finalRemarks = sprintf("%s (%s)", $remarks, $flowStrategy);
-
-            StockMovement::create([
-                'product_id' => $product->id,
-                'product_name' => $product->product_name,
-                'warehouse_id' => $stock->warehouse_id,
-                'warehouse_name' => $stock->warehouse_name ?? 'Unknown Warehouse',
-                'inventory_lot_id' => $stock->inventory_lot_id,
-                'movement_type' => 'SALE',
-                'quantity' => $deduct,
-                'reference_type' => 'Shop Order',
-                'reference_number' => $referenceNumber,
-                'remarks' => $finalRemarks,
-                'last_log_by' => Auth::id() ?? 1,
-            ]);
-
-            $remaining -= $deduct;
-        }
-
-        if ($remaining > 0) {
-            throw new \Exception("Insufficient stock for {$product->product_name}. Short by {$remaining} units ({$flowStrategy}).");
-        }
     }
 
     public function deleteDiscount(Request $request)

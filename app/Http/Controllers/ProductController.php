@@ -943,7 +943,6 @@ class ProductController extends Controller
                     ->from('product_bom')
                     ->where('product_id', $productId);
             })
-            ->where('track_inventory', 'Yes')
             ->where('product_status', 'Active')
             ->where('id', '!=', $productId)
             ->orderBy('product_name')

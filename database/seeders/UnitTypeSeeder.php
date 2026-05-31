@@ -16,11 +16,9 @@ class UnitTypeSeeder extends Seeder
         ];
 
         $unitType = [
-            ['unit_type_name' => 'Quantity/Count'],
             ['unit_type_name' => 'Weight/Mass'],
             ['unit_type_name' => 'Volume/Liquid'],
-            ['unit_type_name' => 'Length/Area'],
-            ['unit_type_name' => 'Time/Duration'],
+            ['unit_type_name' => 'Countable/Packaging Units'],
         ];
 
         DB::table('unit_type')->insert(
