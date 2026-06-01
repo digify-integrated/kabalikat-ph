@@ -1490,11 +1490,8 @@ document.addEventListener('DOMContentLoaded', () => {
         $('#applied-discount-list').html(html);
     };
 
-    // --------------------
-
     const renderAvailableCharges = (charges) => {
         if (!charges.length) {
-
             $('#available-charge-list').html(`
                 <div class="text-center py-10 text-muted">
                     No available charges
@@ -1505,46 +1502,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const html = charges.map(charge => {
-
-            const isVariable =
-                charge.is_variable === 'Yes';
+            const isVariable = charge.is_variable === 'Yes';
 
             return `
-
-            <div
-                class="card border-0 shadow-sm rounded-4 mb-3 overflow-hidden">
-
+            <div class="card border-0 shadow-sm rounded-4 mb-3 overflow-hidden">
                 <div class="card-body p-3">
-
-                    <!-- TOP -->
-                    <div
-                        class="d-flex justify-content-between align-items-start gap-3">
-
+                    <div class="d-flex justify-content-between align-items-start gap-3">
                         <div class="flex-grow-1">
-
-                            <div
-                                class="fw-bold text-gray-900 fs-5 mb-1">
-
+                            <div class="fw-bold text-gray-900 fs-5 mb-1">
                                 ${charge.charge_type_name}
-
                             </div>
 
-                            <div
-                                class="d-flex align-items-center flex-wrap gap-2">
-
-                                <span
-                                    class="badge badge-light-danger">
-
-                                    ${charge.value_type}
-
-                                </span>
+                            <div class="d-flex align-items-center flex-wrap gap-2">
+                                <span class="badge badge-light-danger">${charge.value_type}</span>
 
                                 ${
                                     isVariable
                                         ? `
-                                            <span class="badge badge-light-warning">
-                                                Variable
-                                            </span>
+                                            <span class="badge badge-light-warning">Variable</span>
                                         `
                                         : `
                                             <span class="fw-semibold text-danger fs-7">
@@ -1557,70 +1532,31 @@ document.addEventListener('DOMContentLoaded', () => {
                                         `
                                 }
 
-                                <span
-                                    class="badge badge-light-secondary">
-
-                                    ${charge.application_order}
-
-                                </span>
-
+                                <span class="badge badge-light-secondary">${charge.application_order}</span>
                             </div>
-
                         </div>
 
-                        <button
-                            type="button"
-                            class="btn btn-danger btn-sm px-4 apply-charge-button"
-
-                            data-charge-id="${charge.id}"
-
-                            data-variable="${charge.is_variable}"
-
-                            data-value-type="${charge.value_type}">
-
+                        <button type="button" class="btn btn-danger btn-sm px-4 apply-charge-button" data-charge-id="${charge.id}" data-variable="${charge.is_variable}" data-value-type="${charge.value_type}">
                             Apply
-
                         </button>
-
                     </div>
 
-                    <!-- QUICK INPUTS -->
                     <div class="row g-2 mt-2">
-
                         ${
                             isVariable
                                 ? `
                                 <div class="col-md-4">
-
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
-                                        class="form-control form-control-sm variable-charge-value"
-                                        placeholder="${
-                                            charge.value_type === 'Percentage'
-                                                ? 'Charge %'
-                                                : 'Charge Amount'
-                                        }">
-
+                                    <input type="number" min="0" step="0.01" class="form-control form-control-sm variable-charge-value" placeholder="${charge.value_type === 'Percentage' ? 'Charge %' : 'Charge Amount'}">
                                 </div>
                                 `
                                 : ''
                         }
 
                         <div class="${isVariable ? 'col-md-8' : 'col-md-12'}">
-
-                            <input
-                                type="text"
-                                class="form-control form-control-sm charge-remarks"
-                                placeholder="Remarks">
-
+                            <input type="text" class="form-control form-control-sm charge-remarks" placeholder="Remarks">
                         </div>
-
                     </div>
-
                 </div>
-
             </div>
             `;
         }).join('');
@@ -1629,9 +1565,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const renderAppliedCharges = (charges) => {
-
         if (!charges.length) {
-
             $('#applied-charge-list').html(`
                 <div class="text-center py-5 text-muted">
                     No applied charges
@@ -1642,38 +1576,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const html = charges.map(charge => {
-
             return `
 
-            <div
-                class="card border-0 shadow-sm rounded-4 mb-2">
-
+            <div class="card border-0 shadow-sm rounded-4 mb-2">
                 <div class="card-body p-3">
-
-                    <div
-                        class="d-flex justify-content-between align-items-start gap-3">
-
-                        <!-- LEFT -->
+                    <div class="d-flex justify-content-between align-items-start gap-3">
                         <div class="flex-grow-1">
-
-                            <div
-                                class="d-flex align-items-center flex-wrap gap-2 mb-1">
-
+                            <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
                                 <div class="fw-bold text-gray-900">
                                     ${charge.charge_type_name}
                                 </div>
 
-                                <span
-                                    class="badge badge-light-danger">
-
-                                    ${
-                                        charge.value_type === 'Percentage'
-                                            ? `${charge.charge_value}%`
-                                            : formatPeso(charge.charge_value)
-                                    }
-
-                                </span>
-
+                                <span class="badge badge-light-danger">${charge.value_type === 'Percentage' ? `${charge.charge_value}%` : formatPeso(charge.charge_value)}</span>
                             </div>
 
                             ${
@@ -1698,31 +1612,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         </div>
 
-                        <!-- RIGHT -->
                         <div class="text-end">
-
-                            <div
-                                class="fw-bolder text-danger fs-5 mb-2">
-
+                            <divclass="fw-bolder text-danger fs-5 mb-2">
                                 + ${formatPeso(charge.charge_amount)}
-
                             </div>
 
-                            <button
-                                type="button"
-                                class="btn btn-light-danger btn-sm remove-charge-button"
-                                data-applied-id="${charge.id}">
-
+                            <button type="button" class="btn btn-light-danger btn-sm remove-charge-button" data-applied-id="${charge.id}">
                                 Remove
-
                             </button>
-
                         </div>
-
                     </div>
-
                 </div>
-
             </div>
             `;
         }).join('');
@@ -1730,12 +1630,8 @@ document.addEventListener('DOMContentLoaded', () => {
         $('#applied-charge-list').html(html);
     };
 
-    const renderPaymentMethods = (
-        paymentMethods
-    ) => {
-
+    const renderPaymentMethods = (paymentMethods) => {
         if (!paymentMethods.length) {
-
             $('#payment-method-list').html(`
                 <div class="text-center py-5 text-muted">
                     No payment methods assigned
@@ -1746,39 +1642,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const html = paymentMethods.map(method => {
-
             return `
-            <div
-                class="card border-0 shadow-sm rounded-4 mb-3 payment-method-card"
-                data-payment-method-id="${method.payment_method_id}">
-
+            <div class="card border-0 shadow-sm rounded-4 mb-3 payment-method-card" data-payment-method-id="${method.payment_method_id}">
                 <div class="card-body p-3">
-
                     <div class="d-flex justify-content-between align-items-center mb-3">
-
                         <div class="fw-bold fs-5">
                             ${method.payment_method_name}
                         </div>
 
-                        <button
-                            type="button"
-                            class="btn btn-light-success btn-sm add-payment-row"
-                            data-payment-method-id="${method.payment_method_id}"
-                            data-payment-method-name="${method.payment_method_name}">
-
+                        <button type="button" class="btn btn-light-success btn-sm add-payment-row" data-payment-method-id="${method.payment_method_id}" data-payment-method-name="${method.payment_method_name}">
                             Add
-
                         </button>
-
                     </div>
 
-                    <div
-                        class="payment-row-container"
-                        id="payment-row-container-${method.payment_method_id}">
-                    </div>
-
+                    <div class="payment-row-container" id="payment-row-container-${method.payment_method_id}"></div>
                 </div>
-
             </div>
             `;
         }).join('');
@@ -1787,44 +1665,33 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const renderKitchenLoading = () => {
-
         return `
-
             <div class="text-center py-15">
-
                 <div class="spinner-border text-primary"></div>
-
                 <div class="mt-5 text-muted">
                     Loading kitchen items...
                 </div>
-
             </div>
-
         `;
     };
 
     const getKitchenActionStyle = (action) => {
-
         const map = {
-
             New: {
                 header: 'bg-light-success',
                 border: 'border-success',
                 text: 'text-success',
             },
-
             Add: {
                 header: 'bg-light-primary',
                 border: 'border-primary',
                 text: 'text-primary',
             },
-
             Reduce: {
                 header: 'bg-light-warning',
                 border: 'border-warning',
                 text: 'text-warning',
             },
-
             Cancel: {
                 header: 'bg-light-danger',
                 border: 'border-danger',
@@ -1836,9 +1703,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const renderKitchenActionBadge = (action) => {
-
         const styles = {
-
             New: 'badge-light-success',
             Add: 'badge-light-primary',
             Reduce: 'badge-light-warning',
@@ -1847,56 +1712,26 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         return `
-
-            <span class="
-                badge
-                ${styles[action]}
-                fw-bold
-                fs-7
-                px-4
-                py-2
-            ">
-                ${action.toUpperCase()}
-            </span>
-
+            <span class="badge ${styles[action]} fw-bold fs-7 px-4 py-2">${action.toUpperCase()}</span>
         `;
     };
 
     const renderKitchenPriority = (item) => {
-
         if (item.action_type === 'Cancel') {
-
-            return `
-                <span class="badge badge-danger fs-7">
-                    Immediate Kitchen Update
-                </span>
-            `;
+            return `<span class="badge badge-danger fs-7">Immediate Kitchen Update</span>`;
         }
 
         if (item.action_type === 'Reduce') {
-
-            return `
-                <span class="badge badge-warning fs-7">
-                    Quantity Reduction
-                </span>
-            `;
+            return `<span class="badge badge-warning fs-7">Quantity Reduction</span>`;
         }
 
-        return `
-            <span class="badge badge-light-success fs-7">
-                Ready To Send
-            </span>
-        `;
+        return `<span class="badge badge-light-success fs-7">Ready To Send</span>`;
     };
 
     const renderKitchenItems = (items) => {
-
         if (!items.length) {
-
             $('#kitchen-items-container').html(`
-
                 <div class="text-center py-15">
-
                     <div class="fw-bold fs-2 mb-2">
                         No Kitchen Updates
                     </div>
@@ -1904,7 +1739,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="text-muted fs-6">
                         All items are already synced
                     </div>
-
                 </div>
 
             `);
@@ -1913,640 +1747,291 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const html = `
-
             <div class="row g-5">
-
                 ${items.map(item => {
-
-                    const style =
-                        getKitchenActionStyle(item.action_type);
+                    const style = getKitchenActionStyle(item.action_type);
 
                     return `
-
                     <div class="col-12 col-md-6 col-xl-4">
-
-                        <div class="
-                            card
-                            border-2
-                            ${style.border}
-                            rounded-4
-                            shadow-sm
-                            kitchen-grid-item
-                            overflow-hidden
-                            h-100
-                            position-relative
-                        ">
-
-                            <!-- SELECTED -->
-                            <div class="
-                                selected-indicator
-                                d-none
-                                position-absolute
-                                top-0
-                                end-0
-                                m-3
-                                z-index-3
-                            ">
-
-                                <span class="
-                                    badge
-                                    badge-primary
-                                    px-3
-                                    py-2
-                                ">
-                                    SELECTED
-                                </span>
-
+                        <div class=" card border-2 ${style.border} rounded-4 shadow-sm kitchen-grid-item overflow-hidden h-100 position-relative">
+                            <div class="selected-indicator d-none position-absolute top-0 end-0 m-3 z-index-3">
+                                <span class="badge badge-primary px-3 py-2 ">SELECTED</span>
                             </div>
 
-                            <!-- HEADER -->
-                            <div class="
-                                ${style.header}
-                                px-4
-                                py-3
-                                border-bottom
-                            ">
-
-                                <div class="
-                                    d-flex
-                                    align-items-center
-                                    justify-content-between
-                                ">
-
+                            <div class="${style.header} px-4 py-3 border-bottom">
+                                <div class="d-flex align-items-center justify-content-between">
                                     ${renderKitchenActionBadge(item.action_type)}
 
-                                    <div class="
-                                        fw-bold
-                                        fs-3
-                                        ${style.text}
-                                    ">
-
+                                    <div class=" fw-bold fs-3${style.text}">
                                         QTY: ${item.quantity}
-
                                     </div>
-
                                 </div>
-
                             </div>
-
-                            <!-- BODY -->
+                            
                             <div class="card-body p-4">
-
-                                <!-- CHECKBOX -->
                                 <div class="d-none">
-
-                                    <input
-                                        type="checkbox"
-
-                                        class="kitchen-item-checkbox"
-
-                                        data-order-item-id="${item.shop_order_item_id}"
-
-                                        data-quantity="${item.quantity}"
-
-                                        data-action="${item.action_type}"
-
-                                        data-route-id="${item.locked_route_id ?? ''}"
-                                    >
-
+                                    <input type="checkbox" class="kitchen-item-checkbox" data-order-item-id="${item.shop_order_item_id}" data-quantity="${item.quantity}" data-action="${item.action_type}" data-route-id="${item.locked_route_id ?? ''}">
                                 </div>
 
-                                <!-- PRODUCT -->
                                 <div class="fw-bold fs-3 text-dark mb-2">
-
                                     ${item.product_name}
-
                                 </div>
 
-                                <!-- PRIORITY -->
                                 <div class="mb-4">
-
                                     ${renderKitchenPriority(item)}
-
                                 </div>
 
-                                <!-- NOTE -->
-                                <div class="
-                                    bg-light
-                                    rounded-3
-                                    p-3
-                                    mb-4
-                                ">
-
-                                    <div class="
-                                        text-muted
-                                        fs-8
-                                        fw-bold
-                                        mb-1
-                                    ">
+                                <div class="bg-light rounded-3 p-3 mb-4">
+                                    <div class="text-muted fs-8 fw-bold mb-1">
                                         ORDER NOTE
                                     </div>
 
-                                    <div class="
-                                        fs-7
-                                        fw-semibold
-                                        text-dark
-                                    ">
-
+                                    <div class="fs-7 fw-semibold text-dark">
                                         ${item.note || 'No special instruction'}
-
                                     </div>
-
                                 </div>
 
-                                <!-- ROUTING -->
                                 ${
                                     item.is_route_locked
                                     ? `
 
-                                    <div class="
-                                        border
-                                        border-danger
-                                        bg-light-danger
-                                        rounded-3
-                                        p-3
-                                    ">
-
-                                        <div class="
-                                            d-flex
-                                            align-items-center
-                                            gap-2
-                                            mb-2
-                                        ">
-
-                                            <i class="
-                                                ki-outline
-                                                ki-lock-2
-                                                fs-3
-                                                text-danger
-                                            "></i>
-
-                                            <span class="
-                                                fw-bold
-                                                text-danger
-                                            ">
-                                                Locked Station
-                                            </span>
-
+                                    <div class="border border-danger bg-light-danger rounded-3 p-3">
+                                        <div class=" d-flex align-items-center gap-2 mb-2">
+                                            <i class="ki-outline ki-lock-2 fs-3 text-danger"></i>
+                                            <span class="fw-bold text-danger">Locked Station</span>
                                         </div>
 
-                                        <div class="
-                                            fw-bold
-                                            fs-5
-                                        ">
+                                        <div class="fw-bold fs-5">
                                             ${item.locked_route_name}
                                         </div>
-
                                     </div>
-
                                     `
                                     : `
-
                                     <div>
+                                        <label class="form-label fw-bold fs-7">Select Kitchen Station</label>
 
-                                        <label class="
-                                            form-label
-                                            fw-bold
-                                            fs-7
-                                        ">
-                                            Select Kitchen Station
-                                        </label>
-
-                                        <select
-                                            class="
-                                                form-select
-                                                form-select-solid
-                                                kitchen-route-select
-                                            "
-
-                                            data-order-item-id="${item.shop_order_item_id}"
-                                        >
-
-                                            <option value="">
-                                                Choose Station
-                                            </option>
-
+                                        <select class="form-select form-select-solid kitchen-route-select" data-order-item-id="${item.shop_order_item_id}">
+                                            <option value="">Choose Station</option>
                                             ${kitchenRoutes.map(route => `
-
-                                                <option value="${route.id}">
-                                                    ${route.kitchen_route_name}
-                                                </option>
-
+                                                <option value="${route.id}">${route.kitchen_route_name}</option>
                                             `).join('')}
-
                                         </select>
-
                                     </div>
-
                                     `
                                 }
 
                             </div>
-
                         </div>
-
                     </div>
-
                     `;
                 }).join('')}
 
             </div>
-
         `;
 
         $('#kitchen-items-container').html(html);
     };
 
-    const createPaymentRow = ({
-        paymentMethodId,
-        paymentMethodName
-    }) => {
-
-        const isCash =
-            paymentMethodName
-                .toLowerCase()
-                .includes('cash');
+    const createPaymentRow = ({paymentMethodId, paymentMethodName}) => {
+        const isCash = paymentMethodName.toLowerCase().includes('cash');
 
         return `
         <div class="payment-row card border-0 shadow-sm rounded-4 mb-3">
-
-            <!-- TOP -->
             <div class="card-body p-0">
-
-                <!-- HEADER -->
                 <div class="d-flex justify-content-between align-items-center px-4 py-3 border-bottom bg-light rounded-top-4">
-
                     <div class="d-flex align-items-center gap-3">
-
-                        <div
-                            class="rounded-circle d-flex align-items-center justify-content-center bg-success text-white"
-                            style="
-                                width: 45px;
-                                height: 45px;
-                                font-size: 18px;
-                                font-weight: 700;
-                            ">
-
+                        <div class="rounded-circle d-flex align-items-center justify-content-center bg-success text-white" style="width: 45px; height: 45px; font-size: 18px; font-weight: 700;">
                             ${isCash ? '<i class="ki-outline ki-bill text-white"></i>' : '<i class="ki-outline ki-credit-cart text-white"></i>'}
-
                         </div>
 
                         <div>
-
                             <div class="fw-bold fs-5">
                                 ${paymentMethodName}
                             </div>
 
                             <div class="text-muted small">
-
-                                ${
-                                    isCash
-                                        ? 'Enter the cash received from customer'
-                                        : 'Enter payment details'
-                                }
-
+                                ${isCash ? 'Enter the cash received from customer' : 'Enter payment details'}
                             </div>
-
                         </div>
-
                     </div>
-
-                        <button type="button" class="btn btn-light-danger btn-sm remove-payment-row">
-
-                                    Remove
-
-                                </button>
-
+                    <button type="button" class="btn btn-light-danger btn-sm remove-payment-row">
+                        Remove
+                    </button>
                 </div>
 
-                <!-- CONTENT -->
                 <div class="p-4">
-
-                    <!-- CASH LAYOUT -->
                     ${
                         isCash
                         ? `
                         <div class="row g-3">
-
                             <div class="col-md-6">
-
-                                <label class="form-label fw-semibold fs-6">
-                                    Amount Received
-                                </label>
-
+                                <label class="form-label fw-semibold fs-6">Amount Received</label>
                                 <div class="input-group input-group-lg">
-
-                                    <span class="input-group-text">
-                                        ₱
-                                    </span>
-
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        min="0"
-                                        class="form-control payment-amount"
-                                        placeholder="0.00">
-
+                                    <span class="input-group-text">₱</span>
+                                    <input type="number" step="0.01" min="0" class="form-control payment-amount" placeholder="0.00">
                                 </div>
-
                             </div>
 
                             <div class="col-md-6">
-
-                                <label class="form-label fw-semibold fs-6">
-                                    Notes
-                                </label>
-
-                                <input
-                                    type="text"
-                                    class="form-control form-control-lg payment-remarks"
-                                    placeholder="Optional note">
-
+                                <label class="form-label fw-semibold fs-6">Notes</label>
+                                <input type="text" class="form-control form-control-lg payment-remarks" placeholder="Optional note">
                             </div>
-
                         </div>
                         `
                         : `
                         <!-- DIGITAL / CARD LAYOUT -->
                         <div class="row g-3">
-
                             <div class="col-md-4">
-
-                                <label class="form-label fw-semibold">
-                                    Payment Amount
-                                </label>
+                                <label class="form-label fw-semibold">Payment Amount</label>
 
                                 <div class="input-group">
+                                    <span class="input-group-text">₱</span>
 
-                                    <span class="input-group-text">
-                                        ₱
-                                    </span>
-
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        min="0"
-                                        class="form-control payment-amount"
-                                        placeholder="0.00">
-
+                                    <input type="number" step="0.01" min="0" class="form-control payment-amount" placeholder="0.00">
                                 </div>
-
                             </div>
 
                             <div class="col-md-4">
+                                <label class="form-label fw-semibold">Reference Number</label>
 
-                                <label class="form-label fw-semibold">
-                                    Reference Number
-                                </label>
-
-                                <input
-                                    type="text"
-                                    class="form-control payment-reference-number"
-                                    placeholder="Transaction ID">
-
+                                <input type="text" class="form-control payment-reference-number" placeholder="Transaction ID">
                             </div>
 
                             <div class="col-md-4">
+                                <label class="form-label fw-semibold">Account / Name</label>
 
-                                <label class="form-label fw-semibold">
-                                    Account / Name
-                                </label>
-
-                                <input
-                                    type="text"
-                                    class="form-control payment-reference-name"
-                                    placeholder="GCash / Card holder">
-
+                                <input type="text" class="form-control payment-reference-name" placeholder="GCash / Card holder">
                             </div>
 
                             <div class="col-12">
+                                <label class="form-label fw-semibold">Notes</label>
 
-                                <label class="form-label fw-semibold">
-                                    Notes
-                                </label>
-
-                                <textarea
-                                    rows="2"
-                                    class="form-control payment-remarks"
-                                    placeholder="Optional note"></textarea>
-
+                                <textarea rows="2" class="form-control payment-remarks" placeholder="Optional note"></textarea>
                             </div>
-
                         </div>
                         `
                     }
 
                 </div>
-
             </div>
 
-            <!-- HIDDEN -->
-            <input
-                type="hidden"
-                class="payment-method-id"
-                value="${paymentMethodId}">
-
-            <input
-                type="hidden"
-                class="payment-method-name"
-                value="${paymentMethodName}">
+            <input type="hidden" class="payment-method-id" value="${paymentMethodId}">
+            <input type="hidden" class="payment-method-name" value="${paymentMethodName}">
         </div>
         `;
     };
 
     const discountLoadingState = () => {
-
         $('#available-discount-list').html(`
-
             <div class="d-flex flex-column gap-3">
 
                 ${Array.from({ length: 3 }).map(() => `
-
                     <div class="card border-0 shadow-sm rounded-4">
-
                         <div class="card-body p-4">
-
                             <div class="placeholder-glow">
+                                <div class="placeholder col-4 mb-3 rounded"></div>
 
-                                <div
-                                    class="placeholder col-4 mb-3 rounded">
-                                </div>
-
-                                <div
-                                    class="placeholder col-2 mb-4 rounded">
-                                </div>
+                                <div class="placeholder col-2 mb-4 rounded"></div>
 
                                 <div class="row g-2">
-
                                     <div class="col-md-4">
-                                        <div
-                                            class="placeholder col-12 rounded">
-                                        </div>
+                                        <div class="placeholder col-12 rounded"></div>
                                     </div>
 
                                     <div class="col-md-4">
-                                        <div
-                                            class="placeholder col-12 rounded">
-                                        </div>
+                                        <div class="placeholder col-12 rounded"></div>
                                     </div>
 
                                     <div class="col-md-4">
-                                        <div
-                                            class="placeholder col-12 rounded">
-                                        </div>
+                                        <div class="placeholder col-12 rounded"></div>
                                     </div>
-
                                 </div>
-
                             </div>
-
                         </div>
-
                     </div>
 
                 `).join('')}
 
             </div>
-
         `);
 
         $('#applied-discount-list').html(`
-
             <div class="d-flex flex-column gap-2">
 
                 ${Array.from({ length: 2 }).map(() => `
-
                     <div class="card border-0 shadow-sm rounded-4">
-
                         <div class="card-body p-3">
-
                             <div class="placeholder-glow">
+                                <div class="placeholder col-5 mb-2 rounded"></div>
 
-                                <div
-                                    class="placeholder col-5 mb-2 rounded">
-                                </div>
-
-                                <div
-                                    class="placeholder col-3 rounded">
-                                </div>
-
+                                <div class="placeholder col-3 rounded"></div>
                             </div>
-
                         </div>
-
                     </div>
 
                 `).join('')}
 
             </div>
-
         `);
     };
 
     const chargeLoadingState = () => {
-
         $('#available-charge-list').html(`
-
             <div class="d-flex flex-column gap-3">
 
                 ${Array.from({ length: 3 }).map(() => `
-
                     <div class="card border-0 shadow-sm rounded-4">
-
                         <div class="card-body p-4">
-
                             <div class="placeholder-glow">
+                                <div class="placeholder col-4 mb-3 rounded"></div>
 
-                                <div
-                                    class="placeholder col-4 mb-3 rounded">
-                                </div>
-
-                                <div
-                                    class="placeholder col-2 mb-4 rounded">
-                                </div>
+                                <div class="placeholder col-2 mb-4 rounded"></div>
 
                                 <div class="row g-2">
-
                                     <div class="col-md-4">
-                                        <div
-                                            class="placeholder col-12 rounded">
-                                        </div>
+                                        <div class="placeholder col-12 rounded"></div>
                                     </div>
 
                                     <div class="col-md-8">
-                                        <div
-                                            class="placeholder col-12 rounded">
-                                        </div>
+                                        <div class="placeholder col-12 rounded"></div>
                                     </div>
-
                                 </div>
-
                             </div>
-
                         </div>
-
                     </div>
 
                 `).join('')}
 
             </div>
-
         `);
 
         $('#applied-charge-list').html(`
-
             <div class="d-flex flex-column gap-2">
 
                 ${Array.from({ length: 2 }).map(() => `
-
                     <div class="card border-0 shadow-sm rounded-4">
-
                         <div class="card-body p-3">
-
                             <div class="placeholder-glow">
+                                <div class="placeholder col-5 mb-2 rounded"></div>
 
-                                <div
-                                    class="placeholder col-5 mb-2 rounded">
-                                </div>
-
-                                <div
-                                    class="placeholder col-3 rounded">
-                                </div>
-
+                                <div class="placeholder col-3 rounded"></div>
                             </div>
-
                         </div>
-
                     </div>
 
                 `).join('')}
 
             </div>
-
         `);
     };
 
     const filterOrderHistory = () => {
-
-        const search = $('#order-history-search')
-            .val()
-            .toLowerCase()
-            .trim();
-
-        const filter = $('#order-history-filter')
-            .val();
-
+        const search = $('#order-history-search').val().toLowerCase().trim();
+        const filter = $('#order-history-filter').val();
         let filtered = [...cachedOrders];
-
-        /*
-        |--------------------------------------------------------------------------
-        | SEARCH FILTER
-        |--------------------------------------------------------------------------
-        */
 
         if (search) {
             filtered = filtered.filter(order => {
-
                 return (
                     order.order_number?.toLowerCase().includes(search) ||
                     order.customer_name?.toLowerCase().includes(search)
@@ -2554,16 +2039,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | STATUS FILTER
-        |--------------------------------------------------------------------------
-        */
-
         if (filter && filter !== 'all') {
-
             filtered = filtered.filter(order => {
-
                 return (
                     order.payment_status === filter ||
                     order.order_status === filter
@@ -2571,70 +2048,38 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | RENDER RESULT
-        |--------------------------------------------------------------------------
-        */
-
         renderOrderHistoryGrid(filtered);
     };
 
     const saveCustomer = async () => {
-
         try {
-
-            const shopOrderId =
-                sessionStorage.getItem('shop_order_id');
+            const shopOrderId = sessionStorage.getItem('shop_order_id');
 
             if (!shopOrderId) {
-
-                showNotification(
-                    'No active order found.'
-                );
+                showNotification('No active order found.');
 
                 return;
             }
 
-            const customerName =
-                $('#customer-name-input')
-                    .val()
-                    .trim();
-
+            const customerName = $('#customer-name-input').val().trim();
             const csrf = getCsrfToken();
 
             const formData = new URLSearchParams();
 
-            formData.append(
-                'shop_order_id',
-                shopOrderId
-            );
+            formData.append('shop_order_id', shopOrderId);
+            formData.append('customer_name', customerName);
 
-            formData.append(
-                'customer_name',
-                customerName
-            );
-
-            const response = await fetch(
-                '/shop-order/save-customer',
-                {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'Content-Type':
-                            'application/x-www-form-urlencoded; charset=UTF-8',
-
-                        Accept: 'application/json',
-
-                        ...(csrf
-                            ? { 'X-CSRF-TOKEN': csrf }
-                            : {}),
-                    },
-                }
-            );
+            const response = await fetch('/shop-order/save-customer', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    Accept: 'application/json',
+                    ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+                },
+            });
 
             if (!response.ok) {
-
                 throw new Error(
                     `Update customer failed: ${response.status}`
                 );
@@ -2643,52 +2088,86 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
 
             if (!data.success) {
-
                 showNotification(data.message);
 
                 return;
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | UPDATE BADGE
-            |--------------------------------------------------------------------------
-            */
-
-            $('#badge-customer-name').text(
-                data.customer_name || 'Walk-in Customer'
-            );
-
-            /*
-            |--------------------------------------------------------------------------
-            | CLOSE MODAL
-            |--------------------------------------------------------------------------
-            */
+            $('#badge-customer-name').text(data.customer_name || 'Walk-in Customer');
 
             $('#customer-modal').modal('hide');
 
-            showNotification(
-                'Customer updated successfully.',
-                'success'
-            );
-
-        } catch (error) {
-
-            handleSystemError(
-                error,
-                'save_customer_failed',
-                error.message
-            );
+            showNotification('Customer updated successfully.', 'success');
+        }
+        catch (error) {
+            handleSystemError(error, 'save_customer_failed', error.message);
         }
     };
 
     const updateKitchenSelectionCount = () => {
+        const count = $('.kitchen-item-checkbox:checked').length;
 
-        const count =
-            $('.kitchen-item-checkbox:checked').length;
+        $('#selected-kitchen-items-count').text(count);
+    };    
 
-        $('#selected-kitchen-items-count')
-            .text(count);
+    const executeOrderCancellation = async () => {
+        try {
+            const shopOrderId = sessionStorage.getItem('shop_order_id');
+            if (!shopOrderId) {
+                showNotification('No active order context found.', 'danger');
+                return;
+            }
+
+            const cancellationReason = $('#order-cancellation-reason').val().trim();
+            if (!cancellationReason) {
+                showNotification('You must provide a cancellation reason.', 'warning');
+                return;
+            }
+
+            const csrf = getCsrfToken();
+            const formData = new URLSearchParams();
+            formData.append('shop_order_id', shopOrderId);
+            formData.append('void_reason', cancellationReason);
+
+            const confirmBtn = document.getElementById('confirm-cancel-order-button');
+            confirmBtn.setAttribute('disabled', 'true');
+
+            const response = await fetch('/shop-order/cancel-order', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    'Accept': 'application/json',
+                    ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`Cancellation payload request failed: ${response.status}`);
+            }
+
+            const data = await response.json();
+            confirmBtn.removeAttribute('disabled');
+
+            if (!data.success) {
+                showNotification(data.message, 'error');
+                return;
+            }
+
+            $('#cancel-order-modal').modal('hide');
+            $('#order-cancellation-reason').val('');
+
+            showNotification('Order canceled successfully.', 'success');
+
+            sessionStorage.removeItem('shop_order_id');
+            sessionStorage.removeItem('shop_order_number');
+            resetCartUI();
+
+        }
+        catch (error) {
+            document.getElementById('confirm-cancel-order-button').removeAttribute('disabled');
+            handleSystemError(error, 'cancel_order_failed', error.message);
+        }
     };
 
     config.forms.map((cfg) => initValidation(cfg.selector, cfg.rules));
@@ -2697,7 +2176,1034 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initializeCart();
 
-    $('#order-type').on('change', async function () {
+    document.addEventListener('click', (event) => {
+        const button = event.target.closest('.product-category-filter');
+
+        if (!button) {
+            return;
+        }
+
+        document.querySelectorAll('.product-category-filter').forEach(btn => {
+            btn.classList.remove('active');
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-light');
+        });
+
+        button.classList.add('active');
+        button.classList.add('btn-primary');
+
+        button.classList.remove('btn-light');
+
+        generatePOSProduct(config.posProduct.url, {category_id: button.dataset.productFilter, search: document.getElementById('product_search').value});
+    });
+
+    document.addEventListener('click', (event) => {
+        const resetButton = event.target.closest('.reset-product-filter');
+
+        if (!resetButton) {
+            return;
+        }
+
+        document.getElementById('product_search').value = '';
+
+        document .querySelectorAll('.product-category-filter').forEach(btn => {
+            btn.classList.remove('active');
+            btn.classList.remove('btn-primary');
+
+            btn.classList.add('btn-light');
+        });
+
+        const allButton = document.querySelector('.product-category-filter[data-product-filter="all"]');
+
+        if (allButton) {
+            allButton.classList.add('active');
+            allButton.classList.add('btn-primary');
+
+            allButton.classList.remove('btn-light');
+        }
+
+        generatePOSProduct(config.posProduct.url, {category_id: 'all', search: ''});
+    });
+
+    document.addEventListener('click', function (e) {
+        const card = e.target.closest('.product-card[data-bs-toggle="modal"]');
+
+        if (!card) return;
+
+        const productId = card.dataset.productId;
+        const productName = card.dataset.productName;
+        const price = parseFloat(card.dataset.price || 0);
+
+        document.getElementById('modal_product_id').value = productId;
+        document.getElementById('modal-product-name').textContent = productName;
+        document.getElementById('modal-product-base-price').value = price;
+
+        const qtyInput = document.getElementById('order_qty_input');
+        qtyInput.value = 1;
+
+        updateModalTotal();
+    });
+
+    document.addEventListener('click', function (e) {
+        if (e.target.closest('[data-kt-dialer-control="increase"], [data-kt-dialer-control="decrease"]')) {
+            setTimeout(updateModalTotal, 10);
+        }
+    });
+
+    document.addEventListener('click', function (e) {
+        if (e.target.closest('#new-order')) {
+            sessionStorage.removeItem('shop_order_id');
+            sessionStorage.removeItem('shop_order_number');
+            resetCartUI();
+        }
+    });
+
+    $(document).on('click', '#set-table', async function () {
+        const shopOrderId = sessionStorage.getItem('shop_order_id');
+
+        if (!shopOrderId) {
+            showNotification('Create an order first.');
+
+            return;
+        }
+
+        await loadFloorPlans(shopOrderId);
+    });
+
+    $(document).on('click', '.floor-plan-filter', async function () {
+        $('.floor-plan-filter').removeClass('btn-success').addClass('btn-light');
+
+        $(this).removeClass('btn-light').addClass('btn-success');
+
+        selectedFloorPlanId = $(this).data('floor-plan-id');
+
+        const shopOrderId = sessionStorage.getItem('shop_order_id');
+
+        await loadFloorTables(selectedFloorPlanId, shopOrderId);
+    });
+
+    $(document).on('click', '.selectable-table', async function () {
+        const floorPlanTableId =$(this).data('floor-plan-table-id');
+
+        await assignTableToOrder(floorPlanTableId);
+    });
+
+    $(document).on('click', '.increase-item-qty', async function () {
+        const shopOrderItemId = $(this).data('shop-order-item-id');
+
+        await updateOrderItemQuantity({shopOrderItemId, action: 'increase'});
+    });
+
+    $(document).on('click', '.decrease-item-qty', async function () {
+        const shopOrderItemId = $(this).data('shop-order-item-id');
+
+        await updateOrderItemQuantity({shopOrderItemId, action: 'decrease'});
+    });
+
+    $(document).on('click', '.delete-order-item', async function () {
+        const shopOrderItemId = $(this).data('shop-order-item-id');
+
+        await updateOrderItemQuantity({shopOrderItemId, action: 'delete'});
+    });
+
+    $(document).on('click', '#manage-discount-button', async function () {
+        try {
+            const shopOrderId = sessionStorage.getItem('shop_order_id');
+
+            if (!shopOrderId) {
+                showNotification('No active order.');
+
+                return;
+            }
+
+            discountLoadingState();
+
+            const csrf = getCsrfToken();
+
+            const response = await fetch('/shop-order/fetch-discounts',{
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    Accept: 'application/json',
+                    ...(csrf ? { 'X-CSRF-TOKEN': csrf }: {}),
+                },
+                body: new URLSearchParams({
+                    shop_order_id: shopOrderId,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!data.success) {
+                showNotification(data.message);
+
+                return;
+            }
+
+            renderAvailableDiscounts(data.available_discounts);
+
+            renderAppliedDiscounts(data.applied_discounts);
+        }
+        catch (error) {
+            handleSystemError(error, 'fetch_failed', error.message);
+        }
+    });
+
+    $(document).on('click', '.apply-discount-button', async function () {
+        try {
+            const button = $(this);
+            const card = button.closest('.card');
+            const discountTypeId = button.data('discount-id');
+            const isVariable = button.data('variable');
+            const valueType = button.data('value-type');
+
+            let discountValue = null;
+            let referenceName = card.find('.discount-reference-name').val();
+            let referenceNumber = card.find('.discount-reference-number').val();
+            let remarks = card.find('.discount-remarks').val();
+
+            if (isVariable === 'Yes') {
+                discountValue = card.find('.variable-discount-value').val();
+
+                if (discountValue === '' || discountValue === null) {
+                    showNotification('Enter a discount value.');
+                
+                    return;
+                }
+
+                discountValue = parseFloat(discountValue);
+
+                if (isNaN(discountValue) || discountValue <= 0) {
+                    showNotification('Invalid discount value.');
+
+                    return;
+                }
+
+                if (valueType === 'Percentage' && discountValue > 100) {
+                    showNotification('Percentage discount cannot exceed 100%.');
+
+                    return;
+                }
+            }
+
+            const csrf = getCsrfToken();
+
+            const shopOrderId =sessionStorage.getItem('shop_order_id');
+
+            button.prop('disabled', true);
+
+            const response = await fetch('/shop-order/save-discount', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    Accept: 'application/json',
+                        ...(csrf ? {'X-CSRF-TOKEN': csrf } : {}),
+                },
+                body: new URLSearchParams({
+                    shop_order_id: shopOrderId,
+                    discount_type_id: discountTypeId,
+                    discount_value: discountValue ?? '',
+                    reference_name: referenceName ?? '',
+                    reference_number: referenceNumber ?? '',
+                    remarks: remarks ?? '',
+                }),
+            });
+
+            const data = await response.json();
+
+            button.prop('disabled', false);
+
+            if (!data.success) {
+                showNotification(data.message);
+                
+                return;
+            }
+            
+            populateCart(data.order);
+
+            renderAvailableDiscounts(data.available_discounts);
+
+            renderAppliedDiscounts(data.applied_discounts);
+
+            showNotification(data.message, 'success');
+        }
+        catch (error) {
+            $('.apply-discount-button').prop('disabled', false);
+
+            handleSystemError(error, 'save_failed', error.message);
+        }
+    });
+
+    $(document).on('click', '.remove-discount-button', async function () {
+        try {
+            const appliedId = $(this).data('applied-id');
+            const csrf = getCsrfToken();
+            const response = await fetch('/shop-order/delete-discount', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    Accept: 'application/json',
+                    ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+                },
+                body: new URLSearchParams({
+                    applied_discount_id: appliedId,
+                }),
+            });
+
+             const data = await response.json();
+
+            if (!data.success) {
+                showNotification(data.message);
+                
+                return;
+            }
+
+            populateCart(data.order);
+
+            renderAvailableDiscounts(data.available_discounts);
+
+            renderAppliedDiscounts(data.applied_discounts);
+
+        }
+        catch (error) {
+            handleSystemError(error, 'delete_failed', error.message);
+        }
+    });
+
+    $(document).on('click', '#manage-charge-button', async function () {
+        try {
+            const shopOrderId = sessionStorage.getItem('shop_order_id');
+
+            if (!shopOrderId) {
+                showNotification('No active order.');
+
+                return;
+            }
+
+            chargeLoadingState();
+
+            const csrf = getCsrfToken();
+
+            const response = await fetch('/shop-order/fetch-charges', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    Accept: 'application/json',
+                    ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+                },
+                body: new URLSearchParams({
+                    shop_order_id: shopOrderId,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!data.success) {
+                showNotification(data.message);
+
+                return;
+            }
+
+            renderAvailableCharges(data.available_charges);
+
+            renderAppliedCharges(data.applied_charges);
+
+        }
+        catch (error) {
+            handleSystemError(error, 'fetch_failed', error.message);
+        }
+    });
+
+    $(document).on('click', '.apply-charge-button', async function () {
+        try {
+            const button = $(this);
+            const card = button.closest('.card');
+            const chargeTypeId = button.data('charge-id');
+            const isVariable = button.data('variable');
+            const valueType = button.data('value-type');
+
+            let chargeValue = null;
+            let remarks = card.find('.charge-remarks').val();
+
+            if (isVariable === 'Yes') {
+                chargeValue = card.find('.variable-charge-value').val();
+
+                if (chargeValue === '' || chargeValue === null) {
+                    showNotification('Enter a charge value.');
+
+                    return;
+                }
+
+                chargeValue = parseFloat(chargeValue);
+
+                if (isNaN(chargeValue) || chargeValue <= 0) {
+                    showNotification('Invalid charge value.');
+
+                    return;
+                }
+
+                if (valueType === 'Percentage' && chargeValue > 100) {
+                    showNotification('Percentage charge cannot exceed 100%.');
+
+                    return;
+                }
+            }
+
+            const csrf = getCsrfToken();
+            const shopOrderId = sessionStorage.getItem('shop_order_id');
+
+            button.prop('disabled', true);
+
+            const response = await fetch('/shop-order/save-charge',  {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    Accept: 'application/json',
+                    ...(csrf ? {'X-CSRF-TOKEN': csrf } : {}),
+                },
+                body: new URLSearchParams({
+                    shop_order_id: shopOrderId,
+                    charge_type_id: chargeTypeId,
+                    charge_value: chargeValue ?? '',
+                    remarks: remarks ?? '',
+                }),
+            });
+
+            const data = await response.json();
+                
+            button.prop('disabled', false);
+
+            if (!data.success) {
+                showNotification(data.message);
+
+                return;
+            }
+
+            populateCart(data.order);
+
+            renderAvailableCharges(data.available_charges);
+
+            renderAppliedCharges(data.applied_charges);
+
+            showNotification(data.message, 'success');
+
+        }
+        catch (error) {
+            $('.apply-charge-button').prop('disabled', false);
+
+            handleSystemError(error, 'save_failed', error.message);
+        }
+    });
+
+    $(document).on('click','.remove-charge-button', async function () {
+        try {
+            const chargeId = $(this).data('applied-id');
+            const csrf = getCsrfToken();
+
+            const response = await fetch('/shop-order/delete-charge', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    Accept: 'application/json',
+                    ...(csrf ? { 'X-CSRF-TOKEN': csrf }: {}),
+                },
+                body: new URLSearchParams({
+                    shop_order_applied_charge_id: chargeId,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!data.success) {
+                showNotification(data.message);
+                
+                return;
+            }
+
+            populateCart(data.order);
+
+            renderAvailableCharges(data.available_charges);
+
+            renderAppliedCharges(data.applied_charges);
+
+        }
+        catch (error) {
+            handleSystemError(error, 'delete_failed', error.message);
+        }
+    });
+
+    $(document).on('click', '#print-bill', function () {
+        const shopOrderId = sessionStorage.getItem('shop_order_id');
+
+        if (!shopOrderId) {
+            showNotification('No active order.');
+
+            return;
+        }
+
+        const width = 900;
+        const height = 700;
+        const left = (screen.width - width) / 2;
+        const top = (screen.height - height) / 2;
+        const url = `/shop-order/${shopOrderId}/print-bill`;
+        
+        window.open(url, '_blank',` width=${width}, height=${height}, top=${top}, left=${left}`);
+    });
+
+    $(document).on('click', '#print-order-summary', function () {
+        const ctx = getPageContext();
+        const width = 900;
+        const height = 700;
+        const left = (screen.width - width) / 2;
+        const top = (screen.height - height) / 2;
+        const url = `/shop-order/register/${ctx.detailId}/print-orders`;
+
+        window.open(url, '_blank',`width=${width}, height=${height}, top=${top}, left=${left}`);
+    });
+
+    $(document).on('click', '#print-payment-summary', function () {
+        const ctx = getPageContext();
+        const width = 900;
+        const height = 700;
+        const left = (screen.width - width) / 2;
+        const top = (screen.height - height) / 2;
+        const url = `/shop-order/register/${ctx.detailId}/print-payments`;
+
+        window.open(url, '_blank', `width=${width}, height=${height}, top=${top}, left=${left}`);
+    });
+
+    $(document).on('click', '#manage-charge-button', async function () {
+        try {
+            const shopOrderId = sessionStorage.getItem('shop_order_id');
+
+            if (!shopOrderId) {
+                showNotification('No active order.');
+
+                return;
+            }
+            
+            chargeLoadingState();
+
+            const csrf = getCsrfToken();
+
+            const response = await fetch('/shop-order/fetch-charges', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    Accept: 'application/json',
+                    ...(csrf ? {'X-CSRF-TOKEN': csrf} : {}),
+                },
+                body: new URLSearchParams({
+                    shop_order_id: shopOrderId,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!data.success) {
+                showNotification(data.message);
+
+                return;
+            }
+
+            renderAvailableCharges(data.available_charges);
+
+            renderAppliedCharges(data.applied_charges);
+        }
+        catch (error) {
+            handleSystemError(error, 'fetch_failed', error.message);
+        }
+    });
+
+    $(document).on('click', '#manage-payment-button', async function () {
+        try {
+            const shopOrderId = sessionStorage.getItem('shop_order_id');
+
+            if (!shopOrderId) {
+                showNotification('No active order.');
+
+                return;
+            }
+
+            $('#payment-method-list').html(`
+                <div class="text-center py-5">
+                    <div class="spinner-border text-success mb-3" role="status"></div>
+
+                    <div class="text-muted">
+                        Loading payment methods...
+                    </div>
+
+                </div>
+            `);
+
+            $('#payment-balance-display').text('₱ 0.00');
+            $('#payment-order-number').text('');
+            $('#total-payment-display').text('₱ 0.00');
+            $('#payment-change-display').text('₱ 0.00');
+            $('#payment-validation-message').addClass('d-none');
+            
+            const csrf = getCsrfToken();
+
+            const response = await fetch('/shop-order/fetch-payment-methods', {
+                method: 'POST',
+                headers: {
+                    'Content-Type':'application/x-www-form-urlencoded; charset=UTF-8',
+                    Accept: 'application/json',
+                    ...(csrf ? {'X-CSRF-TOKEN' : csrf} : {}),
+                },
+                body: new URLSearchParams({
+                    shop_order_id: shopOrderId,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!data.success) {
+                showNotification(data.message);
+                
+                return;
+            }
+
+            $('#payment-order-number').text(data.order_number);
+            $('#payment-balance-display').text(formatPeso(data.balance_due)).attr('data-balance',data.balance_due);
+
+            renderPaymentMethods(data.payment_methods);
+
+            calculatePayments();
+        }
+        catch (error) {
+            handleSystemError(error, 'fetch_failed', error.message);
+        }
+    });
+
+    $(document).on('click', '.add-payment-row', function () {
+        const paymentMethodId = $(this).data('payment-method-id');
+        const paymentMethodName = $(this).data('payment-method-name');
+
+        $(`#payment-row-container-${paymentMethodId}`).append(createPaymentRow({paymentMethodId, paymentMethodName}));
+
+        calculatePayments();
+    });
+
+    $(document).on('click', '.remove-payment-row', function () {
+        $(this).closest('.payment-row').remove();
+
+        calculatePayments();
+    });
+
+    $(document).on('click', '#complete-payment-button', async function () {
+        try {
+            const button = $(this);
+            const shopOrderId = sessionStorage.getItem('shop_order_id');
+
+            if (!shopOrderId) {
+                showNotification('No active order.');
+
+                return;
+            }
+
+            const payments = [];
+
+            let totalPayment = 0;
+
+            $('.payment-method-card').each(function () {
+                const card = $(this);
+                const paymentAmount = parseFloat(card.find('.payment-amount').val()) || 0;
+
+                if (paymentAmount <= 0) {
+                    return;
+                }
+
+                const tenderedAmount = parseFloat(card.find('.tendered-amount').val()) || paymentAmount;
+
+                payments.push({
+                    payment_method_id: card.data('payment-method-id'),
+                    payment_amount: paymentAmount,
+                    tendered_amount: tenderedAmount,
+                    reference_number: card.find('.reference-number').val(),
+                    reference_name: card.find('.reference-name').val(),
+                    remarks: card.find('.payment-remarks').val()
+                });
+
+                totalPayment += paymentAmount;
+            });
+
+            if (!payments.length) {
+                showNotification('Please enter payment.');
+
+                return;
+            }
+
+            const outstandingBalance = parseFloat($('#payment-outstanding-balance').data('amount')) || 0;
+
+            if (totalPayment < outstandingBalance) {
+                showNotification('Total payment cannot be less than outstanding balance.');
+
+                return;
+            }
+
+            button.prop('disabled', true).html(`<span class="spinner-border spinner-border-sm me-2"></span>Processing Payment...`);
+
+            const csrf = getCsrfToken();
+
+            const response = await fetch('/shop-order/save-payment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    ...(csrf ? {'X-CSRF-TOKEN': csrf}: {}),
+                },
+                body: JSON.stringify({
+                    shop_order_id: shopOrderId,
+                    payments:payments,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!data.success) {
+                showNotification(data.message);
+
+                return;
+            }
+
+            showNotification(data.message, 'success');
+
+            $('#payment-modal').modal('hide');
+
+            if (typeof fetchCartSummary === 'function') {
+                fetchCartSummary();
+            }
+
+            if (typeof fetchOrders === 'function') {
+                fetchOrders();
+            }
+
+            sessionStorage.removeItem('shop_order_id');
+            sessionStorage.removeItem('shop_order_number');
+
+            generatePOSProduct(config.posProduct.url);
+
+            resetCartUI();
+
+        }
+        catch (error) {
+            handleSystemError(error, 'payment_failed', error.message);
+        }
+        finally {
+            $('#complete-payment-button').prop('disabled', false).html(`Complete Payment`);
+        }
+    });
+
+    $(document).on('click', '#order-history-button', function () {
+        loadOrderHistory();
+    });
+
+    $(document).on('click', '.order-history-card', function () {
+        const orderId = $(this).data('order-id');
+        
+        sessionStorage.setItem('shop_order_id', orderId);
+
+        loadCart(orderId, {silent: false});
+
+        $('#order-history-modal').modal('hide');
+    });
+
+    $(document).on('click', '#customer-button', function () {
+        const currentCustomer = $('#badge-customer-name').text().trim();
+
+        $('#customer-name-input').val(currentCustomer === 'Walk-in Customer' ? '' : currentCustomer);
+
+        $('#current-customer-name').text(currentCustomer);
+    });
+
+    $(document).on('click', '.customer-quick-select', function () {
+        const customerName = $(this).data('customer-name');
+
+        $('#customer-name-input').val(customerName);
+    });
+
+    $(document).on('click', '#save-customer-button', function () {
+        saveCustomer();
+    });
+
+    $(document).on('click', '#remove-customer-button', function () {
+        $('#customer-name-input').val('');
+
+        saveCustomer();
+    });
+
+    $(document).on('click', '#submit-void-request', async function () {
+        try {
+            const shopOrderId = sessionStorage.getItem('shop_order_id');
+            const reason = $('#void-reason').val().trim();
+
+            if (!reason) {
+                showNotification('Void reason is required.');
+
+                return;
+            }
+
+            const csrf = getCsrfToken();
+            const ctx = getPageContext();
+
+            const formData = new URLSearchParams();
+
+            formData.append('shop_order_id', shopOrderId);
+            formData.append('request_reason', reason);
+            formData.append('appId', ctx.appId ?? '');
+            formData.append('navigationMenuId', ctx .navigationMenuId ?? '');
+
+            const response = await fetch('/shop-order-request/save-void-request', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    Accept: 'application/json',
+                    ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+                },
+            });
+
+            const data = await response.json();
+
+            if (!data.success) {
+                showNotification(data.message);
+
+                return;
+            }
+
+            $('#void-order-modal').modal('hide');
+
+            $('#void-reason').val('');
+
+            showNotification(data.message);
+        }
+        catch (error) {
+            handleSystemError(error, 'submit_void_request_failed', error.message);
+        }
+    });
+
+    $(document).on('click', '#submit-refund-request', async function () {
+        try {
+            const shopOrderId = sessionStorage.getItem('shop_order_id');
+            const reason = $('#refund-reason').val().trim();
+
+            if (!reason) {
+                showNotification('Refund reason is required.');
+
+                return;
+            }
+
+            const csrf = getCsrfToken();
+            const ctx = getPageContext();
+
+            const formData = new URLSearchParams();
+
+            formData.append('shop_order_id', shopOrderId);
+            formData.append('request_reason', reason);
+            formData.append('appId', ctx.appId ?? '');
+            formData.append('navigationMenuId', ctx .navigationMenuId ?? '');
+
+            const response = await fetch('/shop-order-request/save-refund-request', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    Accept: 'application/json',
+                    ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+                },
+            });
+
+            const data = await response.json();
+
+            if (!data.success) {
+                showNotification(data.message);
+
+                return;
+            }
+
+            $('#refund-order-modal').modal('hide');
+            $('#refund-reason').val('');
+
+            showNotification(data.message);
+        }
+        catch (error) {
+            handleSystemError(error, 'submit_refund_request_failed', error.message);
+        }
+    });
+
+    $(document).on('click', '#send-kitchen-ticket', async function () {
+        try {
+            const shopOrderId = sessionStorage.getItem('shop_order_id');
+
+            $('#selected-kitchen-items-count').text('0');
+            $('#kitchen-items-container').html(renderKitchenLoading());
+
+            const csrf = getCsrfToken();
+            const ctx = getPageContext();
+
+            const params = new URLSearchParams();
+
+            params.append('shop_order_id', shopOrderId);
+            params.append('appId', ctx.appId ?? '');
+            params.append('navigationMenuId', ctx.navigationMenuId ?? '');
+
+            const response = await fetch('/kitchen-ticket/generate-kitchen-send-data', {
+                method: 'POST',
+                body: params,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    Accept: 'application/json',
+                    ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+                },
+            });
+
+            const data = await response.json();
+
+            kitchenItems = data.data || [];
+            kitchenRoutes = data.routes || [];
+
+            renderKitchenItems(kitchenItems);
+
+        }
+        catch (error) {
+            handleSystemError(error, 'open_kitchen_modal_failed', error.message);
+        }
+    });
+
+    $(document).on('click', '#confirm-send-kitchen-ticket', async function () {
+        try {
+            const invalidNewItems = $('.kitchen-route-select').filter(function () {
+                const card = $(this).closest('.kitchen-grid-item');
+                const checked = card.find('.kitchen-item-checkbox').is(':checked');
+
+                return checked && !$(this).val();
+            });
+
+            if (invalidNewItems.length) {
+                showNotification('Some NEW items do not have kitchen stations selected.');
+
+                return;
+            }
+
+            const selectedItems = [];
+
+            $('.kitchen-item-checkbox:checked').each(function () {
+                const card = $(this).closest('.kitchen-grid-item');
+                const routeSelect = card.find('.kitchen-route-select');
+                let routeId = $(this).data('route-id');
+
+                if (routeSelect.length) {
+                    routeId = routeSelect.val();
+                }
+
+                selectedItems.push({
+                    shop_order_item_id: $(this).data('order-item-id'),
+                    quantity: $(this).data('quantity'),
+                    action_type: $(this).data('action'),
+                    kitchen_route_id: routeId,
+                });
+            });
+
+            if (!selectedItems.length) {
+                showNotification('Please select items.');
+
+                return;
+            }
+
+            const csrf = getCsrfToken();
+            const ctx = getPageContext();
+
+            const formData = new URLSearchParams();
+
+            formData.append('shop_order_id', sessionStorage.getItem('shop_order_id'));
+            formData.append('items', JSON.stringify(selectedItems));
+            formData.append('appId', ctx.appId ?? '');
+            formData.append('navigationMenuId', ctx.navigationMenuId ?? '');
+
+            const button = $('#confirm-send-kitchen-ticket');
+            
+            button.prop('disabled', true);
+            button.html(`
+                <span class="spinner-border spinner-border-sm me-2"></span>
+                Sending...
+            `);
+
+            const response = await fetch('/kitchen-ticket/send-kitchen-ticket', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    Accept: 'application/json',
+                    ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+                },
+            });
+
+            const data = await response.json();
+                
+            button.prop('disabled', false);
+            button.html(`
+                <i class="ki-outline ki-entrance-left fs-2 me-1"></i>
+                Send
+            `);
+
+            if (!data.success) {
+                showNotification(data.message);
+
+                return;
+            }
+
+            generatePOSProduct(config.posProduct.url);
+
+            $('#kitchen-send-modal').modal('hide');
+
+            showNotification(data.message, 'success');
+        }
+        catch (error) {
+            handleSystemError(error, 'send_kitchen_ticket_failed', error.message);
+        }
+    });
+
+    $(document).on('click','.kitchen-grid-item', function (e) {
+        if ($(e.target).closest('.kitchen-route-select').length) {
+            return;
+        }
+
+        const checkbox = $(this).find('.kitchen-item-checkbox');
+
+        checkbox.prop('checked', !checkbox.prop('checked')).trigger('change');
+    });
+
+    $('#kitchen-send-modal').on('hidden.bs.modal', function () {
+        $('#kitchen-route-select').val('').trigger('change');
+        $('#selected-kitchen-items-count').text('0');
+        $('#kitchen-items-container').html('');
+    });
+
+    document.addEventListener('input', (event) => {
+        if (event.target.id !== 'product_search') {
+            return;
+        }
+
+        clearTimeout(searchTimeout);
+
+        searchTimeout = setTimeout(() => {
+            const activeCategory = document.querySelector('.product-category-filter.active');
+            const categoryId = activeCategory?.dataset.productFilter ?? 'all';
+
+            generatePOSProduct(config.posProduct.url,{category_id: categoryId, search: event.target.value});
+        }, 100);
+    });
+
+    $(document).on('input', '.payment-amount', function () {
+        calculatePayments();
+    });
+
+    $(document).on('input', '#order-history-search', function () {
+        filterOrderHistory();
+    });
+
+    $(document).on('change', '#order-type',  async function () {
         try {
             const orderType = $(this).val();
             const csrf = getCsrfToken();
@@ -2726,2288 +3232,60 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
             
             if (data.success) {
-
-                /*
-                |--------------------------------------------------------------------------
-                | SHOW/HIDE TABLE BUTTON
-                |--------------------------------------------------------------------------
-                */
-
                 if (orderType === 'Dine-in') {
-
-                    $('#set-table-column')
-                        .removeClass('d-none');
+                    $('#set-table-column').removeClass('d-none');
                 }
-
                 else {
-
-                    $('#set-table-column')
-                        .addClass('d-none');
+                    $('#set-table-column').addClass('d-none');
                 }
-
-                /*
-                |--------------------------------------------------------------------------
-                | UPDATE BADGE
-                |--------------------------------------------------------------------------
-                */
 
                 $('#badge-order-type').text(orderType);
 
-                /*
-                |--------------------------------------------------------------------------
-                | RELEASE TABLE UI
-                |--------------------------------------------------------------------------
-                */
-
                 if (data.table_removed) {
-
                     $('#badge-table').text('No Table');
                 }
             }
             else {
                 showNotification(data.message);
             }
-        } catch (error) {
+        }
+        catch (error) {
             handleSystemError(error, 'fetch_failed', `Failed to settings: ${error.message}`);
         }
-    });
-
-    document.addEventListener('input', (event) => {
-
-        if (event.target.id !== 'product_search') {
-            return;
-        }
-
-        clearTimeout(searchTimeout);
-
-        searchTimeout = setTimeout(() => {
-
-            const activeCategory =
-                document.querySelector('.product-category-filter.active');
-
-            const categoryId =
-                activeCategory?.dataset.productFilter ?? 'all';
-
-            generatePOSProduct(
-                config.posProduct.url,
-                {
-                    category_id: categoryId,
-                    search: event.target.value,
-                }
-            );
-
-        }, 100);
-    });
-
-    document.addEventListener('click', (event) => {
-
-        const button = event.target.closest('.product-category-filter');
-
-        if (!button) {
-            return;
-        }
-
-        document
-            .querySelectorAll('.product-category-filter')
-            .forEach(btn => {
-
-                btn.classList.remove('active');
-                btn.classList.remove('btn-primary');
-
-                btn.classList.add('btn-light');
-            });
-
-        button.classList.add('active');
-        button.classList.add('btn-primary');
-
-        button.classList.remove('btn-light');
-
-        generatePOSProduct(
-            config.posProduct.url,
-            {
-                category_id: button.dataset.productFilter,
-                search: document.getElementById('product_search').value,
-            }
-        );
-    });
-
-    document.addEventListener('click', (event) => {
-        const resetButton =
-            event.target.closest('.reset-product-filter');
-
-        if (!resetButton) {
-            return;
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | RESET SEARCH
-        |--------------------------------------------------------------------------
-        */
-
-        document.getElementById('product_search').value = '';
-
-        /*
-        |--------------------------------------------------------------------------
-        | RESET CATEGORY
-        |--------------------------------------------------------------------------
-        */
-
-        document
-            .querySelectorAll('.product-category-filter')
-            .forEach(btn => {
-
-                btn.classList.remove('active');
-                btn.classList.remove('btn-primary');
-
-                btn.classList.add('btn-light');
-            });
-
-        const allButton =
-            document.querySelector(
-                '.product-category-filter[data-product-filter="all"]'
-            );
-
-        if (allButton) {
-
-            allButton.classList.add('active');
-            allButton.classList.add('btn-primary');
-
-            allButton.classList.remove('btn-light');
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | RELOAD PRODUCTS
-        |--------------------------------------------------------------------------
-        */
-
-        generatePOSProduct(
-            config.posProduct.url,
-            {
-                category_id: 'all',
-                search: '',
-            }
-        );
-    });
-
-    document.addEventListener('click', function (e) {
-        const card = e.target.closest('.product-card[data-bs-toggle="modal"]');
-
-        if (!card) return;
-
-        const productId = card.dataset.productId;
-        const productName = card.dataset.productName;
-        const price = parseFloat(card.dataset.price || 0);
-
-        // set modal values
-        document.getElementById('modal_product_id').value = productId;
-        document.getElementById('modal-product-name').textContent = productName;
-        document.getElementById('modal-product-base-price').value = price;
-
-        // reset quantity
-        const qtyInput = document.getElementById('order_qty_input');
-        qtyInput.value = 1;
-
-        // compute initial total
-        updateModalTotal();
-    });
-
-    document.addEventListener('click', function (e) {
-        if (e.target.closest('[data-kt-dialer-control="increase"], [data-kt-dialer-control="decrease"]')) {
-
-            setTimeout(updateModalTotal, 10);
-        }
-    });
-
-    document.addEventListener('click', function (e) {
-        if (e.target.closest('#new-order')) {
-
-            sessionStorage.removeItem('shop_order_id');
-            sessionStorage.removeItem('shop_order_number');
-            resetCartUI();
-        }
-    });
-
-    $(document).on('click', '#set-table', async function () {
-
-        const shopOrderId = sessionStorage.getItem('shop_order_id');
-
-        if (!shopOrderId) {
-
-            showNotification('Create an order first.');
-
-            return;
-        }
-
-        await loadFloorPlans(shopOrderId);
-    });
-
-    $(document).on(
-        'click',
-        '.floor-plan-filter',
-        async function () {
-
-            $('.floor-plan-filter')
-                .removeClass('btn-success')
-                .addClass('btn-light');
-
-            $(this)
-                .removeClass('btn-light')
-                .addClass('btn-success');
-
-            selectedFloorPlanId =
-                $(this).data('floor-plan-id');
-
-            const shopOrderId =
-                sessionStorage.getItem('shop_order_id');
-
-            await loadFloorTables(
-                selectedFloorPlanId,
-                shopOrderId
-            );
-        }
-    );
-
-    $(document).on(
-        'click',
-        '.selectable-table',
-        async function () {
-
-            const floorPlanTableId =
-                $(this).data('floor-plan-table-id');
-
-            await assignTableToOrder(
-                floorPlanTableId
-            );
-        }
-    );
-
-    $(document).on(
-        'click',
-        '.increase-item-qty',
-        async function () {
-
-            const shopOrderItemId =
-                $(this).data('shop-order-item-id');
-
-            await updateOrderItemQuantity({
-                shopOrderItemId,
-                action: 'increase',
-            });
-        }
-    );
-
-    $(document).on(
-        'click',
-        '.decrease-item-qty',
-        async function () {
-
-            const shopOrderItemId =
-                $(this).data('shop-order-item-id');
-
-            await updateOrderItemQuantity({
-                shopOrderItemId,
-                action: 'decrease',
-            });
-        }
-    );
-
-    $(document).on(
-        'click',
-        '.delete-order-item',
-        async function () {
-
-            const shopOrderItemId =
-                $(this).data('shop-order-item-id');
-
-            await updateOrderItemQuantity({
-                shopOrderItemId,
-                action: 'delete',
-            });
-        }
-    );
-
-    $(document).on(
-        'click',
-        '#manage-discount-button',
-        async function () {
-
-            try {
-
-                const shopOrderId =
-                    sessionStorage.getItem('shop_order_id');
-
-                if (!shopOrderId) {
-
-                    showNotification('No active order.');
-
-                    return;
-                }
-
-                /*
-                |--------------------------------------------------------------------------
-                | LOADING STATE
-                |--------------------------------------------------------------------------
-                */
-
-                discountLoadingState();
-
-                const csrf = getCsrfToken();
-
-                const response = await fetch(
-                    '/shop-order/fetch-discounts',
-                    {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type':
-                                'application/x-www-form-urlencoded; charset=UTF-8',
-                            Accept: 'application/json',
-                            ...(csrf
-                                ? { 'X-CSRF-TOKEN': csrf }
-                                : {}),
-                        },
-                        body: new URLSearchParams({
-                            shop_order_id: shopOrderId,
-                        }),
-                    }
-                );
-
-                const data = await response.json();
-
-                if (!data.success) {
-
-                    showNotification(data.message);
-
-                    return;
-                }
-
-                renderAvailableDiscounts(
-                    data.available_discounts
-                );
-
-                renderAppliedDiscounts(
-                    data.applied_discounts
-                );
-
-            } catch (error) {
-
-                handleSystemError(
-                    error,
-                    'fetch_failed',
-                    error.message
-                );
-            }
-        }
-    );
-
-    $(document).on(
-        'click',
-        '.apply-discount-button',
-        async function () {
-
-            try {
-
-                const button = $(this);
-
-                const card =
-                    button.closest('.card');
-
-                const discountTypeId =
-                    button.data('discount-id');
-
-                const isVariable =
-                    button.data('variable');
-
-                const valueType =
-                    button.data('value-type');
-
-                let discountValue = null;
-
-                let referenceName = card
-                        .find('.discount-reference-name')
-                        .val();
-
-                let referenceNumber = card
-                        .find('.discount-reference-number')
-                        .val();
-
-                let remarks = card
-                        .find('.discount-remarks')
-                        .val();
-
-                /*
-                |--------------------------------------------------------------------------
-                | VARIABLE VALUE
-                |--------------------------------------------------------------------------
-                */
-
-                if (isVariable === 'Yes') {
-
-                    discountValue = card
-                        .find('.variable-discount-value')
-                        .val();
-
-                    if (
-                        discountValue === ''
-                        || discountValue === null
-                    ) {
-
-                        showNotification(
-                            'Enter a discount value.'
-                        );
-
-                        return;
-                    }
-
-                    discountValue =
-                        parseFloat(discountValue);
-
-                    if (
-                        isNaN(discountValue)
-                        || discountValue <= 0
-                    ) {
-
-                        showNotification(
-                            'Invalid discount value.'
-                        );
-
-                        return;
-                    }
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | PERCENTAGE LIMIT
-                    |--------------------------------------------------------------------------
-                    */
-
-                    if (
-                        valueType === 'Percentage'
-                        && discountValue > 100
-                    ) {
-
-                        showNotification(
-                            'Percentage discount cannot exceed 100%.'
-                        );
-
-                        return;
-                    }
-                }
-
-                /*
-                |--------------------------------------------------------------------------
-                | REQUEST
-                |--------------------------------------------------------------------------
-                */
-
-                const csrf = getCsrfToken();
-
-                const shopOrderId =
-                    sessionStorage.getItem(
-                        'shop_order_id'
-                    );
-
-                button.prop('disabled', true);
-
-                const response = await fetch(
-                    '/shop-order/save-discount',
-                    {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type':
-                                'application/x-www-form-urlencoded; charset=UTF-8',
-                            Accept: 'application/json',
-                            ...(csrf
-                                ? {
-                                    'X-CSRF-TOKEN': csrf
-                                }
-                                : {}),
-                        },
-                        body: new URLSearchParams({
-
-                            shop_order_id:
-                                shopOrderId,
-
-                            discount_type_id:
-                                discountTypeId,
-
-                            discount_value:
-                                discountValue ?? '',
-
-                            reference_name:
-                                referenceName ?? '',
-
-                            reference_number:
-                                referenceNumber ?? '',
-
-                            remarks:
-                                remarks ?? '',
-                        }),
-                    }
-                );
-
-                const data =
-                    await response.json();
-
-                button.prop('disabled', false);
-
-                /*
-                |--------------------------------------------------------------------------
-                | FAILED
-                |--------------------------------------------------------------------------
-                */
-
-                if (!data.success) {
-
-                    showNotification(
-                        data.message
-                    );
-
-                    return;
-                }
-
-                /*
-                |--------------------------------------------------------------------------
-                | REFRESH
-                |--------------------------------------------------------------------------
-                */
-
-                populateCart(data.order);
-
-                renderAvailableDiscounts(
-                    data.available_discounts
-                );
-
-                renderAppliedDiscounts(
-                    data.applied_discounts
-                );
-
-                showNotification(
-                    data.message,
-                    'success'
-                );
-
-            } catch (error) {
-
-                $('.apply-discount-button')
-                    .prop('disabled', false);
-
-                handleSystemError(
-                    error,
-                    'save_failed',
-                    error.message
-                );
-            }
-        }
-    );
-
-    $(document).on(
-        'click',
-        '.remove-discount-button',
-        async function () {
-
-            try {
-
-                const appliedId =
-                    $(this).data('applied-id');
-
-                const csrf = getCsrfToken();
-
-                const response = await fetch(
-                    '/shop-order/delete-discount',
-                    {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type':
-                                'application/x-www-form-urlencoded; charset=UTF-8',
-                            Accept: 'application/json',
-                            ...(csrf
-                                ? { 'X-CSRF-TOKEN': csrf }
-                                : {}),
-                        },
-                        body: new URLSearchParams({
-                            applied_discount_id: appliedId,
-                        }),
-                    }
-                );
-
-                const data = await response.json();
-
-                if (!data.success) {
-                    showNotification(data.message);
-                    return;
-                }
-
-                populateCart(data.order);
-
-                renderAvailableDiscounts(
-                    data.available_discounts
-                );
-
-                renderAppliedDiscounts(
-                    data.applied_discounts
-                );
-
-            } catch (error) {
-
-                handleSystemError(
-                    error,
-                    'delete_failed',
-                    error.message
-                );
-            }
-        }
-    );
-
-    $(document).on(
-        'click',
-        '#manage-charge-button',
-        async function () {
-
-            try {
-
-                const shopOrderId =
-                    sessionStorage.getItem(
-                        'shop_order_id'
-                    );
-
-                if (!shopOrderId) {
-
-                    showNotification(
-                        'No active order.'
-                    );
-
-                    return;
-                }
-
-                /*
-                |--------------------------------------------------------------------------
-                | LOADING STATE
-                |--------------------------------------------------------------------------
-                */
-
-                chargeLoadingState();
-
-                const csrf = getCsrfToken();
-
-                const response = await fetch(
-                    '/shop-order/fetch-charges',
-                    {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type':
-                                'application/x-www-form-urlencoded; charset=UTF-8',
-                            Accept: 'application/json',
-                            ...(csrf
-                                ? {
-                                    'X-CSRF-TOKEN': csrf
-                                }
-                                : {}),
-                        },
-                        body: new URLSearchParams({
-                            shop_order_id: shopOrderId,
-                        }),
-                    }
-                );
-
-                const data =
-                    await response.json();
-
-                if (!data.success) {
-
-                    showNotification(
-                        data.message
-                    );
-
-                    return;
-                }
-
-                renderAvailableCharges(
-                    data.available_charges
-                );
-
-                renderAppliedCharges(
-                    data.applied_charges
-                );
-
-            } catch (error) {
-
-                handleSystemError(
-                    error,
-                    'fetch_failed',
-                    error.message
-                );
-            }
-        }
-    );
-
-    $(document).on(
-        'click',
-        '.apply-charge-button',
-        async function () {
-
-            try {
-
-                const button = $(this);
-
-                const card =
-                    button.closest('.card');
-
-                const chargeTypeId =
-                    button.data('charge-id');
-
-                const isVariable =
-                    button.data('variable');
-
-                const valueType =
-                    button.data('value-type');
-
-                let chargeValue = null;
-
-                let remarks = card
-                        .find('.charge-remarks')
-                        .val();
-
-                /*
-                |--------------------------------------------------------------------------
-                | VARIABLE VALUE
-                |--------------------------------------------------------------------------
-                */
-
-                if (isVariable === 'Yes') {
-
-                    chargeValue = card
-                        .find('.variable-charge-value')
-                        .val();
-
-                    if (
-                        chargeValue === ''
-                        || chargeValue === null
-                    ) {
-
-                        showNotification(
-                            'Enter a charge value.'
-                        );
-
-                        return;
-                    }
-
-                    chargeValue =
-                        parseFloat(chargeValue);
-
-                    if (
-                        isNaN(chargeValue)
-                        || chargeValue <= 0
-                    ) {
-
-                        showNotification(
-                            'Invalid charge value.'
-                        );
-
-                        return;
-                    }
-
-                    if (
-                        valueType === 'Percentage'
-                        && chargeValue > 100
-                    ) {
-
-                        showNotification(
-                            'Percentage charge cannot exceed 100%.'
-                        );
-
-                        return;
-                    }
-                }
-
-                /*
-                |--------------------------------------------------------------------------
-                | REQUEST
-                |--------------------------------------------------------------------------
-                */
-
-                const csrf = getCsrfToken();
-
-                const shopOrderId =
-                    sessionStorage.getItem(
-                        'shop_order_id'
-                    );
-
-                button.prop('disabled', true);
-
-                const response = await fetch(
-                    '/shop-order/save-charge',
-                    {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type':
-                                'application/x-www-form-urlencoded; charset=UTF-8',
-                            Accept: 'application/json',
-                            ...(csrf
-                                ? {
-                                    'X-CSRF-TOKEN': csrf
-                                }
-                                : {}),
-                        },
-                        body: new URLSearchParams({
-
-                            shop_order_id:
-                                shopOrderId,
-
-                            charge_type_id:
-                                chargeTypeId,
-
-                            charge_value:
-                                chargeValue ?? '',
-
-                            remarks:
-                                remarks ?? '',
-                        }),
-                    }
-                );
-
-                const data =
-                    await response.json();
-
-                button.prop('disabled', false);
-
-                if (!data.success) {
-
-                    showNotification(
-                        data.message
-                    );
-
-                    return;
-                }
-
-                populateCart(data.order);
-
-                renderAvailableCharges(
-                    data.available_charges
-                );
-
-                renderAppliedCharges(
-                    data.applied_charges
-                );
-
-                showNotification(
-                    data.message,
-                    'success'
-                );
-
-            } catch (error) {
-
-                $('.apply-charge-button')
-                    .prop('disabled', false);
-
-                handleSystemError(
-                    error,
-                    'save_failed',
-                    error.message
-                );
-            }
-        }
-    );
-
-    $(document).on(
-        'click',
-        '.remove-charge-button',
-        async function () {
-
-            try {
-
-                const chargeId =
-                    $(this).data(
-                        'applied-id'
-                    );
-
-                const csrf = getCsrfToken();
-
-                const response = await fetch(
-                    '/shop-order/delete-charge',
-                    {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type':
-                                'application/x-www-form-urlencoded; charset=UTF-8',
-                            Accept: 'application/json',
-                            ...(csrf
-                                ? { 'X-CSRF-TOKEN': csrf }
-                                : {}),
-                        },
-                        body: new URLSearchParams({
-                            shop_order_applied_charge_id:
-                                chargeId,
-                        }),
-                    }
-                );
-
-                const data = await response.json();
-
-                if (!data.success) {
-
-                    showNotification(data.message);
-                    return;
-                }
-
-                populateCart(data.order);
-
-                renderAvailableCharges(
-                    data.available_charges
-                );
-
-                renderAppliedCharges(
-                    data.applied_charges
-                );
-
-            } catch (error) {
-
-                handleSystemError(
-                    error,
-                    'delete_failed',
-                    error.message
-                );
-            }
-        }
-    );
-
-    $(document).on(
-        'click',
-        '#print-bill',
-        function () {
-
-            const shopOrderId =
-                sessionStorage.getItem(
-                    'shop_order_id'
-                );
-
-            if (!shopOrderId) {
-
-                showNotification(
-                    'No active order.'
-                );
-
-                return;
-            }
-
-            const width = 900;
-
-            const height = 700;
-
-            const left =
-                (screen.width - width) / 2;
-
-            const top =
-                (screen.height - height) / 2;
-
-            const url =
-                `/shop-order/${shopOrderId}/print-bill`;
-
-            window.open(
-                url,
-                '_blank',
-                `
-                    width=${width},
-                    height=${height},
-                    top=${top},
-                    left=${left}
-                `
-            );
-        }
-    );
-
-    $(document).on(
-        'click',
-        '#print-order-summary',
-        function () {
-            
-            const ctx = getPageContext();
-
-            const width = 900;
-
-            const height = 700;
-
-            const left =
-                (screen.width - width) / 2;
-
-            const top =
-                (screen.height - height) / 2;
-
-            const url =
-                `/shop-order/register/${ctx.detailId}/print-orders`;
-
-            window.open(
-                url,
-                '_blank',
-                `
-                    width=${width},
-                    height=${height},
-                    top=${top},
-                    left=${left}
-                `
-            );
-        }
-    );
-
-    $(document).on(
-        'click',
-        '#print-payment-summary',
-        function () {
-            
-            const ctx = getPageContext();
-
-            const width = 900;
-
-            const height = 700;
-
-            const left =
-                (screen.width - width) / 2;
-
-            const top =
-                (screen.height - height) / 2;
-
-            const url =
-                `/shop-order/register/${ctx.detailId}/print-payments`;
-
-            window.open(
-                url,
-                '_blank',
-                `
-                    width=${width},
-                    height=${height},
-                    top=${top},
-                    left=${left}
-                `
-            );
-        }
-    );
-
-    $(document).on(
-        'click',
-        '#manage-charge-button',
-        async function () {
-
-            try {
-
-                const shopOrderId =
-                    sessionStorage.getItem(
-                        'shop_order_id'
-                    );
-
-                if (!shopOrderId) {
-
-                    showNotification(
-                        'No active order.'
-                    );
-
-                    return;
-                }
-
-                /*
-                |--------------------------------------------------------------------------
-                | LOADING STATE
-                |--------------------------------------------------------------------------
-                */
-
-                chargeLoadingState();
-
-                const csrf = getCsrfToken();
-
-                const response = await fetch(
-                    '/shop-order/fetch-charges',
-                    {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type':
-                                'application/x-www-form-urlencoded; charset=UTF-8',
-                            Accept: 'application/json',
-                            ...(csrf
-                                ? {
-                                    'X-CSRF-TOKEN': csrf
-                                }
-                                : {}),
-                        },
-                        body: new URLSearchParams({
-                            shop_order_id: shopOrderId,
-                        }),
-                    }
-                );
-
-                const data =
-                    await response.json();
-
-                if (!data.success) {
-
-                    showNotification(
-                        data.message
-                    );
-
-                    return;
-                }
-
-                renderAvailableCharges(
-                    data.available_charges
-                );
-
-                renderAppliedCharges(
-                    data.applied_charges
-                );
-
-            } catch (error) {
-
-                handleSystemError(
-                    error,
-                    'fetch_failed',
-                    error.message
-                );
-            }
-        }
-    );
-
-    $(document).on(
-        'click',
-        '#manage-payment-button',
-        async function () {
-
-            try {
-
-                const shopOrderId =
-                    sessionStorage.getItem(
-                        'shop_order_id'
-                    );
-
-                if (!shopOrderId) {
-
-                    showNotification(
-                        'No active order.'
-                    );
-
-                    return;
-                }
-
-                /*
-                |--------------------------------------------------------------------------
-                | LOADING STATE
-                |--------------------------------------------------------------------------
-                */
-
-                $('#payment-method-list').html(`
-                    <div class="text-center py-5">
-
-                        <div
-                            class="spinner-border text-success mb-3"
-                            role="status">
-                        </div>
-
-                        <div class="text-muted">
-                            Loading payment methods...
-                        </div>
-
-                    </div>
-                `);
-
-                $('#payment-balance-display')
-                    .text('₱ 0.00');
-
-                $('#payment-order-number')
-                    .text('');
-
-                $('#total-payment-display')
-                    .text('₱ 0.00');
-
-                $('#payment-change-display')
-                    .text('₱ 0.00');
-
-                $('#payment-validation-message')
-                    .addClass('d-none');
-
-                /*
-                |--------------------------------------------------------------------------
-                | REQUEST
-                |--------------------------------------------------------------------------
-                */
-
-                const csrf = getCsrfToken();
-
-                const response = await fetch(
-                    '/shop-order/fetch-payment-methods',
-                    {
-                        method: 'POST',
-
-                        headers: {
-
-                            'Content-Type':
-                                'application/x-www-form-urlencoded; charset=UTF-8',
-
-                            Accept: 'application/json',
-
-                            ...(csrf
-                                ? {
-                                    'X-CSRF-TOKEN': csrf
-                                }
-                                : {}),
-                        },
-
-                        body: new URLSearchParams({
-                            shop_order_id: shopOrderId,
-                        }),
-                    }
-                );
-
-                const data =
-                    await response.json();
-
-                /*
-                |--------------------------------------------------------------------------
-                | VALIDATION
-                |--------------------------------------------------------------------------
-                */
-
-                if (!data.success) {
-
-                    showNotification(
-                        data.message
-                    );
-
-                    return;
-                }
-
-                /*
-                |--------------------------------------------------------------------------
-                | ORDER SUMMARY
-                |--------------------------------------------------------------------------
-                */
-
-                $('#payment-order-number')
-                    .text(data.order_number);
-
-                $('#payment-balance-display')
-
-                    .text(
-                        formatPeso(
-                            data.balance_due
-                        )
-                    )
-
-                    .attr(
-                        'data-balance',
-                        data.balance_due
-                    );
-
-                /*
-                |--------------------------------------------------------------------------
-                | RENDER PAYMENT METHODS
-                |--------------------------------------------------------------------------
-                */
-
-                renderPaymentMethods(
-                    data.payment_methods
-                );
-
-                /*
-                |--------------------------------------------------------------------------
-                | RESET TOTALS
-                |--------------------------------------------------------------------------
-                */
-
-                calculatePayments();
-
-            } catch (error) {
-
-                handleSystemError(
-                    error,
-                    'fetch_failed',
-                    error.message
-                );
-            }
-        }
-    );
-
-    $(document).on(
-        'click',
-        '.add-payment-row',
-        function () {
-
-            const paymentMethodId =
-                $(this).data('payment-method-id');
-
-            const paymentMethodName =
-                $(this).data('payment-method-name');
-
-            $(
-                `#payment-row-container-${paymentMethodId}`
-            ).append(
-                createPaymentRow({
-                    paymentMethodId,
-                    paymentMethodName
-                })
-            );
-
-            calculatePayments();
-        }
-    );
-
-    $(document).on(
-        'click',
-        '.remove-payment-row',
-        function () {
-
-            $(this)
-                .closest('.payment-row')
-                .remove();
-
-            calculatePayments();
-        }
-    );
-
-    $(document).on(
-        'input',
-        '.payment-amount',
-        function () {
-
-            calculatePayments();
-        }
-    );
-
-    $(document).on(
-        'click',
-        '#complete-payment-button',
-        async function () {
-
-            try {
-
-                const button = $(this);
-
-                /*
-                |--------------------------------------------------------------------------
-                | ORDER
-                |--------------------------------------------------------------------------
-                */
-
-                const shopOrderId =
-                    sessionStorage.getItem(
-                        'shop_order_id'
-                    );
-
-                if (!shopOrderId) {
-
-                    showNotification(
-                        'No active order.'
-                    );
-
-                    return;
-                }
-
-                /*
-                |--------------------------------------------------------------------------
-                | PAYMENTS
-                |--------------------------------------------------------------------------
-                */
-
-                const payments = [];
-
-                let totalPayment = 0;
-
-                $('.payment-method-card').each(
-                    function () {
-
-                        const card = $(this);
-
-                        const paymentAmount =
-                            parseFloat(
-                                card.find(
-                                    '.payment-amount'
-                                ).val()
-                            ) || 0;
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | SKIP EMPTY
-                        |--------------------------------------------------------------------------
-                        */
-
-                        if (paymentAmount <= 0) {
-                            return;
-                        }
-
-                        const tenderedAmount =
-                            parseFloat(
-                                card.find(
-                                    '.tendered-amount'
-                                ).val()
-                            ) || paymentAmount;
-
-                        payments.push({
-
-                            payment_method_id:
-                                card.data(
-                                    'payment-method-id'
-                                ),
-
-                            payment_amount:
-                                paymentAmount,
-
-                            tendered_amount:
-                                tenderedAmount,
-
-                            reference_number:
-                                card.find(
-                                    '.reference-number'
-                                ).val(),
-
-                            reference_name:
-                                card.find(
-                                    '.reference-name'
-                                ).val(),
-
-                            remarks:
-                                card.find(
-                                    '.payment-remarks'
-                                ).val(),
-                        });
-
-                        totalPayment +=
-                            paymentAmount;
-                    }
-                );
-
-                /*
-                |--------------------------------------------------------------------------
-                | VALIDATION
-                |--------------------------------------------------------------------------
-                */
-
-                if (!payments.length) {
-
-                    showNotification(
-                        'Please enter payment.'
-                    );
-
-                    return;
-                }
-
-                const outstandingBalance =
-                    parseFloat(
-                        $('#payment-outstanding-balance')
-                            .data('amount')
-                    ) || 0;
-
-                if (
-                    totalPayment < outstandingBalance
-                ) {
-
-                    showNotification(
-                        'Total payment cannot be less than outstanding balance.'
-                    );
-
-                    return;
-                }
-
-                /*
-                |--------------------------------------------------------------------------
-                | LOADING
-                |--------------------------------------------------------------------------
-                */
-
-                button
-                    .prop('disabled', true)
-                    .html(`
-                        <span class="spinner-border spinner-border-sm me-2"></span>
-                        Processing Payment...
-                    `);
-
-                /*
-                |--------------------------------------------------------------------------
-                | REQUEST
-                |--------------------------------------------------------------------------
-                */
-
-                const csrf = getCsrfToken();
-
-                const response = await fetch(
-                    '/shop-order/save-payment',
-                    {
-                        method: 'POST',
-
-                        headers: {
-
-                            'Content-Type':
-                                'application/json',
-
-                            Accept:
-                                'application/json',
-
-                            ...(csrf
-                                ? {
-                                    'X-CSRF-TOKEN':
-                                        csrf
-                                }
-                                : {}),
-                        },
-
-                        body: JSON.stringify({
-
-                            shop_order_id:
-                                shopOrderId,
-
-                            payments:
-                                payments,
-                        }),
-                    }
-                );
-
-                const data =
-                    await response.json();
-
-                /*
-                |--------------------------------------------------------------------------
-                | FAILED
-                |--------------------------------------------------------------------------
-                */
-
-                if (!data.success) {
-
-                    showNotification(
-                        data.message
-                    );
-
-                    return;
-                }
-
-                /*
-                |--------------------------------------------------------------------------
-                | SUCCESS
-                |--------------------------------------------------------------------------
-                */
-
-                showNotification(
-                    data.message,
-                    'success'
-                );
-
-                /*
-                |--------------------------------------------------------------------------
-                | CLOSE MODAL
-                |--------------------------------------------------------------------------
-                */
-
-                $('#payment-modal')
-                    .modal('hide');
-
-                /*
-                |--------------------------------------------------------------------------
-                | OPTIONAL REFRESH
-                |--------------------------------------------------------------------------
-                */
-
-                if (
-                    typeof fetchCartSummary
-                    === 'function'
-                ) {
-
-                    fetchCartSummary();
-                }
-
-                if (
-                    typeof fetchOrders
-                    === 'function'
-                ) {
-
-                    fetchOrders();
-                }
-
-                /*
-                |--------------------------------------------------------------------------
-                | CLEAR ACTIVE ORDER
-                |--------------------------------------------------------------------------
-                */
-
-                sessionStorage.removeItem('shop_order_id');
-                sessionStorage.removeItem('shop_order_number');
-
-                generatePOSProduct(config.posProduct.url);
-
-                resetCartUI();
-
-            } catch (error) {
-
-                handleSystemError(
-                    error,
-                    'payment_failed',
-                    error.message
-                );
-
-            } finally {
-
-                $('#complete-payment-button')
-
-                    .prop('disabled', false)
-
-                    .html(`
-                        Complete Payment
-                    `);
-            }
-        }
-    );
-
-    $(document).on(
-        'click',
-        '#order-history-button',
-        function () {
-            loadOrderHistory();
-        }
-    );
-
-    $(document).on('click', '.order-history-card', function () {
-
-        const orderId = $(this).data('order-id');
-        
-        sessionStorage.setItem('shop_order_id', orderId);
-
-        loadCart(orderId, {
-            silent: false
-        });
-
-        $('#order-history-modal').modal('hide');
-    });
-
-    $(document).on('input', '#order-history-search', function () {
-        filterOrderHistory();
     });
 
     $(document).on('change', '#order-history-filter', function () {
         filterOrderHistory();
     });
 
-    $(document).on(
-        'click',
-        '#customer-button',
-        function () {
+    $(document).on('change', '.kitchen-route-select', function () {
+        const card = $(this).closest('.kitchen-grid-item');
+        const checkbox = card.find('.kitchen-item-checkbox');
 
-            const currentCustomer =
-                $('#badge-customer-name').text().trim();
-
-            $('#customer-name-input').val(
-                currentCustomer === 'Walk-in Customer'
-                    ? ''
-                    : currentCustomer
-            );
-
-            $('#current-customer-name').text(
-                currentCustomer
-            );
+        if ($(this).val()) {
+            checkbox.prop('checked', true).trigger('change');
         }
-    );
-
-    $(document).on(
-        'click',
-        '.customer-quick-select',
-        function () {
-
-            const customerName =
-                $(this).data('customer-name');
-
-            $('#customer-name-input').val(
-                customerName
-            );
+        else {
+            checkbox.prop('checked', false).trigger('change');
         }
-    );
+    });
 
-    $(document).on(
-        'click',
-        '#save-customer-button',
-        function () {
+    $(document).on('change', '.kitchen-item-checkbox', function () {
+        const card = $(this).closest('.kitchen-grid-item');
+        const selected = $(this).is(':checked');
+        
+        card.toggleClass('kitchen-selected', selected);
+        card.find('.selected-indicator').toggleClass('d-none', !selected);
 
-            saveCustomer();
-        }
-    );
+        updateKitchenSelectionCount();
+    });
 
-    $(document).on(
-    'click',
-        '#remove-customer-button',
-        function () {
-
-            $('#customer-name-input').val('');
-
-            saveCustomer();
-        }
-    );
-
-    $(document).on(
-        'click',
-        '#submit-void-request',
-        async function () {
-
-            try {
-
-                const shopOrderId =
-                    sessionStorage.getItem('shop_order_id');
-
-                const reason =
-                    $('#void-reason').val().trim();
-
-                if (!reason) {
-
-                    showNotification(
-                        'Void reason is required.'
-                    );
-
-                    return;
-                }
-
-                const csrf = getCsrfToken();
-                const ctx = getPageContext();
-
-                const formData = new URLSearchParams();
-
-                formData.append(
-                    'shop_order_id',
-                    shopOrderId
-                );
-
-                formData.append(
-                    'request_reason',
-                    reason
-                );
-
-                formData.append('appId', ctx.appId ?? '');
-                formData.append('navigationMenuId', ctx .navigationMenuId ?? '');
-
-                const response = await fetch(
-                    '/shop-order-request/save-void-request',
-                    {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'Content-Type':
-                                'application/x-www-form-urlencoded; charset=UTF-8',
-
-                            Accept: 'application/json',
-
-                            ...(csrf
-                                ? { 'X-CSRF-TOKEN': csrf }
-                                : {}),
-                        },
-                    }
-                );
-
-                const data = await response.json();
-
-                if (!data.success) {
-
-                    showNotification(data.message);
-
-                    return;
-                }
-
-                $('#void-order-modal').modal('hide');
-
-                $('#void-reason').val('');
-
-                showNotification(data.message);
-
-            } catch (error) {
-
-                handleSystemError(
-                    error,
-                    'submit_void_request_failed',
-                    error.message
-                );
-            }
-        }
-    );
-
-    $(document).on(
-        'click',
-        '#submit-refund-request',
-        async function () {
-
-            try {
-
-                const shopOrderId =
-                    sessionStorage.getItem('shop_order_id');
-
-                const reason =
-                    $('#refund-reason').val().trim();
-
-                if (!reason) {
-
-                    showNotification(
-                        'Refund reason is required.'
-                    );
-
-                    return;
-                }
-
-                const csrf = getCsrfToken();
-                const ctx = getPageContext();
-
-                const formData = new URLSearchParams();
-
-                formData.append(
-                    'shop_order_id',
-                    shopOrderId
-                );
-
-                formData.append(
-                    'request_reason',
-                    reason
-                );
-
-                formData.append('appId', ctx.appId ?? '');
-                formData.append('navigationMenuId', ctx .navigationMenuId ?? '');
-
-                const response = await fetch(
-                    '/shop-order-request/save-refund-request',
-                    {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'Content-Type':
-                                'application/x-www-form-urlencoded; charset=UTF-8',
-
-                            Accept: 'application/json',
-
-                            ...(csrf
-                                ? { 'X-CSRF-TOKEN': csrf }
-                                : {}),
-                        },
-                    }
-                );
-
-                const data = await response.json();
-
-                if (!data.success) {
-
-                    showNotification(data.message);
-
-                    return;
-                }
-
-                $('#refund-order-modal').modal('hide');
-
-                $('#refund-reason').val('');
-
-                showNotification(data.message);
-
-            } catch (error) {
-
-                handleSystemError(
-                    error,
-                    'submit_refund_request_failed',
-                    error.message
-                );
-            }
-        }
-    );
-
-    $(document).on(
-        'click',
-        '#send-kitchen-ticket',
-        async function () {
-
-            try {
-
-                const shopOrderId =
-                    sessionStorage.getItem('shop_order_id');
-
-                $('#selected-kitchen-items-count')
-                    .text('0');
-
-                $('#kitchen-items-container')
-                    .html(renderKitchenLoading());
-
-                const csrf = getCsrfToken();
-                const ctx = getPageContext();
-
-                const params = new URLSearchParams();
-
-                params.append(
-                    'shop_order_id',
-                    shopOrderId
-                );
-
-                params.append(
-                    'appId',
-                    ctx.appId ?? ''
-                );
-
-                params.append(
-                    'navigationMenuId',
-                    ctx.navigationMenuId ?? ''
-                );
-
-                const response = await fetch(
-                    '/kitchen-ticket/generate-kitchen-send-data',
-                    {
-                        method: 'POST',
-                        body: params,
-                        headers: {
-                            'Content-Type':
-                                'application/x-www-form-urlencoded; charset=UTF-8',
-
-                            Accept: 'application/json',
-
-                            ...(csrf
-                                ? { 'X-CSRF-TOKEN': csrf }
-                                : {}),
-                        },
-                    }
-                );
-
-                const data =
-                    await response.json();
-
-                kitchenItems =
-                    data.data || [];
-
-                kitchenRoutes =
-                    data.routes || [];
-
-                renderKitchenItems(kitchenItems);
-
-            } catch (error) {
-
-                handleSystemError(
-                    error,
-                    'open_kitchen_modal_failed',
-                    error.message
-                );
-            }
-        }
-    );
-
-    $(document).on(
-        'click',
-        '#confirm-send-kitchen-ticket',
-        async function () {
-
-            try {
-
-                const invalidNewItems =
-                    $('.kitchen-route-select').filter(function () {
-
-                        const card =
-                            $(this).closest('.kitchen-grid-item');
-
-                        const checked =
-                            card.find('.kitchen-item-checkbox')
-                                .is(':checked');
-
-                        return checked && !$(this).val();
-                    });
-
-                if (invalidNewItems.length) {
-
-                    showNotification(
-                        'Some NEW items do not have kitchen stations selected.'
-                    );
-
-                    return;
-                }
-
-                const selectedItems = [];
-
-                $('.kitchen-item-checkbox:checked')
-                    .each(function () {
-
-                        const card =
-                            $(this).closest('.kitchen-grid-item');
-
-                        const routeSelect =
-                            card.find('.kitchen-route-select');
-
-                        let routeId =
-                            $(this).data('route-id');
-
-                        if (routeSelect.length) {
-                            routeId = routeSelect.val();
-                        }
-
-                        selectedItems.push({
-
-                            shop_order_item_id:
-                                $(this).data('order-item-id'),
-
-                            quantity:
-                                $(this).data('quantity'),
-
-                            action_type:
-                                $(this).data('action'),
-
-                            kitchen_route_id:
-                                routeId,
-                        });
-                    });
-
-                if (!selectedItems.length) {
-
-                    showNotification(
-                        'Please select items.'
-                    );
-
-                    return;
-                }
-
-                const csrf = getCsrfToken();
-                const ctx = getPageContext();
-
-                const formData =
-                    new URLSearchParams();
-
-                formData.append(
-                    'shop_order_id',
-                    sessionStorage.getItem('shop_order_id')
-                );
-
-                formData.append(
-                    'items',
-                    JSON.stringify(selectedItems)
-                );
-
-                formData.append(
-                    'appId',
-                    ctx.appId ?? ''
-                );
-
-                formData.append(
-                    'navigationMenuId',
-                    ctx.navigationMenuId ?? ''
-                );
-
-                const button =
-                    $('#confirm-send-kitchen-ticket');
-
-                button.prop('disabled', true);
-
-                button.html(`
-
-                    <span class="spinner-border spinner-border-sm me-2"></span>
-
-                    Sending...
-
-                `);
-
-                const response = await fetch(
-                    '/kitchen-ticket/send-kitchen-ticket',
-                    {
-                        method: 'POST',
-
-                        body: formData,
-
-                        headers: {
-                            'Content-Type':
-                                'application/x-www-form-urlencoded; charset=UTF-8',
-
-                            Accept: 'application/json',
-
-                            ...(csrf
-                                ? { 'X-CSRF-TOKEN': csrf }
-                                : {}),
-                        },
-                    }
-                );
-
-                const data =
-                    await response.json();
-
-                button.prop('disabled', false);
-
-                button.html(`
-
-                    <i class="ki-outline ki-entrance-left fs-2 me-1"></i>
-
-                    Send
-
-                `);
-
-                if (!data.success) {
-
-                    showNotification(data.message);
-
-                    return;
-                }
-
-                generatePOSProduct(config.posProduct.url);
-
-                $('#kitchen-send-modal')
-                    .modal('hide');
-
-                showNotification(
-                    data.message,
-                    'success'
-                );
-
-            } catch (error) {
-
-                handleSystemError(
-                    error,
-                    'send_kitchen_ticket_failed',
-                    error.message
-                );
-            }
-        }
-    );
-
-    $('#kitchen-send-modal').on(
-        'hidden.bs.modal',
-        function () {
-
-            $('#kitchen-route-select')
-                .val('')
-                .trigger('change');
-
-            $('#selected-kitchen-items-count')
-                .text('0');
-
-            $('#kitchen-items-container')
-                .html('');
-        }
-    );
-
-    $(document).on(
-        'click',
-        '.kitchen-grid-item',
-        function (e) {
-
-            if (
-                $(e.target).closest('.kitchen-route-select').length
-            ) {
-                return;
-            }
-
-            const checkbox =
-                $(this).find('.kitchen-item-checkbox');
-
-            checkbox
-                .prop('checked', !checkbox.prop('checked'))
-                .trigger('change');
-        }
-    );
-
-    $(document).on(
-        'change',
-        '.kitchen-route-select',
-        function () {
-
-            const card =
-                $(this).closest('.kitchen-grid-item');
-
-            const checkbox =
-                card.find('.kitchen-item-checkbox');
-
-            if ($(this).val()) {
-
-                checkbox
-                    .prop('checked', true)
-                    .trigger('change');
-
-            } else {
-
-                checkbox
-                    .prop('checked', false)
-                    .trigger('change');
-            }
-        }
-    );
-
-    $(document).on(
-        'change',
-        '.kitchen-item-checkbox',
-        function () {
-
-            const card =
-                $(this).closest('.kitchen-grid-item');
-
-            const selected =
-                $(this).is(':checked');
-
-            card.toggleClass(
-                'kitchen-selected',
-                selected
-            );
-
-            card.find('.selected-indicator')
-                .toggleClass('d-none', !selected);
-
-            updateKitchenSelectionCount();
-        }
-    );
-
-    // Quick text assignment event listener
     $(document).on('click', '.reason-quick-select', function () {
         const reason = $(this).data('reason');
         $('#order-cancellation-reason').val(reason);
     });
 
-    // Submit cancellation handler
     $(document).on('click', '#confirm-cancel-order-button', function () {
         executeOrderCancellation();
     });
-
-    const executeOrderCancellation = async () => {
-        try {
-            const shopOrderId = sessionStorage.getItem('shop_order_id');
-            if (!shopOrderId) {
-                showNotification('No active order context found.', 'danger');
-                return;
-            }
-
-            const cancellationReason = $('#order-cancellation-reason').val().trim();
-            if (!cancellationReason) {
-                showNotification('You must provide a cancellation reason.', 'warning');
-                return;
-            }
-
-            const csrf = getCsrfToken();
-            const formData = new URLSearchParams();
-            formData.append('shop_order_id', shopOrderId);
-            formData.append('void_reason', cancellationReason);
-
-            // Disable button to prevent double-clicks
-            const confirmBtn = document.getElementById('confirm-cancel-order-button');
-            confirmBtn.setAttribute('disabled', 'true');
-
-            const response = await fetch('/shop-order/cancel-order', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                    'Accept': 'application/json',
-                    ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error(`Cancellation payload request failed: ${response.status}`);
-            }
-
-            const data = await response.json();
-            confirmBtn.removeAttribute('disabled');
-
-            if (!data.success) {
-                showNotification(data.message, 'error');
-                return;
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | INTERFACE STATUS AND VIEW UPDATES
-            |--------------------------------------------------------------------------
-            */
-            $('#cancel-order-modal').modal('hide');
-            $('#order-cancellation-reason').val(''); // Reset text box
-
-            showNotification('Order canceled successfully.', 'success');
-
-            sessionStorage.removeItem('shop_order_id');
-            sessionStorage.removeItem('shop_order_number');
-            resetCartUI();
-
-        } catch (error) {
-            document.getElementById('confirm-cancel-order-button').removeAttribute('disabled');
-            handleSystemError(error, 'cancel_order_failed', error.message);
-        }
-    };
-
 });

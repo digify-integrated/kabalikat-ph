@@ -7,19 +7,13 @@ import { generateDropdownOptions, appendObject } from '../../form/field.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     let searchTimeout;
-    let pollInterval; 
-    
-    // Track current active ticket IDs on screen to detect new arrivals
+    let pollInterval;     
     let currentTicketIds = []; 
     
-    // Initialize the kitchen notification audio object
     const alertAudio = new Audio(window.kitchenAlertAudioUrl);
+    const unlockBtn = document.getElementById('btn-unlock-kds');
 
-    async function generateKitchenTickets(
-        url,
-        otherData = {},
-        isSilent = false
-    ) {
+    async function generateKitchenTickets(url, otherData = {}, isSilent = false) {
         try {
             const csrf = getCsrfToken();
             const ctx = getPageContext();
@@ -59,11 +53,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | ITEM-LEVEL LIVE AUDIO NOTIFICATION ENGINE
-            |--------------------------------------------------------------------------
-            */
             const incomingItemsSignatures = [];
             let hasNewKitchenDemands = false;
 
@@ -90,25 +79,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
             currentTicketIds = incomingItemsSignatures;
 
-            // 🌟 STEP 1: Find out which tab is currently selected before rewriting the DOM
-            let activeStatusTab = 'Queued'; // Fallback baseline
+            let activeStatusTab = 'Queued';
             const currentActiveTabEl = container.querySelector('#kitchenTabs .nav-link.active');
+
             if (currentActiveTabEl) {
-                // If id is "tab-Preparing", extracting splits string to get "Preparing"
                 activeStatusTab = currentActiveTabEl.id.replace('tab-', '');
             }
 
-            // 🌟 STEP 2: Pass the active state indicator string into the display renderer
             container.innerHTML = renderKitchenDisplay(route, activeStatusTab);
-
-        } catch (error) {
+        }
+        catch (error) {
             if (!isSilent) {
-                handleSystemError(
-                    error,
-                    fetch_failed,
-                    `Fetch request failed: ${error.message}`
-                );
-            } else {
+                handleSystemError(error, fetch_failed, `Fetch request failed: ${error.message}`);
+            }
+            else {
                 console.warn('Background auto-refresh synchronized error sync:', error.message);
             }
         }
@@ -125,11 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            generateKitchenTickets(
-                '/kitchen-ticket/generate-kitchen-tickets',
-                {},
-                true 
-            );
+            generateKitchenTickets('/kitchen-ticket/generate-kitchen-tickets', {}, true);
         }, 5000); 
     }
 
@@ -152,19 +132,15 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // 🌟 OPTIMIZATION: Check if the tab frame navigation shell already exists on the screen
         const existingTabsContainer = document.querySelector('.kitchen-tabbed-display');
 
         if (existingTabsContainer) {
-            // If the main menu shell already exists, update the specific ticket lists and counts directly
             Object.entries(grouped).forEach(([status, tickets]) => {
-                
-                // 1. Dynamic Badge Count Synchronization without changing focus state
                 const countBadge = document.querySelector(`#tab-${status} .badge`);
+
                 if (countBadge) {
                     countBadge.textContent = tickets.length;
                     
-                    // Keep context indicator styling aligned with incoming load volumes
                     countBadge.className = 'badge ms-2 px-3 py-2 small shadow-sm';
                     if (tickets.length === 0) countBadge.classList.add('bg-secondary');
                     else if (status === 'Queued') countBadge.classList.add('bg-primary');
@@ -172,8 +148,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     else if (status === 'Ready') countBadge.classList.add('bg-success');
                 }
 
-                // 2. Refresh target status card lists safely
                 const panelContainer = document.getElementById(`panel-${status}`);
+
                 if (panelContainer) {
                     if (tickets.length === 0) {
                         panelContainer.innerHTML = `
@@ -182,8 +158,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <div class="fw-medium">No active tickets inside ${status} group.</div>
                             </div>
                         `;
-                    } else {
-                        // Update only the child grids within the panel container
+                    }
+                    else {
                         panelContainer.innerHTML = `
                             <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
                                 ${tickets.map(t => `
@@ -197,11 +173,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            // Return an empty string or null since we modified the targeted sub-nodes directly
             return existingTabsContainer.outerHTML;
         }
 
-        // 🌟 FALLBACK: If this is the initial load, build the entire wrapper frame standard setup
         const tabHeaders = Object.entries(grouped).map(([status, tickets]) => {
             const isActive = status === activeStatus ? 'active' : '';
             let badgeColor = 'bg-secondary';
@@ -212,16 +186,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             return `
                 <li class="nav-item flex-fill text-center" role="presentation">
-                    <button 
-                        class="nav-link w-100 py-3 fs-5 fw-bold text-uppercase position-relative ${isActive}" 
-                        id="tab-${status}" 
-                        data-bs-toggle="tab" 
-                        data-bs-target="#panel-${status}" 
-                        type="button" 
-                        role="tab" 
-                        aria-controls="panel-${status}" 
-                        aria-selected="${status === activeStatus ? 'true' : 'false'}"
-                    >
+                    <button class="nav-link w-100 py-3 fs-5 fw-bold text-uppercase position-relative ${isActive}" id="tab-${status}" data-bs-toggle="tab" data-bs-target="#panel-${status}" type="button" role="tab" aria-controls="panel-${status}" aria-selected="${status === activeStatus ? 'true' : 'false'}">
                         ${status}
                         <span class="badge ${badgeColor} ms-2 px-2.5 py-1.5 rounded-circle small shadow-sm">${tickets.length}</span>
                     </button>
@@ -233,12 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const isActive = status === activeStatus ? 'show active' : '';
             
             return `
-                <div 
-                    class="tab-pane fade ${isActive} pt-3" 
-                    id="panel-${status}" 
-                    role="tabpanel" 
-                    aria-labelledby="tab-${status}"
-                >
+                <div class="tab-pane fade ${isActive} pt-3" id="panel-${status}" role="tabpanel" aria-labelledby="tab-${status}">
                     ${tickets.length === 0 ? `
                         <div class="text-center py-5 my-3 text-muted border border-dashed rounded-3 bg-light">
                             <div class="fs-1 mb-2">🍽️</div>
@@ -275,7 +235,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const isDelayed = minutes >= 20;
         const isWarning = minutes >= 10 && minutes < 20;
         
-        // Determine styling based on ticket urgency
         let cardBorder = 'border-neutral-200';
         let headerBg = '';
         let timerBadge = 'text-dark fw-bold';
@@ -283,38 +242,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (isDelayed) {
             cardBorder = 'border-danger border-2';
-            headerBg = 'bg-danger text-white'; // Added text-white for danger contrast
+            headerBg = 'bg-danger text-white';
             timerBadge = 'fw-bold';
             icon = '🚨 ';
-        } else if (isWarning) {
+        }
+        else if (isWarning) {
             cardBorder = 'border-warning border-2';
-            headerBg = 'bg-warning text-dark'; // Kept text-dark for yellow contrast
+            headerBg = 'bg-warning text-dark';
             timerBadge = 'fw-bold';
             icon = '⚠️ ';
         }
 
         return `
-        <div class="card h-100 border overflow-hidden ${cardBorder}">
-            <div class="card-header d-flex justify-content-between align-items-center px-5 py-2.5 ${headerBg}">
-                <div>
-                    <span class="fs-4 fw-bold tracking-tight"># ${ticket.ticket_number}</span>
-                    <div class="small opacity-80 fw-semibold text-uppercase tracking-wider mt-0.5">
-                        ${ticket.floor_plan_name ?? 'Walk-in'} • <span class="fw-bold">TBL ${ticket.table_number ?? '-'}</span>
+            <div class="card h-100 border overflow-hidden ${cardBorder}">
+                <div class="card-header d-flex justify-content-between align-items-center px-5 py-2.5 ${headerBg}">
+                    <div>
+                        <span class="fs-4 fw-bold tracking-tight"># ${ticket.ticket_number}</span>
+                        <div class="small opacity-80 fw-semibold text-uppercase tracking-wider mt-0.5">
+                            ${ticket.floor_plan_name ?? 'Walk-in'} • <span class="fw-bold">TBL ${ticket.table_number ?? '-'}</span>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="fs-6 px-3 py-2 ${timerBadge}">${icon}${Math.floor(minutes)}m</span>
                     </div>
                 </div>
-                <div>
-                    <span class="fs-6 px-3 py-2 ${timerBadge}">
-                        ${icon}${Math.floor(minutes)}m
-                    </span>
+                
+                <div class="card-body p-2 bg-light">
+                    <div class="d-grid gap-2">
+                        ${ticket.items.map((item, index) => renderKitchenItem(item, index, ticket.items.length, ticket.ticket_status)).join('')}
+                    </div>
                 </div>
             </div>
-            
-            <div class="card-body p-2 bg-light">
-                <div class="d-grid gap-2">
-                    ${ticket.items.map((item, index) => renderKitchenItem(item, index, ticket.items.length, ticket.ticket_status)).join('')}
-                </div>
-            </div>
-        </div>
         `;
     }
 
@@ -325,13 +283,14 @@ document.addEventListener('DOMContentLoaded', () => {
         let isDone = false;
         if (ticketStatus === 'Queued' && ['Preparing', 'Ready', 'Served'].includes(item.status)) {
             isDone = true;
-        } else if (ticketStatus === 'Preparing' && ['Ready', 'Served'].includes(item.status)) {
+        }
+        else if (ticketStatus === 'Preparing' && ['Ready', 'Served'].includes(item.status)) {
             isDone = true;
-        } else if (ticketStatus === 'Ready' && ['Served'].includes(item.status)) {
+        }
+        else if (ticketStatus === 'Ready' && ['Served'].includes(item.status)) {
             isDone = true;
         }
 
-        // Modern State Styling Configuration Matrix
         let containerClass = 'border-light text-dark';
         let qtyBadgeClass = 'bg-primary text-white';
         let textClass = 'fw-bold text-dark';
@@ -342,7 +301,8 @@ document.addEventListener('DOMContentLoaded', () => {
             qtyBadgeClass = 'bg-secondary text-white-50';
             textClass = 'text-decoration-line-through text-muted fw-normal';
             actionIndicator = `<span class="text-success fw-bold fs-5">✓</span>`;
-        } else if (isCancelled) {
+        }
+        else if (isCancelled) {
             containerClass = 'bg-danger bg-opacity-10 border-danger border-opacity-20';
             qtyBadgeClass = 'bg-danger text-white';
             textClass = 'text-decoration-line-through text-danger';
@@ -350,16 +310,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         return `
-        <div
-            class="d-flex justify-content-between align-items-center p-4 rounded border transition-all shadow-xs user-select-none ${containerClass}"
-            style="cursor: pointer; min-height: 58px;"
-            data-action="toggle-kitchen-item"
-            data-id="${item.shop_order_item_id}"
-            data-ticket-item-id="${item.ticket_item_id}" 
-            onmousedown="this.style.transform='scale(0.98)'"
-            onmouseup="this.style.transform='scale(1)'"
-            onmouseleave="this.style.transform='scale(1)'"
-        >
+        <div class="d-flex justify-content-between align-items-center p-4 rounded border transition-all shadow-xs user-select-none ${containerClass}" style="cursor: pointer; min-height: 58px;" data-action="toggle-kitchen-item" data-id="${item.shop_order_item_id}" data-ticket-item-id="${item.ticket_item_id}" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'" onmouseleave="this.style.transform='scale(1)'">
             <div class="d-flex align-items-center gap-3 flex-grow-1">
                 <div class="rounded-2 ${qtyBadgeClass} d-flex align-items-center justify-content-center" style="width: 44px; height: 38px;">
                     <span class="fs-4 fw-bold">${remaining}</span>
@@ -389,28 +340,28 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!container) return;
 
         container.innerHTML = `
-        <div class="col-12">
-            <div class="card shadow-sm border-0">
-                <div class="card-body text-center py-15">
-                    <div class="spinner-border text-primary mb-3"></div>
-                    <div class="fw-bold text-muted">Synchronizing with live inventory tickets...</div>
+            <div class="col-12">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body text-center py-15">
+                        <div class="spinner-border text-primary mb-3"></div>
+                        <div class="fw-bold text-muted">Synchronizing with live inventory tickets...</div>
+                    </div>
                 </div>
             </div>
-        </div>
         `;
     }
 
     function renderNoKitchenTickets() {
         return `
-        <div class="col-12">
-            <div class="card shadow-sm border-0">
-                <div class="card-body text-center py-15">
-                    <i class="ki-outline ki-chef fs-5tx text-muted mb-5"></i>
-                    <div class="fw-bold fs-2 mb-3">No Kitchen Tickets</div>
-                    <div class="text-muted">Standing by. Direct food entries from cashier terminals print instantly.</div>
+            <div class="col-12">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body text-center py-15">
+                        <i class="ki-outline ki-chef fs-5tx text-muted mb-5"></i>
+                        <div class="fw-bold fs-2 mb-3">No Kitchen Tickets</div>
+                        <div class="text-muted">Standing by. Direct food entries from cashier terminals print instantly.</div>
+                    </div>
                 </div>
             </div>
-        </div>
         `;
     }
 
@@ -426,17 +377,14 @@ document.addEventListener('DOMContentLoaded', () => {
         searchTimeout = setTimeout(() => {
             const query = event.target.value;
 
-            generateKitchenTickets(
-                '/kitchen-ticket/generate-kitchen-tickets',
-                { search: query },
-                query !== '' 
-            );
+            generateKitchenTickets('/kitchen-ticket/generate-kitchen-tickets', { search: query }, query !== '');
         }, 250);
     });
 
     document.addEventListener('click', async (event) => {
         const target = event.target.closest('[data-action="toggle-kitchen-item"]');
         if (!target) return;
+
 
         const ticketItemId = target.dataset.ticketItemId;
 
@@ -445,11 +393,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             await updateKitchenItemStatus(ticketItemId);
             await generateKitchenTickets('/kitchen-ticket/generate-kitchen-tickets', {}, true);
-
-        } catch (error) {
+        }
+        catch (error) {
             console.error(error);
             handleSystemError(error, 'update_failed', 'Failed to update kitchen item');
-        } finally {
+        }
+        finally {
             if (target) target.classList.remove('opacity-50');
         }
     });
@@ -482,7 +431,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return data;
     }
 
-    const unlockBtn = document.getElementById('btn-unlock-kds');
     if (unlockBtn) {
         unlockBtn.addEventListener('click', () => {
             alertAudio.play()
