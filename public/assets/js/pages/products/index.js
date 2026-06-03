@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
             columns: [
                 { data: 'CHECK_BOX' },
                 { data: 'PRODUCT' },
+                { data: 'CATEGORY' },
                 { data: 'SKU' },
                 { data: 'BARCODE' },
                 { data: 'PARENT_PRODUCT' },
@@ -30,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 { width: 'auto', targets: 5, responsivePriority: 6 },
                 { width: 'auto', targets: 6, responsivePriority: 7 },
                 { width: 'auto', targets: 7, responsivePriority: 8 },
+                { width: 'auto', targets: 8, responsivePriority: 9 },
             ],
             onRowClick: (rowData) => {
                 if (rowData?.LINK) window.open(rowData.LINK, '_blank');
@@ -42,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
         action: [
             {
                 trigger : '#delete-data',
-                url : '/product/delete-multiple',
+                url : '/products/delete-multiple',
                 swalTitle : 'Confirm Multiple Product Deletion',
                 swalText : 'Are you sure you want to delete these product?',
                 confirmButtonText : 'Delete',

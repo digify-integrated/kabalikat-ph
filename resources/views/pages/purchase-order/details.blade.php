@@ -242,7 +242,7 @@
                                         Quantity
                                     </label>
 
-                                    <input type="number" class="form-control" id="ordered_quantity" name="ordered_quantity" min="0.01" step="0.01">
+                                    <input type="number" class="form-control" id="ordered_quantity" name="ordered_quantity" min="0.001" step="0.001">
                                 </div>
                             </div>
 
@@ -302,7 +302,7 @@
                                         Received Quantity
                                     </label>
 
-                                    <input type="number" class="form-control" id="received_quantity" name="received_quantity" min="0.01" step="0.01">
+                                    <input type="number" class="form-control" id="received_quantity" name="received_quantity" min="0.001" step="0.001">
                                 </div>
                             </div>
 
@@ -312,7 +312,7 @@
                                         Cost Per Unit
                                     </label>
 
-                                    <input type="number" class="form-control" id="cost_per_unit" name="cost_per_unit" min="0.01" step="0.01">
+                                    <input type="number" class="form-control" id="cost_per_unit" name="cost_per_unit" min="0.001" step="0.001">
                                 </div>
                             </div>
                         </div>
@@ -371,7 +371,7 @@
                                         Cancel Quantity
                                     </label>
 
-                                    <input type="number" class="form-control" id="cancelled_quantity" name="cancelled_quantity" min="0.01" step="0.01">
+                                    <input type="number" class="form-control" id="cancelled_quantity" name="cancelled_quantity" min="0.001" step="0.001">
                                 </div>
                             </div>
                         </div>

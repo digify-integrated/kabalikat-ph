@@ -13,7 +13,6 @@ class BreadcrumbBuilder
             "breadcrumbs:navmenu:{$navigationMenuId}",
             now()->addMinutes(30),
             function () use ($navigationMenuId) {
-
                 $trail = [];
                 $visited = [];
 

@@ -60,7 +60,7 @@
                                 Quantity
                             </label>
                             <div class="col-lg-10">
-                                <input type="number" class="form-control" id="quantity" name="quantity" step="0.01" @disabled(!$canWrite)>
+                                <input type="number" class="form-control" id="quantity" name="quantity" step="0.001" @disabled(!$canWrite)>
                             </div>
                         </div>
                         

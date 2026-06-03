@@ -968,7 +968,7 @@ return new class extends Migration
             $table->enum('stock_status', ['In Stock', 'Low Stock', 'Out of Stock'])
             ->default('In Stock');
 
-            $table->decimal('quantity', 10, 2)
+            $table->decimal('quantity', 10, 3)
             ->default(0);
 
             $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
@@ -1061,7 +1061,7 @@ return new class extends Migration
 
             $table->date('received_date');
 
-            $table->decimal('quantity', 10, 2);
+            $table->decimal('quantity', 10, 3);
 
             $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
             $table->timestamps();
@@ -1143,9 +1143,9 @@ return new class extends Migration
                 'Set Exact Stock'
             ]);
 
-            $table->decimal('adjustment_quantity', 10, 2)->nullable();
-            $table->decimal('current_quantity', 10, 2)->nullable();
-            $table->decimal('new_quantity', 10, 2)->nullable();
+            $table->decimal('adjustment_quantity', 10, 3)->nullable();
+            $table->decimal('current_quantity', 10, 3)->nullable();
+            $table->decimal('new_quantity', 10, 3)->nullable();
 
             $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
             $table->timestamps();
@@ -1228,7 +1228,7 @@ return new class extends Migration
                 ->constrained('stock_level')
                 ->cascadeOnDelete();
 
-            $table->decimal('quantity', 10, 2);
+            $table->decimal('quantity', 10, 3);
 
             $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
             $table->timestamps();
@@ -1274,7 +1274,7 @@ return new class extends Migration
                 'REFUND',                
             ]);
 
-            $table->decimal('quantity', 10, 2);
+            $table->decimal('quantity', 10, 3);
 
             $table->string('reference_type');
             $table->string('reference_number');
@@ -1368,12 +1368,12 @@ return new class extends Migration
 
             $table->string('product_name');
 
-            $table->decimal('ordered_quantity', 10, 2);
+            $table->decimal('ordered_quantity', 10, 3);
 
-            $table->decimal('received_quantity', 10, 2)->default(0);
-            $table->decimal('cancelled_quantity', 10, 2)->default(0);
+            $table->decimal('received_quantity', 10, 3)->default(0);
+            $table->decimal('cancelled_quantity', 10, 3)->default(0);
 
-            $table->decimal('remaining_quantity', 10, 2)->default(0);
+            $table->decimal('remaining_quantity', 10, 3)->default(0);
 
             $table->decimal('estimated_cost', 10, 2)->default(0);
 
@@ -1412,7 +1412,7 @@ return new class extends Migration
             $table->date('expiration_date')->nullable();
             $table->date('received_date');
 
-            $table->decimal('received_quantity', 10, 2);
+            $table->decimal('received_quantity', 10, 3);
 
             $table->foreignId('last_log_by')->nullable()->default(1)
                 ->constrained('users')->nullOnDelete();
@@ -1445,7 +1445,7 @@ return new class extends Migration
 
             $table->string('product_name');
 
-            $table->decimal('cancelled_quantity', 10, 2);
+            $table->decimal('cancelled_quantity', 10, 3);
 
             $table->string('reason')->nullable();
 
@@ -1945,7 +1945,7 @@ return new class extends Migration
             $table->integer('total_items')
                 ->default(0);
 
-            $table->decimal('total_quantity', 10, 2)
+            $table->decimal('total_quantity', 10, 3)
                 ->default(0);
 
             $table->decimal('subtotal', 15, 2)
@@ -2082,19 +2082,19 @@ return new class extends Migration
 
             $table->enum('product_type', ['Goods', 'Service']);
 
-            $table->decimal('quantity', 12, 2)
+            $table->decimal('quantity', 12, 3)
                 ->default(1);
 
-            $table->decimal('sent_to_kitchen_quantity', 12, 2)
+            $table->decimal('sent_to_kitchen_quantity', 12, 3)
                 ->default(0);
 
-            $table->decimal('prepared_quantity', 12, 2)
+            $table->decimal('prepared_quantity', 12, 3)
                 ->default(0);
 
-            $table->decimal('served_quantity', 12, 2)
+            $table->decimal('served_quantity', 12, 3)
                 ->default(0);
 
-            $table->decimal('cancelled_quantity', 12, 2)
+            $table->decimal('cancelled_quantity', 12, 3)
                 ->default(0);
 
             $table->foreignId('kitchen_route_id')
@@ -2637,15 +2637,15 @@ return new class extends Migration
             $table->text('action_reason')
                 ->nullable();
 
-            $table->decimal('quantity', 12, 2);
+            $table->decimal('quantity', 12, 3);
 
-            $table->decimal('original_quantity', 12, 2)
+            $table->decimal('original_quantity', 12, 3)
                 ->default(0);
 
-            $table->decimal('prepared_quantity', 12, 2)
+            $table->decimal('prepared_quantity', 12, 3)
                 ->default(0);
 
-            $table->decimal('served_quantity', 12, 2)
+            $table->decimal('served_quantity', 12, 3)
                 ->default(0);
 
             $table->text('order_note')->nullable();

@@ -190,29 +190,43 @@ class ShopOrderPrintController extends Controller
         $pdf->SetFont('helvetica', '', 7.5);
         foreach ($shopOrder->items as $item) {
             $currentY = $pdf->GetY();
-            $pdf->Cell(8, 4, number_format($item->quantity) . 'x', 0, 0, 'L');
-
             $itemName = strtoupper($item->product_name);
-            $pdf->MultiCell(42, 4, $itemName, 0, 'L', false, 0);
-            $endY = $pdf->GetY();
             
-            $lineHeight = $endY - $currentY;
-            if ($lineHeight < 4) {
-                $lineHeight = 4;
-            }
+            // 1. Calculate the real height required for the item name MultiCell
+            $cellWidth = 42;
+            $cellHeight = 4; // minimum row height
+            $calculatedHeight = $pdf->GetStringHeight($cellWidth, $itemName);
+            $itemHeight = max($cellHeight, $calculatedHeight);
 
+            // 2. Render QTY and Amount aligned with the top of the item name
+            $pdf->Cell(8, $itemHeight, number_format($item->quantity) . 'x', 0, 0, 'L');
+            
+            // Render item name (using 1 for $ln to push cursor down naturally)
+            $pdf->MultiCell($cellWidth, $cellHeight, $itemName, 0, 'L', false, 0);
+            
+            // Move to the exact position for Amount cell
             $lineSubtotal = $item->line_subtotal ?? $item->subtotal ?? 0;
             $pdf->SetXY($leftMargin + 50, $currentY);
-            $pdf->Cell(22, 4, number_format($lineSubtotal, 2), 0, 1, 'R');
-            $pdf->SetY($currentY + $lineHeight);
+            $pdf->Cell(22, $itemHeight, number_format($lineSubtotal, 2), 0, 1, 'R');
+            
+            // 3. Explicitly reset Y position below the longest point of the item row
+            $pdf->SetY($currentY + $itemHeight);
 
+            // 4. Render Notes without breaking layout
             if (!empty($item->order_note)) {
                 $pdf->SetFont('helvetica', 'I', 7);
-                $pdf->Cell(8, 3.5, '', 0, 0);
-                $pdf->MultiCell(64, 3.5, '* Note: ' . $item->order_note, 0, 'L', false, 1);
+                
+                // Re-calculate note height to prevent it from clipping into the next item
+                $noteText = '* Note: ' . $item->order_note;
+                $noteHeight = max(3.5, $pdf->GetStringHeight(64, $noteText));
+                
+                $pdf->Cell(8, $noteHeight, '', 0, 0);
+                $pdf->MultiCell(64, 3.5, $noteText, 0, 'L', false, 1);
+                
                 $pdf->SetFont('helvetica', '', 7.5);
             }
-            $pdf->Ln(0.5);
+            
+            $pdf->Ln(1); // Small space before the next item loop begins
         }
 
         $pdf->Cell(0, 3, str_repeat('-', 46), 0, 1, 'C');

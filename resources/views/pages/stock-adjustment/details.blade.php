@@ -213,7 +213,7 @@
                                         Adjustment Quantity
                                     </label>
 
-                                    <input type="number" class="form-control" id="adjustment_quantity" name="adjustment_quantity" step="0.01">
+                                    <input type="number" class="form-control" id="adjustment_quantity" name="adjustment_quantity" step="0.001">
                                 </div>
                             </div>
                         </div>

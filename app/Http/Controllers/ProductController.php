@@ -740,17 +740,27 @@ class ProductController extends Controller
         $filterByProductType = $request->input('filter_by_product_type');
         $filterByProductStatus = $request->input('filter_by_product_status');
 
+        // 1. Fetch your products using standard query builder
         $products = DB::table('product')
-        ->when(!empty($filterByProductType), function ($q) use ($filterByProductType) {
-            $q->where('product_type', $filterByProductType);
-        })
-        ->when(!empty($filterByProductStatus), function ($q) use ($filterByProductStatus) {
-            $q->where('product_status', $filterByProductStatus);
-        })
-        ->orderBy('product_name')
-        ->get();
+            ->when(!empty($filterByProductType), function ($q) use ($filterByProductType) {
+                $q->where('product_type', $filterByProductType);
+            })
+            ->when(!empty($filterByProductStatus), function ($q) use ($filterByProductStatus) {
+                $q->where('product_status', $filterByProductStatus);
+            })
+            ->orderBy('product_name')
+            ->get();
 
-        $response = $products->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
+        // 2. Extract all product IDs from the collection
+        $productIds = $products->pluck('id')->toArray();
+
+        // 3. Fetch all matching categories via your Eloquent Model in ONE query, grouped by product_id
+        $categoriesGrouped = ProductCategoryMap::whereIn('product_id', $productIds)
+            ->get()
+            ->groupBy('product_id');
+
+        // 4. Map the response array
+        $response = $products->map(function ($row) use ($pageAppId, $pageNavigationMenuId, $categoriesGrouped)  {
             $productId = $row->id;
             $productName = $row->product_name;
             $productDescription = $row->product_description;
@@ -763,8 +773,24 @@ class ProductController extends Controller
             $class = $productStatus === 'Active' ? 'success' : 'danger';
             $activeBadge = "<span class=\"badge badge-light-{$class}\">{$productStatus}</span>";
             
-            $defaultProductImage = asset('assets/media/default/upload-placeholder.png');
+            // --- Process the categories using the Eloquent collection ---
+            $categoriesHtml = '--';
+            
+            // Check if our grouped collection has mapping items for this specific product ID
+            if ($categoriesGrouped->has($productId)) {
+                // Get the collection of ProductCategoryMap models for this product
+                $productCategoryMaps = $categoriesGrouped->get($productId);
 
+                // Map each model instance to an HTML badge snippet
+                $badges = $productCategoryMaps->map(function($mapRecord) {
+                    return '<span class="badge badge-light-primary fs-8 me-1 mt-1">' . e($mapRecord->product_category_name) . '</span>';
+                })->toArray();
+                
+                $categoriesHtml = '<div class="d-flex flex-wrap">' . implode('', $badges) . '</div>';
+            }
+            // -------------------------------------------------------------
+
+            $defaultProductImage = asset('assets/media/default/upload-placeholder.png');
             $path = trim((string) ($row->product_image ?? ''));
 
             $productImageLUrl = $path !== '' && Storage::disk('public')->exists($path)
@@ -794,6 +820,7 @@ class ProductController extends Controller
                         </div>
                     </div>
                 ',
+                'CATEGORY' => $categoriesHtml,
                 'SKU' => $sku,
                 'BARCODE' => $barcode,
                 'PARENT_PRODUCT' => $parentProductName,

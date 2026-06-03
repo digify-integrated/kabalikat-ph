@@ -36,7 +36,7 @@
                         Quantity
                     </label>
                     <div class="col-lg-10">
-                        <input type="number" class="form-control" id="quantity" name="quantity" step="0.01">
+                        <input type="number" class="form-control" id="quantity" name="quantity" step="0.001">
                     </div>
                 </div>
                 

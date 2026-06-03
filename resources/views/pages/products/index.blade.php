@@ -96,6 +96,7 @@
                                 </div>
                             </th>
                             <th>Product</th>
+                            <th>Category</th>
                             <th>SKU</th>
                             <th>Barcode</th>
                             <th>Parent Product</th>

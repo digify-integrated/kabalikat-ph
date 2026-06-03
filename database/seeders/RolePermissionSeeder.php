@@ -350,12 +350,12 @@ class RolePermissionSeeder extends Seeder
                 'navigation_menu_id' => 25,
                 'navigation_menu_name' => 'Stock Movement',
                 'read_access' => true,
-                'write_access' => true,
-                'create_access' => true,
-                'delete_access' => true,
-                'import_access' => true,
-                'export_access' => true,
-                'logs_access' => true,
+                'write_access' => false,
+                'create_access' => false,
+                'delete_access' => false,
+                'import_access' => false,
+                'export_access' => false,
+                'logs_access' => false,
             ],
 
             [

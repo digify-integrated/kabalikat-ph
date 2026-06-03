@@ -211,7 +211,7 @@
                                         Quantity
                                     </label>
 
-                                    <input type="number" class="form-control" id="quantity" name="quantity" min="0.01" step="0.01">
+                                    <input type="number" class="form-control" id="quantity" name="quantity" min="0.001" step="0.001">
                                 </div>
                             </div>
 

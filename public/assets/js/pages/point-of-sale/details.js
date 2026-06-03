@@ -1087,9 +1087,9 @@ document.addEventListener('DOMContentLoaded', () => {
         return `
         <div class="card border-0 shadow-sm mb-3 order-item-card rounded-3">
             <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div class="flex-grow-1 pe-3">
-                        <div class="fw-bold fs-5 text-gray-900 mb-1 text-truncate">
+                <div class="row g-2 align-items-start mb-3">
+                    <div class="col-8">
+                        <div class="fw-bold fs-5 text-gray-900 mb-1 text-break">
                             ${item.product_name}
                         </div>
 
@@ -1100,8 +1100,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             </span>
                         </div>
                     </div>
-                    <div class="text-end">
-                        <div class="fw-bolder fs-2 text-primary lh-1">
+                    
+                    <div class="col-4 text-end">
+                        <div class="fw-bolder fs-2 text-primary lh-1 text-break">
                             ${formatPeso(item.line_total)}
                         </div>
 
@@ -1110,12 +1111,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </div>
                 </div>
+
                 ${
                     item.order_note
                         ? `
                         <div class="d-flex align-items-start gap-2 bg-light-warning border border-warning border-dashed rounded-3 p-3 mb-4">
                             <i class="ki-outline ki-notepad fs-4 text-warning mt-1"></i>
-                            <div class="fs-7 fw-semibold text-gray-700">
+                            <div class="fs-7 fw-semibold text-gray-700 text-break">
                                 ${item.order_note}
                             </div>
                         </div>
@@ -1128,7 +1130,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <i class="ki-outline ki-minus fs-5"></i>
                         </button>
 
-                        <input type="text" class=" form-control form-control-flush fw-bold text-center bg-transparent border-0 text-gray-900 w-40px px-0" value="${item.quantity}" readonly>
+                        <input type="text" class="form-control form-control-flush fw-bold text-center bg-transparent border-0 text-gray-900 w-40px px-0" value="${item.quantity}" readonly>
 
                         <button type="button" class="btn btn-icon btn-sm btn-light-primary rounded-circle increase-item-qty" data-shop-order-item-id="${item.id}">
                             <i class="ki-outline ki-plus fs-5"></i>
