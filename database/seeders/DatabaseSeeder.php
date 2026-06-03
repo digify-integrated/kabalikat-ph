@@ -38,6 +38,7 @@ class DatabaseSeeder extends Seeder
             StockAdjustmentReasonSeeder::class,
             StockTransferReasonSeeder::class,
             PaymentMethodSeeder::class,
+            DiscountTypeSeeder::class,
         ]);
     }
 }

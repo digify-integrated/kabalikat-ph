@@ -267,6 +267,17 @@
                                     </div>
 
                                     <div class="row mb-6">
+                                        <label class="col-lg-3 col-form-label fw-semibold fs-6" for="kitchen_route_id">
+                                            Kitchen Route
+                                        </label>
+                                        <div class="col-lg-9">
+                                            <select id="kitchen_route_id" name="kitchen_route_id" class="form-select" data-control="select2" @disabled(!$canWrite)>
+                                                <option>--</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="row mb-6">
                                         <label class="col-lg-3 col-form-label required fw-semibold fs-6" for="base_unit_id">
                                             Base Unit
                                         </label>

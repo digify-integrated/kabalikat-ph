@@ -338,6 +338,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     $('#product_type').val(data.productType ?? '').trigger('change');
                     $('#product_status').val(data.productStatus ?? 'Active').trigger('change');
                     $('#tax_classification').val(data.taxClassification ?? '').trigger('change');
+                    $('#kitchen_route_id').val(data.kitchenRoutedId ?? '').trigger('change');
                     $('#base_unit_id').val(data.baseUnitId ?? '').trigger('change');
                     $('#inventory_flow').val(data.inventoryFlow ?? '').trigger('change');
                     $('#product_category_id').val(data.productCategoryId ?? '').trigger('change');
@@ -402,6 +403,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ],
         dropdown: [
             { url: '/unit/generate-options', dropdownSelector: '#base_unit_id' },
+            { url: '/kitchen-route/generate-options', dropdownSelector: '#kitchen_route_id' },
             { url: '/product-category/generate-options', dropdownSelector: '#product_category_id', data : { product_id : ctx.detailId, multiple: true } }
         ],
         attributeDropdown: {

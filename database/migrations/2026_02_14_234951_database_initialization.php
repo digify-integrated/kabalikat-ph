@@ -768,6 +768,13 @@ return new class extends Migration
             $table->double('reorder_level')
             ->default(0);
 
+            $table->foreignId('kitchen_route_id')
+            ->nullable()
+            ->constrained('kitchen_route')
+            ->nullOnDelete();
+
+            $table->string('kitchen_route_name');
+
             $table->foreignId('base_unit_id')
             ->nullable()
             ->constrained('unit')
@@ -784,13 +791,14 @@ return new class extends Migration
                 'unique_variant_signature'
             );
 
-            $table->index(['sku'], 'product_sku_idx');
-            $table->index(['barcode'], 'product_barcode_idx');
-            $table->index(['tax_classification'], 'product_tax_classification_idx');
-            $table->index(['product_type'], 'product_product_type_idx');
-            $table->index(['parent_product_id'], 'product_parent_product_id_idx');
-            $table->index(['variant_signature'], 'product_variant_signature_idx');
-            $table->index(['base_unit_id'], 'product_base_unit_id_idx');
+            $table->index(['sku']);
+            $table->index(['barcode']);
+            $table->index(['kitchen_route_id']);
+            $table->index(['tax_classification']);
+            $table->index(['product_type']);
+            $table->index(['parent_product_id']);
+            $table->index(['variant_signature']);
+            $table->index(['base_unit_id']);
         });
 
         /* =============================================================================================

@@ -1442,6 +1442,10 @@ return new class extends Migration
                     SET audit_log = CONCAT(audit_log, "Reorder Level: ", OLD.reorder_level, " -> ", NEW.reorder_level, "<br/>");
                 END IF;
 
+                IF NEW.kitchen_route_name <> OLD.kitchen_route_name THEN
+                    SET audit_log = CONCAT(audit_log, "Kitchen Route: ", OLD.kitchen_route_name, " -> ", NEW.kitchen_route_name, "<br/>");
+                END IF;
+
                 IF NEW.base_unit_name <> OLD.base_unit_name THEN
                     SET audit_log = CONCAT(audit_log, "Base Unit: ", OLD.base_unit_name, " -> ", NEW.base_unit_name, "<br/>");
                 END IF;

@@ -605,18 +605,29 @@ class KitchenTicketController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | ORDER ITEMS
+        | ORDER ITEMS WITH DEFAULT PRODUCT ROUTING
         |--------------------------------------------------------------------------
+        | We join the product master table to fetch the default station routing parameters.
         */
-        $items = DB::table('shop_order_item')
-            ->where('shop_order_id', $shopOrderId)
-            ->select(['id', 'product_id', 'product_name', 'quantity', 'order_note', 'item_status'])
+        $items = DB::table('shop_order_item as soi')
+            ->join('product as p', 'p.id', '=', 'soi.product_id')
+            ->where('soi.shop_order_id', $shopOrderId)
+            ->select([
+                'soi.id', 
+                'soi.product_id', 
+                'soi.product_name', 
+                'soi.quantity', 
+                'soi.order_note', 
+                'soi.item_status',
+                'p.kitchen_route_id as default_route_id' // Extracted fallback route parameter
+            ])
             ->get();
 
         /*
         |--------------------------------------------------------------------------
         | KITCHEN HISTORY & STATUS TRACKING
         |--------------------------------------------------------------------------
+        | Unchanged, tracking historical production runs.
         */
         $kitchenHistory = DB::table('kitchen_ticket_item as kti')
             ->join('kitchen_ticket as kt', 'kt.id', '=', 'kti.kitchen_ticket_id')
@@ -652,120 +663,76 @@ class KitchenTicketController extends Controller
         $response = $items->map(function ($item) use ($kitchenHistory) {
             $history = $kitchenHistory->get($item->id, collect());
 
-            /*
-            |--------------------------------------------------------------------------
-            | REBUILD KITCHEN QTY (FIX: READ ACTIVE LIVESTATES INSTEAD OF HISTORICAL LOOPS)
-            |--------------------------------------------------------------------------
-            */
             $kitchenQty = $history
                 ->whereIn('item_status', ['Queued', 'Preparing', 'Ready', 'Served', 'Completed'])
                 ->sum('quantity');
                 
             $currentQty = (float) $item->quantity;
 
-            /*
-            |--------------------------------------------------------------------------
-            | RESOLVE ROUTE LOCKS
-            |--------------------------------------------------------------------------
-            */
             $latestRoute = $history->whereNotNull('kitchen_route_id')->last();
             $lockedRouteId = $latestRoute?->kitchen_route_id;
             $lockedRouteName = $latestRoute?->kitchen_route_name;
 
-            /*
-            |--------------------------------------------------------------------------
-            | CASE 1: CANCELLED ITEM
-            |--------------------------------------------------------------------------
-            */
+            // Base properties template mapping dictionary helper
+            $basePayload = [
+                'shop_order_item_id' => $item->id,
+                'product_id'        => $item->product_id,
+                'product_name'      => $item->product_name,
+                'order_note'        => $item->order_note,
+                'status'            => $item->item_status,
+                'default_route_id'  => $item->default_route_id, // Attached payload fallback value
+                'previous_sent_qty' => $kitchenQty,
+            ];
+
+            /* Case 1: Cancelled */
             if ($item->item_status === 'Cancelled') {
                 if ($kitchenQty > 0) {
-                    return [
-                        'shop_order_item_id' => $item->id,
-                        'product_id'        => $item->product_id,
-                        'product_name'      => $item->product_name,
+                    return array_merge($basePayload, [
                         'quantity'          => $kitchenQty,
-                        'order_note'        => $item->order_note,
-                        'status'            => 'Cancelled',
                         'action_type'       => 'Cancel',
                         'is_route_locked'   => !is_null($lockedRouteId),
                         'locked_route_id'   => $lockedRouteId,
                         'locked_route_name' => $lockedRouteName,
-                        'previous_sent_qty' => $kitchenQty,
-                    ];
+                    ]);
                 }
                 return null;
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | CASE 2: NO CHANGES BETWEEN CART AND KITCHEN
-            |--------------------------------------------------------------------------
-            */
             if ($currentQty == $kitchenQty) {
                 return null;
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | CASE 3: NEW ITEM (OR FRESH LINE RE-ADD EXCEPTION)
-            |--------------------------------------------------------------------------
-            */
+            /* Case 3: New Ticket Line Item */
             if ($kitchenQty == 0 && $currentQty > 0) {
-                return [
-                    'shop_order_item_id' => $item->id,
-                    'product_id'        => $item->product_id,
-                    'product_name'      => $item->product_name,
+                return array_merge($basePayload, [
                     'quantity'          => $currentQty,
-                    'order_note'        => $item->order_note,
-                    'status'            => $item->item_status,
                     'action_type'       => 'New',
                     'is_route_locked'   => false,
                     'locked_route_id'   => null,
                     'locked_route_name' => null,
-                    'previous_sent_qty' => 0,
-                ];
+                ]);
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | CASE 4: ADDITIONAL QUANTITY DETECTED
-            |--------------------------------------------------------------------------
-            */
+            /* Case 4: Added Qty */
             if ($currentQty > $kitchenQty) {
-                return [
-                    'shop_order_item_id' => $item->id,
-                    'product_id'        => $item->product_id,
-                    'product_name'      => $item->product_name,
+                return array_merge($basePayload, [
                     'quantity'          => $currentQty - $kitchenQty,
-                    'order_note'        => $item->order_note,
-                    'status'            => $item->item_status,
                     'action_type'       => 'Add',
                     'is_route_locked'   => !is_null($lockedRouteId),
                     'locked_route_id'   => $lockedRouteId,
                     'locked_route_name' => $lockedRouteName,
-                    'previous_sent_qty' => $kitchenQty,
-                ];
+                ]);
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | CASE 5: REDUCE QUANTITY
-            |--------------------------------------------------------------------------
-            */
+            /* Case 5: Reduced Qty */
             if ($currentQty < $kitchenQty) {
-                return [
-                    'shop_order_item_id' => $item->id,
-                    'product_id'        => $item->product_id,
-                    'product_name'      => $item->product_name,
+                return array_merge($basePayload, [
                     'quantity'          => $kitchenQty - $currentQty,
-                    'order_note'        => $item->order_note,
-                    'status'            => $item->item_status,
                     'action_type'       => 'Reduce',
                     'is_route_locked'   => !is_null($lockedRouteId),
                     'locked_route_id'   => $lockedRouteId,
                     'locked_route_name' => $lockedRouteName,
-                    'previous_sent_qty' => $kitchenQty,
-                ];
+                ]);
             }
 
             return null;

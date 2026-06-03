@@ -1149,6 +1149,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderOrderSummary = (order) => {
         let html = '';
 
+        // 1. Subtotal Baseline
         html += `
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <span class="fw-semibold text-gray-700">Subtotal</span>
@@ -1156,24 +1157,33 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
 
-        if ((order.vatable_sales ?? 0) > 0) {
+        // 2. VATable Sales (Removed the > 0 condition so it can render ₱0.00 dynamically)
+        html += `
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="fw-semibold text-gray-700">VATable Sales</span>
+                <span class="fw-semibold text-gray-900">${formatPeso(order.vatable_sales ?? 0)}</span>
+            </div>
+        `;
+
+        // 3. VAT 12% (Removed the > 0 condition so it can drop to ₱0.00 dynamically)
+        html += `
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="fw-semibold text-gray-700">VAT (12%)</span>
+                <span class="fw-semibold text-gray-900">${formatPeso(order.vat_amount ?? 0)}</span>
+            </div>
+        `;
+
+        // 4. VAT Exempt Sales (CRITICAL ADDITION: Added to safely display the senior/pwd exemption pool)
+        if ((order.vat_exempt_sales ?? 0) > 0) {
             html += `
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <span class="fw-semibold text-gray-700">VATable Sales</span>
-                    <span class="fw-semibold text-gray-900">${formatPeso(order.vatable_sales ?? 0)}</span>
+                    <span class="fw-semibold text-gray-700">VAT Exempt Sales</span>
+                    <span class="fw-semibold text-gray-900">${formatPeso(order.vat_exempt_sales ?? 0)}</span>
                 </div>
             `;
         }
 
-        if ((order.vat_amount ?? 0) > 0) {
-            html += `
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <span class="fw-semibold text-gray-700">VAT (12%)</span>
-                    <span class="fw-semibold text-gray-900">${formatPeso(order.vat_amount ?? 0)}</span>
-                </div>
-            `;
-        }
-
+        // 5. Applied Discounts Iteration Pipeline
         if (Array.isArray(order.discounts) && order.discounts.length > 0) {
             order.discounts.forEach((discount) => {
                 html += `
@@ -1185,6 +1195,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        // 6. Applied Operational Service Charges Iteration Pipeline
         if (Array.isArray(order.charges) && order.charges.length > 0) {
             order.charges.forEach((charge) => {
                 html += `
@@ -1196,6 +1207,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        // 7. Final Net Total Due
         html += `
             <div class="separator separator-dashed my-4"></div>
 
@@ -1205,6 +1217,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
 
+        // Overwrite the dynamic element with the clean payload layout string
         $('#order-summary-list').html(html);
     };
 
@@ -1249,10 +1262,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <div class="fw-bold fs-2 ${isSelected ? 'text-success' : 'text-gray-900'} mb-1">
                                     Table ${table.table_number}
                                 </div>
-
-                                <div class="text-muted fw-semibold fs-7">
-                                    ${table.seats} Seats
-                                </div>
                             </div>
 
                             <span class="badge ${badgeClass} fw-bold">${badgeText}</span>
@@ -1291,16 +1300,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderAvailableDiscounts = (discounts) => {
         if (!discounts.length) {
             $('#available-discount-list').html(`
-                <div class="text-center py-10 text-muted">
-                    No available discounts
-                </div>
+                <div class="text-center py-10 text-muted">No available discounts</div>
             `);
-
             return;
         }
 
         const html = discounts.map(discount => {
             const isVariable = discount.is_variable === 'Yes';
+            
+            // BULLETPROOF CHECK: Handles both string "Yes" and boolean true states seamlessly
+            const isRestaurantEnv = typeof window.isRestaurant !== 'undefined' && 
+                                    (window.isRestaurant === 'Yes' || window.isRestaurant === true);
 
             return `
             <div class="card border-0 shadow-sm rounded-4 mb-3 overflow-hidden">
@@ -1310,40 +1320,16 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div class="fw-bold text-gray-900 fs-5 mb-1">
                                 ${discount.discount_type_name}
                             </div>
-
                             <div class="d-flex align-items-center flex-wrap gap-2">
-                                <span class="badge badge-light-success">
-                                    ${discount.value_type}
-                                </span>
-
+                                <span class="badge badge-light-success">${discount.value_type}</span>
                                 ${
                                     isVariable
-                                        ? `
-                                            <span class="badge badge-light-warning">
-                                                Variable
-                                            </span>
-                                        `
-                                        : `
-                                            <span class="fw-semibold text-success fs-7">
-                                                ${
-                                                    discount.value_type === 'Percentage'
-                                                        ? `${discount.discount_value}%`
-                                                        : formatPeso(discount.discount_value)
-                                                }
-                                            </span>
-                                        `
+                                        ? `<span class="badge badge-light-warning">Variable</span>`
+                                        : `<span class="fw-semibold text-success fs-7">
+                                            ${discount.value_type === 'Percentage' ? `${parseFloat(discount.discount_value)}%` : formatPeso(discount.discount_value)}
+                                        </span>`
                                 }
-
-                                ${
-                                    discount.is_vat_exempt === 'Yes'
-                                        ? `
-                                            <span class="badge badge-light-info">
-                                                VAT Exempt
-                                            </span>
-                                        `
-                                        : ''
-                                }
-
+                                ${discount.is_vat_exempt === 'Yes' ? `<span class="badge badge-light-info">VAT Exempt</span>` : ''}
                             </div>
                         </div>
 
@@ -1357,32 +1343,34 @@ document.addEventListener('DOMContentLoaded', () => {
                             isVariable
                                 ? `
                                 <div class="col-md-3">
-
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
-                                        class="form-control form-control-sm variable-discount-value"
-                                        placeholder="${
-                                            discount.value_type === 'Percentage'
-                                                ? 'Discount %'
-                                                : 'Discount Amount'
-                                        }">
-
+                                    <input type="number" min="0" step="0.01" class="form-control form-control-sm variable-discount-value" 
+                                        placeholder="${discount.value_type === 'Percentage' ? 'Discount %' : 'Discount Amount'}">
                                 </div>
                                 `
                                 : ''
                         }
 
-                        <div class="${isVariable ? 'col-md-3' : 'col-md-4'}">
+                        <!-- Custom Field Appears Here Dynamically -->
+                        ${
+                            isRestaurantEnv
+                                ? `
+                                <div class="${isVariable ? 'col-md-3' : 'col-md-4'}">
+                                    <input type="number" min="0" step="0.01" class="form-control form-control-sm custom-discountable-amount border-primary" 
+                                        placeholder="SC/PWD Custom Share (₱)">
+                                </div>
+                                `
+                                : ''
+                        }
+
+                        <div class="col-md-3">
                             <input type="text" class="form-control form-control-sm discount-reference-name" placeholder="Reference Name">
                         </div>
 
-                        <div class="${isVariable ? 'col-md-3' : 'col-md-4'}">
+                        <div class="col-md-3">
                             <input type="text" class="form-control form-control-sm discount-reference-number" placeholder="Reference No.">
                         </div>
 
-                        <div class="${isVariable ? 'col-md-3' : 'col-md-4'}">
+                        <div class="col-md-2">
                             <input type="text" class="form-control form-control-sm discount-remarks" placeholder="Remarks">
                         </div>
                     </div>
@@ -1734,17 +1722,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!items.length) {
             $('#kitchen-items-container').html(`
                 <div class="text-center py-15">
-                    <div class="fw-bold fs-2 mb-2">
-                        No Kitchen Updates
-                    </div>
-
-                    <div class="text-muted fs-6">
-                        All items are already synced
-                    </div>
+                    <div class="fw-bold fs-2 mb-2">No Kitchen Updates</div>
+                    <div class="text-muted fs-6">All items are already synced</div>
                 </div>
-
             `);
-
             return;
         }
 
@@ -1755,16 +1736,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     return `
                     <div class="col-12 col-md-6 col-xl-4">
-                        <div class=" card border-2 ${style.border} rounded-4 shadow-sm kitchen-grid-item overflow-hidden h-100 position-relative">
+                        <div class="card border-2 ${style.border} rounded-4 shadow-sm kitchen-grid-item overflow-hidden h-100 position-relative">
                             <div class="selected-indicator d-none position-absolute top-0 end-0 m-3 z-index-3">
-                                <span class="badge badge-primary px-3 py-2 ">SELECTED</span>
+                                <span class="badge badge-primary px-3 py-2">SELECTED</span>
                             </div>
 
                             <div class="${style.header} px-4 py-3 border-bottom">
                                 <div class="d-flex align-items-center justify-content-between">
                                     ${renderKitchenActionBadge(item.action_type)}
-
-                                    <div class=" fw-bold fs-3${style.text}">
+                                    <div class="fw-bold fs-3 ${style.text}">
                                         QTY: ${item.quantity}
                                     </div>
                                 </div>
@@ -1772,7 +1752,11 @@ document.addEventListener('DOMContentLoaded', () => {
                             
                             <div class="card-body p-4">
                                 <div class="d-none">
-                                    <input type="checkbox" class="kitchen-item-checkbox" data-order-item-id="${item.shop_order_item_id}" data-quantity="${item.quantity}" data-action="${item.action_type}" data-route-id="${item.locked_route_id ?? ''}">
+                                    <input type="checkbox" class="kitchen-item-checkbox" 
+                                        data-order-item-id="${item.shop_order_item_id}" 
+                                        data-quantity="${item.quantity}" 
+                                        data-action="${item.action_type}" 
+                                        data-route-id="${item.locked_route_id ?? item.default_route_id ?? ''}">
                                 </div>
 
                                 <div class="fw-bold fs-3 text-dark mb-2">
@@ -1784,10 +1768,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </div>
 
                                 <div class="bg-light rounded-3 p-3 mb-4">
-                                    <div class="text-muted fs-8 fw-bold mb-1">
-                                        ORDER NOTE
-                                    </div>
-
+                                    <div class="text-muted fs-8 fw-bold mb-1">ORDER NOTE</div>
                                     <div class="fs-7 fw-semibold text-dark">
                                         ${item.note || 'No special instruction'}
                                     </div>
@@ -1796,13 +1777,11 @@ document.addEventListener('DOMContentLoaded', () => {
                                 ${
                                     item.is_route_locked
                                     ? `
-
                                     <div class="border border-danger bg-light-danger rounded-3 p-3">
-                                        <div class=" d-flex align-items-center gap-2 mb-2">
+                                        <div class="d-flex align-items-center gap-2 mb-2">
                                             <i class="ki-outline ki-lock-2 fs-3 text-danger"></i>
                                             <span class="fw-bold text-danger">Locked Station</span>
                                         </div>
-
                                         <div class="fw-bold fs-5">
                                             ${item.locked_route_name}
                                         </div>
@@ -1811,12 +1790,13 @@ document.addEventListener('DOMContentLoaded', () => {
                                     : `
                                     <div>
                                         <label class="form-label fw-bold fs-7">Select Kitchen Station</label>
-
                                         <select class="form-select form-select-solid kitchen-route-select" data-order-item-id="${item.shop_order_item_id}">
                                             <option value="">Choose Station</option>
-                                            ${kitchenRoutes.map(route => `
-                                                <option value="${route.id}">${route.kitchen_route_name}</option>
-                                            `).join('')}
+                                            ${kitchenRoutes.map(route => {
+                                                // Dynamic conditional comparison block evaluating system route parameters
+                                                const isSelected = Number(route.id) === Number(item.default_route_id) ? 'selected' : '';
+                                                return `<option value="${route.id}" ${isSelected}>${route.kitchen_route_name}</option>`;
+                                            }).join('')}
                                         </select>
                                     </div>
                                     `
@@ -1827,7 +1807,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     `;
                 }).join('')}
-
             </div>
         `;
 
@@ -2033,11 +2012,30 @@ document.addEventListener('DOMContentLoaded', () => {
         let filtered = [...cachedOrders];
 
         if (search) {
+            // Smart Parsing: If cashier typed "table 5" or "tb 5", isolate the number "5"
+            let isolatedTableNum = null;
+            if (search.includes('table ') || search.includes('tb ') || search.includes('Table ')) {
+                const matches = search.match(/\d+/); // Finds the first digit block in the text
+                if (matches) {
+                    isolatedTableNum = matches[0];
+                }
+            }
+
             filtered = filtered.filter(order => {
-                return (
+                const orderTableStr = order.table_number?.toString().toLowerCase() || '';
+                
+                // Check direct matching criteria
+                const matchesDirectSearch = (
                     order.order_number?.toLowerCase().includes(search) ||
-                    order.customer_name?.toLowerCase().includes(search)
+                    order.customer_name?.toLowerCase().includes(search) ||
+                    order.floor_plan_name?.toLowerCase().includes(search) ||
+                    orderTableStr.includes(search)
                 );
+
+                // Check smart keyword variation criteria (e.g., search context "table 1")
+                const matchesSmartTableSearch = isolatedTableNum && orderTableStr === isolatedTableNum;
+
+                return matchesDirectSearch || matchesSmartTableSearch;
             });
         }
 
@@ -2314,7 +2312,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!shopOrderId) {
                 showNotification('No active order.');
-
                 return;
             }
 
@@ -2322,12 +2319,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const csrf = getCsrfToken();
 
-            const response = await fetch('/shop-order/fetch-discounts',{
+            const response = await fetch('/shop-order/fetch-discounts', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
                     Accept: 'application/json',
-                    ...(csrf ? { 'X-CSRF-TOKEN': csrf }: {}),
+                    ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
                 },
                 body: new URLSearchParams({
                     shop_order_id: shopOrderId,
@@ -2338,12 +2335,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!data.success) {
                 showNotification(data.message);
-
                 return;
             }
 
-            renderAvailableDiscounts(data.available_discounts);
+            // CRITICAL FIX: Capture and assign the state variable so renderAvailableDiscounts reads it!
+            window.isRestaurant = data.is_restaurant;
 
+            renderAvailableDiscounts(data.available_discounts);
             renderAppliedDiscounts(data.applied_discounts);
         }
         catch (error) {
@@ -2351,7 +2349,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    $(document).on('click', '.apply-discount-button', async function () {
+   $(document).on('click', '.apply-discount-button', async function () {
         try {
             const button = $(this);
             const card = button.closest('.card');
@@ -2363,34 +2361,41 @@ document.addEventListener('DOMContentLoaded', () => {
             let referenceName = card.find('.discount-reference-name').val();
             let referenceNumber = card.find('.discount-reference-number').val();
             let remarks = card.find('.discount-remarks').val();
+            
+            // Fetch the restaurant individual share input value
+            let customDiscountableAmount = card.find('.custom-discountable-amount').val();
 
             if (isVariable === 'Yes') {
                 discountValue = card.find('.variable-discount-value').val();
 
                 if (discountValue === '' || discountValue === null) {
                     showNotification('Enter a discount value.');
-                
                     return;
                 }
 
                 discountValue = parseFloat(discountValue);
-
                 if (isNaN(discountValue) || discountValue <= 0) {
                     showNotification('Invalid discount value.');
-
                     return;
                 }
 
                 if (valueType === 'Percentage' && discountValue > 100) {
                     showNotification('Percentage discount cannot exceed 100%.');
+                    return;
+                }
+            }
 
+            // Validate the individual share amount if provided
+            if (customDiscountableAmount) {
+                customDiscountableAmount = parseFloat(customDiscountableAmount);
+                if (isNaN(customDiscountableAmount) || customDiscountableAmount < 0) {
+                    showNotification('Invalid customer item order share value entered.');
                     return;
                 }
             }
 
             const csrf = getCsrfToken();
-
-            const shopOrderId =sessionStorage.getItem('shop_order_id');
+            const shopOrderId = sessionStorage.getItem('shop_order_id');
 
             button.prop('disabled', true);
 
@@ -2399,12 +2404,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
                     Accept: 'application/json',
-                        ...(csrf ? {'X-CSRF-TOKEN': csrf } : {}),
+                    ...(csrf ? {'X-CSRF-TOKEN': csrf } : {}),
                 },
                 body: new URLSearchParams({
                     shop_order_id: shopOrderId,
                     discount_type_id: discountTypeId,
                     discount_value: discountValue ?? '',
+                    custom_discountable_amount: customDiscountableAmount ?? '', // Sent to backend controller
                     reference_name: referenceName ?? '',
                     reference_number: referenceNumber ?? '',
                     remarks: remarks ?? '',
@@ -2412,26 +2418,20 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             const data = await response.json();
-
             button.prop('disabled', false);
 
             if (!data.success) {
                 showNotification(data.message);
-                
                 return;
             }
             
             populateCart(data.order);
-
             renderAvailableDiscounts(data.available_discounts);
-
             renderAppliedDiscounts(data.applied_discounts);
-
             showNotification(data.message, 'success');
         }
         catch (error) {
             $('.apply-discount-button').prop('disabled', false);
-
             handleSystemError(error, 'save_failed', error.message);
         }
     });

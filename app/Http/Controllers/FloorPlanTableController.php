@@ -15,10 +15,8 @@ class FloorPlanTableController extends Controller
     public function save(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'floor_plan_table_id' => ['nullable', 'integer'],
             'floor_plan_id' => ['required', 'integer', Rule::exists('floor_plan', 'id')],
-            'table_number' => ['required', 'int', 'min:1'],
-            'seats' => ['required', 'int', 'min:1'],
+            'quantity'      => ['required', 'integer', 'min:1', 'max:50'], // Capped at 50 per batch for performance
         ]);
 
         if ($validator->fails()) {
@@ -29,34 +27,66 @@ class FloorPlanTableController extends Controller
         }
 
         $validated = $validator->validated();
+        $floorPlanId = $validated['floor_plan_id'];
 
-        $floorPlanId = $validated['floor_plan_id'] ?? null;
+        DB::beginTransaction();
+        try {
+            // Fetch the floor plan name once to optimize payload assignments
+            $floorPlanName = (string) FloorPlan::query()
+                ->whereKey($floorPlanId)
+                ->value('floor_plan_name');
 
-        $floorPlanName = (string) FloorPlan::query()
-            ->whereKey($floorPlanId)
-            ->value('floor_plan_name');
+            /*
+            |--------------------------------------------------------------------------
+            | SEQUENCING RESOLVER
+            |--------------------------------------------------------------------------
+            | We grab the maximum string table number for this floor plan, cast it to 
+            | an unsigned integer so MySQL can sort it numerically instead of alphabetically,
+            | and fallback to 0 if this is the very first table.
+            |--------------------------------------------------------------------------
+            */
+            $maxTableNumber = (int) FloorPlanTable::query()
+                ->where('floor_plan_id', $floorPlanId)
+                ->selectRaw('MAX(CAST(table_number AS UNSIGNED)) as max_num')
+                ->value('max_num') ?? 0;
 
-        $payload = [
-            'floor_plan_id' => $floorPlanId,
-            'floor_plan_name' => $floorPlanName,
-            'table_number' => $validated['table_number'],
-            'seats' => $validated['seats'],
-            'last_log_by' => Auth::id(),
-        ];
+            $quantityToCreate = (int) $validated['quantity'];
+            $createdTablesCount = 0;
 
-        $floorPlanTableId = $validated['floor_plan_table_id'] ?? null;
+            // Loop to generate sequential records
+            for ($i = 1; $i <= $quantityToCreate; $i++) {
+                $nextTableNumber = $maxTableNumber + $i;
 
-        if ($floorPlanTableId && FloorPlanTable::query()->whereKey($floorPlanTableId)->exists()) {
-            $floorPlanTable = FloorPlanTable::query()->findOrFail($floorPlanTableId);
-            $floorPlanTable->update($payload);
-        } else {
-            $floorPlanTable = FloorPlanTable::query()->create($payload);
+                FloorPlanTable::query()->create([
+                    'floor_plan_id'   => $floorPlanId,
+                    'floor_plan_name' => $floorPlanName,
+                    'table_number'    => (string) $nextTableNumber, // Cast back to string for database consistency
+                    'seats'           => 1,
+                    'last_log_by'     => Auth::id(),
+                ]);
+
+                $createdTablesCount++;
+            }
+
+            DB::commit();
+
+            $message = $createdTablesCount === 1 
+                ? '1 new table has been added successfully.' 
+                : "{$createdTablesCount} tables have been sequenced and added successfully.";
+
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+            ]);
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            report($e);
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while generating the table sequence.',
+            ]);
         }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'The floor plan table has been saved successfully',
-        ]);
     }
 
     public function delete(Request $request)
@@ -147,16 +177,10 @@ class FloorPlanTableController extends Controller
         $response = $floorPlanTables->map(function ($row) use ($writeAccess, $logsAccess)  {
             $floorPlanTableId = $row->id;
             $tableNumber = $row->table_number;
-            $seats = $row->seats;
 
-            $updateButton = '';
             $deleteButton = '';
 
             if($writeAccess > 0){
-                $updateButton = '<button class="btn btn-icon btn-light btn-active-light-primary update-floor-plan-table" data-bs-toggle="modal" data-bs-target="#floor-plan-tables-modal" data-reference-id="' . $floorPlanTableId . '" title="Update Table">
-                                    <i class="ki-outline ki-pencil fs-3 m-0 fs-5"></i>
-                                </button>';
-
                 $deleteButton = '<button class="btn btn-icon btn-light btn-active-light-danger delete-floor-plan-table" data-reference-id="' . $floorPlanTableId . '" title="Delete Floor Plan Table">
                                     <i class="ki-outline ki-trash fs-3 m-0 fs-5"></i>
                                 </button>';
@@ -171,9 +195,7 @@ class FloorPlanTableController extends Controller
 
             return [
                 'TABLE_NUMBER' => $tableNumber,
-                'SEATS' => $seats,
                 'ACTION' => '<div class="d-flex justify-content-end gap-3">
-                                '. $updateButton .'
                                 '. $logNotes .'
                                 '. $deleteButton .'
                             </div>'

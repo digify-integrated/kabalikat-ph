@@ -19,6 +19,7 @@ class ShopOrderAppliedDiscount extends Model
         'is_vat_exempt',
         'discount_rate',
         'discount_amount',
+        'custom_discountable_amount',
         'vat_exempt_amount',
         'reference_number',
         'reference_name',

@@ -104,7 +104,6 @@
                                 <thead>
                                     <tr class="fw-semibold fs-6 text-gray-800">
                                         <th>Table No</th>
-                                        <th>Seats</th>
                                         <th></th>
                                     </tr>
                                 </thead>
@@ -134,19 +133,11 @@
                         <input type="hidden" id="floor_plan_table_id" name="floor_plan_table_id">
 
                         <div class="row mb-6">
-                            <label class="col-lg-3 col-form-label required fw-semibold fs-6" for="table_number">
-                                Table Number
+                            <label class="col-lg-3 col-form-label required fw-semibold fs-6" for="quantity">
+                                No. of Tables
                             </label>
                             <div class="col-lg-9">
-                                <input type="number" class="form-control" id="table_number" name="table_number" min="1" step="1">
-                            </div>
-                        </div>
-                        <div class="row mb-6">
-                            <label class="col-lg-3 col-form-label required fw-semibold fs-6" for="seats">
-                                Seats
-                            </label>
-                            <div class="col-lg-9">
-                                <input type="number" class="form-control" id="seats" name="seats" min="1" step="1">
+                                <input type="number" class="form-control" id="quantity" name="quantity" min="1" max="50" step="1">
                             </div>
                         </div>
                     </form>

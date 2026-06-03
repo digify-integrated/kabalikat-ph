@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\InventoryLot;
+use App\Models\KitchenRoute;
 use App\Models\Product;
 use App\Models\ProductAddon;
 use App\Models\ProductAttribute;
@@ -39,6 +40,7 @@ class ProductController extends Controller
             'base_price' => ['required', 'numeric'],
             'cost_price' => ['required', 'numeric'],
             'base_unit_id' => ['required', 'integer', Rule::exists('unit', 'id')],
+            'kitchen_route_id' => ['nullable', 'integer', Rule::exists('kitchen_route', 'id')],
             'inventory_flow' => ['required', 'string'],
             'reorder_level' => ['required', 'numeric'],
             'product_description' => ['nullable', 'string'],
@@ -57,10 +59,15 @@ class ProductController extends Controller
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
 
         $baseUnitId = (int) $validated['base_unit_id'];
+        $kitchenRouteId = (int) $validated['kitchen_route_id'];
 
         $baseUnitName = (string) Unit::query()
             ->whereKey($baseUnitId)
             ->value('unit_name');
+
+        $kitchenRouteName = (string) KitchenRoute::query()
+            ->whereKey($kitchenRouteId)
+            ->value('kitchen_route_name');
 
         $baseUnitDetails = Unit::query()->find($baseUnitId);
         $baseUnitName = $baseUnitDetails?->unit_name;
@@ -76,7 +83,9 @@ class ProductController extends Controller
             'tax_classification' => $validated['tax_classification'] ?? null,
             'base_price' => $validated['base_price'] ?? 0,
             'cost_price' => $validated['cost_price'] ?? 0,
-            'base_unit_id' => $validated['base_unit_id'] ?? null,
+            'kitchen_route_id' => $kitchenRouteId,
+            'kitchen_route_name' => $kitchenRouteName,
+            'base_unit_id' => $baseUnitId,
             'base_unit_name' => $baseUnitName,
             'base_unit_abbreviation' => $baseUnitabbreviation,
             'inventory_flow' => $validated['inventory_flow'] ?? null,
@@ -720,6 +729,7 @@ class ProductController extends Controller
             'taxClassification'     => $product->tax_classification ?? null,
             'basePrice'             => $product->base_price ?? null,
             'costPrice'             => $product->cost_price ?? null,
+            'kitchenRouteId'        => $product->kitchen_route_id ?? null,
             'baseUnitId'            => $product->base_unit_id ?? null,
             'inventoryFlow'         => $product->inventory_flow ?? null,
             'reorderLevel'          => $product->reorder_level ?? null,

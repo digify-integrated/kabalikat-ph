@@ -101,6 +101,17 @@
                     </div>
                     <div class="col">
                         <div class="fv-row mb-4">
+                            <label class="fs-6 fw-semibold form-label mt-3" for="kitchen_route_id">
+                                Kitchen Route
+                            </label>
+
+                            <select id="kitchen_route_id" name="kitchen_route_id" class="form-select" data-control="select2" data-allow-clear="false">
+                                <option>--</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="fv-row mb-4">
                             <label class="fs-6 fw-semibold required form-label mt-3" for="base_unit_id">
                                 Base Unit
                             </label>

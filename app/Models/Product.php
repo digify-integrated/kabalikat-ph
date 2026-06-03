@@ -30,6 +30,8 @@ class Product extends Model
         'parent_product_name',
         'variant_signature',
         'reorder_level',
+        'kitchen_route_id',
+        'kitchen_route_name',
         'base_unit_id',
         'base_unit_name',
         'base_unit_abbreviation',

@@ -59,12 +59,6 @@
                                 <i class="ki-outline ki-dots-vertical fs-2"></i>
                             </button>
                             <div class="dropdown-menu dropdown-menu-end rounded-4 shadow-sm border-0 p-2 w-225px">
-                                <button class="dropdown-item rounded-3 py-3 fw-semibold" id="new-order">
-                                    <i class="ki-outline ki-plus fs-4 me-2 text-primary"></i>New Order
-                                </button>
-                                <button class="dropdown-item rounded-3 py-3 fw-semibold" data-bs-toggle="modal" data-bs-target="#order-history-modal" id="order-history-button">
-                                    <i class="ki-outline ki-time fs-4 me-2 text-dark"></i>Order History
-                                </button>
                                 <div class="separator my-2"></div>
                                 <button class="dropdown-item rounded-3 py-3 fw-semibold" id="print-order-summary">
                                     <i class="ki-outline ki-printer fs-4 me-2 text-muted"></i>Print Order Summary
@@ -90,21 +84,35 @@
                     </div>
                 </div>
 
-                <div class="bg-light-inline border-bottom px-4 py-3 cart-action d-none bg-light">
+                <div class="bg-light-inline border-bottom px-4 py-3 bg-light">
                     <div class="row g-2 mb-2">
-                        <div class="col-4">
+                        <div class="col">
+                            <button class="btn btn-bg-white btn-color-gray-700 btn-active-light-success border w-100 py-3 d-flex flex-column align-items-center gap-1" id="new-order">
+                                <i class="ki-outline ki-plus fs-2 text-success p-0"></i>
+                                <span class="fw-bold small">New Order</span>
+                            </button>
+                        </div>
+                        <div class="col">
+                            <button class="btn btn-bg-white btn-color-gray-700 btn-active-light-warning border w-100 py-3 d-flex flex-column align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#order-history-modal" id="order-history-button">
+                                <i class="ki-outline ki-time fs-2 text-warning p-0"></i>
+                                <span class="fw-bold small">Orders</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-2 cart-action d-none">
+                        <div class="col">
                             <button class="btn btn-bg-white btn-color-gray-700 btn-active-light-primary border w-100 py-3 d-flex flex-column align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#customer-modal" id="customer-button">
                                 <i class="ki-outline ki-user fs-2 text-primary p-0"></i>
                                 <span class="fw-bold small">Customer</span>
                             </button>
                         </div>
-                        <div class="col-4">
+                        <div class="col">
                             <button class="btn btn-bg-white btn-color-gray-700 btn-active-light-warning border w-100 py-3 d-flex flex-column align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#discount-modal" id="manage-discount-button">
                                 <i class="ki-outline ki-discount fs-2 text-warning p-0"></i>
                                 <span class="fw-bold small">Discount</span>
                             </button>
                         </div>
-                        <div class="col-4">
+                        <div class="col">
                             <button class="btn btn-bg-white btn-color-gray-700 btn-active-light-danger border w-100 py-3 d-flex flex-column align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#charges-modal" id="manage-charge-button">
                                 <i class="ki-outline ki-dollar fs-2 text-danger p-0"></i>
                                 <span class="fw-bold small">Charges</span>
@@ -112,19 +120,21 @@
                         </div>
                     </div>
 
-                    <div class="row g-2">
+                    <div class="row g-2 cart-action d-none">
                         <div class="col">
                             <select class="form-select fw-bold fs-6 rounded-3" id="order-type">
-                                <option value="Walk-in">Walk-in</option>
+                                <option value="Walk-in" {{ $shopRegister->is_restaurant !== 'Yes' ? 'selected' : '' }}>Walk-in</option>
+                                
                                 @if($shopRegister->is_restaurant === 'Yes')
-                                    <option value="Dine-in">Dine-in</option>
+                                    <option value="Dine-in" selected>Dine-in</option>
                                     <option value="Take-out">Take-out</option>
                                 @endif
                                 <option value="Delivery">Delivery</option>
                             </select>
                         </div>
+
                         @if($shopRegister->is_restaurant === 'Yes')
-                            <div class="col d-none" id="set-table-column">
+                            <div class="col" id="set-table-column">
                                 <button class="btn btn-light-warning w-100 fw-bold rounded-3 d-flex align-items-center justify-content-center gap-2 h-100" id="set-table" data-bs-toggle="modal" data-bs-target="#table-modal">
                                     <i class="ki-outline ki-element-11 fs-4"></i>
                                     <span id="selected-table-label" class="small">Select Table</span>

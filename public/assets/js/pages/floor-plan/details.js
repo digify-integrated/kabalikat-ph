@@ -65,12 +65,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 selector: '#floor_plan_tables_form',
                 rules: {
                     rules: {
-                        table_number: { required: true},
-                        seats: { required: true},
+                        quantity: { required: true},
                     },
                     messages: {
-                        table_number: { required: 'Enter the table number' },
-                        seats: { required: 'Enter the seats' },
+                        quantity: { required: 'Enter the number of tables' },
                     },
                     submitHandler: async (form) => {
                         const formData = new URLSearchParams(new FormData(form));
@@ -119,13 +117,11 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             columns: [
                 { data: 'TABLE_NUMBER' },
-                { data: 'SEATS' },
                 { data: 'ACTION' },
             ],
             columnDefs: [
                 { width: 'auto', targets: 0, responsivePriority: 1 },
-                { width: 'auto', targets: 1, responsivePriority: 2 },
-                { width: 'auto', bSortable: false, targets: 2, responsivePriority: 3 },
+                { width: 'auto', bSortable: false, targets: 1, responsivePriority: 2 },
             ],
             addons: {
                 subControls: {

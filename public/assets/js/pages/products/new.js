@@ -71,7 +71,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         ],
         dropdown: [
-            { url: '/unit/generate-options', dropdownSelector: '#base_unit_id' }
+            { url: '/unit/generate-options', dropdownSelector: '#base_unit_id' },
+            { url: '/kitchen-route/generate-options', dropdownSelector: '#kitchen_route_id' },
         ]
     }
 
