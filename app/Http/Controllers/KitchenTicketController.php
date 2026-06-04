@@ -122,7 +122,7 @@ class KitchenTicketController extends Controller
                 } else {
                     // Spawns a brand new clean ticket if the old one is already being worked on/finished
                     $ticketId = DB::table('kitchen_ticket')->insertGetId([
-                        'ticket_number'      => 'KT-' . time() . rand(100, 999),
+                        'ticket_number' => 'KT-' . strtoupper(now()->format('FdY')) . '-' . substr($order->order_number, -4),
                         'shop_order_id'      => $shopOrderId,
                         'shop_register_id'   => $order->shop_register_id,
                         'shop_register_name' => $order->shop_register_name,

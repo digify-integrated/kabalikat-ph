@@ -31,7 +31,8 @@ class ShopOrderController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'shop_register_id' => ['required', 'integer', Rule::exists('shop_register', 'id')],
-            'modal_product_id' => ['required', 'integer', Rule::exists('product', 'id')],
+            'modal_product_id' => ['nullable', 'integer', Rule::exists('product', 'id')],
+            'barcode'          => ['nullable', 'string'], // Added barcode integration route parameter
             'order_qty_input'  => ['required', 'numeric', 'min:0.01'],
             'order_note'       => ['nullable', 'string'],
             'shop_order_id'    => ['nullable', 'integer'],
@@ -44,11 +45,16 @@ class ShopOrderController extends Controller
             ]);
         }
 
+        $validated = $validator->validated();
+
+        // Enforce that either a clear structural product ID or a scanned barcode is provided
+        if (empty($validated['modal_product_id']) && empty($validated['barcode'])) {
+            return response()->json(['success' => false, 'message' => 'No product targeted for execution.']);
+        }
+
         DB::beginTransaction();
 
         try {
-            $validated = $validator->validated();
-
             $shopRegister = ShopRegister::find($validated['shop_register_id']);
             if (!$shopRegister) {
                 return response()->json(['success' => false, 'message' => 'Shop register not found.']);
@@ -64,9 +70,23 @@ class ShopOrderController extends Controller
                 return response()->json(['success' => false, 'message' => 'No open register session found.']);
             }
 
-            $product = Product::find($validated['modal_product_id']);
+            // 💡 BARCODE RESOLUTION LOGIC
+            if (!empty($validated['barcode'])) {
+                $product = Product::query()
+                    ->where('barcode', $validated['barcode'])
+                    ->where('product_status', 'Active')
+                    ->where('show_on_pos', 'Yes')
+                    ->first();
+
+                if (!$product) {
+                    return response()->json(['success' => false, 'message' => "Product code '{$validated['barcode']}' not found."]);
+                }
+            } else {
+                $product = Product::find($validated['modal_product_id']);
+            }
+
             if (!$product) {
-                return response()->json(['success' => false, 'message' => 'Product not found.']);
+                return response()->json(['success' => false, 'message' => 'Product context reference corrupted.']);
             }
 
             $quantity          = round((float) $validated['order_qty_input'], 2);
@@ -211,14 +231,6 @@ class ShopOrderController extends Controller
                 }
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | UNIFIED RECOMPUTE CALL
-            |--------------------------------------------------------------------------
-            | Instead of running messy inline math blocks here, delegate everything
-            | directly out to our master calculation handler.
-            |--------------------------------------------------------------------------
-            */
             $this->recomputeShopOrder($shopOrder->id);
 
             DB::commit();

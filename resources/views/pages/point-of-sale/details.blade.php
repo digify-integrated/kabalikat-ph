@@ -79,6 +79,30 @@
                 </div>
 
                 <div class="bg-light-inline border-bottom px-4 py-3 bg-light">
+                    <div class="row g-2 mb-4">
+                        <div class="col">
+                            <div class="position-relative">
+                                <div class="input-group input-group-solid border border-gray-300 rounded-3 overflow-hidden shadow-sm transition-all">
+                                    <span class="input-group-text bg-light-primary border-0">
+                                        <i class="ki-outline ki-barcode fs-1 text-primary anim-pulse"></i>
+                                    </span>
+                                    
+                                    <input type="text" 
+                                        id="pos-barcode-scanner-input" 
+                                        class="form-control form-control-solid fs-7 py-4 ps-3 bg-transparent" 
+                                        placeholder="Ready to Scan / Type Barcode..." 
+                                        autocomplete="off" />
+                                    
+                                    <span class="input-group-text bg-transparent border-0 pe-4">
+                                        <span class="badge badge-light-success d-flex align-items-center gap-1 py-2 px-3 border border-success border-opacity-30">
+                                            <span class="bullet bullet-dot bg-success h-6px w-6px animation-blink"></span>
+                                            <span class="fw-bold fs-8 text-success text-uppercase tracking-wide">Live</span>
+                                        </span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="row g-2 mb-2">
                         <div class="col">
                             <button class="btn btn-bg-white btn-color-gray-700 btn-active-light-success border w-100 py-3 d-flex flex-column align-items-center gap-1" id="new-order">
@@ -99,6 +123,7 @@
                             </button>
                         </div>
                     </div>
+                    
                     <div class="row g-2 mb-2 cart-action d-none">
                         <div class="col">
                             <button class="btn btn-bg-white btn-color-gray-700 btn-active-light-primary border w-100 py-3 d-flex flex-column align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#customer-modal" id="customer-button">
@@ -124,7 +149,6 @@
                         <div class="col">
                             <select class="form-select fw-bold fs-6 rounded-3" id="order-type">
                                 <option value="Walk-in" {{ $shopRegister->is_restaurant !== 'Yes' ? 'selected' : '' }}>Walk-in</option>
-                                
                                 @if($shopRegister->is_restaurant === 'Yes')
                                     <option value="Dine-in" selected>Dine-in</option>
                                     <option value="Take-out">Take-out</option>
@@ -208,7 +232,6 @@
                         @endif
                     </div>
                 </div>
-
             </div>
         </div>
     </div>

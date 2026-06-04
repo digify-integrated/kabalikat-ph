@@ -13,6 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let cachedOrders = [];
     let kitchenItems = [];
     let kitchenRoutes = [];
+    let barcodeBuffer = '';
+    let lastKeyTime = Date.now();
     
     const config = {
         forms: [
@@ -66,6 +68,125 @@ document.addEventListener('DOMContentLoaded', () => {
         ],
         posCategory: { url: '/shop-register/generate-category' },
         posProduct: { url: '/shop-register/generate-product' },
+    };
+
+    const initBarcodeScannerEventHandlers = () => {
+        const barcodeInput = document.getElementById('pos-barcode-scanner-input');
+        
+        if (!barcodeInput) return;
+
+        // Handler 1: Catch standard local form input events
+        barcodeInput.addEventListener('keypress', async (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const scannedBarcode = barcodeInput.value.trim();
+                if (scannedBarcode) {
+                    await executeBarcodeCartInjection(scannedBarcode);
+                    barcodeInput.value = '';
+                }
+            }
+        });
+
+        // Handler 2: Global Key Listening Framework (No Focus Needed)
+        document.addEventListener('keydown', async (e) => {
+            // Guard checking: If user is actively typing in a comment notes text area, skip execution
+            const activeTag = document.activeElement.tagName.toUpperCase();
+            if (activeTag === 'TEXTAREA' || (activeTag === 'INPUT' && document.activeElement !== barcodeInput)) {
+                return;
+            }
+
+            const currentTime = Date.now();
+            
+            // Hardware scanners stream input characters rapidly (typically < 30ms apart)
+            if (currentTime - lastKeyTime > 50) {
+                barcodeBuffer = ''; // Clear buffer if it's a slow human keystroke
+            }
+
+            lastKeyTime = currentTime;
+
+            if (e.key === 'Enter') {
+                if (barcodeBuffer.length >= 3) {
+                    e.preventDefault();
+                    await executeBarcodeCartInjection(barcodeBuffer);
+                    barcodeBuffer = '';
+                }
+            } else if (e.key.length === 1) {
+                barcodeBuffer += e.key;
+            }
+        });
+    };
+
+    const executeBarcodeCartInjection = async (barcodeString) => {
+        const ctx = getPageContext();
+        const currentShopOrderId = sessionStorage.getItem('shop_order_id');
+
+        const params = new URLSearchParams();
+        params.append('barcode', barcodeString);
+        params.append('order_qty_input', '1'); // Default increment value
+        params.append('shop_order_id', currentShopOrderId ?? '');
+        params.append('shop_register_id', ctx.detailId ?? '');
+        params.append('appId', ctx.appId ?? '');
+        params.append('navigationMenuId', ctx.navigationMenuId ?? '');
+
+        try {
+            const response = await fetch('/shop-order/save', {
+                method: 'POST',
+                body: params,
+                headers: {
+                    'X-CSRF-TOKEN': getCsrfToken(),
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+                }
+            });
+
+            if (!response.ok) throw new Error(`Network status error: ${response.status}`);
+            
+            const data = await response.json();
+
+            if (data.success) {
+                // Play a crisp audio beep confirmation for the cashier
+                playAudioBeepSuccess();
+                
+                sessionStorage.setItem('shop_order_id', data.shop_order_id);
+                sessionStorage.setItem('shop_order_number', data.order_number);
+                
+                // Instantly re-render cart elements
+                if (typeof loadCart === 'function') {
+                    loadCart(data.shop_order_id, { silent: true });
+                }
+            } else {
+                playAudioBeepFailure();
+                showNotification(data.message);
+            }
+        } catch (err) {
+            playAudioBeepFailure();
+            console.error('Barcode runtime exception: ', err);
+        }
+    };
+
+    const playAudioBeepSuccess = () => {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(830, audioCtx.currentTime); // High pitch success tone
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.09);
+    };
+
+    const playAudioBeepFailure = () => {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(220, audioCtx.currentTime); // Low buzz error tone
+        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.22);
     };
 
     const updateModalTotal = () => {
@@ -2203,6 +2324,7 @@ document.addEventListener('DOMContentLoaded', () => {
     config.dropdown.map((cfg) => generateDropdownOptions(cfg));
     generatePOSCategory(config.posCategory.url)
     generatePOSProduct(config.posProduct.url);
+    initBarcodeScannerEventHandlers();
 
     initializeCart();
 

@@ -10,8 +10,101 @@ document.addEventListener('DOMContentLoaded', () => {
     let pollInterval;     
     let currentTicketIds = []; 
     
-    const alertAudio = new Audio(window.kitchenAlertAudioUrl);
+    // Stateful tracking map for escalation alarms thresholds
+    let trackedOverdueTickets = {};
+    
+    // NEW STATE MAPS FOR HANDLING MULTIPLE OVERDUES
+    let overdueTicketsQueue = [];
+    let isBoardLaunched = false; // Rigid lock gate preventing pre-rendered modal popups
+    let bootstrapModalInstance = null; // Uninstantiated globally on initial download load
+
+    const audioPath = window.kitchenAlertAudioUrl || '/audio/kitchen-alarm.mp3'; 
+    const alertAudio = new Audio(audioPath);
+    alertAudio.preload = 'auto';
+
+    // Elements
     const unlockBtn = document.getElementById('btn-unlock-kds');
+    const alarmModalElement = document.getElementById('kdsAlarmModal');
+    
+    const acknowledgeBtn = document.getElementById('btn-kds-acknowledge');
+    const snoozeBtn = document.getElementById('btn-kds-snooze');
+
+    // Helper to render the top item inside our ticket warning queue stack cleanly
+    function processedNextQueuedAlarm() {
+        if (overdueTicketsQueue.length === 0) {
+            alertAudio.pause();
+            alertAudio.currentTime = 0;
+            if (bootstrapModalInstance) {
+                bootstrapModalInstance.hide();
+            }
+            return;
+        }
+
+        const currentTicket = overdueTicketsQueue[0];
+        
+        // 1. Dynamically update core modal text descriptors
+        document.getElementById('kdsModalTicketNum').textContent = `TICKET #${currentTicket.ticket_number}`;
+        document.getElementById('kdsModalTicketMeta').textContent = `${currentTicket.floor_plan_name ?? 'Walk-in'} • TBL ${currentTicket.table_number ?? '-'}`;
+        document.getElementById('kdsModalTicketTime').textContent = Math.floor(currentTicket.minutes_waiting);
+
+        // 2. NEW: Extract and inject ONLY active items (skip cooked/served/cancelled rows)
+        const itemsListContainer = document.getElementById('kdsModalTicketItemsList');
+        if (itemsListContainer && currentTicket.items && Array.isArray(currentTicket.items)) {
+            
+            // Filter to capture items that still need kitchen production attention
+            const activeItems = currentTicket.items.filter(item => {
+                const remaining = Number(item.remaining_quantity ?? 0);
+                const isCancelled = item.status === 'Cancelled' || Number(item.cancelled_quantity ?? 0) > 0;
+                
+                let isDone = false;
+                if (currentTicket.ticket_status === 'Queued' && ['Preparing', 'Ready', 'Served'].includes(item.status)) isDone = true;
+                if (currentTicket.ticket_status === 'Preparing' && ['Ready', 'Served'].includes(item.status)) isDone = true;
+                if (currentTicket.ticket_status === 'Ready' && ['Served'].includes(item.status)) isDone = true;
+
+                return remaining > 0 && !isCancelled && !isDone;
+            });
+
+            // Loop and append neat UI line items to the container element
+            itemsListContainer.innerHTML = activeItems.map(item => `
+                <div class="d-flex align-items-center gap-3 p-2.5 rounded border border-gray-200 shadow-xs">
+                    <div class="bg-danger text-white rounded-2 d-flex align-items-center justify-content-center fw-bold fs-5 shadow-sm" style="width: 36px; height: 32px; min-width: 36px;">
+                        ${Number(item.remaining_quantity ?? 0)}
+                    </div>
+                    <div class="text-start flex-grow-1">
+                        <div class="fw-extrabold text-dark fs-6" style="line-height: 1.2;">
+                            ${item.product_name}
+                        </div>
+                        ${item.order_note ? `
+                            <div class="text-danger border-start border-danger border-2 ps-2 mt-0.5 fw-semibold" style="font-size: 0.75rem;">
+                                📝 Note: ${item.order_note}
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+
+            // Fallback backup display in case backend statuses state shifts unexpectedly
+            if (activeItems.length === 0) {
+                itemsListContainer.innerHTML = `<div class="text-muted text-center py-2 small">All item batches cleared down. Check status.</div>`;
+            }
+        }
+
+        // 3. Update warning subtexts if multiple tickets are waiting queued back-to-back
+        const queueNotice = document.getElementById('kdsModalQueueNotice');
+        if (overdueTicketsQueue.length > 1) {
+            queueNotice.innerHTML = `<span class="text-danger fw-bold">⚠️ [${overdueTicketsQueue.length} Overdue Tickets Pending]</span> Acknowledge this item to view the next card reminder.`;
+        } else {
+            queueNotice.textContent = "The kitchen staff must acknowledge this warning immediately or choose to snooze the siren alert.";
+        }
+
+        // 4. Fire continuous loops
+        alertAudio.loop = true;
+        alertAudio.play().catch(err => console.warn('Audio restriction handled:', err.message));
+
+        if (bootstrapModalInstance) {
+            bootstrapModalInstance.show();
+        }
+    }
 
     async function generateKitchenTickets(url, otherData = {}, isSilent = false) {
         try {
@@ -50,13 +143,46 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!route || !route.tickets?.length) {
                 container.innerHTML = renderNoKitchenTickets();
                 currentTicketIds = []; 
+                trackedOverdueTickets = {}; 
+                overdueTicketsQueue = [];
                 return;
             }
 
             const incomingItemsSignatures = [];
             let hasNewKitchenDemands = false;
+            const currentActiveTicketNumbers = [];
+            
+            // Temporary collection stack for this specific poll interval cycle iteration
+            let newlyFoundOverdueTickets = [];
 
             route.tickets.forEach(ticket => {
+                const ticketNum = ticket.ticket_number;
+                
+                if (['Queued', 'Preparing', 'Ready'].includes(ticket.ticket_status)) {
+                    currentActiveTicketNumbers.push(ticketNum);
+                    
+                    const minutes = Math.floor(Number(ticket.minutes_waiting ?? 0));
+
+                    // Escalation Alarm Logic
+                    if (minutes >= 20) {
+                        let isAnAlarmMilestone = false;
+                        if (!(ticketNum in trackedOverdueTickets)) {
+                            isAnAlarmMilestone = true;
+                            trackedOverdueTickets[ticketNum] = 25; 
+                        } else if (minutes >= trackedOverdueTickets[ticketNum]) {
+                            isAnAlarmMilestone = true;
+                            trackedOverdueTickets[ticketNum] = Math.floor(minutes / 5) * 5 + 5; 
+                        }
+
+                        if (isAnAlarmMilestone) {
+                            // Verify it isn't already inside our processing collection array
+                            if (!overdueTicketsQueue.some(t => t.ticket_number === ticketNum)) {
+                                newlyFoundOverdueTickets.push(ticket);
+                            }
+                        }
+                    }
+                }
+
                 if (ticket.items && Array.isArray(ticket.items)) {
                     ticket.items.forEach(item => {
                         const itemSignature = `${item.ticket_item_id}-${item.status}`;
@@ -71,10 +197,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            if (hasNewKitchenDemands) {
-                alertAudio.play().catch(err => {
-                    console.warn('Audio playback restricted:', err.message);
-                });
+            // Clean up tracking memory for tickets that are completed, cancelled, or served
+            Object.keys(trackedOverdueTickets).forEach(ticketNum => {
+                if (!currentActiveTicketNumbers.includes(Number(ticketNum)) && !currentActiveTicketNumbers.includes(String(ticketNum))) {
+                    delete trackedOverdueTickets[ticketNum];
+                }
+            });
+
+            // Strip items from the current active display array if they were cleared off from cashier terminals out of band
+            overdueTicketsQueue = overdueTicketsQueue.filter(t => currentActiveTicketNumbers.includes(t.ticket_number));
+
+            // CRITICAL LOCK GATE: Append and display popups ONLY if board has been unlocked by user interaction
+            if (isBoardLaunched) {
+                if (newlyFoundOverdueTickets.length > 0) {
+                    overdueTicketsQueue = [...overdueTicketsQueue, ...newlyFoundOverdueTickets];
+                    
+                    // If the modal isn't currently displayed open, trigger the newly prioritized alarm array head
+                    const isModalOpen = alarmModalElement && alarmModalElement.classList.contains('show');
+                    if (!isModalOpen) {
+                        processedNextQueuedAlarm();
+                    }
+                } else if (hasNewKitchenDemands) {
+                    alertAudio.loop = false;
+                    alertAudio.play().catch(err => console.warn('Audio restriction handled:', err.message));
+                    showNotification(`🔔 NEW ORDER: Fresh tickets added to the kitchen display board.`);
+                }
             }
 
             currentTicketIds = incomingItemsSignatures;
@@ -90,7 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         catch (error) {
             if (!isSilent) {
-                handleSystemError(error, fetch_failed, `Fetch request failed: ${error.message}`);
+                handleSystemError(error, 'fetch_failed', `Fetch request failed: ${error.message}`);
             }
             else {
                 console.warn('Background auto-refresh synchronized error sync:', error.message);
@@ -98,21 +245,82 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Modal Button Trigger - ACKNOWLEDGE
+    if (acknowledgeBtn) {
+        acknowledgeBtn.addEventListener('click', () => {
+            // Remove the resolved item from the top of the array queue stack
+            overdueTicketsQueue.shift(); 
+            processedNextQueuedAlarm();
+        });
+    }
+
+    // Modal Button Trigger - SNOOZE
+    if (snoozeBtn) {
+        snoozeBtn.addEventListener('click', () => {
+            if (overdueTicketsQueue.length > 0) {
+                const currentTicket = overdueTicketsQueue.shift();
+                const ticketNum = currentTicket.ticket_number;
+                const currentMinutes = Math.floor(Number(currentTicket.minutes_waiting ?? 0));
+                
+                // Adjust threshold tracker to suppress immediate alerts on this card for 3 minutes
+                trackedOverdueTickets[ticketNum] = currentMinutes + 3;
+            }
+            processedNextQueuedAlarm();
+        });
+    }
+
     function startKitchenAutoRefresh() {
         clearInterval(pollInterval);
-
         pollInterval = setInterval(() => {
             const searchField = document.getElementById('kitchen_ticket_search');
             const searchVal = searchField ? searchField.value.trim() : '';
 
-            if (searchVal !== '') {
-                return;
-            }
+            const isModalOpen = alarmModalElement && alarmModalElement.classList.contains('show');
+            if (searchVal !== '' || isModalOpen) return;
 
             generateKitchenTickets('/kitchen-ticket/generate-kitchen-tickets', {}, true);
         }, 5000); 
     }
 
+    // Initial load running quietly in the background on initial page initialization
+    generateKitchenTickets('/kitchen-ticket/generate-kitchen-tickets', {}, true);
+
+    // CLICK HANDLER: This is the ONLY bridge that removes the overlay and enables alerts
+    if (unlockBtn) {
+        unlockBtn.addEventListener('click', () => {
+            if (alarmModalElement) {
+                // Clear out pre-rendered "!important" styling restrictions entirely 
+                alarmModalElement.style.setProperty('display', 'none', 'important'); 
+                alarmModalElement.style.display = ''; 
+                
+                // Dynamically build the Modal element inside tracking state context here
+                bootstrapModalInstance = new bootstrap.Modal(alarmModalElement);
+            }
+
+            alertAudio.play()
+                .then(() => {
+                    alertAudio.pause();
+                    alertAudio.currentTime = 0;
+
+                    // Unshackle the operational state flags
+                    isBoardLaunched = true;
+                    document.getElementById('kds-audio-lock').remove();
+
+                    // Force an immediate fetch update to populate everything cleanly
+                    generateKitchenTickets('/kitchen-ticket/generate-kitchen-tickets').then(() => {
+                        startKitchenAutoRefresh();
+                    });
+                })
+                .catch(err => {
+                    console.error("Audio initialization failed:", err);
+                    isBoardLaunched = true;
+                    document.getElementById('kds-audio-lock').remove();
+                    startKitchenAutoRefresh();
+                });
+        });
+    }
+
+    // Remaining template rendering utility blocks (unchanged)...
     function getTicketStatusBadge(status) {
         switch (status) {
             case 'Queued': return 'bg-warning text-dark';
@@ -140,7 +348,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (countBadge) {
                     countBadge.textContent = tickets.length;
-                    
                     countBadge.className = 'badge ms-2 px-3 py-2 small shadow-sm';
                     if (tickets.length === 0) countBadge.classList.add('bg-secondary');
                     else if (status === 'Queued') countBadge.classList.add('bg-primary');
@@ -365,18 +572,12 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
-    generateKitchenTickets('/kitchen-ticket/generate-kitchen-tickets').then(() => {
-        startKitchenAutoRefresh();
-    });
-
     document.addEventListener('input', (event) => {
         if (event.target.id !== 'kitchen_ticket_search') return;
 
         clearTimeout(searchTimeout);
-
         searchTimeout = setTimeout(() => {
             const query = event.target.value;
-
             generateKitchenTickets('/kitchen-ticket/generate-kitchen-tickets', { search: query }, query !== '');
         }, 250);
     });
@@ -385,12 +586,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const target = event.target.closest('[data-action="toggle-kitchen-item"]');
         if (!target) return;
 
-
         const ticketItemId = target.dataset.ticketItemId;
 
         try {
             target.classList.add('opacity-50');
-
             await updateKitchenItemStatus(ticketItemId);
             await generateKitchenTickets('/kitchen-ticket/generate-kitchen-tickets', {}, true);
         }
@@ -422,28 +621,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         const data = await response.json();
-
         if (!data.success) {
             showNotification(data.message);
             return;
         }
-
         return data;
-    }
-
-    if (unlockBtn) {
-        unlockBtn.addEventListener('click', () => {
-            alertAudio.play()
-                .then(() => {
-                    document.getElementById('kds-audio-lock').remove();
-                    generateKitchenTickets('/kitchen-ticket/generate-kitchen-tickets').then(() => {
-                        startKitchenAutoRefresh();
-                    });
-                })
-                .catch(err => {
-                    console.error("Audio initialization failed:", err);
-                    document.getElementById('kds-audio-lock').remove();
-                });
-        });
     }
 });
