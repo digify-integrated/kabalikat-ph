@@ -253,18 +253,6 @@ class NavigationMenuSeeder extends Seeder
 
             // Inventory -> Stock Adjustments ID: 21
             [
-                'navigation_menu_name'          => 'Stock Level',
-                'navigation_menu_icon'          => null,
-                'app_id'                        => 4,
-                'app_name'                      => 'Inventory',
-                'parent_navigation_menu_id'     => 20,
-                'parent_navigation_menu_name'   => 'Inventory',
-                'database_table'                => 'stock_level',
-                'order_sequence'                => 1
-            ],
-
-            // Inventory -> Stock Adjustments ID: 22
-            [
                 'navigation_menu_name'          => 'Stock Adjustment',
                 'navigation_menu_icon'          => null,
                 'app_id'                        => 4,
@@ -275,7 +263,7 @@ class NavigationMenuSeeder extends Seeder
                 'order_sequence'                => 2
             ],
 
-            // Inventory -> Stock Batch ID: 23
+            // Inventory -> Stock Batch ID: 22
             [
                 'navigation_menu_name'          => 'Stock Batch',
                 'navigation_menu_icon'          => null,
@@ -287,7 +275,7 @@ class NavigationMenuSeeder extends Seeder
                 'order_sequence'                => 3
             ],
 
-            // Inventory -> Stock Transfer ID: 24
+            // Inventory -> Stock Transfer ID: 23
             [
                 'navigation_menu_name'          => 'Stock Transfer',
                 'navigation_menu_icon'          => null,
@@ -299,19 +287,43 @@ class NavigationMenuSeeder extends Seeder
                 'order_sequence'                => 4
             ],
 
-            // Inventory -> Stock Movement ID: 25
+            // Inventory Report ID: 24
+            [
+                'navigation_menu_name'          => 'Reports',
+                'navigation_menu_icon'          => 'ki-outline ki-book',
+                'app_id'                        => 4,
+                'app_name'                      => 'Inventory',
+                'parent_navigation_menu_id'     => null,
+                'parent_navigation_menu_name'   => null,
+                'database_table'                => null,
+                'order_sequence'                => 3
+            ],
+
+            // Inventory -> Stock Adjustments ID: 25
+            [
+                'navigation_menu_name'          => 'Stock Level',
+                'navigation_menu_icon'          => null,
+                'app_id'                        => 4,
+                'app_name'                      => 'Inventory',
+                'parent_navigation_menu_id'     => 24,
+                'parent_navigation_menu_name'   => 'Reports',
+                'database_table'                => 'stock_level',
+                'order_sequence'                => 1
+            ],
+
+            // Inventory -> Stock Movement ID: 26
             [
                 'navigation_menu_name'          => 'Stock Movement',
                 'navigation_menu_icon'          => null,
                 'app_id'                        => 4,
                 'app_name'                      => 'Inventory',
-                'parent_navigation_menu_id'     => 20,
-                'parent_navigation_menu_name'   => 'Inventory',
+                'parent_navigation_menu_id'     => 24,
+                'parent_navigation_menu_name'   => 'Reports',
                 'database_table'                => 'stock_movement',
                 'order_sequence'                => 5
             ],
 
-            // Purchase Order ID: 26
+            // Purchase Order ID: 27
             [
                 'navigation_menu_name'          => 'Purchase Order',
                 'navigation_menu_icon'          => 'ki-outline ki-purchase',
@@ -323,7 +335,7 @@ class NavigationMenuSeeder extends Seeder
                 'order_sequence'                => 4
             ],
 
-            // Configurations -> Suppliers ID: 27
+            // Configurations -> Suppliers ID: 28
             [
                 'navigation_menu_name'          => 'Suppliers',
                 'navigation_menu_icon'          => 'ki-outline ki-parcel-tracking',
@@ -335,7 +347,7 @@ class NavigationMenuSeeder extends Seeder
                 'order_sequence'                => 5
             ],
 
-            // Warehouse ID: 28
+            // Warehouse ID: 29
             [
                 'navigation_menu_name'          => 'Warehouse',
                 'navigation_menu_icon'          => 'ki-outline ki-parcel',
@@ -347,7 +359,7 @@ class NavigationMenuSeeder extends Seeder
                 'order_sequence'                => 6
             ],
 
-            // Configurations ID: 29
+            // Configurations ID: 30
             [
                 'navigation_menu_name'          => 'Configurations',
                 'navigation_menu_icon'          => 'ki-outline ki-wrench',
@@ -359,116 +371,116 @@ class NavigationMenuSeeder extends Seeder
                 'order_sequence'                => 7
             ],
 
-            // Configurations -> Attribute ID: 30
+            // Configurations -> Attribute ID: 31
             [
                 'navigation_menu_name'          => 'Attribute',
                 'navigation_menu_icon'          => null,
                 'app_id'                        => 4,
                 'app_name'                      => 'Inventory',
-                'parent_navigation_menu_id'     => 29,
+                'parent_navigation_menu_id'     => 30,
                 'parent_navigation_menu_name'   => 'Configurations',
                 'database_table'                => 'attribute',
                 'order_sequence'                => 1
             ],
 
-            // Configurations -> Product Category ID: 31
+            // Configurations -> Product Category ID: 32
             [
                 'navigation_menu_name'          => 'Product Category',
                 'navigation_menu_icon'          => null,
                 'app_id'                        => 4,
                 'app_name'                      => 'Inventory',
-                'parent_navigation_menu_id'     => 29,
+                'parent_navigation_menu_id'     => 30,
                 'parent_navigation_menu_name'   => 'Configurations',
                 'database_table'                => 'product_category',
                 'order_sequence'                => 2
             ],
 
-            // Configurations -> Stock Adjustment Reason ID: 32
+            // Configurations -> Stock Adjustment Reason ID: 33
             [
                 'navigation_menu_name'          => 'Stock Adjustment Reason',
                 'navigation_menu_icon'          => null,
                 'app_id'                        => 4,
                 'app_name'                      => 'Inventory',
-                'parent_navigation_menu_id'     => 29,
+                'parent_navigation_menu_id'     => 30,
                 'parent_navigation_menu_name'   => 'Configurations',
                 'database_table'                => 'stock_adjustment_reason',
                 'order_sequence'                => 3
             ],
 
-            // Configurations -> Stock Adjustment Reason ID: 33
+            // Configurations -> Stock Adjustment Reason ID: 34
             [
                 'navigation_menu_name'          => 'Stock Transfer Reason',
                 'navigation_menu_icon'          => null,
                 'app_id'                        => 4,
                 'app_name'                      => 'Inventory',
-                'parent_navigation_menu_id'     => 29,
+                'parent_navigation_menu_id'     => 30,
                 'parent_navigation_menu_name'   => 'Configurations',
                 'database_table'                => 'stock_transfer_reason',
                 'order_sequence'                => 3
             ],
 
-            // Configurations -> Unit Management ID: 34
+            // Configurations -> Unit Management ID: 35
             [
                 'navigation_menu_name'          => 'Unit Management',
                 'navigation_menu_icon'          => null,
                 'app_id'                        => 4,
                 'app_name'                      => 'Inventory',
-                'parent_navigation_menu_id'     => 29,
+                'parent_navigation_menu_id'     => 30,
                 'parent_navigation_menu_name'   => 'Configurations',
                 'database_table'                => null,
                 'order_sequence'                => 5
             ],
 
-            // Configurations -> Unit Management -> Units ID: 35
+            // Configurations -> Unit Management -> Units ID: 36
             [
                 'navigation_menu_name'          => 'Units',
                 'navigation_menu_icon'          => null,
                 'app_id'                        => 4,
                 'app_name'                      => 'Inventory',
-                'parent_navigation_menu_id'     => 34,
+                'parent_navigation_menu_id'     => 35,
                 'parent_navigation_menu_name'   => 'Unit Management',
                 'database_table'                => 'unit',
                 'order_sequence'                => 1
             ],
 
-            // Configurations -> Unit Management -> Unit Conversion ID: 36
+            // Configurations -> Unit Management -> Unit Conversion ID: 37
             [
                 'navigation_menu_name'          => 'Unit Conversion',
                 'navigation_menu_icon'          => null,
                 'app_id'                        => 4,
                 'app_name'                      => 'Inventory',
-                'parent_navigation_menu_id'     => 34,
+                'parent_navigation_menu_id'     => 35,
                 'parent_navigation_menu_name'   => 'Unit Management',
                 'database_table'                => 'unit_type',
                 'order_sequence'                => 2
             ],
 
-            // Configurations -> Unit Management ->Unit Type ID: 37
+            // Configurations -> Unit Management ->Unit Type ID: 38
             [
                 'navigation_menu_name'          => 'Unit Type',
                 'navigation_menu_icon'          => null,
                 'app_id'                        => 4,
                 'app_name'                      => 'Inventory',
-                'parent_navigation_menu_id'     => 34,
+                'parent_navigation_menu_id'     => 35,
                 'parent_navigation_menu_name'   => 'Unit Management',
                 'database_table'                => 'unit_type',
                 'order_sequence'                => 3
             ],
 
-            // Configurations -> Warehouse Type ID: 38
+            // Configurations -> Warehouse Type ID: 39
             [
                 'navigation_menu_name'          => 'Warehouse Type',
                 'navigation_menu_icon'          => null,
                 'app_id'                        => 4,
                 'app_name'                      => 'Inventory',
-                'parent_navigation_menu_id'     => 29,
+                'parent_navigation_menu_id'     => 30,
                 'parent_navigation_menu_name'   => 'Configurations',
                 'database_table'                => 'warehouse_type',
                 'order_sequence'                => 6
             ],
 
             // POS App
-            // POS Dashboard ID: 39
+            // POS Dashboard ID: 40
             [
                 'navigation_menu_name'          => 'Dashboard',
                 'navigation_menu_icon'          => 'ki-outline ki-category',
@@ -480,7 +492,7 @@ class NavigationMenuSeeder extends Seeder
                 'order_sequence'                => 1
             ],
 
-            // Point of Sale ID: 40
+            // Point of Sale ID: 41
             [
                 'navigation_menu_name'          => 'Point of Sale',
                 'navigation_menu_icon'          => 'ki-outline ki-screen',
@@ -492,7 +504,7 @@ class NavigationMenuSeeder extends Seeder
                 'order_sequence'                => 1
             ],
 
-            // Shop Register ID: 41
+            // Shop Register ID: 42
             [
                 'navigation_menu_name'          => 'Shop Register',
                 'navigation_menu_icon'          => 'ki-outline ki-shop',
@@ -504,7 +516,7 @@ class NavigationMenuSeeder extends Seeder
                 'order_sequence'                => 2
             ],
 
-            // Configurations ID: 42
+            // Configurations ID: 43
             [
                 'navigation_menu_name'          => 'Configurations',
                 'navigation_menu_icon'          => 'ki-outline ki-wrench',
@@ -516,67 +528,67 @@ class NavigationMenuSeeder extends Seeder
                 'order_sequence'                => 7
             ],
 
-            // Configurations -> Charge Type ID: 43
+            // Configurations -> Charge Type ID: 44
             [
                 'navigation_menu_name'          => 'Charge Type',
                 'navigation_menu_icon'          => null,
                 'app_id'                        => 3,
                 'app_name'                      => 'Point of Sale',
-                'parent_navigation_menu_id'     => 42,
+                'parent_navigation_menu_id'     => 43,
                 'parent_navigation_menu_name'   => 'Configurations',
                 'database_table'                => 'charge_type',
                 'order_sequence'                => 3
             ],
 
-            // Configurations -> Discount Type ID: 44
+            // Configurations -> Discount Type ID: 45
             [
                 'navigation_menu_name'          => 'Discount Type',
                 'navigation_menu_icon'          => null,
                 'app_id'                        => 3,
                 'app_name'                      => 'Point of Sale',
-                'parent_navigation_menu_id'     => 42,
+                'parent_navigation_menu_id'     => 43,
                 'parent_navigation_menu_name'   => 'Configurations',
                 'database_table'                => 'discount_type',
                 'order_sequence'                => 4
             ],
 
-            // Configurations -> Floor Plan ID: 45
+            // Configurations -> Floor Plan ID: 46
             [
                 'navigation_menu_name'          => 'Floor Plan',
                 'navigation_menu_icon'          => null,
                 'app_id'                        => 3,
                 'app_name'                      => 'Point of Sale',
-                'parent_navigation_menu_id'     => 42,
+                'parent_navigation_menu_id'     => 43,
                 'parent_navigation_menu_name'   => 'Configurations',
                 'database_table'                => 'floor_plan',
                 'order_sequence'                => 6
             ],
 
-            // Configurations -> Kitchen Route ID: 46
+            // Configurations -> Kitchen Route ID: 47
             [
                 'navigation_menu_name'          => 'Kitchen Route',
                 'navigation_menu_icon'          => null,
                 'app_id'                        => 3,
                 'app_name'                      => 'Point of Sale',
-                'parent_navigation_menu_id'     => 42,
+                'parent_navigation_menu_id'     => 43,
                 'parent_navigation_menu_name'   => 'Configurations',
                 'database_table'                => 'kitchen_route',
                 'order_sequence'                => 6
             ],
 
-            // Configurations -> Payment Method ID: 47
+            // Configurations -> Payment Method ID: 48
             [
                 'navigation_menu_name'          => 'Payment Method',
                 'navigation_menu_icon'          => null,
                 'app_id'                        => 3,
                 'app_name'                      => 'Point of Sale',
-                'parent_navigation_menu_id'     => 42,
+                'parent_navigation_menu_id'     => 43,
                 'parent_navigation_menu_name'   => 'Configurations',
                 'database_table'                => 'payment_method',
                 'order_sequence'                => 16
             ],
 
-            // Shop Order Request ID: 48
+            // Shop Order Request ID: 49
             [
                 'navigation_menu_name'          => 'Shop Order Request',
                 'navigation_menu_icon'          => 'ki-outline ki-tablet-text-up',
@@ -588,7 +600,7 @@ class NavigationMenuSeeder extends Seeder
                 'order_sequence'                => 3
             ],
 
-            // Reports ID: 49
+            // Reports ID: 50
             [
                 'navigation_menu_name'          => 'Reports',
                 'navigation_menu_icon'          => 'ki-outline ki-book',
@@ -600,43 +612,43 @@ class NavigationMenuSeeder extends Seeder
                 'order_sequence'                => 4
             ],
             
-            // Reports -> Cash Count ID: 50
+            // Reports -> Cash Count ID: 51
             [
                 'navigation_menu_name'          => 'Cash Count',
                 'navigation_menu_icon'          => null,
                 'app_id'                        => 3,
                 'app_name'                      => 'Point of Sale',
-                'parent_navigation_menu_id'     => 49,
+                'parent_navigation_menu_id'     => 50,
                 'parent_navigation_menu_name'   => 'Reports',
                 'database_table'                => null,
                 'order_sequence'                => 3
             ],
             
-            // Reports -> Payment Summary ID: 51
+            // Reports -> Payment Summary ID: 52
             [
                 'navigation_menu_name'          => 'Payment Summary',
                 'navigation_menu_icon'          => null,
                 'app_id'                        => 3,
                 'app_name'                      => 'Point of Sale',
-                'parent_navigation_menu_id'     => 49,
+                'parent_navigation_menu_id'     => 50,
                 'parent_navigation_menu_name'   => 'Reports',
                 'database_table'                => null,
                 'order_sequence'                => 16
             ],
 
-            // Reports -> Transaction Summary ID: 52
+            // Reports -> Transaction Summary ID: 53
             [
                 'navigation_menu_name'          => 'Transaction Summary',
                 'navigation_menu_icon'          => null,
                 'app_id'                        => 3,
                 'app_name'                      => 'Point of Sale',
-                'parent_navigation_menu_id'     => 49,
+                'parent_navigation_menu_id'     => 50,
                 'parent_navigation_menu_name'   => 'Reports',
                 'database_table'                => null,
                 'order_sequence'                => 10
             ],
 
-            // Preparation Display ID: 53
+            // Preparation Display ID: 54
             [
                 'navigation_menu_name'          => 'Preparation Display',
                 'navigation_menu_icon'          => 'ki-outline ki-questionnaire-tablet',

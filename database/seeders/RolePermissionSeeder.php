@@ -292,20 +292,6 @@ class RolePermissionSeeder extends Seeder
                 'role_id' => 1,
                 'role_name' => 'Super Admin',
                 'navigation_menu_id' => 21,
-                'navigation_menu_name' => 'Stock Level',
-                'read_access' => true,
-                'write_access' => false,
-                'create_access' => false,
-                'delete_access' => true,
-                'import_access' => true,
-                'export_access' => true,
-                'logs_access' => true,
-            ],
-
-            [
-                'role_id' => 1,
-                'role_name' => 'Super Admin',
-                'navigation_menu_id' => 22,
                 'navigation_menu_name' => 'Stock Adjustment',
                 'read_access' => true,
                 'write_access' => true,
@@ -319,7 +305,7 @@ class RolePermissionSeeder extends Seeder
             [
                 'role_id' => 1,
                 'role_name' => 'Super Admin',
-                'navigation_menu_id' => 23,
+                'navigation_menu_id' => 22,
                 'navigation_menu_name' => 'Stock Batch',
                 'read_access' => true,
                 'write_access' => true,
@@ -333,7 +319,7 @@ class RolePermissionSeeder extends Seeder
             [
                 'role_id' => 1,
                 'role_name' => 'Super Admin',
-                'navigation_menu_id' => 24,
+                'navigation_menu_id' => 23,
                 'navigation_menu_name' => 'Stock Transfer',
                 'read_access' => true,
                 'write_access' => true,
@@ -347,7 +333,35 @@ class RolePermissionSeeder extends Seeder
             [
                 'role_id' => 1,
                 'role_name' => 'Super Admin',
+                'navigation_menu_id' => 24,
+                'navigation_menu_name' => 'Reports',
+                'read_access' => true,
+                'write_access' => false,
+                'create_access' => false,
+                'delete_access' => false,
+                'import_access' => false,
+                'export_access' => false,
+                'logs_access' => false,
+            ],
+    
+            [
+                'role_id' => 1,
+                'role_name' => 'Super Admin',
                 'navigation_menu_id' => 25,
+                'navigation_menu_name' => 'Stock Level',
+                'read_access' => true,
+                'write_access' => false,
+                'create_access' => false,
+                'delete_access' => true,
+                'import_access' => true,
+                'export_access' => true,
+                'logs_access' => true,
+            ],
+
+            [
+                'role_id' => 1,
+                'role_name' => 'Super Admin',
+                'navigation_menu_id' => 26,
                 'navigation_menu_name' => 'Stock Movement',
                 'read_access' => true,
                 'write_access' => false,
@@ -361,7 +375,7 @@ class RolePermissionSeeder extends Seeder
             [
                 'role_id' => 1,
                 'role_name' => 'Super Admin',
-                'navigation_menu_id' => 26,
+                'navigation_menu_id' => 27,
                 'navigation_menu_name' => 'Purchase Order',
                 'read_access' => true,
                 'write_access' => true,
@@ -375,7 +389,7 @@ class RolePermissionSeeder extends Seeder
             [
                 'role_id' => 1,
                 'role_name' => 'Super Admin',
-                'navigation_menu_id' => 27,
+                'navigation_menu_id' => 28,
                 'navigation_menu_name' => 'Suppliers',
                 'read_access' => true,
                 'write_access' => true,
@@ -389,7 +403,7 @@ class RolePermissionSeeder extends Seeder
             [
                 'role_id' => 1,
                 'role_name' => 'Super Admin',
-                'navigation_menu_id' => 28,
+                'navigation_menu_id' => 29,
                 'navigation_menu_name' => 'Warehouse',
                 'read_access' => true,
                 'write_access' => true,
@@ -403,7 +417,7 @@ class RolePermissionSeeder extends Seeder
             [
                 'role_id' => 1,
                 'role_name' => 'Super Admin',
-                'navigation_menu_id' => 29,
+                'navigation_menu_id' => 30,
                 'navigation_menu_name' => 'Configurations',
                 'read_access' => true,
                 'write_access' => false,
@@ -417,7 +431,7 @@ class RolePermissionSeeder extends Seeder
             [
                 'role_id' => 1,
                 'role_name' => 'Super Admin',
-                'navigation_menu_id' => 30,
+                'navigation_menu_id' => 31,
                 'navigation_menu_name' => 'Attribute',
                 'read_access' => true,
                 'write_access' => true,
@@ -431,7 +445,7 @@ class RolePermissionSeeder extends Seeder
             [
                 'role_id' => 1,
                 'role_name' => 'Super Admin',
-                'navigation_menu_id' => 31,
+                'navigation_menu_id' => 32,
                 'navigation_menu_name' => 'Product Category',
                 'read_access' => true,
                 'write_access' => true,
@@ -445,7 +459,7 @@ class RolePermissionSeeder extends Seeder
             [
                 'role_id' => 1,
                 'role_name' => 'Super Admin',
-                'navigation_menu_id' => 32,
+                'navigation_menu_id' => 33,
                 'navigation_menu_name' => 'Stock Adjustment Reason',
                 'read_access' => true,
                 'write_access' => true,
@@ -459,7 +473,7 @@ class RolePermissionSeeder extends Seeder
             [
                 'role_id' => 1,
                 'role_name' => 'Super Admin',
-                'navigation_menu_id' => 33,
+                'navigation_menu_id' => 34,
                 'navigation_menu_name' => 'Stock Transfer Reason',
                 'read_access' => true,
                 'write_access' => true,
@@ -473,7 +487,7 @@ class RolePermissionSeeder extends Seeder
             [
                 'role_id' => 1,
                 'role_name' => 'Super Admin',
-                'navigation_menu_id' => 34,
+                'navigation_menu_id' => 35,
                 'navigation_menu_name' => 'Unit Management',
                 'read_access' => true,
                 'write_access' => false,
@@ -487,7 +501,7 @@ class RolePermissionSeeder extends Seeder
             [
                 'role_id' => 1,
                 'role_name' => 'Super Admin',
-                'navigation_menu_id' => 35,
+                'navigation_menu_id' => 36,
                 'navigation_menu_name' => 'Units',
                 'read_access' => true,
                 'write_access' => true,
@@ -501,7 +515,7 @@ class RolePermissionSeeder extends Seeder
             [
                 'role_id' => 1,
                 'role_name' => 'Super Admin',
-                'navigation_menu_id' => 36,
+                'navigation_menu_id' => 37,
                 'navigation_menu_name' => 'Unit Conversion',
                 'read_access' => true,
                 'write_access' => true,
@@ -515,7 +529,7 @@ class RolePermissionSeeder extends Seeder
             [
                 'role_id' => 1,
                 'role_name' => 'Super Admin',
-                'navigation_menu_id' => 37,
+                'navigation_menu_id' => 38,
                 'navigation_menu_name' => 'Unit Type',
                 'read_access' => true,
                 'write_access' => true,
@@ -529,7 +543,7 @@ class RolePermissionSeeder extends Seeder
             [
                 'role_id' => 1,
                 'role_name' => 'Super Admin',
-                'navigation_menu_id' => 38,
+                'navigation_menu_id' => 39,
                 'navigation_menu_name' => 'Warehouse Type',
                 'read_access' => true,
                 'write_access' => true,
@@ -546,7 +560,7 @@ class RolePermissionSeeder extends Seeder
             [
                 'role_id' => 1,
                 'role_name' => 'Super Admin',
-                'navigation_menu_id' => 39,
+                'navigation_menu_id' => 40,
                 'navigation_menu_name' => 'Dashboard',
                 'read_access' => true,
                 'write_access' => false,
@@ -560,7 +574,7 @@ class RolePermissionSeeder extends Seeder
             [
                 'role_id' => 1,
                 'role_name' => 'Super Admin',
-                'navigation_menu_id' => 40,
+                'navigation_menu_id' => 41,
                 'navigation_menu_name' => 'Point of Sale',
                 'read_access' => true,
                 'write_access' => false,
@@ -574,7 +588,7 @@ class RolePermissionSeeder extends Seeder
             [
                 'role_id' => 1,
                 'role_name' => 'Super Admin',
-                'navigation_menu_id' => 41,
+                'navigation_menu_id' => 42,
                 'navigation_menu_name' => 'Shop Register',
                 'read_access' => true,
                 'write_access' => true,
@@ -588,7 +602,7 @@ class RolePermissionSeeder extends Seeder
             [
                 'role_id' => 1,
                 'role_name' => 'Super Admin',
-                'navigation_menu_id' => 42,
+                'navigation_menu_id' => 43,
                 'navigation_menu_name' => 'Configurations',
                 'read_access' => true,
                 'write_access' => false,
@@ -602,7 +616,7 @@ class RolePermissionSeeder extends Seeder
             [
                 'role_id' => 1,
                 'role_name' => 'Super Admin',
-                'navigation_menu_id' => 43,
+                'navigation_menu_id' => 44,
                 'navigation_menu_name' => 'Charge Type',
                 'read_access' => true,
                 'write_access' => true,
@@ -616,7 +630,7 @@ class RolePermissionSeeder extends Seeder
             [
                 'role_id' => 1,
                 'role_name' => 'Super Admin',
-                'navigation_menu_id' => 44,
+                'navigation_menu_id' => 45,
                 'navigation_menu_name' => 'Discount Type',
                 'read_access' => true,
                 'write_access' => true,
@@ -630,7 +644,7 @@ class RolePermissionSeeder extends Seeder
             [
                 'role_id' => 1,
                 'role_name' => 'Super Admin',
-                'navigation_menu_id' => 45,
+                'navigation_menu_id' => 46,
                 'navigation_menu_name' => 'Floor Plan',
                 'read_access' => true,
                 'write_access' => true,
@@ -644,7 +658,7 @@ class RolePermissionSeeder extends Seeder
             [
                 'role_id' => 1,
                 'role_name' => 'Super Admin',
-                'navigation_menu_id' => 46,
+                'navigation_menu_id' => 47,
                 'navigation_menu_name' => 'Kitchen Route',
                 'read_access' => true,
                 'write_access' => true,
@@ -658,7 +672,7 @@ class RolePermissionSeeder extends Seeder
             [
                 'role_id' => 1,
                 'role_name' => 'Super Admin',
-                'navigation_menu_id' => 47,
+                'navigation_menu_id' => 48,
                 'navigation_menu_name' => 'Payment Method',
                 'read_access' => true,
                 'write_access' => true,
@@ -672,7 +686,7 @@ class RolePermissionSeeder extends Seeder
             [
                 'role_id' => 1,
                 'role_name' => 'Super Admin',
-                'navigation_menu_id' => 48,
+                'navigation_menu_id' => 49,
                 'navigation_menu_name' => 'Shop Order Request',
                 'read_access' => true,
                 'write_access' => false,
@@ -686,7 +700,7 @@ class RolePermissionSeeder extends Seeder
             [
                 'role_id' => 1,
                 'role_name' => 'Super Admin',
-                'navigation_menu_id' => 49,
+                'navigation_menu_id' => 50,
                 'navigation_menu_name' => 'Reports',
                 'read_access' => true,
                 'write_access' => false,
@@ -700,7 +714,7 @@ class RolePermissionSeeder extends Seeder
             [
                 'role_id' => 1,
                 'role_name' => 'Super Admin',
-                'navigation_menu_id' => 50,
+                'navigation_menu_id' => 51,
                 'navigation_menu_name' => 'Cash Count',
                 'read_access' => true,
                 'write_access' => false,
@@ -714,7 +728,7 @@ class RolePermissionSeeder extends Seeder
             [
                 'role_id' => 1,
                 'role_name' => 'Super Admin',
-                'navigation_menu_id' => 51,
+                'navigation_menu_id' => 52,
                 'navigation_menu_name' => 'Payment Summary',
                 'read_access' => true,
                 'write_access' => false,
@@ -728,7 +742,7 @@ class RolePermissionSeeder extends Seeder
             [
                 'role_id' => 1,
                 'role_name' => 'Super Admin',
-                'navigation_menu_id' => 52,
+                'navigation_menu_id' => 53,
                 'navigation_menu_name' => 'Transaction Summary',
                 'read_access' => true,
                 'write_access' => false,
@@ -742,7 +756,7 @@ class RolePermissionSeeder extends Seeder
             [
                 'role_id' => 1,
                 'role_name' => 'Super Admin',
-                'navigation_menu_id' => 53,
+                'navigation_menu_id' => 54,
                 'navigation_menu_name' => 'Preparation Display',
                 'read_access' => true,
                 'write_access' => false,

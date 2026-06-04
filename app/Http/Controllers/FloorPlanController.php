@@ -224,4 +224,53 @@ class FloorPlanController extends Controller
 
         return response()->json($response);
     }
+
+    public function generatePOSTableOptions(Request $request)
+    {
+        $multiple = filter_var($request->input('multiple', false), FILTER_VALIDATE_BOOLEAN);
+
+        $response = collect();
+
+        // Add empty default option if not multiple
+        if (!$multiple) {
+            $response->push([
+                'id'   => 'all',
+                'text' => 'Filter by Table',
+            ]);
+        }
+
+        // Fetch floor plans and join their corresponding tables
+        $floorPlansWithTables = DB::table('floor_plan')
+            ->join('floor_plan_table', 'floor_plan.id', '=', 'floor_plan_table.floor_plan_id')
+            ->select([
+                'floor_plan.id as floor_id',
+                'floor_plan.floor_plan_name as floor_name',
+                'floor_plan_table.id as table_id',
+                'floor_plan_table.table_number',
+                'floor_plan_table.seats'
+            ])
+            ->orderBy('floor_plan.floor_plan_name')
+            ->orderBy('floor_plan_table.table_number')
+            ->get();
+
+        // Group the results by floor plan to create the optgroup structure
+        $grouped = $floorPlansWithTables->groupBy('floor_id')->map(function ($tables) {
+            // Grab the floor name from the first item in this group
+            $firstItem = $tables->first();
+
+            return [
+                'text'     => $firstItem->floor_name,
+                'children' => $tables->map(fn ($table) => [
+                    'id'   => $table->table_id,
+                    // Customize how you want the table label to look (e.g., "Table 5 (4 Seats)")
+                    'text' => "Table " . $table->table_number
+                ])->values()->all()
+            ];
+        })->values();
+
+        // Merge everything together
+        $response = $response->concat($grouped);
+
+        return response()->json($response);
+    }
 }

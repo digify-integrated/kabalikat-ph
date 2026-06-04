@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Company;
-use App\Models\Product;
 use App\Models\ShopRegister;
 use App\Models\ShopRegisterSession;
 use App\Models\ShopSessionDenomination;
@@ -743,7 +742,10 @@ class ShopRegisterController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | CACHE STOCK LEVELS
+        | 1. CACHE STOCK LEVELS & BOM MAPS
+        |--------------------------------------------------------------------------
+        | Pre-loading these data structures into memory prevents N+1 query execution
+        | degradation loops within the mapping collections below.
         |--------------------------------------------------------------------------
         */
         $stockMap = DB::table('stock_level')
@@ -753,7 +755,6 @@ class ShopRegisterController extends Controller
             ->get()
             ->groupBy('product_id');
 
-        // Simple single-level collection wrapper for cache evaluation
         $getAvailableStock = function ($productId) use ($stockMap): float {
             if (!isset($stockMap[$productId])) {
                 return 0.0;
@@ -766,6 +767,49 @@ class ShopRegisterController extends Controller
                 ->sum('quantity');
         };
 
+        // Pre-cache the entire Bill of Materials registry matrix layout
+        $bomMap = DB::table('product_bom')
+            ->select('product_id', 'bom_product_id', 'quantity')
+            ->get()
+            ->groupBy('product_id');
+
+        /*
+        |--------------------------------------------------------------------------
+        | 2. DEEP RECURSIVE YIELD CALCULATOR
+        |--------------------------------------------------------------------------
+        | Recursively drills down into nested BOM configurations (BOM inside BOM)
+        | until it maps down to structural raw tracking materials.
+        |--------------------------------------------------------------------------
+        */
+        $calculateYield = function ($productId) use (&$calculateYield, $getAvailableStock, $bomMap) {
+            // Core structural exit condition: If no recipe mapping exists, return shelf stock balance
+            if (!isset($bomMap[$productId])) {
+                return $getAvailableStock($productId);
+            }
+
+            $maxPossibleYield = INF;
+
+            foreach ($bomMap[$productId] as $ingredient) {
+                $requiredQtyPerUnit = (float) $ingredient->quantity;
+                if ($requiredQtyPerUnit <= 0) continue;
+
+                // Recursive self-call invocation resolves deep sub-recipe assemblies
+                $totalComponentAvailable = $calculateYield($ingredient->bom_product_id);
+                $yieldForThisIngredient = floor($totalComponentAvailable / $requiredQtyPerUnit);
+
+                if ($yieldForThisIngredient < $maxPossibleYield) {
+                    $maxPossibleYield = $yieldForThisIngredient;
+                }
+            }
+
+            return $maxPossibleYield === INF ? 0.0 : (float)$maxPossibleYield;
+        };
+
+        /*
+        |--------------------------------------------------------------------------
+        | 3. QUERY BASE ACTIVE POS REGISTRY PRODUCTS
+        |--------------------------------------------------------------------------
+        */
         $products = DB::table('shop_register_product')
             ->join('product', 'product.id', '=', 'shop_register_product.product_id')
             ->select('product.*')
@@ -792,20 +836,33 @@ class ShopRegisterController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | MAP EVALUATION VIA CLASS METHOD REGISTER
+        | 4. EXECUTE RUNTIME INVENTORY EVALUATIONS
         |--------------------------------------------------------------------------
         */
-        $response = $products->map(function ($product) use ($getAvailableStock) {
+        $response = $products->map(function ($product) use ($bomMap, $calculateYield) {
+            $productId = (int)$product->id;
+            $trackInventory = $product->track_inventory === 'Yes';
             
-            // Calling the dedicated private method keeps the type-inferring flat
-            $availability = $this->checkComponentAvailability((int)$product->id, 1.0, $getAvailableStock);
+            $estimatedStock = 0.0;
+            $isBomProduct = isset($bomMap[$productId]);
+
+            if ($trackInventory) {
+                $estimatedStock = $calculateYield($productId);
+            }
+
+            // Determine stock availability state flags
+            $canFulfill = !$trackInventory || $estimatedStock > 0;
+            
+            // Dynamic reorder threshold checks
+            $reorderLevel = (float) $product->reorder_level;
+            $isLowStock = $trackInventory && $canFulfill && ($estimatedStock <= $reorderLevel);
 
             $category = DB::table('product_category_map')
-                ->where('product_id', $product->id)
+                ->where('product_id', $productId)
                 ->first();
 
             return [
-                'id' => $product->id,
+                'id' => $productId,
                 'product_name' => $product->product_name,
                 'sku' => $product->sku,
                 'barcode' => $product->barcode,
@@ -814,10 +871,13 @@ class ShopRegisterController extends Controller
                 'image' => $product->product_image,
                 'track_inventory' => $product->track_inventory,
                 'category_name' => $category?->product_category_name ?? 'Uncategorized',
-                'in_stock' => $availability['can_fulfill'],
-                'stock_status' => $availability['can_fulfill'] 
-                    ? 'Available' 
-                    : "Insufficient component: " . ($availability['failed_component'] ?? 'Ingredients'),
+                'in_stock' => $canFulfill,
+                'estimated_stock' => $estimatedStock,
+                'is_low_stock' => $isLowStock,
+                'is_bom' => $isBomProduct,
+                'stock_status' => $canFulfill 
+                    ? ($isLowStock ? 'Low Stock' : 'Available') 
+                    : 'Out of Stock',
             ];
         })
         ->sortBy([

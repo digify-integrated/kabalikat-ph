@@ -704,6 +704,19 @@ return new class extends Migration
         });
 
         /* =============================================================================================
+            TABLE: Kitchen Route
+        ============================================================================================= */
+
+        Schema::create('kitchen_route', function (Blueprint $table) {
+            $table->id();
+
+            $table->string('kitchen_route_name');
+            
+            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
+            $table->timestamps();
+        });
+
+        /* =============================================================================================
             TABLE: Product
         ============================================================================================= */
 
@@ -773,15 +786,18 @@ return new class extends Migration
             ->constrained('kitchen_route')
             ->nullOnDelete();
 
-            $table->string('kitchen_route_name');
+            $table->string('kitchen_route_name')
+            ->nullable();
 
             $table->foreignId('base_unit_id')
             ->nullable()
             ->constrained('unit')
             ->nullOnDelete();
 
-            $table->string('base_unit_name');
-            $table->string('base_unit_abbreviation');
+            $table->string('base_unit_name')
+            ->nullable();
+            $table->string('base_unit_abbreviation')
+            ->nullable();
 
             $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
             $table->timestamps();
@@ -1554,19 +1570,6 @@ return new class extends Migration
         });
 
         /* =============================================================================================
-            TABLE: Kitchen Route
-        ============================================================================================= */
-
-        Schema::create('kitchen_route', function (Blueprint $table) {
-            $table->id();
-
-            $table->string('kitchen_route_name');
-            
-            $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
-            $table->timestamps();
-        });
-
-        /* =============================================================================================
             TABLE: Payment Method
         ============================================================================================= */
 
@@ -2241,6 +2244,9 @@ return new class extends Migration
 
             $table->decimal('discount_amount', 12, 2)
                 ->default(0);
+
+            $table->decimal('custom_discountable_amount', 12, 2)
+                ->nullable();
 
             $table->decimal('vat_exempt_amount', 12, 2)
                 ->default(0);

@@ -59,7 +59,7 @@ class ProductController extends Controller
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
 
         $baseUnitId = (int) $validated['base_unit_id'];
-        $kitchenRouteId = (int) $validated['kitchen_route_id'];
+        $kitchenRouteId = !empty($validated['kitchen_route_id']) ? (int) $validated['kitchen_route_id'] : null;
 
         $baseUnitName = (string) Unit::query()
             ->whereKey($baseUnitId)

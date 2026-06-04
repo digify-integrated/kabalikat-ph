@@ -101,13 +101,14 @@ class ShopOrderController extends Controller
             if (!$shopOrder) {
                 $isNewOrder = true;
                 $orderNumber = 'SO-' . now()->format('ymd') . '-' . Str::upper(Str::random(4));
+                $orderType = ($shopRegister->is_restaurant === 'Yes') ? 'Dine-in' : 'Walk-in';
 
                 $shopOrder = ShopOrder::create([
                     'order_number'             => $orderNumber,
                     'shop_register_id'         => $shopRegister->id,
                     'shop_register_name'       => $shopRegister->shop_register_name,
                     'shop_register_session_id' => $shopRegisterSession->id,
-                    'order_type'               => 'Walk-in',
+                    'order_type'               => $orderType,
                     'ordered_at'               => now(),
                     'created_by'               => Auth::id(),
                     'created_by_name'          => Auth::user()->name,

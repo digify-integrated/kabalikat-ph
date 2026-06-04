@@ -399,53 +399,27 @@ class NavigationMenuRouteSeeder extends Seeder
                 'js_file'               => 'import/import',
             ],
 
-            // Stock Level
-            [
-                'navigation_menu_id'    => 21,
-                'route_type'            => 'index',
-                'view_file'             => 'pages.stock-level.index',
-                'js_file'               => 'stock-level/index',
-            ],
-            [
-                'navigation_menu_id'    => 21,
-                'route_type'            => 'new',
-                'view_file'             => 'pages.stock-level.new',
-                'js_file'               => 'stock-level/new',
-            ],
-            [
-                'navigation_menu_id'    => 21,
-                'route_type'            => 'details',
-                'view_file'             => 'pages.stock-level.details',
-                'js_file'               => 'stock-level/details',
-            ],
-            [
-                'navigation_menu_id'    => 21,
-                'route_type'            => 'import',
-                'view_file'             => 'pages.import.index',
-                'js_file'               => 'import/import',
-            ],
-
             // Stock Adjustment
             [
-                'navigation_menu_id'    => 22,
+                'navigation_menu_id'    => 21,
                 'route_type'            => 'index',
                 'view_file'             => 'pages.stock-adjustment.index',
                 'js_file'               => 'stock-adjustment/index',
             ],
             [
-                'navigation_menu_id'    => 22,
+                'navigation_menu_id'    => 21,
                 'route_type'            => 'new',
                 'view_file'             => 'pages.stock-adjustment.new',
                 'js_file'               => 'stock-adjustment/new',
             ],
             [
-                'navigation_menu_id'    => 22,
+                'navigation_menu_id'    => 21,
                 'route_type'            => 'details',
                 'view_file'             => 'pages.stock-adjustment.details',
                 'js_file'               => 'stock-adjustment/details',
             ],
             [
-                'navigation_menu_id'    => 22,
+                'navigation_menu_id'    => 21,
                 'route_type'            => 'import',
                 'view_file'             => 'pages.import.index',
                 'js_file'               => 'import/import',
@@ -453,25 +427,25 @@ class NavigationMenuRouteSeeder extends Seeder
 
             // Stock Batch
             [
-                'navigation_menu_id'    => 23,
+                'navigation_menu_id'    => 22,
                 'route_type'            => 'index',
                 'view_file'             => 'pages.stock-batch.index',
                 'js_file'               => 'stock-batch/index',
             ],
             [
-                'navigation_menu_id'    => 23,
+                'navigation_menu_id'    => 22,
                 'route_type'            => 'new',
                 'view_file'             => 'pages.stock-batch.new',
                 'js_file'               => 'stock-batch/new',
             ],
             [
-                'navigation_menu_id'    => 23,
+                'navigation_menu_id'    => 22,
                 'route_type'            => 'details',
                 'view_file'             => 'pages.stock-batch.details',
                 'js_file'               => 'stock-batch/details',
             ],
             [
-                'navigation_menu_id'    => 23,
+                'navigation_menu_id'    => 22,
                 'route_type'            => 'import',
                 'view_file'             => 'pages.import.index',
                 'js_file'               => 'import/import',
@@ -479,25 +453,52 @@ class NavigationMenuRouteSeeder extends Seeder
 
             // Stock Transfer
             [
-                'navigation_menu_id'    => 24,
+                'navigation_menu_id'    => 23,
                 'route_type'            => 'index',
                 'view_file'             => 'pages.stock-transfer.index',
                 'js_file'               => 'stock-transfer/index',
             ],
             [
-                'navigation_menu_id'    => 24,
+                'navigation_menu_id'    => 23,
                 'route_type'            => 'new',
                 'view_file'             => 'pages.stock-transfer.new',
                 'js_file'               => 'stock-transfer/new',
             ],
             [
-                'navigation_menu_id'    => 24,
+                'navigation_menu_id'    => 23,
                 'route_type'            => 'details',
                 'view_file'             => 'pages.stock-transfer.details',
                 'js_file'               => 'stock-transfer/details',
             ],
             [
-                'navigation_menu_id'    => 24,
+                'navigation_menu_id'    => 23,
+                'route_type'            => 'import',
+                'view_file'             => 'pages.import.index',
+                'js_file'               => 'import/import',
+            ],
+
+
+            // Stock Level
+            [
+                'navigation_menu_id'    => 25,
+                'route_type'            => 'index',
+                'view_file'             => 'pages.stock-level.index',
+                'js_file'               => 'stock-level/index',
+            ],
+            [
+                'navigation_menu_id'    => 25,
+                'route_type'            => 'new',
+                'view_file'             => 'pages.stock-level.new',
+                'js_file'               => 'stock-level/new',
+            ],
+            [
+                'navigation_menu_id'    => 25,
+                'route_type'            => 'details',
+                'view_file'             => 'pages.stock-level.details',
+                'js_file'               => 'stock-level/details',
+            ],
+            [
+                'navigation_menu_id'    => 25,
                 'route_type'            => 'import',
                 'view_file'             => 'pages.import.index',
                 'js_file'               => 'import/import',
@@ -505,7 +506,7 @@ class NavigationMenuRouteSeeder extends Seeder
 
             // Stock Movement
             [
-                'navigation_menu_id'    => 25,
+                'navigation_menu_id'    => 26,
                 'route_type'            => 'index',
                 'view_file'             => 'pages.stock-movement.index',
                 'js_file'               => 'stock-movement/index',
@@ -517,13 +518,13 @@ class NavigationMenuRouteSeeder extends Seeder
                 'js_file'               => 'stock-movement/new',
             ],
             [
-                'navigation_menu_id'    => 25,
+                'navigation_menu_id'    => 26,
                 'route_type'            => 'details',
                 'view_file'             => 'pages.stock-movement.details',
                 'js_file'               => 'stock-movement/details',
             ],
             [
-                'navigation_menu_id'    => 25,
+                'navigation_menu_id'    => 26,
                 'route_type'            => 'import',
                 'view_file'             => 'pages.import.index',
                 'js_file'               => 'import/import',
@@ -531,25 +532,25 @@ class NavigationMenuRouteSeeder extends Seeder
 
             // Purchase Order
             [
-                'navigation_menu_id'    => 26,
+                'navigation_menu_id'    => 27,
                 'route_type'            => 'index',
                 'view_file'             => 'pages.purchase-order.index',
                 'js_file'               => 'purchase-order/index',
             ],
             [
-                'navigation_menu_id'    => 26,
+                'navigation_menu_id'    => 27,
                 'route_type'            => 'new',
                 'view_file'             => 'pages.purchase-order.new',
                 'js_file'               => 'purchase-order/new',
             ],
             [
-                'navigation_menu_id'    => 26,
+                'navigation_menu_id'    => 27,
                 'route_type'            => 'details',
                 'view_file'             => 'pages.purchase-order.details',
                 'js_file'               => 'purchase-order/details',
             ],
             [
-                'navigation_menu_id'    => 26,
+                'navigation_menu_id'    => 27,
                 'route_type'            => 'import',
                 'view_file'             => 'pages.import.index',
                 'js_file'               => 'import/import',
@@ -557,25 +558,25 @@ class NavigationMenuRouteSeeder extends Seeder
 
             // Suppliers
             [
-                'navigation_menu_id'    => 27,
+                'navigation_menu_id'    => 28,
                 'route_type'            => 'index',
                 'view_file'             => 'pages.suppliers.index',
                 'js_file'               => 'suppliers/index',
             ],
             [
-                'navigation_menu_id'    => 27,
+                'navigation_menu_id'    => 28,
                 'route_type'            => 'new',
                 'view_file'             => 'pages.suppliers.new',
                 'js_file'               => 'suppliers/new',
             ],
             [
-                'navigation_menu_id'    => 27,
+                'navigation_menu_id'    => 28,
                 'route_type'            => 'details',
                 'view_file'             => 'pages.suppliers.details',
                 'js_file'               => 'suppliers/details',
             ],
             [
-                'navigation_menu_id'    => 27,
+                'navigation_menu_id'    => 28,
                 'route_type'            => 'import',
                 'view_file'             => 'pages.import.index',
                 'js_file'               => 'import/import',
@@ -584,25 +585,25 @@ class NavigationMenuRouteSeeder extends Seeder
 
             // Warehouse
             [
-                'navigation_menu_id'    => 28,
+                'navigation_menu_id'    => 29,
                 'route_type'            => 'index',
                 'view_file'             => 'pages.warehouse.index',
                 'js_file'               => 'warehouse/index',
             ],
             [
-                'navigation_menu_id'    => 28,
+                'navigation_menu_id'    => 29,
                 'route_type'            => 'new',
                 'view_file'             => 'pages.warehouse.new',
                 'js_file'               => 'warehouse/new',
             ],
             [
-                'navigation_menu_id'    => 28,
+                'navigation_menu_id'    => 29,
                 'route_type'            => 'details',
                 'view_file'             => 'pages.warehouse.details',
                 'js_file'               => 'warehouse/details',
             ],
             [
-                'navigation_menu_id'    => 28,
+                'navigation_menu_id'    => 29,
                 'route_type'            => 'import',
                 'view_file'             => 'pages.import.index',
                 'js_file'               => 'import/import',
@@ -610,25 +611,25 @@ class NavigationMenuRouteSeeder extends Seeder
 
             // Attribute
             [
-                'navigation_menu_id'    => 30,
+                'navigation_menu_id'    => 31,
                 'route_type'            => 'index',
                 'view_file'             => 'pages.attribute.index',
                 'js_file'               => 'attribute/index',
             ],
             [
-                'navigation_menu_id'    => 30,
+                'navigation_menu_id'    => 31,
                 'route_type'            => 'new',
                 'view_file'             => 'pages.attribute.new',
                 'js_file'               => 'attribute/new',
             ],
             [
-                'navigation_menu_id'    => 30,
+                'navigation_menu_id'    => 31,
                 'route_type'            => 'details',
                 'view_file'             => 'pages.attribute.details',
                 'js_file'               => 'attribute/details',
             ],
             [
-                'navigation_menu_id'    => 30,
+                'navigation_menu_id'    => 31,
                 'route_type'            => 'import',
                 'view_file'             => 'pages.import.index',
                 'js_file'               => 'import/import',
@@ -636,25 +637,25 @@ class NavigationMenuRouteSeeder extends Seeder
 
             // Product Category
             [
-                'navigation_menu_id'    => 31,
+                'navigation_menu_id'    => 32,
                 'route_type'            => 'index',
                 'view_file'             => 'pages.product-category.index',
                 'js_file'               => 'product-category/index',
             ],
             [
-                'navigation_menu_id'    => 31,
+                'navigation_menu_id'    => 32,
                 'route_type'            => 'new',
                 'view_file'             => 'pages.product-category.new',
                 'js_file'               => 'product-category/new',
             ],
             [
-                'navigation_menu_id'    => 31,
+                'navigation_menu_id'    => 32,
                 'route_type'            => 'details',
                 'view_file'             => 'pages.product-category.details',
                 'js_file'               => 'product-category/details',
             ],
             [
-                'navigation_menu_id'    => 31,
+                'navigation_menu_id'    => 32,
                 'route_type'            => 'import',
                 'view_file'             => 'pages.import.index',
                 'js_file'               => 'import/import',
@@ -662,25 +663,25 @@ class NavigationMenuRouteSeeder extends Seeder
 
             // Stock Adjustment Reason
             [
-                'navigation_menu_id'    => 32,
+                'navigation_menu_id'    => 33,
                 'route_type'            => 'index',
                 'view_file'             => 'pages.stock-adjustment-reason.index',
                 'js_file'               => 'stock-adjustment-reason/index',
             ],
             [
-                'navigation_menu_id'    => 32,
+                'navigation_menu_id'    => 33,
                 'route_type'            => 'new',
                 'view_file'             => 'pages.stock-adjustment-reason.new',
                 'js_file'               => 'stock-adjustment-reason/new',
             ],
             [
-                'navigation_menu_id'    => 32,
+                'navigation_menu_id'    => 33,
                 'route_type'            => 'details',
                 'view_file'             => 'pages.stock-adjustment-reason.details',
                 'js_file'               => 'stock-adjustment-reason/details',
             ],
             [
-                'navigation_menu_id'    => 32,
+                'navigation_menu_id'    => 33,
                 'route_type'            => 'import',
                 'view_file'             => 'pages.import.index',
                 'js_file'               => 'import/import',
@@ -688,25 +689,25 @@ class NavigationMenuRouteSeeder extends Seeder
 
             // Stock Transfer Reason
             [
-                'navigation_menu_id'    => 33,
+                'navigation_menu_id'    => 34,
                 'route_type'            => 'index',
                 'view_file'             => 'pages.stock-transfer-reason.index',
                 'js_file'               => 'stock-transfer-reason/index',
             ],
             [
-                'navigation_menu_id'    => 33,
+                'navigation_menu_id'    => 34,
                 'route_type'            => 'new',
                 'view_file'             => 'pages.stock-transfer-reason.new',
                 'js_file'               => 'stock-transfer-reason/new',
             ],
             [
-                'navigation_menu_id'    => 33,
+                'navigation_menu_id'    => 34,
                 'route_type'            => 'details',
                 'view_file'             => 'pages.stock-transfer-reason.details',
                 'js_file'               => 'stock-transfer-reason/details',
             ],
             [
-                'navigation_menu_id'    => 33,
+                'navigation_menu_id'    => 34,
                 'route_type'            => 'import',
                 'view_file'             => 'pages.import.index',
                 'js_file'               => 'import/import',
@@ -714,25 +715,25 @@ class NavigationMenuRouteSeeder extends Seeder
 
             // Units
             [
-                'navigation_menu_id'    => 35,
+                'navigation_menu_id'    => 36,
                 'route_type'            => 'index',
                 'view_file'             => 'pages.units.index',
                 'js_file'               => 'units/index',
             ],
             [
-                'navigation_menu_id'    => 35,
+                'navigation_menu_id'    => 36,
                 'route_type'            => 'new',
                 'view_file'             => 'pages.units.new',
                 'js_file'               => 'units/new',
             ],
             [
-                'navigation_menu_id'    => 35,
+                'navigation_menu_id'    => 36,
                 'route_type'            => 'details',
                 'view_file'             => 'pages.units.details',
                 'js_file'               => 'units/details',
             ],
             [
-                'navigation_menu_id'    => 35,
+                'navigation_menu_id'    => 36,
                 'route_type'            => 'import',
                 'view_file'             => 'pages.import.index',
                 'js_file'               => 'import/import',
@@ -740,25 +741,25 @@ class NavigationMenuRouteSeeder extends Seeder
 
             // Unit Conversion
             [
-                'navigation_menu_id'    => 36,
+                'navigation_menu_id'    => 37,
                 'route_type'            => 'index',
                 'view_file'             => 'pages.unit-conversion.index',
                 'js_file'               => 'unit-conversion/index',
             ],
             [
-                'navigation_menu_id'    => 36,
+                'navigation_menu_id'    => 37,
                 'route_type'            => 'new',
                 'view_file'             => 'pages.unit-conversion.new',
                 'js_file'               => 'unit-conversion/new',
             ],
             [
-                'navigation_menu_id'    => 36,
+                'navigation_menu_id'    => 37,
                 'route_type'            => 'details',
                 'view_file'             => 'pages.unit-conversion.details',
                 'js_file'               => 'unit-conversion/details',
             ],
             [
-                'navigation_menu_id'    => 36,
+                'navigation_menu_id'    => 37,
                 'route_type'            => 'import',
                 'view_file'             => 'pages.import.index',
                 'js_file'               => 'import/import',
@@ -766,25 +767,25 @@ class NavigationMenuRouteSeeder extends Seeder
 
             // Unit Type
             [
-                'navigation_menu_id'    => 37,
+                'navigation_menu_id'    => 38,
                 'route_type'            => 'index',
                 'view_file'             => 'pages.unit-type.index',
                 'js_file'               => 'unit-type/index',
             ],
             [
-                'navigation_menu_id'    => 37,
+                'navigation_menu_id'    => 38,
                 'route_type'            => 'new',
                 'view_file'             => 'pages.unit-type.new',
                 'js_file'               => 'unit-type/new',
             ],
             [
-                'navigation_menu_id'    => 37,
+                'navigation_menu_id'    => 38,
                 'route_type'            => 'details',
                 'view_file'             => 'pages.unit-type.details',
                 'js_file'               => 'unit-type/details',
             ],
             [
-                'navigation_menu_id'    => 37,
+                'navigation_menu_id'    => 38,
                 'route_type'            => 'import',
                 'view_file'             => 'pages.import.index',
                 'js_file'               => 'import/import',
@@ -792,25 +793,25 @@ class NavigationMenuRouteSeeder extends Seeder
 
             // Warehouse Type
             [
-                'navigation_menu_id'    => 38,
+                'navigation_menu_id'    => 39,
                 'route_type'            => 'index',
                 'view_file'             => 'pages.warehouse-type.index',
                 'js_file'               => 'warehouse-type/index',
             ],
             [
-                'navigation_menu_id'    => 38,
+                'navigation_menu_id'    => 39,
                 'route_type'            => 'new',
                 'view_file'             => 'pages.warehouse-type.new',
                 'js_file'               => 'warehouse-type/new',
             ],
             [
-                'navigation_menu_id'    => 38,
+                'navigation_menu_id'    => 39,
                 'route_type'            => 'details',
                 'view_file'             => 'pages.warehouse-type.details',
                 'js_file'               => 'warehouse-type/details',
             ],
             [
-                'navigation_menu_id'    => 38,
+                'navigation_menu_id'    => 39,
                 'route_type'            => 'import',
                 'view_file'             => 'pages.import.index',
                 'js_file'               => 'import/import',
@@ -818,7 +819,7 @@ class NavigationMenuRouteSeeder extends Seeder
 
             // POS Dashboard
             [
-                'navigation_menu_id'    => 39,
+                'navigation_menu_id'    => 40,
                 'route_type'            => 'index',
                 'view_file'             => 'pages.point-of-sale-dashboard.index',
                 'js_file'               => 'point-of-sale-dashboard/index',
@@ -826,13 +827,13 @@ class NavigationMenuRouteSeeder extends Seeder
 
             // Point of Sale
             [
-                'navigation_menu_id'    => 40,
+                'navigation_menu_id'    => 41,
                 'route_type'            => 'index',
                 'view_file'             => 'pages.point-of-sale.index',
                 'js_file'               => 'point-of-sale/index',
             ],
             [
-                'navigation_menu_id'    => 40,
+                'navigation_menu_id'    => 41,
                 'route_type'            => 'details',
                 'view_file'             => 'pages.point-of-sale.details',
                 'js_file'               => 'point-of-sale/details',
@@ -841,25 +842,25 @@ class NavigationMenuRouteSeeder extends Seeder
             
             // Shop Register
             [
-                'navigation_menu_id'    => 41,
+                'navigation_menu_id'    => 42,
                 'route_type'            => 'index',
                 'view_file'             => 'pages.shop-register.index',
                 'js_file'               => 'shop-register/index',
             ],
             [
-                'navigation_menu_id'    => 41,
+                'navigation_menu_id'    => 42,
                 'route_type'            => 'new',
                 'view_file'             => 'pages.shop-register.new',
                 'js_file'               => 'shop-register/new',
             ],
             [
-                'navigation_menu_id'    => 41,
+                'navigation_menu_id'    => 42,
                 'route_type'            => 'details',
                 'view_file'             => 'pages.shop-register.details',
                 'js_file'               => 'shop-register/details',
             ],
             [
-                'navigation_menu_id'    => 41,
+                'navigation_menu_id'    => 42,
                 'route_type'            => 'import',
                 'view_file'             => 'pages.import.index',
                 'js_file'               => 'import/import',
@@ -867,25 +868,25 @@ class NavigationMenuRouteSeeder extends Seeder
             
             // Charge Type
             [
-                'navigation_menu_id'    => 43,
+                'navigation_menu_id'    => 44,
                 'route_type'            => 'index',
                 'view_file'             => 'pages.charge-type.index',
                 'js_file'               => 'charge-type/index',
             ],
             [
-                'navigation_menu_id'    => 43,
+                'navigation_menu_id'    => 44,
                 'route_type'            => 'new',
                 'view_file'             => 'pages.charge-type.new',
                 'js_file'               => 'charge-type/new',
             ],
             [
-                'navigation_menu_id'    => 43,
+                'navigation_menu_id'    => 44,
                 'route_type'            => 'details',
                 'view_file'             => 'pages.charge-type.details',
                 'js_file'               => 'charge-type/details',
             ],
             [
-                'navigation_menu_id'    => 43,
+                'navigation_menu_id'    => 44,
                 'route_type'            => 'import',
                 'view_file'             => 'pages.import.index',
                 'js_file'               => 'import/import',
@@ -893,25 +894,25 @@ class NavigationMenuRouteSeeder extends Seeder
             
             // Discount Type
             [
-                'navigation_menu_id'    => 44,
+                'navigation_menu_id'    => 45,
                 'route_type'            => 'index',
                 'view_file'             => 'pages.discount-type.index',
                 'js_file'               => 'discount-type/index',
             ],
             [
-                'navigation_menu_id'    => 44,
+                'navigation_menu_id'    => 45,
                 'route_type'            => 'new',
                 'view_file'             => 'pages.discount-type.new',
                 'js_file'               => 'discount-type/new',
             ],
             [
-                'navigation_menu_id'    => 44,
+                'navigation_menu_id'    => 45,
                 'route_type'            => 'details',
                 'view_file'             => 'pages.discount-type.details',
                 'js_file'               => 'discount-type/details',
             ],
             [
-                'navigation_menu_id'    => 44,
+                'navigation_menu_id'    => 45,
                 'route_type'            => 'import',
                 'view_file'             => 'pages.import.index',
                 'js_file'               => 'import/import',
@@ -919,25 +920,25 @@ class NavigationMenuRouteSeeder extends Seeder
             
             // Floor Plan
             [
-                'navigation_menu_id'    => 45,
+                'navigation_menu_id'    => 46,
                 'route_type'            => 'index',
                 'view_file'             => 'pages.floor-plan.index',
                 'js_file'               => 'floor-plan/index',
             ],
             [
-                'navigation_menu_id'    => 45,
+                'navigation_menu_id'    => 46,
                 'route_type'            => 'new',
                 'view_file'             => 'pages.floor-plan.new',
                 'js_file'               => 'floor-plan/new',
             ],
             [
-                'navigation_menu_id'    => 45,
+                'navigation_menu_id'    => 46,
                 'route_type'            => 'details',
                 'view_file'             => 'pages.floor-plan.details',
                 'js_file'               => 'floor-plan/details',
             ],
             [
-                'navigation_menu_id'    => 45,
+                'navigation_menu_id'    => 46,
                 'route_type'            => 'import',
                 'view_file'             => 'pages.import.index',
                 'js_file'               => 'import/import',
@@ -945,25 +946,25 @@ class NavigationMenuRouteSeeder extends Seeder
             
             // Kitchen Route
             [
-                'navigation_menu_id'    => 46,
+                'navigation_menu_id'    => 47,
                 'route_type'            => 'index',
                 'view_file'             => 'pages.kitchen-route.index',
                 'js_file'               => 'kitchen-route/index',
             ],
             [
-                'navigation_menu_id'    => 46,
+                'navigation_menu_id'    => 47,
                 'route_type'            => 'new',
                 'view_file'             => 'pages.kitchen-route.new',
                 'js_file'               => 'kitchen-route/new',
             ],
             [
-                'navigation_menu_id'    => 46,
+                'navigation_menu_id'    => 47,
                 'route_type'            => 'details',
                 'view_file'             => 'pages.kitchen-route.details',
                 'js_file'               => 'kitchen-route/details',
             ],
             [
-                'navigation_menu_id'    => 46,
+                'navigation_menu_id'    => 47,
                 'route_type'            => 'import',
                 'view_file'             => 'pages.import.index',
                 'js_file'               => 'import/import',
@@ -971,25 +972,25 @@ class NavigationMenuRouteSeeder extends Seeder
             
             // Payment Method
             [
-                'navigation_menu_id'    => 47,
+                'navigation_menu_id'    => 48,
                 'route_type'            => 'index',
                 'view_file'             => 'pages.payment-method.index',
                 'js_file'               => 'payment-method/index',
             ],
             [
-                'navigation_menu_id'    => 47,
+                'navigation_menu_id'    => 48,
                 'route_type'            => 'new',
                 'view_file'             => 'pages.payment-method.new',
                 'js_file'               => 'payment-method/new',
             ],
             [
-                'navigation_menu_id'    => 47,
+                'navigation_menu_id'    => 48,
                 'route_type'            => 'details',
                 'view_file'             => 'pages.payment-method.details',
                 'js_file'               => 'payment-method/details',
             ],
             [
-                'navigation_menu_id'    => 47,
+                'navigation_menu_id'    => 48,
                 'route_type'            => 'import',
                 'view_file'             => 'pages.import.index',
                 'js_file'               => 'import/import',
@@ -997,25 +998,25 @@ class NavigationMenuRouteSeeder extends Seeder
             
             // Shop Order Request
             [
-                'navigation_menu_id'    => 48,
+                'navigation_menu_id'    => 49,
                 'route_type'            => 'index',
                 'view_file'             => 'pages.shop-order-request.index',
                 'js_file'               => 'shop-order-request/index',
             ],
             [
-                'navigation_menu_id'    => 48,
+                'navigation_menu_id'    => 49,
                 'route_type'            => 'new',
                 'view_file'             => 'pages.shop-order-request.new',
                 'js_file'               => 'shop-order-request/new',
             ],
             [
-                'navigation_menu_id'    => 48,
+                'navigation_menu_id'    => 49,
                 'route_type'            => 'details',
                 'view_file'             => 'pages.shop-order-request.details',
                 'js_file'               => 'shop-order-request/details',
             ],
             [
-                'navigation_menu_id'    => 48,
+                'navigation_menu_id'    => 49,
                 'route_type'            => 'import',
                 'view_file'             => 'pages.import.index',
                 'js_file'               => 'import/import',
@@ -1023,7 +1024,7 @@ class NavigationMenuRouteSeeder extends Seeder
             
             // Cash Count
             [
-                'navigation_menu_id'    => 50,
+                'navigation_menu_id'    => 51,
                 'route_type'            => 'index',
                 'view_file'             => 'pages.cash-count.index',
                 'js_file'               => 'cash-count/index',
@@ -1031,7 +1032,7 @@ class NavigationMenuRouteSeeder extends Seeder
             
             // Payment Summary
             [
-                'navigation_menu_id'    => 51,
+                'navigation_menu_id'    => 52,
                 'route_type'            => 'index',
                 'view_file'             => 'pages.payment-summary.index',
                 'js_file'               => 'payment-summary/index',
@@ -1039,7 +1040,7 @@ class NavigationMenuRouteSeeder extends Seeder
             
             // Transaction Summary
             [
-                'navigation_menu_id'    => 52,
+                'navigation_menu_id'    => 53,
                 'route_type'            => 'index',
                 'view_file'             => 'pages.transaction-summary.index',
                 'js_file'               => 'transaction-summary/index',
@@ -1047,13 +1048,13 @@ class NavigationMenuRouteSeeder extends Seeder
             
             // Preparation Display
             [
-                'navigation_menu_id'    => 53,
+                'navigation_menu_id'    => 54,
                 'route_type'            => 'index',
                 'view_file'             => 'pages.preparation-display.index',
                 'js_file'               => 'preparation-display/index',
             ],
             [
-                'navigation_menu_id'    => 53,
+                'navigation_menu_id'    => 54,
                 'route_type'            => 'details',
                 'view_file'             => 'pages.preparation-display.details',
                 'js_file'               => 'preparation-display/details',

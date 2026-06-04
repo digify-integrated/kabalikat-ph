@@ -34,8 +34,7 @@
         </div>
     
         <div class="col-lg-4">
-            <div class="card border-0 shadow-sm mt-5 mt-lg-0 h-100 d-flex flex-column overflow-hidden">
-                
+            <div class="card border-0 shadow-sm mt-5 mt-lg-0 h-100 d-flex flex-column overflow-hidden">             
                 <div class="px-4 py-4 border-bottom">
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="d-flex align-items-center gap-3">
@@ -59,16 +58,11 @@
                                 <i class="ki-outline ki-dots-vertical fs-2"></i>
                             </button>
                             <div class="dropdown-menu dropdown-menu-end rounded-4 shadow-sm border-0 p-2 w-225px">
-                                <div class="separator my-2"></div>
                                 <button class="dropdown-item rounded-3 py-3 fw-semibold" id="print-order-summary">
                                     <i class="ki-outline ki-printer fs-4 me-2 text-muted"></i>Print Order Summary
                                 </button>
                                 <button class="dropdown-item rounded-3 py-3 fw-semibold" id="print-payment-summary">
                                     <i class="ki-outline ki-printer fs-4 me-2 text-muted"></i>Print Payment Summary
-                                </button>
-                                <div class="separator my-2"></div>
-                                <button class="dropdown-item rounded-3 py-3 text-danger fw-bold" data-bs-toggle="modal" data-bs-target="#cancel-order-modal" id="cancel-button">
-                                    <i class="ki-outline ki-cross-circle fs-4 me-2 text-danger"></i>Cancel Order
                                 </button>
                             </div>
                         </div>
@@ -89,13 +83,19 @@
                         <div class="col">
                             <button class="btn btn-bg-white btn-color-gray-700 btn-active-light-success border w-100 py-3 d-flex flex-column align-items-center gap-1" id="new-order">
                                 <i class="ki-outline ki-plus fs-2 text-success p-0"></i>
-                                <span class="fw-bold small">New Order</span>
+                                <span class="fw-bold small">New</span>
                             </button>
                         </div>
                         <div class="col">
                             <button class="btn btn-bg-white btn-color-gray-700 btn-active-light-warning border w-100 py-3 d-flex flex-column align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#order-history-modal" id="order-history-button">
                                 <i class="ki-outline ki-time fs-2 text-warning p-0"></i>
                                 <span class="fw-bold small">Orders</span>
+                            </button>
+                        </div>
+                        <div class="col">
+                            <button class="btn btn-bg-white btn-color-gray-700 btn-active-light-danger border w-100 py-3 d-flex flex-column align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#cancel-order-modal" id="cancel-button">
+                                <i class="ki-outline ki-cross-circle fs-2 text-danger p-0"></i>
+                                <span class="fw-bold small">Cancel</span>
                             </button>
                         </div>
                     </div>
@@ -473,7 +473,7 @@
         </div>
     </div>
 
-    <div class="modal fade" id="order-history-modal" tabindex="-1" aria-hidden="true">
+   <div class="modal fade" id="order-history-modal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-xl">
             <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
                 <div class="modal-header border-0 py-4 px-5">
@@ -491,37 +491,97 @@
                 </div>
 
                 <div class="p-4">
-                    <div class="row g-2 mb-3">
-                        <div class="col-8">
-                            <input type="text" class="form-control form-control-solid" id="order-history-search" placeholder="Search order number or customer...">
+                    <div class="card border-0 p-4 rounded-4 mb-4">
+                        <div class="row g-3 align-items-center mb-3">
+                            <div class="col-6 col-lg-9">
+                                <div class="input-group input-group-solid shadow-sm rounded-3">
+                                    <span class="input-group-text bg-solid ps-4 border-0">
+                                        <i class="ki-duotone ki-magnifier fs-4 text-muted"></i>
+                                    </span>
+                                    <input type="text" 
+                                        class="form-control form-control-solid ps-2 py-3" 
+                                        id="order-history-search" 
+                                        placeholder="Search order #, customer, table, status (e.g., 'Paid', 'Dine-in')...">
+                                </div>
+                            </div>
+                            <div class="col-6 col-lg-3 d-flex justify-content-lg-end gap-2">
+                                <button type="button" class="btn btn-light-danger fw-bold w-100 w-lg-auto px-4" id="btn-reset-filters">
+                                    <i class="ki-duotone ki-arrows-loop fs-5 me-1"></i> Clear Filters
+                                </button>
+                            </div>
                         </div>
 
-                        <div class="col-4">
-                            <select class="form-select form-select-solid" id="order-history-filter">
-                                <option value="all">All</option>
-                                <option value="Unpaid">Unpaid</option>
-                                <option value="Paid">Paid</option>
-                                <option value="Cancelled">Cancelled</option>
-                                <option value="Voided">Voided</option>
-                                <option value="Refunded">Refunded</option>
-                            </select>
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6 col-lg-4">
+                                <label class="form-label fw-bold text-gray-700 fs-7 mb-1">Floor Plan & Table</label>
+                                <select class="form-select form-select-solid shadow-sm" id="order-history-table-filter">
+                                    <option value="all">All Tables / Location Types</option>
+                                </select>
+                            </div>
+
+                            <div class="col-12 col-md-6 col-lg-4">
+                                <label class="form-label fw-bold text-gray-700 fs-7 mb-1">Order Progress</label>
+                                <select class="form-select form-select-solid shadow-sm" id="order-history-order-status-filter">
+                                    <option value="all">All Order Statuses</option>
+                                    <option value="Pending">Pending</option>
+                                    
+                                    @if($shopRegister->is_restaurant === 'Yes')
+                                        <option value="Preparing">Preparing</option>
+                                        <option value="Ready">Ready</option>
+                                    @endif
+
+                                    <option value="Completed">Completed</option>
+                                    <option value="Cancelled">Cancelled</option>
+                                    <option value="Voided">Voided</option>
+                                </select>
+                            </div>
+
+                            <div class="col-12 col-md-6 col-lg-2">
+                                <label class="form-label fw-bold text-gray-700 fs-7 mb-1">Order Type</label>
+                                <select class="form-select form-select-solid shadow-sm" id="order-history-order-type-filter">
+                                    <option value="all">All Types</option>
+                                    <option value="Walk-in">Walk-in</option>
+                                    
+                                    @if($shopRegister->is_restaurant === 'Yes')
+                                        <option value="Dine-in">Dine-in</option>
+                                        <option value="Take-out">Take-out</option>
+                                    @endif
+
+                                    <option value="Delivery">Delivery</option>
+                                </select>
+                            </div>
+
+                            <div class="col-12 col-md-6 col-lg-2">
+                                <label class="form-label fw-bold text-gray-700 fs-7 mb-1">Payment Status</label>
+                                <select class="form-select form-select-solid shadow-sm" id="order-history-payment-status-filter">
+                                    <option value="all">All Payments</option>
+                                    <option value="Unpaid">Unpaid</option>
+                                    <option value="Paid">Paid</option>
+                                    <option value="Cancelled">Cancelled</option>
+                                    <option value="Voided">Voided</option>
+                                    <option value="Refunded">Refunded</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
-                    <div id="order-history-grid" class="row g-3"></div>
+                    <div class="overflow-y-auto px-2" style="max-height: 50vh;">
+                        
+                        <div id="order-history-grid" class="row g-3"></div>
 
-                    <div id="order-history-empty" class="text-center text-muted py-10 d-none">
-                        No orders found
-                    </div>
-
-                    <div id="order-history-loading" class="text-center py-10 d-none">
-                        <div class="spinner-border text-primary mb-3" role="status"></div>
-
-                        <div class="fw-semibold text-muted">
-                            Loading orders...
+                        <div id="order-history-empty" class="text-center text-muted py-10 d-none">
+                            No orders found
                         </div>
+
+                        <div id="order-history-loading" class="text-center py-10 d-none">
+                            <div class="spinner-border text-primary mb-3" role="status"></div>
+                            <div class="fw-semibold text-muted">
+                                Loading orders...
+                            </div>
+                        </div>
+
                     </div>
-                </div>
+                    </div>
             </div>
         </div>
     </div>

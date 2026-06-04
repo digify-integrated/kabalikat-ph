@@ -24,11 +24,19 @@ class RoleSeeder extends Seeder
         $roles = [
             [
                 'role_name' => 'Super Admin',
-                'role_description' => 'Has full access to all features and settings of the application.',
+                'role_description' => 'Has unrestricted access to all modules, settings, and administrative functions, including user and role management.',
             ],
             [
                 'role_name' => 'System Admin',
-                'role_description' => 'Responsible for managing system settings, user accounts, and overall maintenance of the application.',
+                'role_description' => 'Manages system configuration, user accounts, access permissions, and application maintenance to ensure smooth operation.',
+            ],
+            [
+                'role_name' => 'Cashier',
+                'role_description' => 'Processes sales transactions, manages customer payments, handles refunds, and generates daily sales records.',
+            ],
+            [
+                'role_name' => 'Inventory Admin',
+                'role_description' => 'Oversees inventory management, including stock monitoring, product updates, stock adjustments, and inventory reporting.',
             ],
         ];
 

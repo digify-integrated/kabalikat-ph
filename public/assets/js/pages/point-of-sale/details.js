@@ -61,6 +61,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         ],
+        dropdown: [
+            { url: '/floor-plan/generate-pos-table-options', dropdownSelector: '#order-history-table-filter' },
+        ],
         posCategory: { url: '/shop-register/generate-category' },
         posProduct: { url: '/shop-register/generate-product' },
     };
@@ -135,13 +138,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const ctx = getPageContext();
 
             const params = new URLSearchParams();
-
             params.append('detailId', ctx.detailId ?? '');
             params.append('appId', ctx.appId ?? '');
             params.append('navigationMenuId', ctx.navigationMenuId ?? '');
 
             appendObject(params, otherData);
-
             renderProductLoading();
 
             const response = await fetch(url, {
@@ -169,14 +170,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!products.length) {
                     const search = otherData.search?.trim() ?? '';
                     const category = otherData.category_id ?? 'all';
-                    container.innerHTML = renderNoProductsFound({search,category});
-
+                    container.innerHTML = renderNoProductsFound({ search, category });
                     return;
                 }
 
                 products.forEach(product => {
                     let html = renderProduct(product);
-
                     container.insertAdjacentHTML('beforeend', html);
                 });
             }
@@ -831,18 +830,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const renderProduct = (product) => {
         const disabled = !product.in_stock;
+        const isLowStock = product.is_low_stock;
 
-        const badgeClass = disabled
-            ? 'bg-danger-subtle text-danger'
-            : 'bg-success-subtle text-success';
+        // Resolve specific theme layouts relative to real-time warehouse states
+        let badgeClass = 'bg-success-subtle text-success';
+        let badgeText = product.stock_status || 'Available';
+        let icon = 'ki-basket text-muted';
 
-        const badgeText = disabled
-            ? 'Out of Stock'
-            : 'Available';
-
-        const icon = disabled
-            ? 'ki-cross-circle text-danger'
-            : 'ki-basket text-muted';
+        if (disabled) {
+            badgeClass = 'bg-danger-subtle text-danger';
+            badgeText = 'Out of Stock';
+            icon = 'ki-cross-circle text-danger';
+        } else if (isLowStock) {
+            badgeClass = 'bg-warning-subtle text-warning border border-warning';
+            badgeText = 'Low Stock';
+            icon = 'ki-information-5 text-warning';
+        }
 
         const modalAttrs = !disabled
             ? `data-bs-toggle="modal"
@@ -855,24 +858,20 @@ document.addEventListener('DOMContentLoaded', () => {
         return `
         <div class="col-6 col-md-4">
             <div class="card border-0 shadow-sm h-100 product-card ${disabled ? 'product-card-disabled opacity-60' : 'cursor-pointer'}" ${modalAttrs} style="transition: transform 0.2s ease, box-shadow 0.2s ease; ${disabled ? 'pointer-events: none;' : ''}"
-
                 ${!disabled ? `
                     onmouseover="this.style.transform='translateY(-4px)';
                         this.classList.remove('shadow-sm');
                         this.classList.add('shadow');"
-
                     onmouseout="this.style.transform='translateY(0)';
                         this.classList.remove('shadow');
                         this.classList.add('shadow-sm');"
                 ` : ''}
             >
-
                 <div class="card-body d-flex flex-column justify-content-between p-5">
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <span class="badge rounded-pill ${badgeClass} px-3 py-2 fw-semibold fs-8">
                             ${badgeText}
                         </span>
-
                         <i class="ki-duotone ${icon} fs-1"></i>
                     </div>
 
@@ -881,27 +880,26 @@ document.addEventListener('DOMContentLoaded', () => {
                             ${product.category_name}
                         </div>
 
-                        <h5 class="fw-bold fs-2 ${disabled ? 'text-muted' : 'text-gray-900'} mb-2 lh-base">
+                        <h5 class="fw-bold fs-2 ${disabled ? 'text-muted' : 'text-gray-900'} mb-1 lh-base">
                             ${product.product_name}
                         </h5>
 
-                        ${
-                            disabled && product.stock_status
-                            ? `
-                            <div class="text-danger fs-8 d-inline-block px-2 py-1 rounded-sm mt-1">
-                                <i class="ki-duotone ki-information fs-7 me-1 text-danger"></i>
-                                ${product.stock_status}
+                        ${product.track_inventory === 'Yes' ? `
+                            <div class="d-flex align-items-center gap-1 mt-1">
+                                <span class="badge ${isLowStock ? 'badge-light-warning text-warning' : 'badge-light-dark text-muted'} fs-9 px-2 py-1">
+                                    ${product.is_bom ? 'Estimated Qty:' : 'Available Qty:'} ${Math.floor(product.estimated_stock)}
+                                </span>
                             </div>
-                            `
-                            : ''
-                        }
+                        ` : `
+                            <div class="d-flex align-items-center gap-1 mt-1">
+                                <span class="badge badge-light-secondary text-muted fs-9 px-2 py-1">Non-inventoried Service</span>
+                            </div>
+                        `}
                     </div>
 
                     <div class="d-flex align-items-end justify-content-between pt-3 border-top border-gray-100">
                         <div>
-                            <div class="fs-8 text-muted text-uppercase mb-1">
-                                Price
-                            </div>
+                            <div class="fs-8 text-muted text-uppercase mb-1">Price</div>
                             <div class="fw-bolder fs-1 ${disabled ? 'text-muted' : 'text-primary'}">
                                 ₱ ${Number(product.price).toLocaleString(undefined, {
                                     minimumFractionDigits: 2,
@@ -910,7 +908,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                         </div>
 
-                        <div class="btn btn-icon btn-sm ${disabled ? 'btn-light' : 'btn-light-primary'} rounded-circle">
+                        <div class="btn btn-icon btn-sm ${disabled ? 'btn-light' : (isLowStock ? 'btn-warning' : 'btn-light-primary')} rounded-circle">
                             <i class="ki-duotone ${disabled ? 'ki-information' : 'ki-arrow-right'} fs-3"></i>
                         </div>
                     </div>
@@ -1041,7 +1039,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                         ${tableInfo}
                                     </span>
                                 ` : ''}
-
                             </div>
 
                             <div class="fw-bolder fs-5 text-dark text-nowrap">
@@ -1065,8 +1062,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!orders.length) {
             $('#order-history-empty').removeClass('d-none');
-        }
-        else {
+        } else {
             $('#order-history-empty').addClass('d-none');
         }
     };
@@ -2008,14 +2004,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const filterOrderHistory = () => {
         const search = $('#order-history-search').val().toLowerCase().trim();
-        const filter = $('#order-history-filter').val();
+        
+        // Read values from the new explicit filter selectors
+        const orderTypeFilter    = $('#order-history-order-type-filter').val();
+        const orderStatusFilter  = $('#order-history-order-status-filter').val();
+        const paymentStatusFilter = $('#order-history-payment-status-filter').val();
+        const tableFilter        = $('#order-history-table-filter').val(); // Houses floor_plan_table ID
+
         let filtered = [...cachedOrders];
 
-        if (search) {
-            // Smart Parsing: If cashier typed "table 5" or "tb 5", isolate the number "5"
+        // 1. Text Search Filtering (with smart parsing for table typing)
+       if (search) {
             let isolatedTableNum = null;
-            if (search.includes('table ') || search.includes('tb ') || search.includes('Table ')) {
-                const matches = search.match(/\d+/); // Finds the first digit block in the text
+            if (search.includes('table ') || search.includes('tb ') || search.includes('table')) {
+                const matches = search.match(/\d+/); // Finds the first digit block
                 if (matches) {
                     isolatedTableNum = matches[0];
                 }
@@ -2024,27 +2026,54 @@ document.addEventListener('DOMContentLoaded', () => {
             filtered = filtered.filter(order => {
                 const orderTableStr = order.table_number?.toString().toLowerCase() || '';
                 
-                // Check direct matching criteria
+                // Comprehensive check matching against all requested properties safely
                 const matchesDirectSearch = (
                     order.order_number?.toLowerCase().includes(search) ||
                     order.customer_name?.toLowerCase().includes(search) ||
                     order.floor_plan_name?.toLowerCase().includes(search) ||
+                    order.order_status?.toLowerCase().includes(search) ||
+                    order.payment_status?.toLowerCase().includes(search) ||
+                    order.order_type?.toLowerCase().includes(search) ||
                     orderTableStr.includes(search)
                 );
 
-                // Check smart keyword variation criteria (e.g., search context "table 1")
+                // Keep your smart override parsing (e.g., matching "tb 5" quickly to table_number "5")
                 const matchesSmartTableSearch = isolatedTableNum && orderTableStr === isolatedTableNum;
 
                 return matchesDirectSearch || matchesSmartTableSearch;
             });
         }
 
-        if (filter && filter !== 'all') {
+        // 2. Order Type Dropdown Filter
+        if (orderTypeFilter && orderTypeFilter !== 'all') {
+            filtered = filtered.filter(order => order.order_type === orderTypeFilter);
+        }
+
+        // 3. Order Status Dropdown Filter
+        if (orderStatusFilter && orderStatusFilter !== 'all') {
+            filtered = filtered.filter(order => order.order_status === orderStatusFilter);
+        }
+
+        // 4. Payment Status Dropdown Filter
+        if (paymentStatusFilter && paymentStatusFilter !== 'all') {
+            filtered = filtered.filter(order => order.payment_status === paymentStatusFilter);
+        }
+
+        // 5. Table Dropdown Filter (Targeting the specific assigned table ID)
+        if (tableFilter && tableFilter !== 'all' && tableFilter !== '') {
+            // Get the selected option element to read its text and its parent <optgroup> label
+            const $selectedOption = $('#order-history-table-filter').find('option:selected');
+            const selectedFloorName = $selectedOption.closest('optgroup').attr('label')?.toLowerCase().trim();
+            
+            // Extract just the number from "Table 5" -> "5"
+            const selectedTableNum = $selectedOption.text().replace('Table ', '').trim().toLowerCase();
+
             filtered = filtered.filter(order => {
-                return (
-                    order.payment_status === filter ||
-                    order.order_status === filter
-                );
+                const orderFloorName = order.floor_plan_name?.toLowerCase().trim() || '';
+                const orderTableNum = order.table_number?.toString().toLowerCase().trim() || '';
+
+                // Match both the floor plan group and the specific table number
+                return orderFloorName === selectedFloorName && orderTableNum === selectedTableNum;
             });
         }
 
@@ -2171,6 +2200,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     config.forms.map((cfg) => initValidation(cfg.selector, cfg.rules));
+    config.dropdown.map((cfg) => generateDropdownOptions(cfg));
     generatePOSCategory(config.posCategory.url)
     generatePOSProduct(config.posProduct.url);
 
@@ -2884,7 +2914,7 @@ document.addEventListener('DOMContentLoaded', () => {
             sessionStorage.removeItem('shop_order_id');
             sessionStorage.removeItem('shop_order_number');
 
-            generatePOSProduct(config.posProduct.url);
+            generatePOSProduct(config.posProduct.url, {category_id: 'all', search: ''});
 
             resetCartUI();
 
@@ -3176,6 +3206,14 @@ document.addEventListener('DOMContentLoaded', () => {
         checkbox.prop('checked', !checkbox.prop('checked')).trigger('change');
     });
 
+    $(document).on('click', '#btn-reset-filters', function () {
+        $('#order-history-search').val('');
+        $('#order-history-table-filter').val('all').trigger('change');
+        $('#order-history-payment-status-filter').val('all').trigger('change');
+        $('#order-history-order-status-filter').val('all').trigger('change');
+        $('#order-history-order-type-filter').val('all').trigger('change');
+    });
+
     $('#kitchen-send-modal').on('hidden.bs.modal', function () {
         $('#kitchen-route-select').val('').trigger('change');
         $('#selected-kitchen-items-count').text('0');
@@ -3256,7 +3294,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    $(document).on('change', '#order-history-filter', function () {
+    $(document).on('change', '#order-history-order-type-filter', function () {
+        filterOrderHistory();
+    });
+
+    $(document).on('change', '#order-history-order-status-filter', function () {
+        filterOrderHistory();
+    });
+
+    $(document).on('change', '#order-history-payment-status-filter', function () {
+        filterOrderHistory();
+    });
+
+    $(document).on('change', '#order-history-table-filter', function () {
         filterOrderHistory();
     });
 

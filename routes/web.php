@@ -793,6 +793,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
             Route::post('/generate-table', 'generateTable')->name('generate.table');
             Route::post('/generate-options', 'generateOptions')->name('generate.options');
+            Route::post('/generate-pos-table-options', 'generatePOSTableOptions')->name('generate.options');
         });
         
     // Floor Plan Table
