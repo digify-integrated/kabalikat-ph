@@ -2789,7 +2789,6 @@ return new class extends Migration
         Schema::dropIfExists('shop_order_payment');
         Schema::dropIfExists('shop_order_item');
         Schema::dropIfExists('shop_order_request');
-        Schema::dropIfExists('product_kitchen_route');
         Schema::dropIfExists('kitchen_ticket');
         Schema::dropIfExists('kitchen_ticket_item');
         Schema::dropIfExists('shop_order');
