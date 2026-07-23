@@ -150,7 +150,7 @@
 
                     @if($canWrite)
                         <div class="card-footer d-flex justify-content-end py-6 px-9">
-                            <button type="submit" class="btn btn-primary" id="submit-data">
+                            <button type="submit" class="btn btn-primary btn-sm" id="submit-data">
                                 Save Changes
                             </button>
                         </div>

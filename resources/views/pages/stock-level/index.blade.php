@@ -50,8 +50,10 @@
 
                         </div>
                     @endif
-                    
-                    @include('partials.datatable-buttons')
+
+                    @if(($exportPermission ?? 0) > 0)
+                        @include('partials.datatable-buttons')
+                    @endif
                 </div>
                 <div>
                     <button type="button" class="btn btn-light-primary me-3" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end"><i class="ki-outline ki-filter fs-2"></i> Filter</button>

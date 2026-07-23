@@ -276,7 +276,7 @@ return new class extends Migration
             $table->id();
             $table->string('upload_setting_name');
             $table->string('upload_setting_description');
-            $table->double('max_file_size');
+            $table->unsignedInteger('max_file_size');
             $table->foreignId('last_log_by')->nullable()->default(1)->constrained('users')->nullOnDelete();
             $table->timestamps();
         });

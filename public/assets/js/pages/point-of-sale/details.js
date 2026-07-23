@@ -1022,7 +1022,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div>
                             <div class="fs-8 text-muted text-uppercase mb-1">Price</div>
                             <div class="fw-bolder fs-1 ${disabled ? 'text-muted' : 'text-primary'}">
-                                ₱ ${Number(product.price).toLocaleString(undefined, {
+                                ₱ ${Number(String(product.price).replace(/[^0-9.-]+/g, "")).toLocaleString(undefined, {
                                     minimumFractionDigits: 2,
                                     maximumFractionDigits: 2
                                 })}
