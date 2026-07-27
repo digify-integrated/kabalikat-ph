@@ -95,7 +95,7 @@ class KitchenTicketController extends Controller
             foreach ($grouped as $routeId => $routeItems) {
                 $routeName = $routeItems->first()['kitchen_route_name'];
 
-                // 🌟 FIXED: Differentiate between structural reductions vs expansions
+                // Differentiate between structural reductions vs expansions
                 $hasAdditions = $routeItems->contains(function ($item) {
                     return in_array($item['action_type'], ['New', 'Add', 'Refire']);
                 });
@@ -104,25 +104,31 @@ class KitchenTicketController extends Controller
                 $existingTicket = DB::table('kitchen_ticket')
                     ->where('shop_order_id', $shopOrderId)
                     ->where('kitchen_route_id', $routeId)
-                    ->where('ticket_status', 'Queued') // Strict lock: Only catch it if the line hasn't touched it
+                    ->where('ticket_status', 'Queued')
                     ->first();
 
-                // Fallback for reductions: If we're reducing/voiding items, we still want to hit the active working ticket
+                // Fallback for reductions: If we're reducing/voiding items, hit active working ticket
                 if (!$existingTicket && !$hasAdditions) {
                     $existingTicket = DB::table('kitchen_ticket')
                         ->where('shop_order_id', $shopOrderId)
                         ->where('kitchen_route_id', $routeId)
                         ->whereIn('ticket_status', ['Preparing', 'Ready'])
-                        ->orderByDesc('id') // Hit the most recent working ticket iteration
+                        ->orderByDesc('id')
                         ->first();
                 }
 
                 if ($existingTicket) {
                     $ticketId = $existingTicket->id;
                 } else {
+                    // Generate a guaranteed unique Ticket Number
+                    $ticketNumber = 'KT-' 
+                        . strtoupper(now()->format('FdY')) 
+                        . '-' . substr($order->order_number, -4)
+                        . '-' . strtoupper(\Illuminate\Support\Str::random(4));
+
                     // Spawns a brand new clean ticket if the old one is already being worked on/finished
                     $ticketId = DB::table('kitchen_ticket')->insertGetId([
-                        'ticket_number' => 'KT-' . strtoupper(now()->format('FdY')) . '-' . substr($order->order_number, -4),
+                        'ticket_number'      => $ticketNumber,
                         'shop_order_id'      => $shopOrderId,
                         'shop_register_id'   => $order->shop_register_id,
                         'shop_register_name' => $order->shop_register_name,
