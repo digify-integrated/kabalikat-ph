@@ -1006,6 +1006,11 @@ Route::middleware('auth')->group(function () {
         [ShopOrderPrintController::class, 'printRegisterPaymentsReport']
     )->name('shop-order.register.print-payments');
 
+    Route::get(
+        '/orders/{ticketId}/print-kitchen-ticket', 
+        [ShopOrderPrintController::class, 'printKitchenTicket']
+    )->name('shop-order.print-kitchen-ticket');
+
     // Import
     Route::prefix('import')
         ->name('import.')

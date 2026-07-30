@@ -441,6 +441,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const minutes = ticket.minutes_waiting;
         const isDelayed = minutes >= 20;
         const isWarning = minutes >= 10 && minutes < 20;
+        const isQueued = ticket.ticket_status === 'Queued';
         
         let cardBorder = 'border-neutral-200';
         let headerBg = '';
@@ -460,9 +461,22 @@ document.addEventListener('DOMContentLoaded', () => {
             icon = '⚠️ ';
         }
 
+        const ticketId = ticket.ticket_id;
+
+        // Big full-width button at the bottom of the card for queued tickets
+        const cardFooterHtml = isQueued ? `
+            <div class="card-footer bg-light p-2 border-top">
+                <button type="button"
+                        class="btn btn-outline-dark w-100 py-2 fw-bold d-flex align-items-center justify-content-center gap-2 print-kitchen-ticket-btn shadow-sm"
+                        data-ticket-id="${ticketId}">
+                    <span>🖨️</span> Print Kitchen Ticket
+                </button>
+            </div>
+        ` : '';
+
         return `
             <div class="card h-100 border overflow-hidden ${cardBorder}">
-                <div class="card-header d-flex justify-content-between align-items-center px-5 py-2.5 ${headerBg}">
+                <div class="card-header d-flex justify-content-between align-items-center px-4 py-2.5 ${headerBg}">
                     <div>
                         <span class="fs-4 fw-bold tracking-tight"># ${ticket.ticket_number}</span>
                         <div class="small opacity-80 fw-semibold text-uppercase tracking-wider mt-0.5">
@@ -470,7 +484,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </div>
                     <div>
-                        <span class="fs-6 px-3 py-2 ${timerBadge}">${icon}${Math.floor(minutes)}m</span>
+                        <span class="fs-6 px-3 py-1.5 rounded-2 ${timerBadge}">${icon}${Math.floor(minutes)}m</span>
                     </div>
                 </div>
                 
@@ -479,6 +493,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         ${ticket.items.map((item, index) => renderKitchenItem(item, index, ticket.items.length, ticket.ticket_status)).join('')}
                     </div>
                 </div>
+
+                ${cardFooterHtml}
             </div>
         `;
     }
@@ -627,4 +643,32 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         return data;
     }
+
+    $(document).on('click', '.print-kitchen-ticket-btn', function (e) {
+        e.preventDefault();
+
+        // Retrieve ticket ID from the clicked button's data attribute
+        const ticketId = $(this).data('ticket-id');
+
+        if (!ticketId) {
+            if (typeof showNotification === 'function') {
+                showNotification('Unable to print: Ticket ID missing.');
+            } else {
+                alert('Unable to print: Ticket ID missing.');
+            }
+            return;
+        }
+
+        const width = 900;
+        const height = 700;
+        const left = (screen.width - width) / 2;
+        const top = (screen.height - height) / 2;
+        const url = `/orders/${ticketId}/print-kitchen-ticket`;
+
+        window.open(
+            url,
+            'KitchenTicketPrint',
+            `width=${width},height=${height},top=${top},left=${left},scrollbars=yes,resizable=yes`
+        );
+    });
 });

@@ -59,6 +59,159 @@ class ShopOrderPrintController extends Controller
             ->header('Content-Type', 'application/pdf');
     }
 
+    public function printKitchenTicket(int $ticketId)
+    {
+        $kitchenTicket = DB::table('kitchen_ticket')
+            ->where('id', $ticketId)
+            ->first();
+
+        if (!$kitchenTicket) {
+            abort(404, 'Kitchen ticket not found.');
+        }
+
+        $shopOrder = ShopOrder::with([
+            'items' => function ($query) {
+                $query->where('quantity', '>', 0);
+            },
+            'floorPlan',
+            'floorPlanTable',
+        ])->find($kitchenTicket->shop_order_id);
+
+        if (!$shopOrder) {
+            abort(404, 'Shop order not found for this ticket.');
+        }
+
+        // 80mm x 50mm Terminal Ticket Size
+        $pdf = new TCPDF('P', 'mm', [80, 50], true, 'UTF-8', false);
+        
+        $pdf->SetMargins(2, 2, 2); // Tight 2mm margins
+        $pdf->SetAutoPageBreak(false);
+        $pdf->setPrintHeader(false);
+        $pdf->setPrintFooter(false);
+        
+        // --- Inject JavaScript Auto-Print Command ---
+        // print(true) opens the print dialog automatically.
+        // print(false) attempts silent printing (if supported by POS environment).
+        $pdf->IncludeJS("print(true);");
+
+        $pdf->AddPage();
+        $this->renderKitchenTicket($pdf, $shopOrder);
+
+        DB::table('kitchen_ticket')
+            ->where('id', $ticketId)
+            ->update([
+                'print_count' => DB::raw('print_count + 1'),
+                'last_printed_at' => now(),
+            ]);
+
+        return response($pdf->Output("kitchen-ticket-{$shopOrder->order_number}.pdf", 'I'), 200)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'inline; filename="kitchen-ticket-' . $shopOrder->order_number . '.pdf"');
+    }
+
+    private function renderKitchenTicket(TCPDF $pdf, ShopOrder $shopOrder): void
+    {
+        // --- 1. HEADER METADATA ---
+        $pdf->SetFont('helvetica', 'B', 12);
+        $floorPlanName = $shopOrder->floor_plan_name ?? '';
+        $locationOrId = $shopOrder->table_number 
+            ? 'TBL ' . $shopOrder->table_number 
+            : '#' . $shopOrder->order_number;
+        $pdf->Cell(0, 5, trim($floorPlanName . ' ' . $locationOrId), 0, 1, 'C');
+
+        // Ticket Number & Timestamp Line
+        $pdf->SetFont('helvetica', 'B', 8);
+        $pdf->Cell(38, 3.5, 'TICKET #' . $shopOrder->order_number, 0, 0, 'L');
+        
+        $pdf->SetFont('helvetica', '', 7);
+        $pdf->Cell(38, 3.5, now()->format('h:i A | M d'), 0, 1, 'R');
+
+        // Double Divider Line
+        $pdf->SetFont('helvetica', 'B', 6);
+        $pdf->Cell(0, 1, str_repeat('=', 52), 0, 1, 'C');
+
+        // --- 2. BUILD HTML TABLE FOR ITEMS ---
+        $html = '
+        <style>
+            table {
+                width: 100%;
+                font-family: helvetica;
+            }
+            th {
+                font-size: 7pt;
+                font-weight: bold;
+                border-bottom: 0.5pt solid #000;
+            }
+            td.qty {
+                width: 15%;
+                font-size: 9pt;
+                font-weight: bold;
+                vertical-align: top;
+            }
+            td.item {
+                width: 85%;
+                font-size: 8pt;
+                font-weight: bold;
+                vertical-align: top;
+            }
+            .note {
+                font-size: 7pt;
+                font-weight: bold;
+                color: #222222;
+                padding-top: 1px;
+            }
+        </style>
+        <table cellpadding="1" cellspacing="0">
+            <thead>
+                <tr>
+                    <th style="width: 15%;">QTY</th>
+                    <th style="width: 85%;">ITEM DETAILS</th>
+                </tr>
+            </thead>
+            <tbody>';
+
+        $hasItems = false;
+
+        foreach ($shopOrder->items as $item) {
+            if ($item->status === 'Cancelled' || (float) $item->quantity <= 0) {
+                continue;
+            }
+
+            $hasItems = true;
+            $qty = number_format((float) $item->quantity) . 'x';
+            $itemName = htmlspecialchars(strtoupper($item->product_name));
+
+            $html .= '<tr>';
+            $html .= '<td class="qty">' . $qty . '</td>';
+            $html .= '<td class="item">' . $itemName;
+
+            if (!empty($item->order_note)) {
+                $note = htmlspecialchars(strtoupper($item->order_note));
+                $html .= '<div class="note">&gt;&gt; NOTE: ' . $note . '</div>';
+            }
+
+            $html .= '</td>';
+            $html .= '</tr>';
+        }
+
+        $html .= '</tbody></table>';
+
+        if ($hasItems) {
+            // Output the HTML Table block (width 76mm fits within 80mm paper with 2mm margins)
+            $pdf->writeHTMLCell(45, 0, $pdf->GetX(), $pdf->GetY(), $html, 0, 1, false, true, 'L', true);
+        }
+
+        // --- 3. BOTTOM TERMINAL FOOTER ---
+        if ($pdf->GetY() <= 45) {
+            $pdf->Cell(0, 1, str_repeat('=', 52), 0, 1, 'C');
+            $pdf->SetFont('helvetica', 'B', 7);
+            $pdf->Cell(0, 2.5, '*** END OF TICKET ***', 0, 1, 'C');
+        } else {
+            $pdf->SetFont('helvetica', 'B', 6);
+            $pdf->Cell(0, 2, '*** MORE ITEMS ON NEXT TICKET ***', 0, 1, 'C');
+        }
+    }
+
     /**
      * 1. REPORT: List of all shop orders per shop register session
      */

@@ -31,13 +31,30 @@ class KitchenTicketController extends Controller
         DB::beginTransaction();
 
         try {
-            $order = DB::table('shop_order')->where('id', $shopOrderId)->first();
+            // Fetch order along with register information to check restaurant settings
+            $order = DB::table('shop_order as so')
+                ->join('shop_register as sr', 'sr.id', '=', 'so.shop_register_id')
+                ->where('so.id', $shopOrderId)
+                ->select([
+                    'so.*',
+                    'sr.is_restaurant',
+                ])
+                ->first();
 
             if (!$order) {
                 DB::rollBack();
                 return response()->json([
                     'success' => false,
                     'message' => 'Order not found.'
+                ]);
+            }
+
+            // 🌟 VALIDATION: Require table number if register is set to Restaurant mode ('Yes')
+            if ($order->is_restaurant === 'Yes' && (empty($order->table_number) || is_null($order->floor_plan_table_id))) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'A table selection is required for restaurant register orders.'
                 ]);
             }
 
@@ -95,34 +112,30 @@ class KitchenTicketController extends Controller
             foreach ($grouped as $routeId => $routeItems) {
                 $routeName = $routeItems->first()['kitchen_route_name'];
 
-                // 🌟 FIXED: Differentiate between structural reductions vs expansions
                 $hasAdditions = $routeItems->contains(function ($item) {
                     return in_array($item['action_type'], ['New', 'Add', 'Refire']);
                 });
                 
-                // Look for an existing ticket ONLY if it is still completely un-engaged ('Queued')
                 $existingTicket = DB::table('kitchen_ticket')
                     ->where('shop_order_id', $shopOrderId)
                     ->where('kitchen_route_id', $routeId)
-                    ->where('ticket_status', 'Queued') // Strict lock: Only catch it if the line hasn't touched it
+                    ->where('ticket_status', 'Queued')
                     ->first();
 
-                // Fallback for reductions: If we're reducing/voiding items, we still want to hit the active working ticket
                 if (!$existingTicket && !$hasAdditions) {
                     $existingTicket = DB::table('kitchen_ticket')
                         ->where('shop_order_id', $shopOrderId)
                         ->where('kitchen_route_id', $routeId)
                         ->whereIn('ticket_status', ['Preparing', 'Ready'])
-                        ->orderByDesc('id') // Hit the most recent working ticket iteration
+                        ->orderByDesc('id')
                         ->first();
                 }
 
                 if ($existingTicket) {
                     $ticketId = $existingTicket->id;
                 } else {
-                    // Spawns a brand new clean ticket if the old one is already being worked on/finished
                     $ticketId = DB::table('kitchen_ticket')->insertGetId([
-                        'ticket_number' => 'KT-' . strtoupper(now()->format('FdY')) . '-' . substr($order->order_number, -4),
+                        'ticket_number'      => 'KT-' . strtoupper(now()->format('YmdHis')) . '-' . substr($order->order_number, -4),
                         'shop_order_id'      => $shopOrderId,
                         'shop_register_id'   => $order->shop_register_id,
                         'shop_register_name' => $order->shop_register_name,
@@ -137,11 +150,6 @@ class KitchenTicketController extends Controller
                     ]);
                 }
 
-                /*
-                |--------------------------------------------------------------------------
-                | INSERT/PROCESS ITEMS
-                |--------------------------------------------------------------------------
-                */
                 foreach ($routeItems as $item) {
                     $orderItem = DB::table('shop_order_item')
                         ->where('id', $item['shop_order_item_id'])
@@ -180,21 +188,20 @@ class KitchenTicketController extends Controller
                             }
                         }
                     } else {
-                        // Regular append into our safely resolved target ticket configuration
                         DB::table('kitchen_ticket_item')->insert([
-                            'kitchen_ticket_id' => $ticketId,
+                            'kitchen_ticket_id'  => $ticketId,
                             'shop_order_item_id' => $item['shop_order_item_id'],
-                            'product_id' => $orderItem->product_id,
-                            'product_name' => $orderItem->product_name,
-                            'action_type' => $item['action_type'],
-                            'quantity' => $item['quantity'],
-                            'order_note' => $item['order_note'] ?? null,
-                            'item_status' => 'Queued',
-                            'queued_at' => now(),
-                            'created_by' => auth()->id(),
-                            'created_by_name' => auth()->user()->name ?? 'System',
-                            'created_at' => now(),
-                            'updated_at' => now(),
+                            'product_id'         => $orderItem->product_id,
+                            'product_name'       => $orderItem->product_name,
+                            'action_type'        => $item['action_type'],
+                            'quantity'           => $item['quantity'],
+                            'order_note'         => $item['order_note'] ?? null,
+                            'item_status'        => 'Queued',
+                            'queued_at'          => now(),
+                            'created_by'         => auth()->id(),
+                            'created_by_name'    => auth()->user()->name ?? 'System',
+                            'created_at'         => now(),
+                            'updated_at'         => now(),
                         ]);
                     }
 
@@ -203,11 +210,10 @@ class KitchenTicketController extends Controller
                         ->update([
                             'item_status' => $this->mapKitchenStatus($item['action_type']),
                             'last_log_by' => auth()->id(),
-                            'updated_at' => now(),
+                            'updated_at'  => now(),
                         ]);
                 }
 
-                // Clean reassessment score run wrapper
                 $this->recalculateTicketStatus($ticketId);
 
                 $createdTickets[] = $ticketId;
