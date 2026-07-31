@@ -73,19 +73,19 @@
                 </div>
 
                 <div class="d-flex gap-1.5 flex-wrap mt-3 cart-action d-none">
-                    <span class="badge badge-light-primary fw-bold fs-8 px-3 py-2 rounded-2" id="badge-customer-name">Walk-in Customer</span>
-                    <span class="badge badge-light-warning fw-bold fs-8 px-3 py-2 rounded-2" id="badge-order-type">Walk-in</span>
+                    <span class="badge badge-light-primary fw-bold fs-8 px-3 py-2 me-2 mb-2 rounded-2" id="badge-customer-name">Walk-in Customer</span>
+                    <span class="badge badge-light-warning fw-bold fs-8 px-3 py-2 me-2 mb-2 rounded-2" id="badge-order-type">Walk-in</span>
                     @if($shopRegister->is_restaurant === 'Yes')
-                        <span class="badge badge-light-dark fw-bold fs-8 px-3 py-2 rounded-2" id="badge-table">No Table</span>
+                        <span class="badge badge-light-dark fw-bold fs-8 px-3 py-2 me-2 mb-2 rounded-2" id="badge-table">No Table</span>
                     @endif
                     <span class="badge badge-light-success fw-bold fs-8 px-3 py-2 rounded-2" id="badge-order-status">Unpaid</span>
                 </div>
             </div>
 
             <!-- 2. Barcode & Action Controls -->
-            <div class="card-body p-5 bg-light-subtle border-bottom">
+            <div class="card-body p-5 border-bottom">
                 <div class="mb-3">
-                    <div class="input-group input-group-solid border border-gray-300 rounded-3 bg-white shadow-xs">
+                    <div class="input-group input-group-solid border border-gray-300 rounded-3 shadow-xs">
                         <span class="input-group-text bg-transparent border-0 pe-2">
                             <i class="ki-outline ki-barcode fs-1 text-primary"></i>
                         </span>
@@ -193,8 +193,8 @@
             </div>
 
             <!-- 4. Prominent Order Summary Block -->
-            <div id="shop-order-summary-card" class="card-footer bg-light-subtle border-top px-5 py-4 d-none">
-                <div class="bg-white p-4 rounded-3 border shadow-xs" id="order-summary-list"></div>
+            <div id="shop-order-summary-card" class="card-footer border-top px-5 py-4 d-none">
+                <div class="p-4 rounded-3 border shadow-xs" id="order-summary-list"></div>
             </div>
 
             <!-- 5. Payment & Checkout Footer -->

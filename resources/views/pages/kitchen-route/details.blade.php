@@ -38,6 +38,27 @@
 
                             <input type="text" class="form-control" id="kitchen_route_name" name="kitchen_route_name" maxlength="100" autocomplete="off" @disabled(!$canWrite)>
                         </div>
+
+                        <div class="row">
+                            <div class="col">
+                                <div class="fv-row mb-4">
+                                    <label class="fs-6 fw-semibold required form-label mt-3" for="printer_ip">
+                                        Printer IP Address
+                                    </label>
+
+                                    <input type="text" class="form-control" id="printer_ip" name="printer_ip" maxlength="100" autocomplete="off">
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="fv-row mb-4">
+                                    <label class="fs-6 fw-semibold required form-label mt-3" for="printer_port">
+                                        Printer Port
+                                    </label>
+
+                                    <input type="number" class="form-control" id="printer_port" name="printer_port" min="0" step="1" @disabled(!$canWrite)>
+                                </div>
+                            </div>
+                        </div>
                     </form>
                 </div>
 

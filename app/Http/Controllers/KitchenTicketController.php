@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
-use App\Models\ProductBOM;
 use App\Models\ShopOrder;
 use App\Models\StockLevel;
 use App\Models\StockMovement;
@@ -13,6 +12,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Validator;
+use Mike42\Escpos\Printer;
+use Mike42\Escpos\PrintConnectors\NetworkPrintConnector;
 
 class KitchenTicketController extends Controller
 {
@@ -49,7 +50,7 @@ class KitchenTicketController extends Controller
                 ]);
             }
 
-            // 🌟 VALIDATION: Require table number if register is set to Restaurant mode ('Yes')
+            // VALIDATION: Require table number if register is set to Restaurant mode ('Yes')
             if ($order->is_restaurant === 'Yes' && (empty($order->table_number) || is_null($order->floor_plan_table_id))) {
                 DB::rollBack();
                 return response()->json([
@@ -63,6 +64,29 @@ class KitchenTicketController extends Controller
             foreach ($items as $item) {
                 $orderItemId = $item['shop_order_item_id'];
                 $actionType = $item['action_type'];
+
+                // Fetch the corresponding order item from the database to fallback/sync correctly
+                $orderItem = DB::table('shop_order_item')
+                    ->where('id', $orderItemId)
+                    ->first();
+
+                if (!$orderItem) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Order item with ID {$orderItemId} not found."
+                    ]);
+                }
+
+                // Capture order_note dynamically: check payload keys first, then fallback to database record
+                $orderNote = $item['order_note'] 
+                    ?? $item['note'] 
+                    ?? $item['remarks'] 
+                    ?? $orderItem->order_note 
+                    ?? null;
+
+                $item['order_note'] = $orderNote;
+                $item['order_item_record'] = $orderItem;
 
                 $originalRoute = DB::table('kitchen_ticket_item as kti')
                     ->join('kitchen_ticket as kt', 'kt.id', '=', 'kti.kitchen_ticket_id')
@@ -108,11 +132,12 @@ class KitchenTicketController extends Controller
 
             $grouped = collect($resolvedItems)->groupBy('kitchen_route_id');
             $createdTickets = [];
+            $tickets = [];
+            $ticketsToPrint = [];
 
             foreach ($grouped as $routeId => $routeItems) {
                 $routeName = $routeItems->first()['kitchen_route_name'];
 
-                // Differentiate between structural reductions vs expansions
                 $hasAdditions = $routeItems->contains(function ($item) {
                     return in_array($item['action_type'], ['New', 'Add', 'Refire']);
                 });
@@ -123,7 +148,8 @@ class KitchenTicketController extends Controller
                     ->where('ticket_status', 'Queued')
                     ->first();
 
-                // Fallback for reductions: If we're reducing/voiding items, hit active working ticket
+                $isBrandNewTicket = false;
+
                 if (!$existingTicket && !$hasAdditions) {
                     $existingTicket = DB::table('kitchen_ticket')
                         ->where('shop_order_id', $shopOrderId)
@@ -136,13 +162,10 @@ class KitchenTicketController extends Controller
                 if ($existingTicket) {
                     $ticketId = $existingTicket->id;
                 } else {
-                    // Generate a guaranteed unique Ticket Number
-                    $ticketNumber = 'KT-' 
-                        . strtoupper(now()->format('FdY')) 
-                        . '-' . substr($order->order_number, -4)
-                        . '-' . strtoupper(\Illuminate\Support\Str::random(4));
+                    $isBrandNewTicket = true;
 
-                    // Spawns a brand new clean ticket if the old one is already being worked on/finished
+                   $ticketNumber = 'KT-' . now()->format('Hi') . '-' . substr($order->order_number, -3);
+
                     $ticketId = DB::table('kitchen_ticket')->insertGetId([
                         'ticket_number'      => $ticketNumber,
                         'shop_order_id'      => $shopOrderId,
@@ -154,15 +177,11 @@ class KitchenTicketController extends Controller
                         'queued_at'          => now(),
                         'created_by'         => auth()->id(),
                         'created_by_name'    => auth()->user()->name ?? 'System',
-                        'created_at'         => now(),
-                        'updated_at'         => now(),
                     ]);
                 }
 
                 foreach ($routeItems as $item) {
-                    $orderItem = DB::table('shop_order_item')
-                        ->where('id', $item['shop_order_item_id'])
-                        ->first();
+                    $orderItem = $item['order_item_record'];
 
                     if (in_array($item['action_type'], ['Reduce', 'Cancel'])) {
                         $qtyToReduce = $item['quantity'];
@@ -200,24 +219,24 @@ class KitchenTicketController extends Controller
                         DB::table('kitchen_ticket_item')->insert([
                             'kitchen_ticket_id'  => $ticketId,
                             'shop_order_item_id' => $item['shop_order_item_id'],
-                            'product_id'         => $orderItem->product_id,
-                            'product_name'       => $orderItem->product_name,
+                            'product_id'         => $orderItem->product_id ?? null,
+                            'product_name'       => $orderItem->product_name ?? null,
                             'action_type'        => $item['action_type'],
                             'quantity'           => $item['quantity'],
-                            'order_note'         => $item['order_note'] ?? null,
+                            'order_note'         => $item['order_note'], // Successfully saved
                             'item_status'        => 'Queued',
                             'queued_at'          => now(),
                             'created_by'         => auth()->id(),
                             'created_by_name'    => auth()->user()->name ?? 'System',
-                            'created_at'         => now(),
-                            'updated_at'         => now(),
                         ]);
                     }
 
+                    // Update the shop_order_item table to keep status and note synchronized
                     DB::table('shop_order_item')
                         ->where('id', $item['shop_order_item_id'])
                         ->update([
                             'item_status' => $this->mapKitchenStatus($item['action_type']),
+                            'order_note'  => $item['order_note'],
                             'last_log_by' => auth()->id(),
                             'updated_at'  => now(),
                         ]);
@@ -226,13 +245,25 @@ class KitchenTicketController extends Controller
                 $this->recalculateTicketStatus($ticketId);
 
                 $createdTickets[] = $ticketId;
+                $tickets[] = $ticketId;
+                
+                if ($isBrandNewTicket) {
+                    $ticketsToPrint[] = [
+                        'ticket_id' => $ticketId,
+                        'route_id' => $routeId
+                    ];
+                }
             }
 
             DB::commit();
 
+            foreach ($ticketsToPrint as $printJob) {
+                $this->dispatchDirectPrint($printJob['ticket_id'], $printJob['route_id']);
+            }
+
             return response()->json([
                 'success' => true,
-                'message' => 'Sent to kitchen successfully.',
+                'message' => 'Sent to kitchen successfully and printed.',
                 'tickets' => $createdTickets
             ]);
 
@@ -245,6 +276,100 @@ class KitchenTicketController extends Controller
                 'message' => $e->getMessage()
             ]);
         }
+    }
+
+    /**
+     * Send raw ESC/POS commands directly to the printer IP assigned to the kitchen route.
+     */
+     private function dispatchDirectPrint(int $ticketId, int $routeId): void
+    {
+        try {
+            $route = DB::table('kitchen_route')->where('id', $routeId)->first();
+            if (!$route || empty($route->printer_ip)) {
+                return; // No printer IP configured for this route
+            }
+
+            $kitchenTicket = DB::table('kitchen_ticket')->where('id', $ticketId)->first();
+            $shopOrder = ShopOrder::with(['items', 'floorPlan', 'floorPlanTable'])->find($kitchenTicket->shop_order_id);
+            $ticketItems = DB::table('kitchen_ticket_item')->where('kitchen_ticket_id', $ticketId)->get();
+
+            // Connect directly to the printer via its network socket port (default 9100)
+            $connector = new NetworkPrintConnector($route->printer_ip, $route->printer_port ?? 9100);
+            $printer = new Printer($connector);
+
+            // Build Receipt Layout with safe buffer handling
+            $printer->initialize();
+            
+            // --- HEADER ---
+            $printer->setEmphasis(true);
+            $printer->setTextSize(2, 2);
+            
+            $floorPlanName = optional($shopOrder->floorPlan)->name ?? '';
+            $locationOrId = $shopOrder->table_number 
+                ? 'TBL ' . $shopOrder->table_number 
+                : '#' . $shopOrder->order_number;
+            $headerText = trim($floorPlanName . ' ' . $locationOrId);
+            
+            // Constrain header centering calculation to standard 32 columns to prevent overflow
+            $printer->text($this->centerTextEscPos($headerText, 16) . "\n");
+            
+            // Reset to normal text size immediately
+            $printer->setTextSize(1, 1); // Fixed syntax reference for standard library
+            $printer->initialize(); // Safe reset to clear double-height state flags
+            
+            $printer->setEmphasis(false);
+            $printer->text("TICKET: " . ($kitchenTicket->ticket_number ?? $shopOrder->order_number) . "\n");
+            $printer->text("TIME: " . now()->format('h:i A | M d') . "\n");
+            $printer->text(str_repeat("-", 32) . "\n");
+            $printer->text(sprintf("%-3s %-28s\n", "QTY", "ITEM DETAILS"));
+            $printer->text(str_repeat("-", 32) . "\n");
+
+            // --- ITEMS ---
+            foreach ($ticketItems as $item) {
+                if ($item->item_status === 'Cancelled' || (float) $item->quantity <= 0) {
+                    continue;
+                }
+                
+                $printer->setEmphasis(true);
+                // Ensure text strings fit securely within the 32-column limit
+                $cleanProductName = strtoupper(substr($item->product_name, 0, 27));
+                $printer->text(sprintf("%-3d %-28s\n", (int)$item->quantity, $cleanProductName));
+                $printer->setEmphasis(false);
+
+                if (!empty($item->order_note)) {
+                    $cleanNote = strtoupper(substr($item->order_note, 0, 24));
+                    $printer->text("    > NOTE: " . $cleanNote . "\n");
+                }
+            }
+
+            // --- FOOTER ---
+            $printer->text(str_repeat("-", 32) . "\n");
+            $routeNameText = "*** " . strtoupper($route->kitchen_route_name ?? 'KITCHEN') . " ***";
+            $printer->text($this->centerTextEscPos($routeNameText, 32) . "\n\n");
+            
+            // Flush output buffer and cut paper safely
+            $printer->feed(2);
+            $printer->cut();
+            $printer->close();
+
+            // Update print log counter
+            DB::table('kitchen_ticket')
+                ->where('id', $ticketId)
+                ->update([
+                    'print_count' => DB::raw('print_count + 1'),
+                    'last_printed_at' => now(),
+                ]);
+
+        } catch (\Exception $e) {
+            // Log printer connection failure silently so cashier flow isn't interrupted
+            \Log::error("Direct print failed for Route ID {$routeId}: " . $e->getMessage());
+        }
+    }
+
+    private function centerTextEscPos(string $text, int $width = 32): string 
+    {
+        $pad = max(0, floor(($width - strlen($text)) / 2));
+        return str_repeat(" ", (int)$pad) . $text;
     }
 
     public function toggleKitchenItemStatus(Request $request)

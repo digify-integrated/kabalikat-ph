@@ -99,7 +99,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 4. Fire continuous loops
         alertAudio.loop = true;
-        alertAudio.play().catch(err => console.warn('Audio restriction handled:', err.message));
+        alertAudio.currentTime = 0; // Reset just to be safe
+        const playPromise = alertAudio.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(err => console.warn('Audio restriction handled:', err.message));
+        }
 
         if (bootstrapModalInstance) {
             bootstrapModalInstance.show();
@@ -219,7 +223,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 } else if (hasNewKitchenDemands) {
                     alertAudio.loop = false;
-                    alertAudio.play().catch(err => console.warn('Audio restriction handled:', err.message));
+                    alertAudio.currentTime = 0; // FIXED: Rewind audio to ensure playback
+                    
+                    const playPromise = alertAudio.play();
+                    if (playPromise !== undefined) {
+                        playPromise.catch(err => console.warn('Audio restriction handled:', err.message));
+                    }
+                    
                     showNotification(`🔔 NEW ORDER: Fresh tickets added to the kitchen display board.`);
                 }
             }

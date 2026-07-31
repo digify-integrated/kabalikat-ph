@@ -7,7 +7,6 @@ use App\Models\DiscountType;
 use App\Models\FloorPlanTable;
 use App\Models\PaymentMethod;
 use App\Models\Product;
-use App\Models\ProductBOM;
 use App\Models\ShopOrder;
 use App\Models\ShopOrderAppliedCharge;
 use App\Models\ShopOrderAppliedDiscount;
@@ -23,7 +22,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
 
 class ShopOrderController extends Controller
 {
@@ -590,159 +588,159 @@ class ShopOrderController extends Controller
     }
 
     public function saveDiscount(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'shop_order_id' => ['required', 'integer', Rule::exists('shop_order', 'id')],
-        'discount_type_id' => ['required', 'integer', Rule::exists('discount_type', 'id')],
-        'discount_value' => ['nullable', 'numeric', 'min:0'],
-        'custom_discountable_amount' => ['nullable', 'numeric', 'min:0'], 
-        'reference_number' => ['nullable', 'string'],
-        'reference_name' => ['nullable', 'string'],
-        'remarks' => ['nullable', 'string'],
-    ]);
-
-    if ($validator->fails()) {
-        return response()->json([
-            'success' => false,
-            'message' => $validator->errors()->first(),
+    {
+        $validator = Validator::make($request->all(), [
+            'shop_order_id' => ['required', 'integer', Rule::exists('shop_order', 'id')],
+            'discount_type_id' => ['required', 'integer', Rule::exists('discount_type', 'id')],
+            'discount_value' => ['nullable', 'numeric', 'min:0'],
+            'custom_discountable_amount' => ['nullable', 'numeric', 'min:0'], 
+            'reference_number' => ['nullable', 'string'],
+            'reference_name' => ['nullable', 'string'],
+            'remarks' => ['nullable', 'string'],
         ]);
-    }
 
-    $validated = $validator->validated();
-
-    DB::beginTransaction();
-    try {
-        // PESSIMISTIC LOCK: Lock the master order state immediately
-        $shopOrder = ShopOrder::query()->lockForUpdate()->findOrFail($validated['shop_order_id']);
-        
-        $currentSubtotal = (float) ShopOrderItem::query()
-            ->where('shop_order_id', $shopOrder->id)
-            ->where('item_status', '!=', 'Cancelled')
-            ->sum('line_subtotal');
-
-        // Guard Boundary Limit
-        if (!empty($validated['custom_discountable_amount'])) {
-            $inputAmount = round((float)$validated['custom_discountable_amount'], 2);
-            $maxAllowed = round($currentSubtotal, 2);
-
-            if ($inputAmount > $maxAllowed) {
-                DB::rollBack();
-                return response()->json([
-                    'success' => false,
-                    'message' => "The custom share amount (₱" . number_format($inputAmount, 2) . ") cannot exceed the total order subtotal (₱" . number_format($maxAllowed, 2) . ").",
-                ]);
-            }
-        }
-
-        $shopRegister = DB::table('shop_register')->where('id', $shopOrder->shop_register_id)->first();
-        $discountType = DiscountType::query()->findOrFail($validated['discount_type_id']);
-
-        $alreadyApplied = ShopOrderAppliedDiscount::query()
-            ->where('shop_order_id', $shopOrder->id)
-            ->where('discount_type_id', $discountType->id)
-            ->exists();
-
-        if ($alreadyApplied) {
-            DB::rollBack();
+        if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Discount already applied.',
+                'message' => $validator->errors()->first(),
             ]);
         }
 
-        $discountValue = $discountType->discount_value;
-        if ($discountType->is_variable === 'Yes') {
-            if (!isset($validated['discount_value'])) {
+        $validated = $validator->validated();
+
+        DB::beginTransaction();
+        try {
+            // PESSIMISTIC LOCK: Lock the master order state immediately
+            $shopOrder = ShopOrder::query()->lockForUpdate()->findOrFail($validated['shop_order_id']);
+            
+            $currentSubtotal = (float) ShopOrderItem::query()
+                ->where('shop_order_id', $shopOrder->id)
+                ->where('item_status', '!=', 'Cancelled')
+                ->sum('line_subtotal');
+
+            // Guard Boundary Limit
+            if (!empty($validated['custom_discountable_amount'])) {
+                $inputAmount = round((float)$validated['custom_discountable_amount'], 2);
+                $maxAllowed = round($currentSubtotal, 2);
+
+                if ($inputAmount > $maxAllowed) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => "The custom share amount (₱" . number_format($inputAmount, 2) . ") cannot exceed the total order subtotal (₱" . number_format($maxAllowed, 2) . ").",
+                    ]);
+                }
+            }
+
+            $shopRegister = DB::table('shop_register')->where('id', $shopOrder->shop_register_id)->first();
+            $discountType = DiscountType::query()->findOrFail($validated['discount_type_id']);
+
+            $alreadyApplied = ShopOrderAppliedDiscount::query()
+                ->where('shop_order_id', $shopOrder->id)
+                ->where('discount_type_id', $discountType->id)
+                ->exists();
+
+            if ($alreadyApplied) {
                 DB::rollBack();
                 return response()->json([
                     'success' => false,
-                    'message' => 'Discount value is required.',
+                    'message' => 'Discount already applied.',
                 ]);
             }
-            $discountValue = round((float) $validated['discount_value'], 2);
-        }
 
-        $customAmount = null;
-        $calculatedDiscountAmount = 0;
-        $calculatedVatExemptAmount = 0;
+            $discountValue = $discountType->discount_value;
+            if ($discountType->is_variable === 'Yes') {
+                if (!isset($validated['discount_value'])) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Discount value is required.',
+                    ]);
+                }
+                $discountValue = round((float) $validated['discount_value'], 2);
+            }
 
-        if (
-            $shopRegister && 
-            $shopRegister->is_restaurant === 'Yes' && 
-            !empty($validated['custom_discountable_amount']) && 
-            (float)$validated['custom_discountable_amount'] > 0
-        ) {
-            $customAmount = round((float)$validated['custom_discountable_amount'], 2);
-            $netOfVat = $customAmount / 1.12;
-            $rateFactor = ($discountType->value_type === 'Percentage') ? ($discountValue / 100) : 1;
-            
-            if ($discountType->value_type === 'Percentage') {
-                $calculatedDiscountAmount = round($netOfVat * $rateFactor, 2);
+            $customAmount = null;
+            $calculatedDiscountAmount = 0;
+            $calculatedVatExemptAmount = 0;
+
+            if (
+                $shopRegister && 
+                $shopRegister->is_restaurant === 'Yes' && 
+                !empty($validated['custom_discountable_amount']) && 
+                (float)$validated['custom_discountable_amount'] > 0
+            ) {
+                $customAmount = round((float)$validated['custom_discountable_amount'], 2);
+                $netOfVat = $customAmount / 1.12;
+                $rateFactor = ($discountType->value_type === 'Percentage') ? ($discountValue / 100) : 1;
+                
+                if ($discountType->value_type === 'Percentage') {
+                    $calculatedDiscountAmount = round($netOfVat * $rateFactor, 2);
+                } else {
+                    $calculatedDiscountAmount = round(min($discountValue, $netOfVat), 2);
+                }
+
+                if ($discountType->is_vat_exempt === 'Yes') {
+                    // Keep this as the Net of VAT value to match the recompute lifecycle expectations
+                    $calculatedVatExemptAmount = round($netOfVat, 2);
+                }
             } else {
-                $calculatedDiscountAmount = round(min($discountValue, $netOfVat), 2);
+                if ($discountType->value_type === 'Percentage') {
+                    $calculatedDiscountAmount = round(($currentSubtotal * $discountValue) / 100, 2);
+                } else {
+                    $calculatedDiscountAmount = round($discountValue, 2);
+                }
+                $calculatedVatExemptAmount = 0; 
             }
 
-            if ($discountType->is_vat_exempt === 'Yes') {
-                // Keep this as the Net of VAT value to match the recompute lifecycle expectations
-                $calculatedVatExemptAmount = round($netOfVat, 2);
-            }
-        } else {
-            if ($discountType->value_type === 'Percentage') {
-                $calculatedDiscountAmount = round(($currentSubtotal * $discountValue) / 100, 2);
-            } else {
-                $calculatedDiscountAmount = round($discountValue, 2);
-            }
-            $calculatedVatExemptAmount = 0; 
+            ShopOrderAppliedDiscount::create([
+                'shop_order_id' => $shopOrder->id,
+                'discount_type_id' => $discountType->id,
+                'discount_type_name' => $discountType->discount_type_name,
+                'value_type' => $discountType->value_type,
+                'discount_value' => $discountValue,
+                'application_order' => $discountType->application_order,
+                'is_vat_exempt' => $discountType->is_vat_exempt,
+                'custom_discountable_amount' => $customAmount,
+                'discount_amount' => $calculatedDiscountAmount, 
+                'vat_exempt_amount' => $calculatedVatExemptAmount,
+                'reference_number' => $validated['reference_number'] ?? null,
+                'reference_name' => $validated['reference_name'] ?? null,
+                'remarks' => $validated['remarks'] ?? null,
+                'applied_by' => Auth::id(),
+                'applied_by_name' => Auth::user()->name,
+                'last_log_by' => Auth::id(),
+            ]);
+
+            // Triggers calculation cycle
+            $this->recomputeShopOrder($shopOrder->id);
+
+            $appliedDiscounts = ShopOrderAppliedDiscount::query()->where('shop_order_id', $shopOrder->id)->get();
+            $appliedIds = $appliedDiscounts->pluck('discount_type_id');
+
+            $availableDiscounts = DB::table('shop_register_discount')
+                ->join('discount_type', 'discount_type.id', '=', 'shop_register_discount.discount_type_id')
+                ->where('shop_register_discount.shop_register_id', $shopOrder->shop_register_id)
+                ->whereNotIn('discount_type.id', $appliedIds)
+                ->select('discount_type.*')
+                ->get();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Discount applied successfully.',
+                'order' => $this->buildOrderPayload($shopOrder->id),
+                'available_discounts' => $availableDiscounts,
+                'applied_discounts' => $appliedDiscounts,
+            ]);
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            report($e);
+            return response()->json(['success' => false, 'message' => $e->getMessage()]);
         }
-
-        ShopOrderAppliedDiscount::create([
-            'shop_order_id' => $shopOrder->id,
-            'discount_type_id' => $discountType->id,
-            'discount_type_name' => $discountType->discount_type_name,
-            'value_type' => $discountType->value_type,
-            'discount_value' => $discountValue,
-            'application_order' => $discountType->application_order,
-            'is_vat_exempt' => $discountType->is_vat_exempt,
-            'custom_discountable_amount' => $customAmount,
-            'discount_amount' => $calculatedDiscountAmount, 
-            'vat_exempt_amount' => $calculatedVatExemptAmount,
-            'reference_number' => $validated['reference_number'] ?? null,
-            'reference_name' => $validated['reference_name'] ?? null,
-            'remarks' => $validated['remarks'] ?? null,
-            'applied_by' => Auth::id(),
-            'applied_by_name' => Auth::user()->name,
-            'last_log_by' => Auth::id(),
-        ]);
-
-        // Triggers calculation cycle
-        $this->recomputeShopOrder($shopOrder->id);
-
-        $appliedDiscounts = ShopOrderAppliedDiscount::query()->where('shop_order_id', $shopOrder->id)->get();
-        $appliedIds = $appliedDiscounts->pluck('discount_type_id');
-
-        $availableDiscounts = DB::table('shop_register_discount')
-            ->join('discount_type', 'discount_type.id', '=', 'shop_register_discount.discount_type_id')
-            ->where('shop_register_discount.shop_register_id', $shopOrder->shop_register_id)
-            ->whereNotIn('discount_type.id', $appliedIds)
-            ->select('discount_type.*')
-            ->get();
-
-        DB::commit();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Discount applied successfully.',
-            'order' => $this->buildOrderPayload($shopOrder->id),
-            'available_discounts' => $availableDiscounts,
-            'applied_discounts' => $appliedDiscounts,
-        ]);
-
-    } catch (\Throwable $e) {
-        DB::rollBack();
-        report($e);
-        return response()->json(['success' => false, 'message' => $e->getMessage()]);
     }
-}
 
     public function saveCharge(Request $request)
     {
@@ -2265,191 +2263,209 @@ class ShopOrderController extends Controller
     {
         /*
         |--------------------------------------------------------------------------
-        | 1. INITIALIZE MASTER ORDER RECORD
+        | 1. FETCH MASTER ORDER & ACTIVE ITEMS
         |--------------------------------------------------------------------------
         */
         $shopOrder = ShopOrder::query()->findOrFail($shopOrderId);
 
-        /*
-        |--------------------------------------------------------------------------
-        | 2. RESET BASIC ITEM LINE-ITEMS
-        |--------------------------------------------------------------------------
-        */
         $items = ShopOrderItem::query()
             ->where('shop_order_id', $shopOrderId)
             ->where('item_status', '!=', 'Cancelled')
             ->get();
 
+        /*
+        |--------------------------------------------------------------------------
+        | 2. RE-CALCULATE ITEM SUB-TOTALS & CLASSIFY BASE SALES
+        |--------------------------------------------------------------------------
+        */
+        $subtotal              = 0;
+        $baseVatableSubtotal   = 0;
+        $baseVatExemptSubtotal = 0;
+        $baseZeroRatedSubtotal = 0;
+
         foreach ($items as $item) {
-            $quantity = round((float) $item->quantity, 2);
-            $unitPrice = round((float) $item->unit_price, 2);
+            $quantity     = round((float) $item->quantity, 2);
+            $unitPrice    = round((float) $item->unit_price, 2);
             $lineSubtotal = round($quantity * $unitPrice, 2);
 
-            $item->update([
-                'line_subtotal' => $lineSubtotal,
-                'line_total'    => $lineSubtotal,
-            ]);
-        }
+            $vatableSales   = 0;
+            $vatExemptSales = 0;
+            $zeroRatedSales = 0;
+            $vatAmount      = 0;
 
-        $subtotal = round((float) $items->sum('line_subtotal'), 2);
-
-        /*
-        |--------------------------------------------------------------------------
-        | 3. FORCE HARD EXTRACTION OF SENIOR POOL (Strictly Capped)
-        |--------------------------------------------------------------------------
-        | Grabs the locked customer share amount (Gross base) to anchor calculations
-        | during quantity updates.
-        |--------------------------------------------------------------------------
-        */
-        $seniorDiscountRow = ShopOrderAppliedDiscount::query()
-            ->where('shop_order_id', $shopOrderId)
-            ->where(function ($query) {
-                $query->where('is_vat_exempt', 'Yes')
-                    ->orWhere('discount_type_name', 'LIKE', '%Senior%')
-                    ->orWhere('discount_type_name', 'LIKE', '%PWD%');
-            })
-            ->first();
-
-        $seniorDiscountablePool = 0;
-        $hasSeniorDiscount = !is_null($seniorDiscountRow);
-
-        if ($hasSeniorDiscount) {
-            $rawAmount = $seniorDiscountRow->custom_discountable_amount;
-            
-            if (!is_null($rawAmount) && (float)$rawAmount > 0) {
-                $seniorDiscountablePool = round((float)$rawAmount, 2);
-            } else {
-                // Full-order fallback logic if no custom share split is specified
-                $seniorDiscountablePool = $subtotal;
+            if ($item->tax_classification === 'Vatable') {
+                $vatableSales        = round($lineSubtotal / 1.12, 2);
+                $vatAmount           = round($lineSubtotal - $vatableSales, 2);
+                $baseVatableSubtotal += $lineSubtotal;
+            } elseif ($item->tax_classification === 'VAT Exempt') {
+                $vatExemptSales        = $lineSubtotal;
+                $baseVatExemptSubtotal += $lineSubtotal;
+            } elseif ($item->tax_classification === 'Zero Rated') {
+                $zeroRatedSales        = $lineSubtotal;
+                $baseZeroRatedSubtotal += $lineSubtotal;
             }
 
-            // Safety block: The discount pool cannot exceed the absolute current subtotal
-            $seniorDiscountablePool = min($seniorDiscountablePool, $subtotal);
+            $item->update([
+                'line_subtotal'    => $lineSubtotal,
+                'line_total'       => $lineSubtotal,
+                'vatable_sales'    => $vatableSales,
+                'vat_exempt_sales' => $vatExemptSales,
+                'zero_rated_sales' => $zeroRatedSales,
+                'vat_amount'       => $vatAmount,
+            ]);
+
+            $subtotal += $lineSubtotal;
         }
+
+        $subtotal = round($subtotal, 2);
 
         /*
         |--------------------------------------------------------------------------
-        | 4. CORE MATH EXECUTION (Explicit Tax Partitioning)
-        |--------------------------------------------------------------------------
-        */
-        if ($seniorDiscountablePool > 0) {
-            // Exemption Pool: 100 / 1.12 = 89.29
-            $finalVatExemptSales = round($seniorDiscountablePool / 1.12, 2);
-            
-            // Remaining Vatable Base: 200 - 100 = 100
-            $remainingVatableSubtotal = max(0, $subtotal - $seniorDiscountablePool);
-            
-            // Vatable Sales: 100 / 1.12 = 89.29
-            $finalVatableSales = round($remainingVatableSubtotal / 1.12, 2);
-            
-            // VAT Amount: 100 - 89.29 = 10.71
-            $finalVatAmount = round($remainingVatableSubtotal - $finalVatableSales, 2);
-        } else {
-            $finalVatExemptSales = 0;
-            $finalVatableSales   = round($subtotal / 1.12, 2);
-            $finalVatAmount      = round($subtotal - $finalVatableSales, 2);
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | 5. PERSIST CALCULATED DISCOUNTS
+        | 3. CATEGORIZE APPLIED DISCOUNTS
         |--------------------------------------------------------------------------
         */
         $discounts = ShopOrderAppliedDiscount::query()
             ->where('shop_order_id', $shopOrderId)
             ->get();
 
-        $discountTotal = 0;
+        $vatExemptDiscounts = $discounts->filter(function ($d) {
+            return $d->is_vat_exempt === 'Yes' 
+                || str_contains(strtolower($d->discount_type_name), 'senior') 
+                || str_contains(strtolower($d->discount_type_name), 'pwd');
+        });
 
-        foreach ($discounts as $discount) {
-            $discountAmount = 0;
+        $regularDiscounts = $discounts->reject(function ($d) {
+            return $d->is_vat_exempt === 'Yes' 
+                || str_contains(strtolower($d->discount_type_name), 'senior') 
+                || str_contains(strtolower($d->discount_type_name), 'pwd');
+        });
 
-            if ($hasSeniorDiscount && $discount->id === $seniorDiscountRow->id) {
-                // Formula: 89.29 * 0.20 = 17.86
-                $discountAmount = round($finalVatExemptSales * 0.20, 2);
-                
-                $discount->update([
-                    'discount_rate'              => 20.00,
-                    'discount_amount'            => $discountAmount,
-                    'custom_discountable_amount' => $seniorDiscountablePool, // Remains 100
-                    'vat_exempt_amount'          => $finalVatExemptSales,     // Remains 89.29
-                ]);
+        $totalDiscountAmount   = 0;
+        $grossVatExemptShifted = 0;
+
+        /*
+        |--------------------------------------------------------------------------
+        | 4. COMPUTE SENIOR / PWD / VAT-EXEMPT DISCOUNTS FIRST
+        |--------------------------------------------------------------------------
+        */
+        foreach ($vatExemptDiscounts as $discount) {
+            $rawAmount = $discount->custom_discountable_amount;
+
+            // Gamitin ang custom amount kung may pinalo; kung wala, huwag umapaw sa natitirang vatable subtotal
+            if (!is_null($rawAmount) && (float)$rawAmount > 0) {
+                $pool = round((float)$rawAmount, 2);
             } else {
-                $discountAmount = $discount->value_type === 'Percentage'
-                    ? round(($subtotal * $discount->discount_value) / 100, 2)
-                    : round($discount->discount_value, 2);
-
-                $discount->update([
-                    'discount_amount' => $discountAmount,
-                ]);
+                $pool = max(0, $baseVatableSubtotal - $grossVatExemptShifted);
             }
 
-            $discountTotal += $discountAmount;
+            $pool = min($pool, max(0, $baseVatableSubtotal - $grossVatExemptShifted));
+            $grossVatExemptShifted += $pool;
+
+            $netVatExempt = round($pool / 1.12, 2);
+
+            $rate = $discount->value_type === 'Percentage' ? ($discount->discount_value ?: 20.00) : 0;
+            $discAmount = ($discount->value_type === 'Percentage')
+                ? round($netVatExempt * ($rate / 100), 2)
+                : round(min($discount->discount_value, $netVatExempt), 2);
+
+            $discount->update([
+                'discount_amount'            => $discAmount,
+                'custom_discountable_amount' => $pool > 0 ? $pool : null,
+                'vat_exempt_amount'          => $netVatExempt,
+            ]);
+
+            $totalDiscountAmount += $discAmount;
         }
 
         /*
         |--------------------------------------------------------------------------
-        | 6. PROCESS SERVICE CHARGES
+        | 5. COMPUTE REGULAR DISCOUNTS (REDUCING REMAINING VATABLE BASE)
         |--------------------------------------------------------------------------
         */
-        $chargeTotal = 0;
-        $chargeVatAccumulator = 0; // Create a clean independent tax tracker for SC
-        $charges = ShopOrderAppliedCharge::query()->where('shop_order_id', $shopOrderId)->get();
+        $remainingVatableGross = max(0, $baseVatableSubtotal - $grossVatExemptShifted);
+
+        foreach ($regularDiscounts as $discount) {
+            if ($discount->value_type === 'Percentage') {
+                $discAmount = round(($remainingVatableGross * $discount->discount_value) / 100, 2);
+            } else {
+                $discAmount = round(min($discount->discount_value, $remainingVatableGross), 2);
+            }
+
+            $discount->update([
+                'discount_amount' => $discAmount,
+            ]);
+
+            $totalDiscountAmount += $discAmount;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | 6. FINAL TAX & SALES BREAKDOWN COMPUTATION
+        |--------------------------------------------------------------------------
+        */
+        $regularDiscountTotal = $regularDiscounts->sum('discount_amount');
+        $netVatableGross      = max(0, $remainingVatableGross - $regularDiscountTotal);
+
+        $finalVatableSales   = round($netVatableGross / 1.12, 2);
+        $finalVatAmount      = round($netVatableGross - $finalVatableSales, 2);
+        $finalVatExemptSales = round($baseVatExemptSubtotal + ($grossVatExemptShifted / 1.12), 2);
+        $finalZeroRatedSales = round($baseZeroRatedSubtotal, 2);
+
+        /*
+        |--------------------------------------------------------------------------
+        | 7. PROCESS SERVICE CHARGES
+        |--------------------------------------------------------------------------
+        */
+        $chargeTotal          = 0;
+        $chargeVatAccumulator = 0;
+        $charges             = ShopOrderAppliedCharge::query()->where('shop_order_id', $shopOrderId)->get();
 
         foreach ($charges as $charge) {
-            $chargeAmount = $charge->value_type === 'Percentage' 
+            $chargeAmount = ($charge->value_type === 'Percentage') 
                 ? round(($subtotal * $charge->charge_value) / 100, 2) 
                 : round($charge->charge_value, 2);
 
             $chargeVatableAmount = 0;
             $chargeVatAmount     = 0;
-            
+
             if ($charge->tax_type === 'Vatable') {
                 $chargeVatableAmount = round($chargeAmount / 1.12, 2);
                 $chargeVatAmount     = round($chargeAmount - $chargeVatableAmount, 2);
             }
 
             $charge->update([
-                'charge_rate'    => $charge->value_type === 'Percentage' ? $charge->charge_value : 0,
+                'charge_rate'    => ($charge->value_type === 'Percentage') ? $charge->charge_value : 0,
                 'charge_amount'  => $chargeAmount,
                 'vatable_amount' => $chargeVatableAmount,
                 'vat_amount'     => $chargeVatAmount,
             ]);
 
             $chargeTotal          += $chargeAmount;
-            $chargeVatAccumulator += $chargeVatAmount; 
+            $chargeVatAccumulator += $chargeVatAmount;
         }
 
-        // Combine item VAT and service charge VAT cleanly
         $totalCombinedVat = round($finalVatAmount + $chargeVatAccumulator, 2);
 
         /*
         |--------------------------------------------------------------------------
-        | 7. COMMIT SYNCHRONIZED REBALANCED VALUES TO DATABASE
-        |--------------------------------------------------------------------------
-        | Clean Grand Total Formula: 
-        | (Item Net Base) + (Service Charge Net Base) + (Total Combined VAT)
-        | = (89.29 + 89.29 - 17.86) + (20.00 - 2.14) + (8.57 + 2.14) = 191.43
+        | 8. SAVE UPDATED ORDER MASTER RECORD
         |--------------------------------------------------------------------------
         */
         $grossTotal = round($subtotal + $chargeTotal, 2);
-        
-        // Exact structural formula for Philippine POS system implementations
-        $netTotal = round(($finalVatableSales + $finalVatExemptSales - $discountTotal) + ($chargeTotal - $chargeVatAccumulator) + $totalCombinedVat, 2);
+        $netTotal   = round(($subtotal - $totalDiscountAmount) + $chargeTotal, 2);
 
         $shopOrder->update([
-            'total_items'      => (int) ($items->count()),
-            'total_quantity'   => round((float) ($items->sum('quantity')), 2),
+            'total_items'      => (int) $items->count(),
+            'total_quantity'   => round((float) $items->sum('quantity'), 2),
             'subtotal'         => $subtotal,
-            'discount_total'   => $discountTotal,
-            'charge_total'     => $chargeTotal,
+            'discount_total'   => round($totalDiscountAmount, 2),
+            'charge_total'     => round($chargeTotal, 2),
             'vatable_sales'    => $finalVatableSales,
             'vat_exempt_sales' => $finalVatExemptSales,
-            'zero_rated_sales' => 0,
-            'vat_amount'       => $totalCombinedVat, // Displays the clean target 10.71
+            'zero_rated_sales' => $finalZeroRatedSales,
+            'vat_amount'       => $totalCombinedVat,
             'gross_total'      => $grossTotal,
-            'net_total'        => $netTotal,         // Displays the clean target 191.43
-            'balance_due'      => $netTotal,
+            'net_total'        => $netTotal,
         ]);
     }
 

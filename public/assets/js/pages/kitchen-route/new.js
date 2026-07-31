@@ -12,9 +12,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 rules: {
                     rules: {
                         kitchen_route_name: { required: true},
+                        printer_ip: { required: true},
+                        printer_port: { required: true},
                     },
                     messages: {
                         kitchen_route_name: { required: 'Enter the kitchen route' },
+                        printer_ip: { required: 'Enter the printer IP address' },
+                        printer_port: { required: 'Enter the printer port' },
                     },
                     submitHandler: async (form) => {
                         const ctx = getPageContext();

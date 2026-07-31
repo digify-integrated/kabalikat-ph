@@ -11,6 +11,8 @@ class KitchenRoute extends Model
 
     protected $fillable = [
         'kitchen_route_name',
+        'printer_ip',
+        'printer_port',
         'last_log_by'
     ];
 

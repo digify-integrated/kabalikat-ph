@@ -18,9 +18,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 rules: {
                     rules: {
                         kitchen_route_name: { required: true},
+                        printer_ip: { required: true},
+                        printer_port: { required: true},
                     },
                     messages: {
                         kitchen_route_name: { required: 'Enter the kitchen route' },
+                        printer_ip: { required: 'Enter the printer IP address' },
+                        printer_port: { required: 'Enter the printer port' },
                     },
                     submitHandler: async (form) => {
                         const ctx2 = getPageContext();
@@ -64,6 +68,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 busyHideTargets: ['#submit-data'],
                 onSuccess: async (data) => {
                     document.getElementById('kitchen_route_name').value = data.kitchenRouteName || '';
+                    document.getElementById('printer_ip').value = data.printerIP || '';
+                    document.getElementById('printer_port').value = data.printerPort || '';
 
                     await optionsPromise;
                 },

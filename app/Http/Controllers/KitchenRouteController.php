@@ -16,6 +16,8 @@ class KitchenRouteController extends Controller
         $validator = Validator::make($request->all(), [
             'kitchen_route_id' => ['nullable', 'integer'],
             'kitchen_route_name' => ['required', 'string', 'max:255'],
+            'printer_ip' => ['required', 'string', 'max:255'],
+            'printer_port' => ['required', 'integer'],
         ]);
 
         if ($validator->fails()) {
@@ -32,6 +34,8 @@ class KitchenRouteController extends Controller
 
         $payload = [
             'kitchen_route_name' => $validated['kitchen_route_name'],
+            'printer_ip' => $validated['printer_ip'],
+            'printer_port' => $validated['printer_port'],
             'last_log_by' => Auth::id(),
         ];
 
@@ -154,6 +158,8 @@ class KitchenRouteController extends Controller
             'success' => true,
             'notExist' => false,
             'kitchenRouteName' => $kitchenRoute->kitchen_route_name ?? null,
+            'printerIP' => $kitchenRoute->printer_ip ?? null,
+            'printerPort' => $kitchenRoute->printer_port ?? null,
         ]);
     }
 

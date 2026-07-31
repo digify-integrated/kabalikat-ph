@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         ],
         dropdown: [
-            { url: '/floor-plan/generate-pos-table-options', dropdownSelector: '#order-history-table-filter' },
+            { url: '/floor-plan/generate-pos-table-options', dropdownSelector: '#order-history-table-filter', data: {shop_order_id : sessionStorage.getItem('shop_order_id')} },
         ],
         posCategory: { url: '/shop-register/generate-category' },
         posProduct: { url: '/shop-register/generate-product' },
@@ -396,6 +396,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         await loadCart(shopOrderId);
+        config.dropdown.map((cfg) => generateDropdownOptions(cfg));
     };
 
     const loadCart = async (shopOrderId,options = {}) => {
@@ -1887,7 +1888,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <div class="bg-light rounded-3 p-3 mb-4">
                                     <div class="text-muted fs-8 fw-bold mb-1">ORDER NOTE</div>
                                     <div class="fs-7 fw-semibold text-dark">
-                                        ${item.note || 'No special instruction'}
+                                        ${item.order_note || 'No special instruction'}
                                     </div>
                                 </div>
 
@@ -2321,7 +2322,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     config.forms.map((cfg) => initValidation(cfg.selector, cfg.rules));
-    config.dropdown.map((cfg) => generateDropdownOptions(cfg));
     generatePOSCategory(config.posCategory.url)
     generatePOSProduct(config.posProduct.url);
     initBarcodeScannerEventHandlers();

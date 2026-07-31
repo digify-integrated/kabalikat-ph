@@ -79,6 +79,7 @@
 @push('scripts')
     <script src="{{ asset('assets/plugins/datatables/datatables.bundle.js') }}"></script>
     <script src="{{ asset('assets/plugins/bootstrap-duallistbox/dist/jquery.bootstrap-duallistbox.min.js') }}"></script>
+    
     <script>
         window.kitchenAlertAudioUrl = "{{ asset('assets/audio/kitchen-alarm.mp3') }}";
     </script>

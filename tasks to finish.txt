@@ -1,13 +1,4 @@
-Utilities JS:
-1. Disable button
-2. Enable button
-3. Reset Form
-4. Genearate Dropdown
-5. Generate Duallist box
-6. Initialize TinymCE
-7. Initialize Datepicker
-8. Initialize Daterange picker
-9. Copy to clipboard
-10. Password Add on
-11. Show Notification
-12. Discard Create
+Implementation task:
+1. copy files including add_printer_fields_to_kitchen_route_table
+2. run php artisan migrate
+3. run composer require mike42/escpos-php

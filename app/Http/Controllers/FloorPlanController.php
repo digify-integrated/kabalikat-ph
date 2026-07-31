@@ -227,6 +227,7 @@ class FloorPlanController extends Controller
 
     public function generatePOSTableOptions(Request $request)
     {
+        $shop_order_id = $request->input('shop_order_id', false);
         $multiple = filter_var($request->input('multiple', false), FILTER_VALIDATE_BOOLEAN);
 
         $response = collect();
@@ -239,8 +240,8 @@ class FloorPlanController extends Controller
             ]);
         }
 
-        // Fetch floor plans and join their corresponding tables
-        $floorPlansWithTables = DB::table('floor_plan')
+        // Query floor plans and join tables
+        $query = DB::table('floor_plan')
             ->join('floor_plan_table', 'floor_plan.id', '=', 'floor_plan_table.floor_plan_id')
             ->select([
                 'floor_plan.id as floor_id',
@@ -248,21 +249,30 @@ class FloorPlanController extends Controller
                 'floor_plan_table.id as table_id',
                 'floor_plan_table.table_number',
                 'floor_plan_table.seats'
-            ])
-            ->orderBy('floor_plan.floor_plan_name')
+            ]);
+
+        // Apply shop_order_id condition if provided
+        $query->when($shop_order_id, function ($q) use ($shop_order_id) {
+            $q->whereIn('floor_plan.id', function ($subQuery) use ($shop_order_id) {
+                $subQuery->select('srfp.floor_plan_id')
+                    ->from('shop_register_floor_plan as srfp')
+                    ->join('shop_order as so', 'so.shop_register_id', '=', 'srfp.shop_register_id')
+                    ->where('so.id', $shop_order_id);
+            });
+        });
+
+        $floorPlansWithTables = $query->orderBy('floor_plan.floor_plan_name')
             ->orderBy('floor_plan_table.table_number')
             ->get();
 
         // Group the results by floor plan to create the optgroup structure
         $grouped = $floorPlansWithTables->groupBy('floor_id')->map(function ($tables) {
-            // Grab the floor name from the first item in this group
             $firstItem = $tables->first();
 
             return [
                 'text'     => $firstItem->floor_name,
                 'children' => $tables->map(fn ($table) => [
                     'id'   => $table->table_id,
-                    // Customize how you want the table label to look (e.g., "Table 5 (4 Seats)")
                     'text' => "Table " . $table->table_number
                 ])->values()->all()
             ];
