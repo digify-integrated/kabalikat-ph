@@ -15,226 +15,235 @@
             ->first();
     @endphp
 
-    <div class="row">
-        <div class="col-lg-8">
-            <div class="row mb-5">
-                <div class="col">
-                    <div class="d-flex align-items-center position-relative my-1">
-                        <i class="ki-duotone ki-magnifier fs-3 position-absolute ms-4"></i>
-                        <input type="text" class="form-control form-control-solid w-100 ps-12" id="product_search" placeholder="Search products, SKU, barcode...">
-                    </div>
+    <div class="row g-5">
+    <!-- LEFT PANE: PRODUCT CATALOG -->
+    <div class="col-lg-8">
+        <div class="row mb-4">
+            <div class="col">
+                <div class="d-flex align-items-center position-relative">
+                    <i class="ki-duotone ki-magnifier fs-2 position-absolute ms-4 text-gray-500"></i>
+                    <input type="text" class="form-control form-control-solid form-control-lg w-100 ps-12 fs-6 rounded-3" id="product_search" placeholder="Search products, SKU, barcode...">
                 </div>
             </div>
-
-            <div class="mb-4 overflow-auto">
-                <div class="d-flex flex-nowrap gap-2 pb-1" id="shop-product-category-container"></div>
-            </div>
-
-            <div class="row g-3" id="product-container"></div>
         </div>
-    
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-sm mt-5 mt-lg-0 h-100 d-flex flex-column overflow-hidden">             
-                <div class="px-4 py-4 border-bottom">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="symbol symbol-40px">
-                                <div class="symbol-label bg-light-primary rounded-3">
-                                    <i class="ki-duotone ki-handcart fs-2 text-primary">
-                                        <span class="path1"></span><span class="path2"></span>
-                                    </i>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="fw-bold fs-4 text-gray-900">Active Cart</div>
-                                <div class="text-muted small">
-                                    ID: <span class="text-danger fw-bold" id="order-id">No Active Order</span>
-                                </div>
-                            </div>
-                        </div>
 
-                        <div class="dropdown">
-                            <button class="btn btn-icon btn-sm btn-light-active-primary" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="ki-outline ki-dots-vertical fs-2"></i>
-                            </button>
-                            <div class="dropdown-menu dropdown-menu-end rounded-4 shadow-sm border-0 p-2 w-225px">
-                                <button class="dropdown-item rounded-3 py-3 fw-semibold" id="print-order-summary">
-                                    <i class="ki-outline ki-printer fs-4 me-2 text-muted"></i>Print Order Summary
-                                </button>
-                                <button class="dropdown-item rounded-3 py-3 fw-semibold" id="print-payment-summary">
-                                    <i class="ki-outline ki-printer fs-4 me-2 text-muted"></i>Print Payment Summary
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+        <div class="mb-4 overflow-auto">
+            <div class="d-flex flex-nowrap gap-2 pb-1" id="shop-product-category-container"></div>
+        </div>
 
-                    <div class="d-flex gap-1 flex-wrap mt-3 cart-action d-none">
-                        <span class="badge badge-light-primary fw-semibold fs-8" id="badge-customer-name">Walk-in Customer</span>
-                        <span class="badge badge-light-warning fw-semibold fs-8" id="badge-order-type">Walk-in</span>
-                        @if($shopRegister->is_restaurant === 'Yes')
-                            <span class="badge badge-light-dark fw-semibold fs-8" id="badge-table">No Table</span>
-                        @endif
-                        <span class="badge badge-light-success fw-semibold fs-8" id="badge-order-status">Unpaid</span>
-                    </div>
-                </div>
+        <div class="row g-3" id="product-container"></div>
+    </div>
 
-                <div class="bg-light-inline border-bottom px-4 py-3 bg-light">
-                    <div class="row g-2 mb-4">
-                        <div class="col">
-                            <div class="position-relative">
-                                <div class="input-group input-group-solid border border-gray-300 rounded-3 overflow-hidden shadow-sm transition-all">
-                                    <span class="input-group-text bg-light-primary border-0">
-                                        <i class="ki-outline ki-barcode fs-1 text-primary anim-pulse"></i>
-                                    </span>
-                                    
-                                    <input type="text" 
-                                        id="pos-barcode-scanner-input" 
-                                        class="form-control form-control-solid fs-7 py-4 ps-3 bg-transparent" 
-                                        placeholder="Ready to Scan / Type Barcode..." 
-                                        autocomplete="off" />
-                                    
-                                    <span class="input-group-text bg-transparent border-0 pe-4">
-                                        <span class="badge badge-light-success d-flex align-items-center gap-1 py-2 px-3 border border-success border-opacity-30">
-                                            <span class="bullet bullet-dot bg-success h-6px w-6px animation-blink"></span>
-                                            <span class="fw-bold fs-8 text-success text-uppercase tracking-wide">Live</span>
-                                        </span>
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row g-2 mb-2">
-                        <div class="col">
-                            <button class="btn btn-bg-white btn-color-gray-700 btn-active-light-success border w-100 py-3 d-flex flex-column align-items-center gap-1" id="new-order">
-                                <i class="ki-outline ki-plus fs-2 text-success p-0"></i>
-                                <span class="fw-bold small">New</span>
-                            </button>
-                        </div>
-                        <div class="col">
-                            <button class="btn btn-bg-white btn-color-gray-700 btn-active-light-warning border w-100 py-3 d-flex flex-column align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#order-history-modal" id="order-history-button">
-                                <i class="ki-outline ki-time fs-2 text-warning p-0"></i>
-                                <span class="fw-bold small">Orders</span>
-                            </button>
-                        </div>
-                        <div class="col">
-                            <button class="btn btn-bg-white btn-color-gray-700 btn-active-light-danger border w-100 py-3 d-flex flex-column align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#cancel-order-modal" id="cancel-button">
-                                <i class="ki-outline ki-cross-circle fs-2 text-danger p-0"></i>
-                                <span class="fw-bold small">Cancel</span>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="row g-2 mb-2 cart-action d-none">
-                        <div class="col">
-                            <button class="btn btn-bg-white btn-color-gray-700 btn-active-light-primary border w-100 py-3 d-flex flex-column align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#customer-modal" id="customer-button">
-                                <i class="ki-outline ki-user fs-2 text-primary p-0"></i>
-                                <span class="fw-bold small">Customer</span>
-                            </button>
-                        </div>
-                        <div class="col">
-                            <button class="btn btn-bg-white btn-color-gray-700 btn-active-light-warning border w-100 py-3 d-flex flex-column align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#discount-modal" id="manage-discount-button">
-                                <i class="ki-outline ki-discount fs-2 text-warning p-0"></i>
-                                <span class="fw-bold small">Discount</span>
-                            </button>
-                        </div>
-                        <div class="col">
-                            <button class="btn btn-bg-white btn-color-gray-700 btn-active-light-danger border w-100 py-3 d-flex flex-column align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#charges-modal" id="manage-charge-button">
-                                <i class="ki-outline ki-dollar fs-2 text-danger p-0"></i>
-                                <span class="fw-bold small">Charges</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="row g-2 cart-action d-none">
-                        <div class="col">
-                            <select class="form-select fw-bold fs-6 rounded-3" id="order-type">
-                                <option value="Walk-in" {{ $shopRegister->is_restaurant !== 'Yes' ? 'selected' : '' }}>Walk-in</option>
-                                @if($shopRegister->is_restaurant === 'Yes')
-                                    <option value="Dine-in" selected>Dine-in</option>
-                                    <option value="Take-out">Take-out</option>
-                                @endif
-                                <option value="Delivery">Delivery</option>
-                            </select>
-                        </div>
-
-                        @if($shopRegister->is_restaurant === 'Yes')
-                            <div class="col" id="set-table-column">
-                                <button class="btn btn-light-warning w-100 fw-bold rounded-3 d-flex align-items-center justify-content-center gap-2 h-100" id="set-table" data-bs-toggle="modal" data-bs-target="#table-modal">
-                                    <i class="ki-outline ki-element-11 fs-4"></i>
-                                    <span id="selected-table-label" class="small">Select Table</span>
-                                </button>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-
-                <div class="card-body p-0 d-flex flex-column flex-grow-1 min-h-250px">
-                    <div id="shop-order-empty" class="flex-grow-1 d-flex flex-column justify-content-center align-items-center text-center p-8">
-                        <div class="symbol symbol-70px mb-4">
-                            <div class="symbol-label bg-light rounded-circle">
-                                <i class="ki-duotone ki-handcart fs-2x text-muted">
+    <!-- RIGHT PANE: STANDARD POS CART TERMINAL -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            
+            <!-- 1. Header & Order Badges -->
+            <div class="card-header border-bottom px-5 py-4 bg-body min-h-auto d-block">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="symbol symbol-45px">
+                            <div class="symbol-label bg-light-primary rounded-3">
+                                <i class="ki-duotone ki-handcart fs-2x text-primary">
                                     <span class="path1"></span><span class="path2"></span>
                                 </i>
                             </div>
                         </div>
-                        <div class="fw-bold fs-5 text-gray-800 mb-1">Cart is Empty</div>
-                        <div class="text-muted small px-5">Select catalog products on the left pane to assemble a basket.</div>
+                        <div>
+                            <h3 class="fw-bold fs-3 text-gray-900 mb-0">Active Cart</h3>
+                            <div class="text-muted fs-7">
+                                Order ID: <span class="text-danger fw-bold" id="order-id">No Active Order</span>
+                            </div>
+                        </div>
                     </div>
 
-                    <div id="shop-order-list" class="d-none flex-grow-1 px-4 py-2" style="overflow-y: auto; max-height: 380px;"></div>
-
-                    <div id="shop-order-summary-card" class="border-top bg-light-inline d-none mt-auto">
-                        <div class="px-4 py-3">
-                            <div id="order-summary-list"></div>
+                    <div class="dropdown">
+                        <button class="btn btn-icon btn-sm btn-light-active-primary" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="ki-outline ki-dots-vertical fs-2"></i>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end rounded-3 shadow-sm border-0 p-2 w-225px">
+                            <button class="dropdown-item rounded-2 py-2.5 fw-semibold" id="print-order-summary">
+                                <i class="ki-outline ki-printer fs-4 me-2 text-muted"></i>Print Order Summary
+                            </button>
+                            <button class="dropdown-item rounded-2 py-2.5 fw-semibold" id="print-payment-summary">
+                                <i class="ki-outline ki-printer fs-4 me-2 text-muted"></i>Print Payment Summary
+                            </button>
                         </div>
                     </div>
                 </div>
 
-                <div class="border-top p-4">
-                    <div class="row g-2 mb-3 cart-action d-none">
-                        <div class="col-12">
-                            <button class="btn btn-light-primary btn-sm w-100 fw-bold py-2.5 rounded-3" id="print-bill">
-                                <div class="d-flex align-items-center justify-content-center gap-2">
-                                    <i class="ki-outline ki-cheque fs-4"></i><span>Print Bill</span>
-                                </div>
-                            </button>
-                        </div>
-                        <div class="col-6 d-none" id="void-order-column">
-                            <button class="btn btn-light-danger btn-sm w-100 py-2 fs-6 rounded-3" id="void-order-button" data-bs-toggle="modal" data-bs-target="#void-order-modal">
-                                <i class="ki-outline ki-cross-circle fs-5 me-1"></i>Void
-                            </button>
-                        </div>
-                        <div class="col-6 d-none" id="refund-order-column">
-                            <button class="btn btn-light-warning btn-sm w-100 py-2 fs-6 rounded-3" id="refund-order-button" data-bs-toggle="modal" data-bs-target="#refund-order-modal">
-                                <i class="ki-outline ki-arrow-circle-left fs-5 me-1"></i>Refund
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="row g-2">
-                        @if($shopRegister->is_restaurant === 'Yes')
-                            <div class="col">
-                                <button class="btn btn-light-warning w-100 py-4 fs-5 rounded-3 border border-warning border-opacity-25" data-bs-toggle="modal" data-bs-target="#kitchen-send-modal" id="send-kitchen-ticket">
-                                    <i class="ki-outline ki-entrance-left fs-3 me-1"></i>Kitchen
-                                </button>
-                            </div>
-                            <div class="col cart-action d-none">
-                                <button class="btn btn-success w-100 py-4 fs-5 rounded-3 shadow-sm text-uppercase tracking-wide" data-bs-toggle="modal" data-bs-target="#payment-modal" id="manage-payment-button">
-                                    <i class="ki-outline ki-wallet fs-3 me-2"></i>Payment
-                                </button>
-                            </div>
-                        @else
-                            <div class="col-12 cart-action d-none">
-                                <button class="btn btn-success w-100 py-4 fs-5 rounded-3 shadow-sm text-uppercase tracking-wide" data-bs-toggle="modal" data-bs-target="#payment-modal" id="manage-payment-button">
-                                    <i class="ki-outline ki-wallet fs-3 me-2"></i>Payment
-                                </button>
-                            </div>
-                        @endif
-                    </div>
+                <div class="d-flex gap-1.5 flex-wrap mt-3 cart-action d-none">
+                    <span class="badge badge-light-primary fw-bold fs-8 px-3 py-2 rounded-2" id="badge-customer-name">Walk-in Customer</span>
+                    <span class="badge badge-light-warning fw-bold fs-8 px-3 py-2 rounded-2" id="badge-order-type">Walk-in</span>
+                    @if($shopRegister->is_restaurant === 'Yes')
+                        <span class="badge badge-light-dark fw-bold fs-8 px-3 py-2 rounded-2" id="badge-table">No Table</span>
+                    @endif
+                    <span class="badge badge-light-success fw-bold fs-8 px-3 py-2 rounded-2" id="badge-order-status">Unpaid</span>
                 </div>
             </div>
+
+            <!-- 2. Barcode & Action Controls -->
+            <div class="card-body p-5 bg-light-subtle border-bottom">
+                <div class="mb-3">
+                    <div class="input-group input-group-solid border border-gray-300 rounded-3 bg-white shadow-xs">
+                        <span class="input-group-text bg-transparent border-0 pe-2">
+                            <i class="ki-outline ki-barcode fs-1 text-primary"></i>
+                        </span>
+                        
+                        <input type="text" 
+                            id="pos-barcode-scanner-input" 
+                            class="form-control form-control-solid fs-7 py-3 ps-1 bg-transparent border-0" 
+                            placeholder="Ready to scan or type barcode..." 
+                            autocomplete="off" />
+                        
+                        <span class="input-group-text bg-transparent border-0 pe-3">
+                            <span class="badge badge-light-success d-flex align-items-center gap-1.5 py-1.5 px-2.5 rounded-2">
+                                <span class="bullet bullet-dot bg-success h-6px w-6px animation-blink"></span>
+                                <span class="fw-bold fs-9 text-success text-uppercase">Live</span>
+                            </span>
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Main Action Buttons -->
+                <div class="row g-2 mb-2">
+                    <div class="col-4">
+                        <button class="btn btn-white btn-color-gray-800 btn-active-light-success border shadow-xs w-100 py-3 d-flex flex-column align-items-center gap-1 rounded-3" id="new-order">
+                            <i class="ki-outline ki-plus fs-2 text-success p-0"></i>
+                            <span class="fw-bold fs-7">New</span>
+                        </button>
+                    </div>
+                    <div class="col-4">
+                        <button class="btn btn-white btn-color-gray-800 btn-active-light-warning border shadow-xs w-100 py-3 d-flex flex-column align-items-center gap-1 rounded-3" data-bs-toggle="modal" data-bs-target="#order-history-modal" id="order-history-button">
+                            <i class="ki-outline ki-time fs-2 text-warning p-0"></i>
+                            <span class="fw-bold fs-7">Orders</span>
+                        </button>
+                    </div>
+                    <div class="col-4">
+                        <button class="btn btn-white btn-color-gray-800 btn-active-light-danger border shadow-xs w-100 py-3 d-flex flex-column align-items-center gap-1 rounded-3" data-bs-toggle="modal" data-bs-target="#cancel-order-modal" id="cancel-button">
+                            <i class="ki-outline ki-cross-circle fs-2 text-danger p-0"></i>
+                            <span class="fw-bold fs-7">Cancel</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Secondary Quick Modals -->
+                <div class="row g-2 mb-3 cart-action d-none">
+                    <div class="col-4">
+                        <button class="btn btn-white btn-color-gray-800 btn-active-light-primary border shadow-xs w-100 py-2.5 d-flex flex-column align-items-center gap-1 rounded-3" data-bs-toggle="modal" data-bs-target="#customer-modal" id="customer-button">
+                            <i class="ki-outline ki-user fs-2 text-primary p-0"></i>
+                            <span class="fw-semibold fs-8">Customer</span>
+                        </button>
+                    </div>
+                    <div class="col-4">
+                        <button class="btn btn-white btn-color-gray-800 btn-active-light-warning border shadow-xs w-100 py-2.5 d-flex flex-column align-items-center gap-1 rounded-3" data-bs-toggle="modal" data-bs-target="#discount-modal" id="manage-discount-button">
+                            <i class="ki-outline ki-discount fs-2 text-warning p-0"></i>
+                            <span class="fw-semibold fs-8">Discount</span>
+                        </button>
+                    </div>
+                    <div class="col-4">
+                        <button class="btn btn-white btn-color-gray-800 btn-active-light-danger border shadow-xs w-100 py-2.5 d-flex flex-column align-items-center gap-1 rounded-3" data-bs-toggle="modal" data-bs-target="#charges-modal" id="manage-charge-button">
+                            <i class="ki-outline ki-dollar fs-2 text-danger p-0"></i>
+                            <span class="fw-semibold fs-8">Charges</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Order Type Options -->
+                <div class="row g-2 cart-action d-none">
+                    <div class="col">
+                        <select class="form-select fw-bold fs-7 rounded-3 py-2.5" id="order-type">
+                            <option value="Walk-in" {{ $shopRegister->is_restaurant !== 'Yes' ? 'selected' : '' }}>Walk-in</option>
+                            @if($shopRegister->is_restaurant === 'Yes')
+                                <option value="Dine-in" selected>Dine-in</option>
+                                <option value="Take-out">Take-out</option>
+                            @endif
+                            <option value="Delivery">Delivery</option>
+                        </select>
+                    </div>
+
+                    @if($shopRegister->is_restaurant === 'Yes')
+                        <div class="col" id="set-table-column">
+                            <button class="btn btn-light-warning border border-warning border-opacity-25 w-100 fw-bold rounded-3 d-flex align-items-center justify-content-center gap-2 py-2.5" id="set-table" data-bs-toggle="modal" data-bs-target="#table-modal">
+                                <i class="ki-outline ki-element-11 fs-4"></i>
+                                <span id="selected-table-label" class="fs-7">Select Table</span>
+                            </button>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            <!-- 3. Dynamic Items List -->
+            <div class="card-body p-5">
+                <!-- Empty State -->
+                <div id="shop-order-empty" class="text-center py-10">
+                    <div class="symbol symbol-65px mb-3">
+                        <div class="symbol-label bg-light-primary rounded-circle">
+                            <i class="ki-duotone ki-handcart fs-2x text-primary">
+                                <span class="path1"></span><span class="path2"></span>
+                            </i>
+                        </div>
+                    </div>
+                    <div class="fw-bold fs-5 text-gray-800 mb-1">Cart is empty</div>
+                    <div class="text-muted fs-7 px-4">Select items from the catalog to build an order.</div>
+                </div>
+
+                <!-- Dynamic Item List -->
+                <div id="shop-order-list" class="d-none min-h-150px"></div>
+            </div>
+
+            <!-- 4. Prominent Order Summary Block -->
+            <div id="shop-order-summary-card" class="card-footer bg-light-subtle border-top px-5 py-4 d-none">
+                <div class="bg-white p-4 rounded-3 border shadow-xs" id="order-summary-list"></div>
+            </div>
+
+            <!-- 5. Payment & Checkout Footer -->
+            <div class="card-footer p-5 border-top">
+                <div class="row g-2 mb-3 cart-action d-none">
+                    <div class="col-12">
+                        <button class="btn btn-light-primary btn-sm w-100 fw-bold py-2.5 rounded-3" id="print-bill">
+                            <div class="d-flex align-items-center justify-content-center gap-2">
+                                <i class="ki-outline ki-cheque fs-4"></i><span>Print Bill</span>
+                            </div>
+                        </button>
+                    </div>
+                    <div class="col-6 d-none" id="void-order-column">
+                        <button class="btn btn-light-danger btn-sm w-100 py-2 fs-6 rounded-3" id="void-order-button" data-bs-toggle="modal" data-bs-target="#void-order-modal">
+                            <i class="ki-outline ki-cross-circle fs-5 me-1"></i>Void
+                        </button>
+                    </div>
+                    <div class="col-6 d-none" id="refund-order-column">
+                        <button class="btn btn-light-warning btn-sm w-100 py-2 fs-6 rounded-3" id="refund-order-button" data-bs-toggle="modal" data-bs-target="#refund-order-modal">
+                            <i class="ki-outline ki-arrow-circle-left fs-5 me-1"></i>Refund
+                        </button>
+                    </div>
+                </div>
+
+                <div class="row g-2">
+                    @if($shopRegister->is_restaurant === 'Yes')
+                        <div class="col-6">
+                            <button class="btn btn-light-warning w-100 py-3.5 fs-6 fw-bold rounded-3 border border-warning border-opacity-25" data-bs-toggle="modal" data-bs-target="#kitchen-send-modal" id="send-kitchen-ticket">
+                                <i class="ki-outline ki-entrance-left fs-3 me-1"></i>Kitchen
+                            </button>
+                        </div>
+                        <div class="col-6 cart-action d-none">
+                            <button class="btn btn-success w-100 py-3.5 fs-6 fw-bold rounded-3 shadow-sm text-uppercase tracking-wide" data-bs-toggle="modal" data-bs-target="#payment-modal" id="manage-payment-button">
+                                <i class="ki-outline ki-wallet fs-3 me-2"></i>Pay
+                            </button>
+                        </div>
+                    @else
+                        <div class="col-12 cart-action d-none">
+                            <button class="btn btn-success w-100 py-3.5 fs-5 fw-bold rounded-3 shadow-sm text-uppercase tracking-wide" data-bs-toggle="modal" data-bs-target="#payment-modal" id="manage-payment-button">
+                                <i class="ki-outline ki-wallet fs-3 me-2"></i>Pay
+                            </button>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
         </div>
     </div>
+</div>
 
     <div id="shop-register-order-modal" class="modal fade" tabindex="-1" aria-labelledby="shop-register-order-modal" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-md">

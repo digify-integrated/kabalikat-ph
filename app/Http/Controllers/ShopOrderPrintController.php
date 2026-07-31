@@ -342,6 +342,11 @@ class ShopOrderPrintController extends Controller
 
         $pdf->SetFont('helvetica', '', 7.5);
         foreach ($shopOrder->items as $item) {
+            // Skip items with 0, null, or negative quantities
+            if (empty($item->quantity) || $item->quantity <= 0) {
+                continue;
+            }
+
             $currentY = $pdf->GetY();
             $itemName = strtoupper($item->product_name);
             
