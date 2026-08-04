@@ -426,6 +426,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/fetch-details', 'fetchDetails')->name('fetch.details');
             Route::post('/generate-table', 'generateTable')->name('generate.table');
             Route::post('/generate-options', 'generateOptions')->name('generate.options');
+            Route::post('/generate-parent-options', 'generateParentOptions')->name('generate.parent.options');
         });
 
     // Stock Adjustment Reason
@@ -995,6 +996,11 @@ Route::middleware('auth')->group(function () {
         '/shop-order/{shopOrder}/print-bill',
         [ShopOrderPrintController::class, 'printBill']
     )->name('shop-order.print-bill');
+    
+    Route::get(
+        '/shop-order/{shopOrder}/print-receipt',
+        [ShopOrderPrintController::class, 'printReceipt']
+    )->name('shop-order.print-receipt');
     
     Route::get(
         '/shop-order/register/{shopRegister}/print-orders',

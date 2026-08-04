@@ -66,6 +66,7 @@
                                 </div>
                             </th>
                             <th>Product Category</th>
+                            <th>Parent</th>
                         </tr>
                     </thead>
                     <tbody class="fw-semibold text-gray-800"></tbody>

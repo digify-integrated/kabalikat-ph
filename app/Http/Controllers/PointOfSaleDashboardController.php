@@ -10,19 +10,27 @@ class PointOfSaleDashboardController extends Controller
 {
     public function fetchDetails(Request $request)
     {
-        // 1. Gross Sales (Sum of all orders including charges, before deducting voids/cancels)
-        $grossSales = DB::table('shop_order')->sum('gross_total');
+        $today = Carbon::today();
 
-        // 2. Net Sales (Sum of net_total from completed or active revenue tickets)
+        // 1. Gross Sales (Sum of all orders today including charges, before deducting voids/cancels)
+        $grossSales = DB::table('shop_order')
+            ->whereDate('created_at', $today)
+            ->sum('gross_total');
+
+        // 2. Net Sales (Sum of net_total today from completed or active revenue tickets)
         $netSales = DB::table('shop_order')
+            ->whereDate('created_at', $today)
             ->whereNotIn('order_status', ['Cancelled', 'Voided'])
             ->sum('net_total');
 
-        // 3. Total Order Counts
-        $totalOrders = DB::table('shop_order')->count();
+        // 3. Total Order Counts Today
+        $totalOrders = DB::table('shop_order')
+            ->whereDate('created_at', $today)
+            ->count();
 
-        // 4. Average Order Value (AOV) for Active Revenue Tickets
+        // 4. Average Order Value (AOV) Today for Active Revenue Tickets
         $avgOrderValue = DB::table('shop_order')
+            ->whereDate('created_at', $today)
             ->whereNotIn('order_status', ['Cancelled', 'Voided'])
             ->avg('net_total') ?? 0;
 
@@ -44,8 +52,8 @@ class PointOfSaleDashboardController extends Controller
                 'shop_register_name', 'floor_plan_name', 'table_number',
                 'order_status', 'payment_status', 'net_total', 'created_at'
             ])
+            ->whereDate('created_at', Carbon::today())
             ->orderByDesc('id')
-            ->limit(10)
             ->get()
             ->map(function ($row) {
                 // Status Badge CSS Class Configurations
@@ -101,8 +109,8 @@ class PointOfSaleDashboardController extends Controller
                 'shop_order_payment.payment_amount',
                 'shop_order_payment.paid_at'
             ])
+            ->whereDate('shop_order_payment.created_at', Carbon::today())
             ->orderByDesc('shop_order_payment.id')
-            ->limit(10)
             ->get()
             ->map(function ($row) {
                 $statusClass = match($row->payment_status) {

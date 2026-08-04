@@ -31,6 +31,10 @@
             <div class="d-flex flex-nowrap gap-2 pb-1" id="shop-product-category-container"></div>
         </div>
 
+        <div class="mb-4 overflow-auto">
+            <div id="shop-product-subcategory-container" class="d-flex flex-wrap gap-2 mb-3" style="display: none;"></div>
+        </div>
+
         <div class="row g-3" id="product-container"></div>
     </div>
 
@@ -200,10 +204,17 @@
             <!-- 5. Payment & Checkout Footer -->
             <div class="card-footer p-5 border-top">
                 <div class="row g-2 mb-3 cart-action d-none">
-                    <div class="col-12">
+                    <div class="col-6">
                         <button class="btn btn-light-primary btn-sm w-100 fw-bold py-2.5 rounded-3" id="print-bill">
                             <div class="d-flex align-items-center justify-content-center gap-2">
                                 <i class="ki-outline ki-cheque fs-4"></i><span>Print Bill</span>
+                            </div>
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button class="btn btn-light-primary btn-sm w-100 fw-bold py-2.5 rounded-3" id="print-receipt">
+                            <div class="d-flex align-items-center justify-content-center gap-2">
+                                <i class="ki-outline ki-cheque fs-4"></i><span>Print Receipt</span>
                             </div>
                         </button>
                     </div>

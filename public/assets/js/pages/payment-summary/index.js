@@ -15,14 +15,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 filter_payment_date: $('#filter_payment_date').val(),
             }),
             columns: [
-                { data: 'PAYMENT_METHOD' },
-                { data: 'ORDER_NO' },
-                { data: 'AMOUNT' },
-                { data: 'STATUS' },
-                { data: 'CASHIER' },
-                { data: 'REFERENCE' },
-                { data: 'DATE' },
-            ]
+                { data: 'PAYMENT_METHOD' }, // 0
+                { data: 'ORDER_NO' },       // 1
+                { data: 'STATUS' },         // 2
+                { data: 'CASHIER' },        // 3
+                { data: 'REFERENCE' },      // 4
+                { data: 'DATE' },           // 5
+                { data: 'AMOUNT' },         // 6
+            ],
+            footerCallback: function (row, data, start, end, display) {
+                const api = this.api();
+
+                // Helper to clean formatting (commas/currency symbols) and parse as float
+                const parseVal = function (i) {
+                    if (typeof i === 'string') {
+                        return parseFloat(i.replace(/[\$,]/g, '')) || 0;
+                    }
+                    return typeof i === 'number' ? i : 0;
+                };
+
+                // Calculate total for AMOUNT (column index 6) across all filtered pages
+                const totalAmount = api
+                    .column(6, { page: 'all' }) // Use { page: 'current' } for page-only total
+                    .data()
+                    .reduce((a, b) => parseVal(a) + parseVal(b), 0);
+
+                // Format total with commas and 2 decimal places
+                const formattedTotal = totalAmount.toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                });
+
+                // Insert into the footer cell for column 6
+                $(api.column(6).footer()).html(formattedTotal);
+            }
         },
         dropdown: [
             {

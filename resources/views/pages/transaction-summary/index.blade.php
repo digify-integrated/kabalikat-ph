@@ -177,6 +177,25 @@
                         </thead>
 
                     <tbody class="fw-semibold text-gray-800"></tbody>
+                    <tfoot>
+                        <tr>
+                            <th>Total</th>
+                            <th></th><th></th><th></th><th></th><th></th>
+                            <th></th><!-- ITEMS (Index 6) -->
+                            <th></th><!-- GROSS (Index 7) -->
+                            <th></th><!-- DISCOUNT (Index 8) -->
+                            <th></th><!-- CHARGES (Index 9) -->
+                            <th></th><!-- NET (Index 10) -->
+                            <th></th><!-- VAT (Index 11) -->
+                            <th></th><!-- VATABLE (Index 12) -->
+                            <th></th><!-- VAT_EXEMPT (Index 13) -->
+                            <th></th><!-- ZERO_RATED (Index 14) -->
+                            <th></th><!-- PAID (Index 15) -->
+                            <th></th><!-- CHANGE (Index 16) -->
+                            <th></th><!-- BALANCE (Index 17) -->
+                            <th></th><!-- DATE (Index 18) -->
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>

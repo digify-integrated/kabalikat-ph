@@ -18,7 +18,8 @@ class ProductCategoryController extends Controller
             $request->all(),
             [
                 'product_category_id'   => ['nullable', 'integer'],
-                'product_category_name' => ['required', 'string', 'max:255']
+                'product_category_name' => ['required', 'string', 'max:255'],
+                'parent_id'             => ['nullable', 'integer'],
             ]
         );
 
@@ -34,8 +35,16 @@ class ProductCategoryController extends Controller
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
 
+        $parentId = (int) $validated['parent_id'];
+
+        $parentName = (string) ProductCategory::query()
+            ->whereKey($parentId)
+            ->value('product_category_name');
+
         $payload = [
             'product_category_name' => $validated['product_category_name'],
+            'parent_id' => $validated['parent_id'],
+            'parent_name' => $parentName,
             'last_log_by' => Auth::id(),
         ];
 
@@ -164,7 +173,8 @@ class ProductCategoryController extends Controller
         return response()->json([
             'success' => true,
             'notExist' => false,
-            'productCategoryName' => $productCategory->product_category_name ?? null
+            'productCategoryName' => $productCategory->product_category_name ?? null,
+            'parentId' => $productCategory->parent_id ?? null,
         ]);
     }
 
@@ -173,13 +183,14 @@ class ProductCategoryController extends Controller
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
 
-        $productCategorys = DB::table('product_category')
+        $productCategories = DB::table('product_category')
         ->orderBy('product_category_name')
         ->get();
 
-        $response = $productCategorys->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
+        $response = $productCategories->map(function ($row) use ($pageAppId, $pageNavigationMenuId)  {
             $productCategoryId = $row->id;
             $productCategoryName = $row->product_category_name;
+            $parentName = $row->parent_name;
 
             $link = route('apps.details', [
                 'appId' => $pageAppId,
@@ -194,6 +205,7 @@ class ProductCategoryController extends Controller
                     </div>
                 ',
                 'PRODUCT_CATEGORY' => $productCategoryName,
+                'PARENT_NAME' => $parentName,
                 'LINK' => $link,
             ];
         })->values();
@@ -214,13 +226,50 @@ class ProductCategoryController extends Controller
             ]);
         }
 
-        $productCategorys = DB::table('product_category')
+        $productCategories = DB::table('product_category')
             ->select(['id', 'product_category_name'])
             ->orderBy('product_category_name')
             ->get();
 
         $response = $response->concat(
-            $productCategorys->map(fn ($row) => [
+            $productCategories->map(fn ($row) => [
+                'id'   => $row->id,
+                'text' => $row->product_category_name,
+            ])
+        )->values();
+
+        return response()->json($response);
+    }
+
+    public function generateParentOptions(Request $request)
+    {
+        $multiple = filter_var($request->input('multiple', false), FILTER_VALIDATE_BOOLEAN);
+        $productCategoryId = filter_var($request->input('productCategoryId'), FILTER_VALIDATE_INT);
+
+        $response = collect();
+
+        if (!$multiple) {
+            $response->push([
+                'id'   => '',
+                'text' => '--',
+            ]);
+        }
+
+        if(!empty($productCategoryId)) {
+            $productCategories = DB::table('product_category')
+                ->select(['id', 'product_category_name'])
+                ->where('id', '<>', $productCategoryId)
+                ->orderBy('product_category_name')
+                ->get();
+        } else {
+            $productCategories = DB::table('product_category')
+                ->select(['id', 'product_category_name'])
+                ->orderBy('product_category_name')
+                ->get();
+        }
+
+        $response = $response->concat(
+            $productCategories->map(fn ($row) => [
                 'id'   => $row->id,
                 'text' => $row->product_category_name,
             ])

@@ -8,12 +8,26 @@
         <div class="card-body">
             <form id="product_category_form" method="post" action="#" novalidate>
                 @csrf
-                <div class="fv-row mb-4">
-                    <label class="fs-6 fw-semibold required form-label mt-3" for="product_category_name">
-                        Product Category
-                    </label>
+                <div class="row">
+                    <div class="col">
+                        <div class="fv-row mb-4">
+                            <label class="fs-6 fw-semibold required form-label mt-3" for="product_category_name">
+                                Product Category
+                            </label>
 
-                    <input type="text" class="form-control" id="product_category_name" name="product_category_name" maxlength="100" autocomplete="off">
+                            <input type="text" class="form-control" id="product_category_name" name="product_category_name" maxlength="100" autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="fv-row mb-4">
+                            <label class="fs-6 fw-semibold form-label mt-3" for="parent_id">
+                                Parent Category
+                            </label>
+
+                            <select id="parent_id" name="parent_id" class="form-select" data-control="select2" data-allow-clear="false">
+                            </select>
+                        </div>
+                    </div>
                 </div>
             </form>
         </div>

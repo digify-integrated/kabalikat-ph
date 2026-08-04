@@ -68,11 +68,11 @@ document.addEventListener('DOMContentLoaded', () => {
     discardCreate();
 
     config.dropdown.map(cfg => 
-  generateDropdownOptions({
-    url: cfg.url,
-    dropdownSelector: cfg.dropdownSelector
-  })
-);
+        generateDropdownOptions({
+            url: cfg.url,
+            dropdownSelector: cfg.dropdownSelector
+        })
+    );
 
     config.forms.map((cfg) => initValidation(cfg.selector, cfg.rules));
 });

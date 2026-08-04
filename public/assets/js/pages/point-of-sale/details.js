@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let cachedOrders = [];
     let kitchenItems = [];
     let kitchenRoutes = [];
+    let loadedCategories = [];
     let barcodeBuffer = '';
     let lastKeyTime = Date.now();
     
@@ -208,7 +209,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const ctx = getPageContext();
 
             const params = new URLSearchParams();
-
             params.append('detailId', ctx.detailId ?? '');
             params.append('appId', ctx.appId ?? '');
             params.append('navigationMenuId', ctx.navigationMenuId ?? '');
@@ -232,25 +232,65 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
 
             if (data?.success) {
-                const container = document.getElementById('shop-product-category-container');
-                container.innerHTML = `
-                    <button type="button" class="btn btn-primary rounded-pill px-4 py-2 product-category-filter active" data-product-filter="all">
+                loadedCategories = data.data || [];
+
+                const categoryContainer = document.getElementById('shop-product-category-container');
+                const subcategoryContainer = document.getElementById('shop-product-subcategory-container');
+                
+                // Clear subcategories on refresh
+                if (subcategoryContainer) subcategoryContainer.innerHTML = '';
+
+                // Render top-level categories (parent_id is null or 0)
+                const parentCategories = loadedCategories.filter(cat => !cat.parent_id);
+
+                categoryContainer.innerHTML = `
+                    <button type="button" class="btn btn-primary px-4 py-2 product-category-filter active" data-product-filter="all">
                         All
                     </button>`;
 
-                const categories = data.data || [];
-
-                categories.forEach(category => {
-                    let html = renderCategoryTab(category);
-
-                    container.insertAdjacentHTML('beforeend', html);
+                parentCategories.forEach(category => {
+                    categoryContainer.insertAdjacentHTML('beforeend', renderCategoryTab(category, 'parent'));
                 });
             }
-
-        }
-        catch (error) {
+        } catch (error) {
             handleSystemError(error, 'fetch_failed', `Fetch request failed: ${error.message}`);
         }
+    };
+
+    const renderCategoryTab = (category, type = 'parent') => {
+        const className = type === 'parent' ? 'product-category-filter' : 'product-subcategory-filter';
+        return `
+            <button type="button" class="btn btn-light px-4 py-2 ${className}" data-product-filter="${category.id}">
+                ${category.name}
+            </button>
+        `;
+    };
+
+    const renderSubcategories = (parentId) => {
+        const subcontainer = document.getElementById('shop-product-subcategory-container');
+        if (!subcontainer) return;
+
+        const subcategories = loadedCategories.filter(cat => String(cat.parent_id) === String(parentId));
+
+        if (subcategories.length === 0) {
+            subcontainer.innerHTML = '';
+            subcontainer.style.display = 'none';
+            return;
+        }
+
+        subcontainer.style.display = 'flex';
+        subcontainer.innerHTML = `
+            <button type="button" class="btn btn-primary px-4 py-2 product-subcategory-filter active" data-product-filter="${parentId}">
+                All Subcategories
+            </button>`;
+
+        subcategories.forEach(sub => {
+            subcontainer.insertAdjacentHTML('beforeend', `
+                <button type="button" class="btn btn-light px-4 py-2 product-subcategory-filter" data-product-filter="${sub.id}">
+                    ${sub.name}
+                </button>
+            `);
+        });
     };
 
     const generatePOSProduct = async (url, otherData = {}) => {
@@ -745,6 +785,7 @@ document.addEventListener('DOMContentLoaded', () => {
         $('#order-type').prop('disabled', false);
         $('#set-table').prop('disabled', false);
         $('#print-bill').prop('disabled', false);
+        $('#print-receipt').prop('disabled', false);
         $('#void-order-button').prop('disabled', false);
         $('#refund-order-button').prop('disabled', false);
     };
@@ -879,6 +920,7 @@ document.addEventListener('DOMContentLoaded', () => {
             $('#order-type').prop('disabled', true);
             $('#set-table').prop('disabled', true);
             $('#print-bill').prop('disabled', false);
+            $('#print-receipt').prop('disabled', false);
             $('#new-order').prop('disabled', false);
             $('#order-history-button').prop('disabled', false);
             $('#void-order-button').prop('disabled',!isPaid);
@@ -902,6 +944,7 @@ document.addEventListener('DOMContentLoaded', () => {
             $('#order-type').prop('disabled', false);
             $('#set-table').prop('disabled', false);
             $('#print-bill').prop('disabled', false);
+            $('#print-receipt').prop('disabled', false);
         }
     };
 
@@ -940,15 +983,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 .replace(/,/g, '')
                 .trim()
         ) || 0;
-    };    
-
-    const renderCategoryTab = (category) => {
-        return `
-            <button type="button" class="btn btn-light rounded-pill px-4 py-2 product-category-filter" data-product-filter="${category.id}">
-                ${category.name}
-            </button>
-        `;
-    };
+    }; 
 
     const renderProduct = (product) => {
         const disabled = !product.in_stock;
@@ -991,7 +1026,7 @@ document.addEventListener('DOMContentLoaded', () => {
             >
                 <div class="card-body d-flex flex-column justify-content-between p-5">
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                        <span class="badge rounded-pill ${badgeClass} px-3 py-2 fw-semibold fs-8">
+                        <span class="badge ${badgeClass} px-3 py-2 fw-semibold fs-8">
                             ${badgeText}
                         </span>
                         <i class="ki-duotone ${icon} fs-1"></i>
@@ -1243,7 +1278,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 <div class="d-flex justify-content-between align-items-center">
-                    <div class="d-flex align-items-center bg-light rounded-pill px-2 py-1 gap-2 shadow-sm">
+                    <div class="d-flex align-items-center bg-light px-2 py-1 gap-2 shadow-sm">
                         <button type="button" class="btn btn-icon btn-sm btn-light-primary rounded-circle decrease-item-qty" data-shop-order-item-id="${item.id}">
                             <i class="ki-outline ki-minus fs-5"></i>
                         </button>
@@ -1342,7 +1377,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderFloorPlans = (floorPlans) => {
         const html = floorPlans.map((plan, index) => {
             return `            
-            <button type="button" class="btn floor-plan-filter rounded-pill px-6 py-3 fw-bold fs-6 ${index === 0 ? 'btn-success' : 'btn-light'}" data-floor-plan-id="${plan.id}">
+            <button type="button" class="btn floor-plan-filter px-6 py-3 fw-bold fs-6 ${index === 0 ? 'btn-success' : 'btn-light'}" data-floor-plan-id="${plan.id}">
                 ${plan.floor_plan_name}
             </button>
             `;
@@ -1352,67 +1387,89 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const renderFloorTables = (tables) => {
-        const html = tables.map((table) => {
+        const container = $('#shop-floor-table-container');
+        container.empty();
+
+        if (!tables || tables.length === 0) {
+            container.html(`
+                <div class="col-12 text-center py-5 text-muted">
+                    <div class="fw-semibold">No tables found for this floor plan.</div>
+                </div>
+            `);
+            return;
+        }
+
+        tables.forEach(table => {
             const isSelected = table.is_selected;
             const isOccupied = table.is_occupied;
+            const activeOrder = table.active_order;
 
-            let cardClass = 'border-gray-200 border-hover-primary';
-            let badgeClass = 'badge-light-primary';
-            let badgeText = 'Available';
+            // Visual distinction
+            let borderClass = 'border-success-subtle bg-light-success';
+            let badgeClass = 'bg-success';
+            let badgeText = 'AVAILABLE';
 
             if (isSelected) {
-                cardClass = 'border-success bg-success bg-opacity-10';
-                badgeClass = 'badge-success';
-                badgeText = 'Selected';
-            }
-            else if (isOccupied) {
-                cardClass = 'bg-light opacity-75 border-gray-300';
-                badgeClass = 'badge-light-danger';
-                badgeText = 'Occupied';
+                borderClass = 'border-primary border-3 bg-primary-subtle';
+                badgeClass = 'bg-primary';
+                badgeText = 'CURRENTLY SELECTED';
+            } else if (isOccupied) {
+                borderClass = 'border-danger-subtle bg-light-danger';
+                badgeClass = 'bg-danger';
+                badgeText = 'OCCUPIED';
             }
 
-            return `            
-            <div class="col-6 col-md-4 col-xl-3">
-                <div class=" table-card card shadow-sm rounded-4 h-100 ${cardClass} ${ !isOccupied || isSelected ? 'cursor-pointer selectable-table' : ''}"data-floor-plan-table-id="${table.id}">
-                    <div class="card-body p-5">
-                        <div class="d-flex justify-content-between align-items-start mb-5">
-                            <div>
-                                <div class="fw-bold fs-2 ${isSelected ? 'text-success' : 'text-gray-900'} mb-1">
-                                    Table ${table.table_number}
-                                </div>
+            const tableCardHtml = `
+                <div class="col-6 col-md-4 col-lg-3 mb-3">
+                    <div class="card h-100 ${borderClass} shadow-sm border pos-table-card" 
+                        data-floor-plan-table-id="${table.id}"
+                        data-is-occupied="${isOccupied ? '1' : '0'}"
+                        data-active-order-id="${activeOrder ? activeOrder.id : ''}"
+                        style="cursor: pointer;">
+                        
+                        <div class="card-body p-3 d-flex flex-column justify-content-between">
+                            <!-- Header -->
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h5 class="fw-bold mb-0 text-dark">Table ${table.table_number}</h5>
+                                <span class="badge ${badgeClass} rounded-pill fs-8 px-2 py-1">${badgeText}</span>
                             </div>
 
-                            <span class="badge ${badgeClass} fw-bold">${badgeText}</span>
-                        </div>
- 
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div class="d-flex gap-1">
-                                ${Array(table.seats)
-                                    .fill('')
-                                    .map(() => `                                    
-                                        <i class=" ki-outline ki-profile-user fs-4 ${ isSelected ? 'text-success' : 'text-muted'}"></i>
-                                    `)
-                                    .join('')}
+                            <!-- Body Info -->
+                            <div class="my-2">
+                                ${(isOccupied || isSelected) && activeOrder ? `
+                                    <div class="p-2 rounded">
+                                        <div class="fw-bold text-dark fs-7">#${activeOrder.order_number}</div>
+                                        <div class="text-muted fs-8">${activeOrder.customer_name} • ${activeOrder.total_items} items</div>
+                                        <div class="fw-bold ${isSelected ? 'text-primary' : 'text-danger'} fs-7 mt-1">PHP ${activeOrder.net_total}</div>
+                                    </div>
+                                ` : `
+                                    <div class="text-muted fs-7 py-2">
+                                        <i class="ki-outline ki-users me-1"></i>${table.seats ?? 0} Seats
+                                    </div>
+                                `}
                             </div>
 
-                            ${
-                                isSelected
-                                ? `
-                                    <i class="ki-duotone ki-check-circle fs-1 text-success"></i>
-                                `
-                                : `
-                                    <i class="ki-outline ki-arrow-right fs-2 text-muted"></i>
-                                `
-                            }
-
+                            <!-- Footer Action -->
+                            <div class="mt-2">
+                                ${isOccupied && !isSelected ? `
+                                    <button type="button" class="btn btn-sm btn-danger w-100 fw-semibold action-resume-order" data-order-id="${activeOrder.id}">
+                                        Resume Order
+                                    </button>
+                                ` : isSelected ? `
+                                    <span class="text-primary fw-bold fs-5 d-block text-center">Selected</span>
+                                ` : `
+                                    <button type="button" class="btn btn-sm btn-success w-100 fw-semibold action-assign-table">
+                                        Assign Table
+                                    </button>
+                                `}
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
             `;
-        }).join('');
 
-        $('#shop-floor-table-container').html(html);
+            container.append(tableCardHtml);
+        });
     };
 
     const renderAvailableDiscounts = (discounts) => {
@@ -2330,24 +2387,55 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.addEventListener('click', (event) => {
         const button = event.target.closest('.product-category-filter');
-
-        if (!button) {
-            return;
-        }
+        if (!button) return;
 
         document.querySelectorAll('.product-category-filter').forEach(btn => {
-            btn.classList.remove('active');
-            btn.classList.remove('btn-primary');
+            btn.classList.remove('active', 'btn-primary');
             btn.classList.add('btn-light');
         });
 
-        button.classList.add('active');
-        button.classList.add('btn-primary');
-
+        button.classList.add('active', 'btn-primary');
         button.classList.remove('btn-light');
 
-        generatePOSProduct(config.posProduct.url, {category_id: button.dataset.productFilter, search: document.getElementById('product_search').value});
+        const categoryId = button.dataset.productFilter;
+
+        if (categoryId === 'all') {
+            const subcontainer = document.getElementById('shop-product-subcategory-container');
+            if (subcontainer) {
+                subcontainer.innerHTML = '';
+                subcontainer.style.display = 'none';
+            }
+        } else {
+            renderSubcategories(categoryId);
+        }
+
+        generatePOSProduct(config.posProduct.url, {
+            category_id: categoryId,
+            search: document.getElementById('product_search')?.value || ''
+        });
     });
+
+    // Handle Subcategory Click
+    document.addEventListener('click', (event) => {
+        const button = event.target.closest('.product-subcategory-filter');
+        if (!button) return;
+
+        document.querySelectorAll('.product-subcategory-filter').forEach(btn => {
+            btn.classList.remove('active', 'btn-primary');
+            btn.classList.add('btn-light');
+        });
+
+        button.classList.add('active', 'btn-primary');
+        button.classList.remove('btn-light');
+
+        const subcategoryId = button.dataset.productFilter;
+
+        generatePOSProduct(config.posProduct.url, {
+            category_id: subcategoryId,
+            search: document.getElementById('product_search')?.value || ''
+        });
+    });
+
 
     document.addEventListener('click', (event) => {
         const resetButton = event.target.closest('.reset-product-filter');
@@ -2804,6 +2892,24 @@ document.addEventListener('DOMContentLoaded', () => {
         window.open(url, '_blank',` width=${width}, height=${height}, top=${top}, left=${left}`);
     });
 
+    $(document).on('click', '#print-receipt', function () {
+        const shopOrderId = sessionStorage.getItem('shop_order_id');
+
+        if (!shopOrderId) {
+            showNotification('No active order.');
+
+            return;
+        }
+
+        const width = 900;
+        const height = 700;
+        const left = (screen.width - width) / 2;
+        const top = (screen.height - height) / 2;
+        const url = `/shop-order/${shopOrderId}/print-receipt`;
+        
+        window.open(url, '_blank',` width=${width}, height=${height}, top=${top}, left=${left}`);
+    });
+
     $(document).on('click', '#print-order-summary', function () {
         const ctx = getPageContext();
         const width = 900;
@@ -3061,6 +3167,49 @@ document.addEventListener('DOMContentLoaded', () => {
         loadCart(orderId, {silent: false});
 
         $('#order-history-modal').modal('hide');
+    });
+
+    // Click Event for Table Cards
+    $(document).on('click', '.pos-table-card', async function (e) {
+        e.preventDefault();
+
+        const isOccupied = $(this).data('is-occupied') == 1;
+        const activeOrderId = $(this).data('active-order-id');
+        const floorPlanTableId = $(this).data('floor-plan-table-id');
+
+        // ==========================================================
+        // CASE 1: Tapping an OCCUPIED table -> Resume that order
+        // ==========================================================
+        if (isOccupied && activeOrderId) {
+            try {
+                // 1. Update session storage
+                sessionStorage.setItem('shop_order_id', activeOrderId);
+
+                // 2. Reload the cart UI with the resumed order
+                await loadCart(activeOrderId);
+
+                // 3. Close the modal (if you are using a Bootstrap modal for floor plans)
+                const floorPlanModal = $('#table-modal');
+                if (floorPlanModal.length > 0) {
+                    floorPlanModal.modal('hide');
+                }
+
+                // 4. Re-render floor tables so the active order shows as "CURRENTLY SELECTED"
+                if (typeof selectedFloorPlanId !== 'undefined' && selectedFloorPlanId) {
+                    await loadFloorTables(selectedFloorPlanId, activeOrderId);
+                }                
+
+                showNotification(`Switched to Order #${activeOrderId}`, 'success');
+            } catch (error) {
+                handleSystemError(error, 'resume_order_failed', error.message);
+            }
+            return;
+        }
+
+        // ==========================================================
+        // CASE 2: Tapping an AVAILABLE table -> Assign to current order
+        // ==========================================================
+        await assignTableToOrder(floorPlanTableId);
     });
 
     $(document).on('click', '#customer-button', function () {

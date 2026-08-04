@@ -59,6 +59,54 @@ class ShopOrderPrintController extends Controller
             ->header('Content-Type', 'application/pdf');
     }
 
+    public function printReceipt(ShopOrder $shopOrder)
+    {
+        /*
+        |--------------------------------------------------------------------------
+        | LOAD RELATIONSHIPS
+        |--------------------------------------------------------------------------
+        */
+        $shopOrder->load([
+            'items',
+            'appliedCharges',
+            'appliedDiscounts',
+            'shopRegister',
+            'floorPlan',
+            'floorPlanTable',
+        ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | CASHIER
+        |--------------------------------------------------------------------------
+        */
+        $cashier = Auth::user();
+
+        /*
+        |--------------------------------------------------------------------------
+        | PDF HEIGHT CALCULATION
+        |--------------------------------------------------------------------------
+        */
+        $dummyPdf = new TCPDF('P', 'mm', [80, 2000], true, 'UTF-8', false);
+        $this->configurePdf($dummyPdf);
+        $dummyPdf->AddPage();
+        $this->renderReceipt($dummyPdf, $shopOrder, $cashier, 'No');
+        $height = $dummyPdf->GetY() + 12;
+
+        /*
+        |--------------------------------------------------------------------------
+        | FINAL PDF
+        |--------------------------------------------------------------------------
+        */
+        $pdf = new TCPDF('P', 'mm', [80, $height], true, 'UTF-8', false);
+        $this->configurePdf($pdf);
+        $pdf->AddPage();
+        $this->renderReceipt($pdf, $shopOrder, $cashier, 'No');
+
+        return response($pdf->Output('customer-receipt.pdf', 'S'), 200)
+            ->header('Content-Type', 'application/pdf');
+    }
+
     public function printKitchenTicket(int $ticketId)
     {
         $kitchenTicket = DB::table('kitchen_ticket')
@@ -299,15 +347,17 @@ class ShopOrderPrintController extends Controller
         $pdf->SetFont('helvetica', '', 8);
     }
 
-    private function renderReceipt(TCPDF $pdf, ShopOrder $shopOrder, $cashier): void 
+    private function renderReceipt(TCPDF $pdf, ShopOrder $shopOrder, $cashier, $withheader = 'Yes'): void 
     {
         $leftMargin = 4;
         $rightMargin = 76;
         $totalWidth = $rightMargin - $leftMargin;
 
-        $pdf->SetFont('helvetica', 'B', 9);
-        $pdf->Cell(0, 5, 'CUSTOMER BILL', 0, 1, 'C');
-        $pdf->Ln(1);
+        if($withheader == 'Yes'){
+            $pdf->SetFont('helvetica', 'B', 9);
+            $pdf->Cell(0, 5, 'CUSTOMER BILL', 0, 1, 'C');
+            $pdf->Ln(1);
+        }        
 
         $pdf->SetFont('helvetica', '', 7.5);
         $details = [

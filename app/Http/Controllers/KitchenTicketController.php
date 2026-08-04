@@ -32,14 +32,10 @@ class KitchenTicketController extends Controller
         DB::beginTransaction();
 
         try {
-            // Fetch order along with register information to check restaurant settings
             $order = DB::table('shop_order as so')
                 ->join('shop_register as sr', 'sr.id', '=', 'so.shop_register_id')
                 ->where('so.id', $shopOrderId)
-                ->select([
-                    'so.*',
-                    'sr.is_restaurant',
-                ])
+                ->select(['so.*', 'sr.is_restaurant'])
                 ->first();
 
             if (!$order) {
@@ -50,7 +46,6 @@ class KitchenTicketController extends Controller
                 ]);
             }
 
-            // VALIDATION: Require table number if register is set to Restaurant mode ('Yes')
             if ($order->is_restaurant === 'Yes' && (empty($order->table_number) || is_null($order->floor_plan_table_id))) {
                 DB::rollBack();
                 return response()->json([
@@ -65,10 +60,7 @@ class KitchenTicketController extends Controller
                 $orderItemId = $item['shop_order_item_id'];
                 $actionType = $item['action_type'];
 
-                // Fetch the corresponding order item from the database to fallback/sync correctly
-                $orderItem = DB::table('shop_order_item')
-                    ->where('id', $orderItemId)
-                    ->first();
+                $orderItem = DB::table('shop_order_item')->where('id', $orderItemId)->first();
 
                 if (!$orderItem) {
                     DB::rollBack();
@@ -78,7 +70,6 @@ class KitchenTicketController extends Controller
                     ]);
                 }
 
-                // Capture order_note dynamically: check payload keys first, then fallback to database record
                 $orderNote = $item['order_note'] 
                     ?? $item['note'] 
                     ?? $item['remarks'] 
@@ -95,9 +86,6 @@ class KitchenTicketController extends Controller
                     ->orderByDesc('kti.id')
                     ->select(['kt.kitchen_route_id', 'kt.kitchen_route_name'])
                     ->first();
-
-                $finalRouteId = null;
-                $finalRouteName = null;
 
                 if ($actionType === 'New') {
                     $route = DB::table('kitchen_route')->where('id', $item['kitchen_route_id'] ?? null)->first();
@@ -132,53 +120,65 @@ class KitchenTicketController extends Controller
 
             $grouped = collect($resolvedItems)->groupBy('kitchen_route_id');
             $createdTickets = [];
-            $tickets = [];
             $ticketsToPrint = [];
 
             foreach ($grouped as $routeId => $routeItems) {
                 $routeName = $routeItems->first()['kitchen_route_name'];
 
-                $hasAdditions = $routeItems->contains(function ($item) {
-                    return in_array($item['action_type'], ['New', 'Add', 'Refire']);
-                });
-                
+                // FIX A: Always find the latest active OR completed ticket for this order & route
                 $existingTicket = DB::table('kitchen_ticket')
                     ->where('shop_order_id', $shopOrderId)
                     ->where('kitchen_route_id', $routeId)
-                    ->where('ticket_status', 'Queued')
+                    ->orderByDesc('id')
                     ->first();
 
                 $isBrandNewTicket = false;
-
-                if (!$existingTicket && !$hasAdditions) {
-                    $existingTicket = DB::table('kitchen_ticket')
-                        ->where('shop_order_id', $shopOrderId)
-                        ->where('kitchen_route_id', $routeId)
-                        ->whereIn('ticket_status', ['Preparing', 'Ready'])
-                        ->orderByDesc('id')
-                        ->first();
-                }
 
                 if ($existingTicket) {
                     $ticketId = $existingTicket->id;
                 } else {
                     $isBrandNewTicket = true;
 
-                   $ticketNumber = 'KT-' . now()->format('Hi') . '-' . substr($order->order_number, -3);
+                    $inserted = false;
+                    $attempts = 0;
 
-                    $ticketId = DB::table('kitchen_ticket')->insertGetId([
-                        'ticket_number'      => $ticketNumber,
-                        'shop_order_id'      => $shopOrderId,
-                        'shop_register_id'   => $order->shop_register_id,
-                        'shop_register_name' => $order->shop_register_name,
-                        'kitchen_route_id'   => $routeId,
-                        'kitchen_route_name' => $routeName,
-                        'ticket_status'      => 'Queued',
-                        'queued_at'          => now(),
-                        'created_by'         => auth()->id(),
-                        'created_by_name'    => auth()->user()->name ?? 'System',
-                    ]);
+                    while (!$inserted && $attempts < 5) {
+                        $attempts++;
+                        
+                        $ticketNumber = sprintf(
+                            'KT-%s-%s-R%d-%s',
+                            now()->format('Hi'),
+                            substr($order->order_number, -3),
+                            $routeId,
+                            strtoupper(substr(bin2hex(random_bytes(2)), 0, 4))
+                        );
+
+                        try {
+                            $ticketId = DB::table('kitchen_ticket')->insertGetId([
+                                'ticket_number'      => $ticketNumber,
+                                'shop_order_id'      => $shopOrderId,
+                                'shop_register_id'   => $order->shop_register_id,
+                                'shop_register_name' => $order->shop_register_name,
+                                'kitchen_route_id'   => $routeId,
+                                'kitchen_route_name' => $routeName,
+                                'ticket_status'      => 'Queued',
+                                'queued_at'          => now(),
+                                'created_at'         => now(),
+                                'created_by'         => auth()->id(),
+                                'created_by_name'    => auth()->user()->name ?? 'System',
+                            ]);
+                            $inserted = true;
+                        } catch (\Illuminate\Database\QueryException $qe) {
+                            if ($qe->getCode() == '23000' && $attempts < 5) {
+                                continue;
+                            }
+                            throw $qe;
+                        }
+                    }
                 }
+
+                $insertedItemIds = [];
+                $cancelledItemSlips = [];
 
                 foreach ($routeItems as $item) {
                     $orderItem = $item['order_item_record'];
@@ -186,16 +186,17 @@ class KitchenTicketController extends Controller
                     if (in_array($item['action_type'], ['Reduce', 'Cancel'])) {
                         $qtyToReduce = $item['quantity'];
 
+                        // FIX C: Look across ALL non-cancelled items associated with this shop order item
                         $activeKitchenLines = DB::table('kitchen_ticket_item')
-                            ->where('kitchen_ticket_id', $ticketId)
                             ->where('shop_order_item_id', $item['shop_order_item_id'])
-                            ->whereIn('item_status', ['Queued', 'Preparing'])
-                            ->orderBy('item_status', 'asc')
+                            ->where('item_status', '!=', 'Cancelled')
                             ->orderBy('id', 'desc')
                             ->get();
 
                         foreach ($activeKitchenLines as $line) {
                             if ($qtyToReduce <= 0) break;
+
+                            $reducedQty = min($line->quantity, $qtyToReduce);
 
                             if ($line->quantity <= $qtyToReduce) {
                                 $qtyToReduce -= $line->quantity;
@@ -203,9 +204,9 @@ class KitchenTicketController extends Controller
                                 DB::table('kitchen_ticket_item')
                                     ->where('id', $line->id)
                                     ->update([
-                                        'item_status' => 'Cancelled',
+                                        'item_status'  => 'Cancelled',
                                         'cancelled_at' => now(),
-                                        'updated_at' => now()
+                                        'updated_at'   => now()
                                     ]);
                             } else {
                                 DB::table('kitchen_ticket_item')
@@ -214,24 +215,33 @@ class KitchenTicketController extends Controller
                                 
                                 $qtyToReduce = 0;
                             }
+
+                            $cancelledItemSlips[] = [
+                                'product_name' => $line->product_name,
+                                'quantity'     => $reducedQty,
+                                'action_type'  => $item['action_type'],
+                                'order_note'   => $item['order_note'] ?? $line->order_note ?? null
+                            ];
                         }
                     } else {
-                        DB::table('kitchen_ticket_item')->insert([
+                        $newItemId = DB::table('kitchen_ticket_item')->insertGetId([
                             'kitchen_ticket_id'  => $ticketId,
                             'shop_order_item_id' => $item['shop_order_item_id'],
                             'product_id'         => $orderItem->product_id ?? null,
                             'product_name'       => $orderItem->product_name ?? null,
                             'action_type'        => $item['action_type'],
                             'quantity'           => $item['quantity'],
-                            'order_note'         => $item['order_note'], // Successfully saved
+                            'order_note'         => $item['order_note'],
                             'item_status'        => 'Queued',
                             'queued_at'          => now(),
+                            'created_at'         => now(),
                             'created_by'         => auth()->id(),
                             'created_by_name'    => auth()->user()->name ?? 'System',
                         ]);
+
+                        $insertedItemIds[] = $newItemId;
                     }
 
-                    // Update the shop_order_item table to keep status and note synchronized
                     DB::table('shop_order_item')
                         ->where('id', $item['shop_order_item_id'])
                         ->update([
@@ -243,22 +253,46 @@ class KitchenTicketController extends Controller
                 }
 
                 $this->recalculateTicketStatus($ticketId);
-
                 $createdTickets[] = $ticketId;
-                $tickets[] = $ticketId;
                 
-                if ($isBrandNewTicket) {
+                if ($isBrandNewTicket || !empty($insertedItemIds) || !empty($cancelledItemSlips)) {
                     $ticketsToPrint[] = [
-                        'ticket_id' => $ticketId,
-                        'route_id' => $routeId
+                        'ticket_id'            => $ticketId,
+                        'route_id'             => $routeId,
+                        'is_brand_new'         => $isBrandNewTicket,
+                        'inserted_item_ids'    => $insertedItemIds,
+                        'cancelled_item_slips' => $cancelledItemSlips
                     ];
                 }
             }
 
             DB::commit();
 
+            // FIX B: Separate dispatch logic for additions vs cancellations
             foreach ($ticketsToPrint as $printJob) {
-                $this->dispatchDirectPrint($printJob['ticket_id'], $printJob['route_id']);
+                // Print additions/new items
+                if ($printJob['is_brand_new'] || !empty($printJob['inserted_item_ids'])) {
+                    $this->dispatchDirectPrint(
+                        ticketId: $printJob['ticket_id'],
+                        routeId: $printJob['route_id'],
+                        isAddition: !$printJob['is_brand_new'],
+                        insertedItemIds: $printJob['inserted_item_ids'],
+                        isCancellation: false,
+                        cancelledItemSlips: []
+                    );
+                }
+
+                // Print cancellation slip separately
+                if (!empty($printJob['cancelled_item_slips'])) {
+                    $this->dispatchDirectPrint(
+                        ticketId: $printJob['ticket_id'],
+                        routeId: $printJob['route_id'],
+                        isAddition: false,
+                        insertedItemIds: [],
+                        isCancellation: true,
+                        cancelledItemSlips: $printJob['cancelled_item_slips']
+                    );
+                }
             }
 
             return response()->json([
@@ -281,23 +315,44 @@ class KitchenTicketController extends Controller
     /**
      * Send raw ESC/POS commands directly to the printer IP assigned to the kitchen route.
      */
-     private function dispatchDirectPrint(int $ticketId, int $routeId): void
-    {
+    private function dispatchDirectPrint(
+        int $ticketId, 
+        int $routeId, 
+        bool $isAddition = false, 
+        array $insertedItemIds = [],
+        bool $isCancellation = false,
+        array $cancelledItemSlips = []
+    ): void {
         try {
             $route = DB::table('kitchen_route')->where('id', $routeId)->first();
             if (!$route || empty($route->printer_ip)) {
-                return; // No printer IP configured for this route
+                return; // No printer IP configured
             }
 
             $kitchenTicket = DB::table('kitchen_ticket')->where('id', $ticketId)->first();
             $shopOrder = ShopOrder::with(['items', 'floorPlan', 'floorPlanTable'])->find($kitchenTicket->shop_order_id);
-            $ticketItems = DB::table('kitchen_ticket_item')->where('kitchen_ticket_id', $ticketId)->get();
+            
+            $ticketItems = [];
 
-            // Connect directly to the printer via its network socket port (default 9100)
+            if ($isCancellation && !empty($cancelledItemSlips)) {
+                $ticketItems = $cancelledItemSlips;
+            } else {
+                $ticketItemsQuery = DB::table('kitchen_ticket_item')->where('kitchen_ticket_id', $ticketId);
+                
+                if ($isAddition && !empty($insertedItemIds)) {
+                    $ticketItemsQuery->whereIn('id', $insertedItemIds);
+                }
+                
+                $ticketItems = $ticketItemsQuery->get();
+            }
+
+            if (empty($ticketItems)) {
+                return;
+            }
+
             $connector = new NetworkPrintConnector($route->printer_ip, $route->printer_port ?? 9100);
             $printer = new Printer($connector);
 
-            // Build Receipt Layout with safe buffer handling
             $printer->initialize();
             
             // --- HEADER ---
@@ -310,14 +365,22 @@ class KitchenTicketController extends Controller
                 : '#' . $shopOrder->order_number;
             $headerText = trim($floorPlanName . ' ' . $locationOrId);
             
-            // Constrain header centering calculation to standard 32 columns to prevent overflow
             $printer->text($this->centerTextEscPos($headerText, 16) . "\n");
             
-            // Reset to normal text size immediately
-            $printer->setTextSize(1, 1); // Fixed syntax reference for standard library
-            $printer->initialize(); // Safe reset to clear double-height state flags
+            $printer->setTextSize(1, 1);
+            $printer->initialize();
+
+            // Print Header Badges
+            if ($isCancellation) {
+                $printer->setEmphasis(true);
+                $printer->text($this->centerTextEscPos("*** ITEM VOID / CANCEL ***", 32) . "\n");
+                $printer->setEmphasis(false);
+            } elseif ($isAddition) {
+                $printer->setEmphasis(true);
+                $printer->text($this->centerTextEscPos("*** ADD-ON ORDER ***", 32) . "\n");
+                $printer->setEmphasis(false);
+            }
             
-            $printer->setEmphasis(false);
             $printer->text("TICKET: " . ($kitchenTicket->ticket_number ?? $shopOrder->order_number) . "\n");
             $printer->text("TIME: " . now()->format('h:i A | M d') . "\n");
             $printer->text(str_repeat("-", 32) . "\n");
@@ -326,18 +389,29 @@ class KitchenTicketController extends Controller
 
             // --- ITEMS ---
             foreach ($ticketItems as $item) {
-                if ($item->item_status === 'Cancelled' || (float) $item->quantity <= 0) {
+                $itemStatus = is_object($item) ? $item->item_status : null;
+                $itemQty    = is_object($item) ? (int)$item->quantity : (int)$item['quantity'];
+                $prodName   = is_object($item) ? $item->product_name : $item['product_name'];
+                $actionType = is_object($item) ? $item->action_type : $item['action_type'];
+                $note       = is_object($item) ? $item->order_note : ($item['order_note'] ?? null);
+
+                if ($itemStatus === 'Cancelled' && !$isCancellation) {
                     continue;
                 }
                 
                 $printer->setEmphasis(true);
-                // Ensure text strings fit securely within the 32-column limit
-                $cleanProductName = strtoupper(substr($item->product_name, 0, 27));
-                $printer->text(sprintf("%-3d %-28s\n", (int)$item->quantity, $cleanProductName));
+                
+                $prefix = in_array($actionType, ['Add', 'Refire', 'Cancel', 'Reduce']) 
+                    ? '[' . strtoupper($actionType) . '] ' 
+                    : '';
+
+                $cleanProductName = strtoupper(substr($prefix . $prodName, 0, 27));
+                
+                $printer->text(sprintf("%-3d %-28s\n", $itemQty, $cleanProductName));
                 $printer->setEmphasis(false);
 
-                if (!empty($item->order_note)) {
-                    $cleanNote = strtoupper(substr($item->order_note, 0, 24));
+                if (!empty($note)) {
+                    $cleanNote = strtoupper(substr($note, 0, 24));
                     $printer->text("    > NOTE: " . $cleanNote . "\n");
                 }
             }
@@ -347,12 +421,10 @@ class KitchenTicketController extends Controller
             $routeNameText = "*** " . strtoupper($route->kitchen_route_name ?? 'KITCHEN') . " ***";
             $printer->text($this->centerTextEscPos($routeNameText, 32) . "\n\n");
             
-            // Flush output buffer and cut paper safely
             $printer->feed(2);
             $printer->cut();
             $printer->close();
 
-            // Update print log counter
             DB::table('kitchen_ticket')
                 ->where('id', $ticketId)
                 ->update([
@@ -361,7 +433,6 @@ class KitchenTicketController extends Controller
                 ]);
 
         } catch (\Exception $e) {
-            // Log printer connection failure silently so cashier flow isn't interrupted
             \Log::error("Direct print failed for Route ID {$routeId}: " . $e->getMessage());
         }
     }
@@ -892,8 +963,9 @@ class KitchenTicketController extends Controller
         $pageAppId = (int) $request->input('appId');
         $pageNavigationMenuId = (int) $request->input('navigationMenuId');
 
-        // Get today's date string (YYYY-MM-DD)
-        $today = now()->toDateString();
+        // Scope to today (Start of day to End of day in App Timezone)
+        $startDate = now()->startOfDay();
+        $endDate   = now()->endOfDay();
 
         /*
         |--------------------------------------------------------------------------
@@ -906,42 +978,43 @@ class KitchenTicketController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | 2. BULK AGGREGATE ITEM QUANTITIES & TICKET COUNTS (TODAY ONLY)
+        | 2. BULK AGGREGATE TICKET & ITEM QUANTITIES
         |--------------------------------------------------------------------------
-        | Added ->whereDate('kt.created_at', $today) to scope the totals to today.
         */
-        $routeStats = DB::table('kitchen_ticket_item as kti')
-            ->join('kitchen_ticket as kt', 'kt.id', '=', 'kti.kitchen_ticket_id')
-            ->whereDate('kt.created_at', $today) // 📅 Scope items to today's tickets
-            ->whereIn('kti.item_status', ['Queued', 'Preparing', 'Ready', 'Served'])
+        $routeStats = DB::table('kitchen_ticket as kt')
+            ->leftJoin('kitchen_ticket_item as kti', 'kt.id', '=', 'kti.kitchen_ticket_id')
+            ->whereBetween('kt.created_at', [$startDate, $endDate]) // 📅 Flexible date range
             ->selectRaw("
                 kt.kitchen_route_id,
-                COUNT(DISTINCT CASE WHEN kt.ticket_status IN ('Queued', 'Preparing', 'Ready') THEN kt.id END) as active_ticket_count,
-                SUM(CASE WHEN kti.item_status = 'Queued' THEN kti.quantity ELSE 0 END) as queued_qty,
-                SUM(CASE WHEN kti.item_status = 'Preparing' THEN kti.quantity ELSE 0 END) as preparing_qty,
-                SUM(CASE WHEN kti.item_status = 'Ready' THEN kti.quantity ELSE 0 END) as ready_qty,
-                SUM(CASE WHEN kti.item_status = 'Served' THEN kti.quantity ELSE 0 END) as completed_qty
+                COUNT(DISTINCT CASE WHEN LOWER(kt.ticket_status) IN ('queued', 'preparing', 'ready') THEN kt.id END) as active_ticket_count,
+                COALESCE(SUM(CASE WHEN LOWER(kti.item_status) = 'queued' THEN kti.quantity ELSE 0 END), 0) as queued_qty,
+                COALESCE(SUM(CASE WHEN LOWER(kti.item_status) = 'preparing' THEN kti.quantity ELSE 0 END), 0) as preparing_qty,
+                COALESCE(SUM(CASE WHEN LOWER(kti.item_status) = 'ready' THEN kti.quantity ELSE 0 END), 0) as ready_qty,
+                COALESCE(SUM(CASE WHEN LOWER(kti.item_status) IN ('completed', 'served') THEN kti.quantity ELSE 0 END), 0) as completed_qty
             ")
             ->groupBy('kt.kitchen_route_id')
             ->get()
-            ->keyBy('kitchen_route_id');
+            ->keyBy(function ($item) {
+                return (string) $item->kitchen_route_id; // Normalize key to string
+            });
 
         /*
         |--------------------------------------------------------------------------
-        | 3. BULK FETCH TIMESTAMPS FOR METRICS (TODAY ONLY)
+        | 3. BULK FETCH TIMESTAMPS FOR METRICS
         |--------------------------------------------------------------------------
-        | Added ->whereDate('created_at', $today) so age checks ignore old hanging logs.
         */
         $ticketTimestamps = DB::table('kitchen_ticket')
-            ->whereDate('created_at', $today) // 📅 Scope timestamps to today
+            ->whereBetween('created_at', [$startDate, $endDate])
             ->selectRaw("
                 kitchen_route_id,
                 MAX(updated_at) as latest_update,
-                MIN(CASE WHEN ticket_status IN ('Queued', 'Preparing') THEN queued_at END) as oldest_queued
+                MIN(CASE WHEN LOWER(ticket_status) IN ('queued', 'preparing') THEN queued_at END) as oldest_queued
             ")
             ->groupBy('kitchen_route_id')
             ->get()
-            ->keyBy('kitchen_route_id');
+            ->keyBy(function ($item) {
+                return (string) $item->kitchen_route_id; // Normalize key to string
+            });
 
         /*
         |--------------------------------------------------------------------------
@@ -950,8 +1023,9 @@ class KitchenTicketController extends Controller
         */
         $response = $routes->map(function ($route) use ($pageAppId, $pageNavigationMenuId, $routeStats, $ticketTimestamps) {
             
-            $stats = $routeStats->get($route->id);
-            $times = $ticketTimestamps->get($route->id);
+            $routeKey = (string) $route->id;
+            $stats    = $routeStats->get($routeKey);
+            $times    = $ticketTimestamps->get($routeKey);
 
             $link = route('apps.details', [
                 'appId'            => $pageAppId,

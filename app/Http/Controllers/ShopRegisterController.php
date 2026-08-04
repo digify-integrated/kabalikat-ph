@@ -660,47 +660,31 @@ class ShopRegisterController extends Controller
         ]);
 
         if ($validator->fails()) {
-
             return response()->json([
                 'success' => false,
                 'message' => $validator->errors()->first(),
             ]);
         }
 
-        $shopRegisterId = (int) $request->detailId;
-
         /*
         |--------------------------------------------------------------------------
-        | REGISTER WAREHOUSES
-        |--------------------------------------------------------------------------
-        */
-
-        $warehouseIds = DB::table('shop_register_warehouse')
-            ->where('shop_register_id', $shopRegisterId)
-            ->pluck('warehouse_id');
-
-        /*
-        |--------------------------------------------------------------------------
-        | CATEGORIES
+        | CATEGORIES & SUBCATEGORIES
         |--------------------------------------------------------------------------
         */
 
         $categories = DB::table('product_category_map as pcm')
-
             ->join('product as p', 'p.id', '=', 'pcm.product_id')
-
+            ->join('product_category as pc', 'pc.id', '=', 'pcm.product_category_id')
             ->where('p.product_status', 'Active')
             ->where('p.show_on_pos', 'Yes')
-
             ->select(
-                'pcm.product_category_id as id',
-                'pcm.product_category_name as name'
+                'pc.id',
+                'pc.product_category_name as name',
+                'pc.parent_id',
+                'pc.parent_name'
             )
-
             ->distinct()
-
-            ->orderBy('pcm.product_category_name')
-
+            ->orderBy('pc.product_category_name')
             ->get();
 
         return response()->json([

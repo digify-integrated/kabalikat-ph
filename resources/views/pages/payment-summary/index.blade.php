@@ -114,14 +114,25 @@
                         <tr class="text-start text-gray-800 fw-bold fs-7 text-uppercase gs-0">
                             <th>Payment Method</th>
                             <th>Order No</th>
-                            <th>Amount</th>
                             <th>Status</th>
                             <th>Cashier</th>
                             <th>Reference</th>
                             <th>Paid At</th>
+                            <th>Amount</th>
                         </tr>
                     </thead>
                     <tbody class="fw-semibold text-gray-800"></tbody>
+                    <tfoot>
+                        <tr>
+                            <th>Total</th>
+                            <th></th><!-- ORDER_NO -->
+                            <th></th><!-- STATUS -->
+                            <th></th><!-- CASHIER -->
+                            <th></th><!-- REFERENCE -->
+                            <th></th><!-- DATE -->
+                            <th></th><!-- AMOUNT (Index 6) -->
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>

@@ -11,12 +11,19 @@ class ProductCategory extends Model
 
     protected $fillable = [
         'product_category_name',
+        'parent_id',
+        'parent_name',
         'last_log_by'
     ];
 
     public function productMaps(): HasMany
     {
         return $this->hasMany(ProductCategoryMap::class, 'product_category_id', 'id');
+    }
+
+     public function parent()
+    {
+        return $this->belongsTo(ProductCategory::class, 'parent_id');
     }
 
     public function getProductCountAttribute(): int

@@ -1,6 +1,7 @@
 import { initValidation } from '../../util/validation.js';
 import { showNotification, setNotification } from '../../util/notifications.js';
 import { disableButton, enableButton, discardCreate } from '../../form/button.js';
+import { generateDropdownOptions } from '../../form/field.js';
 import { handleSystemError } from '../../util/system-errors.js';
 import { getPageContext } from '../../form/form.js';
 
@@ -52,10 +53,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     },
                 }
             }
+        ],
+        dropdown : [
+            { url: '/product-category/generate-parent-options', dropdownSelector: '#parent_id' },
         ]
     }
 
     discardCreate();
+
+    config.dropdown.map(cfg => 
+        generateDropdownOptions({
+            url: cfg.url,
+            dropdownSelector: cfg.dropdownSelector
+        })
+    );
 
     config.forms.map((cfg) => initValidation(cfg.selector, cfg.rules));
 });

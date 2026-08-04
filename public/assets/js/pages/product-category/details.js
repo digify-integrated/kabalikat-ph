@@ -2,6 +2,7 @@ import { initValidation } from '../../util/validation.js';
 import { showNotification } from '../../util/notifications.js';
 import { attachLogNotesHandler } from '../../util/log-notes.js';
 import { disableButton, enableButton, detailsDeleteButton } from '../../form/button.js';
+import { generateDropdownOptions } from '../../form/field.js';
 import { displayDetails, getPageContext } from '../../form/form.js';
 import { handleSystemError } from '../../util/system-errors.js';
 import { initializeDatatable } from '../../util/datatable.js';
@@ -75,13 +76,20 @@ document.addEventListener('DOMContentLoaded', () => {
             swalTitle: 'Confirm Product Category Deletion',
             swalText: 'Are you sure you want to delete this product category?',
             confirmButtonText: 'Delete',
-        }
+        },
+        dropdown : [
+            { url: '/product-category/generate-parent-options', dropdownSelector: '#parent_id', data : { productCategoryId: ctx.detailId ?? '' } },
+        ]
     };
 
     (async () => {
         try {
             const fetchDetailsPromise = Promise.all(
                 config.details.map((cfg) => displayDetails(cfg))
+            );
+
+            optionsPromise = Promise.all(
+                config.dropdown.map((cfg) => generateDropdownOptions(cfg))
             );
 
             await Promise.all([

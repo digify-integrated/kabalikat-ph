@@ -1747,62 +1747,58 @@ class ShopOrderController extends Controller
 
     public function fetchFloorTables(Request $request)
     {
-        $shopOrder = ShopOrder::find(
-            $request->shop_order_id
-        );
+        $shopOrder = ShopOrder::find($request->shop_order_id);
+
+        if (!$shopOrder) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Shop order not found.',
+            ], 404);
+        }
 
         $tables = FloorPlanTable::query()
-
-            ->where(
-                'floor_plan_id',
-                $request->floor_plan_id
-            )
-
+            ->where('floor_plan_id', $request->floor_plan_id)
             ->orderBy('table_number')
-
             ->get()
-
             ->map(function ($table) use ($shopOrder) {
 
-                $occupied = ShopOrder::query()
-
-                    ->where(
-                        'floor_plan_table_id',
-                        $table->id
-                    )
-
-                    ->where('id', '!=', $shopOrder->id)
-
+                // Find any active order occupying or assigned to this table
+                $activeOrder = ShopOrder::query()
+                    ->where('floor_plan_table_id', $table->id)
+                    ->where('shop_register_session_id', $shopOrder->shop_register_session_id)
+                    // Removed: where('id', '!=', $shopOrder->id)
                     ->whereNotIn('order_status', [
                         'Completed',
                         'Cancelled',
                         'Voided',
                     ])
+                    ->latest()
+                    ->first();
 
-                    ->exists();
+                $isSelected = ($shopOrder->floor_plan_table_id == $table->id);
+                // Table is occupied if there's an active order that isn't the current order
+                $isOccupied = !is_null($activeOrder) && ($activeOrder->id != $shopOrder->id);
 
                 return [
-
-                    'id' => $table->id,
-
-                    'table_number' =>
-                        $table->table_number,
-
-                    'seats' =>
-                        $table->seats,
-
-                    'is_occupied' =>
-                        $occupied,
-
-                    'is_selected' =>
-                        $shopOrder->floor_plan_table_id
-                        == $table->id,
+                    'id'           => $table->id,
+                    'table_number' => $table->table_number,
+                    'seats'        => $table->seats,
+                    'is_occupied'  => $isOccupied,
+                    'is_selected'  => $isSelected,
+                    'active_order' => $activeOrder ? [
+                        'id'            => $activeOrder->id,
+                        'order_number'  => $activeOrder->order_number,
+                        'customer_name' => $activeOrder->customer_name ?? 'Guest',
+                        'total_items'   => $activeOrder->total_items,
+                        'net_total'     => number_format($activeOrder->net_total, 2),
+                        'created_by'    => $activeOrder->created_by_name ?? 'Staff',
+                    ] : null,
                 ];
             });
 
         return response()->json([
             'success' => true,
-            'tables' => $tables,
+            'tables'  => $tables,
         ]);
     }
 
@@ -2448,12 +2444,25 @@ class ShopOrderController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | 8. SAVE UPDATED ORDER MASTER RECORD
+        | 8. COMPUTE PAYMENTS & BALANCE DUE
         |--------------------------------------------------------------------------
         */
         $grossTotal = round($subtotal + $chargeTotal, 2);
         $netTotal   = round(($subtotal - $totalDiscountAmount) + $chargeTotal, 2);
 
+        // Fetch sum of payments made towards this order (assuming ShopOrderPayment model exists)
+        $totalPaid = (float) ShopOrderPayment::query()
+            ->where('shop_order_id', $shopOrderId)
+            ->where('payment_status', '!=', 'Voided') // Adjust status condition according to your schema
+            ->sum('payment_amount');
+
+        $balanceDue = max(0, round($netTotal - $totalPaid, 2));
+
+        /*
+        |--------------------------------------------------------------------------
+        | 9. SAVE UPDATED ORDER MASTER RECORD
+        |--------------------------------------------------------------------------
+        */
         $shopOrder->update([
             'total_items'      => (int) $items->count(),
             'total_quantity'   => round((float) $items->sum('quantity'), 2),
@@ -2466,6 +2475,8 @@ class ShopOrderController extends Controller
             'vat_amount'       => $totalCombinedVat,
             'gross_total'      => $grossTotal,
             'net_total'        => $netTotal,
+            'total_paid'       => round($totalPaid, 2), // Optional: update total_paid if present in schema
+            'balance_due'      => $balanceDue,
         ]);
     }
 
